@@ -17,7 +17,10 @@ class HelpCog(commands.Cog):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
 
-        await interaction.response.send_message(embed=discord.Embed(title="ヘルプ", description="/help .. このメッセージを表示します。\n/dashboard .. ダッシュボードのリンクを取得します。", color=discord.Color.blue()), ephemeral=True)
+        await interaction.response.send_message(embed=discord.Embed(title="ヘルプ", description="""```
+/help .. このメッセージを表示します。
+/dashboard .. ダッシュボードのリンクを取得します。
+```""", color=discord.Color.blue()), ephemeral=True)
 
     @app_commands.command(name="dashboard", description="ダッシュボードのリンクを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
