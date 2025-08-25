@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>SharkBot v2 | Welcome</title>
+        <title>SharkBot v2 | MakeEmbed</title>
         <style>
             body {
                 margin: 0;
@@ -13,29 +13,25 @@
                 min-height: 100vh;
                 padding: 2rem;
             }
-
             .settings-box {
                 background-color: #36393f;
                 padding: 2rem;
                 border-radius: 15px;
                 width: 100%;
-                max-width: 700px;
+                max-width: 1000px;
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             }
-
             h1 {
                 margin-bottom: 1rem;
                 font-size: 1.6rem;
                 color: #ffffff;
                 text-align: center;
             }
-
             .guild-header {
                 display: flex;
                 align-items: center;
                 margin-bottom: 2rem;
             }
-
             .guild-header img {
                 width: 60px;
                 height: 60px;
@@ -44,35 +40,32 @@
                 border: 3px solid #5865f2;
                 background-color: #2f3136;
             }
-
-            .form-group {
-                margin-bottom: 1.5rem;
+            .commands-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1rem;
             }
-
-            label {
-                display: block;
-                font-weight: bold;
-                margin-bottom: 0.5rem;
+            .command-box {
+                background-color: #2f3136;
+                padding: 1rem;
+                border-radius: 10px;
+                border: 1px solid #444;
+                display: flex;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .command-box label {
+                font-weight: normal;
                 color: #cccccc;
+                cursor: pointer;
             }
-
-            input[type="text"],
-            textarea,
-            select {
-                width: 100%;
-                padding: 0.8rem;
-                border: none;
-                border-radius: 8px;
-                background-color: #202225;
-                color: #ffffff;
-                font-size: 1rem;
+            .command-box input[type="checkbox"] {
+                margin-top: 0.2rem;
             }
-
-            textarea {
-                resize: vertical;
-                min-height: 80px;
+            .actions {
+                text-align: right;
+                margin-top: 2rem;
             }
-
             button {
                 background-color: #5865f2;
                 border: none;
@@ -84,14 +77,8 @@
                 cursor: pointer;
                 transition: background 0.2s ease;
             }
-
             button:hover {
                 background-color: #4752c4;
-            }
-
-            .actions {
-                text-align: right;
-                margin-top: 2rem;
             }
         </style>
     </head>
@@ -100,39 +87,30 @@
         <div class="settings-box">
             <div class="guild-header">
                 <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png?size=128" alt="Guild Icon">
-                <h1>{{ guild.name }} のようこそメッセージ設定</h1>
+                <h1>{{ guild.name }} のコマンド設定</h1>
             </div>
 
-            <form method="post" action="/settings/{{ guild.id }}/welcome_set" id="form_welcome">
-                <div class="form-group">
-                    <label for="title">タイトル</label>
-                    <input type="text" id="title" name="title" value="{{title}}">
-                </div>
-
-                <div class="form-group">
-                    <label for="desc">説明</label>
-                    <textarea id="desc" name="desc">{{description}}</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="channel">送信先チャンネル</label>
-                    <select id="channel" name="channel">
-                        {% for ch in channels %}
-                            <option value="{{ ch.id }}">{{ ch.name }}</option>
-                        {% endfor %}
-                    </select>
+            <form method="post" action="/settings/{{ guild.id }}/command_disable">
+                <div class="commands-grid">
+                    {% for cmd in commands %}
+                        <div class="command-box">
+                            <input type="checkbox" 
+                                name="enabled_commands" 
+                                value="{{ cmd.name }}" 
+                                id="cmd_{{ loop.index }}"
+                                {% if cmd.name not in disabled_commands %}checked{% endif %}>
+                            <label for="cmd_{{ loop.index }}">
+                                <strong>{{ cmd.name }}</strong><br>
+                                <span style="font-size: 0.85rem; color: #aaa;">{{ cmd.description }}</span>
+                            </label>
+                        </div>
+                    {% endfor %}
                 </div>
 
                 <div class="actions">
-                    <button type="submit">設定する</button>　　<button onclick="delete_welcome()">削除する</button>
+                    <button type="submit">保存</button>
                 </div>
             </form>
-            <script>
-                function delete_welcome() {
-                    document.getElementById("title").value = "delete_welcome";
-                    document.getElementById("form_welcome").submit();
-                }
-            </script>
         </div>
     </body>
 </html>

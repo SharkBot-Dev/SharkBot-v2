@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>SharkBot v2 | Welcome</title>
+        <title>SharkBot v2 | RolePanel</title>
         <style>
             body {
                 margin: 0;
@@ -100,39 +100,10 @@
         <div class="settings-box">
             <div class="guild-header">
                 <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png?size=128" alt="Guild Icon">
-                <h1>{{ guild.name }} のようこそメッセージ設定</h1>
+                <h1>{{ guild.name }} のロールパネル</h1>
             </div>
 
-            <form method="post" action="/settings/{{ guild.id }}/welcome_set" id="form_welcome">
-                <div class="form-group">
-                    <label for="title">タイトル</label>
-                    <input type="text" id="title" name="title" value="{{title}}">
-                </div>
-
-                <div class="form-group">
-                    <label for="desc">説明</label>
-                    <textarea id="desc" name="desc">{{description}}</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="channel">送信先チャンネル</label>
-                    <select id="channel" name="channel">
-                        {% for ch in channels %}
-                            <option value="{{ ch.id }}">{{ ch.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="actions">
-                    <button type="submit">設定する</button>　　<button onclick="delete_welcome()">削除する</button>
-                </div>
-            </form>
-            <script>
-                function delete_welcome() {
-                    document.getElementById("title").value = "delete_welcome";
-                    document.getElementById("form_welcome").submit();
-                }
-            </script>
+            <h3>/panel role コマンドでロールパネルを作成できます。</h3>
         </div>
     </body>
 </html>

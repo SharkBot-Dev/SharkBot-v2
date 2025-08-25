@@ -3,6 +3,7 @@ import discord
 import datetime
 from consts import mongodb
 from discord import app_commands
+from models import command_disable
 
 class EmbedMake(discord.ui.Modal, title='埋め込みを作成'):
     title_ = discord.ui.TextInput(
@@ -63,7 +64,10 @@ class ToolsCog(commands.Cog):
     @tools.command(name="embed", description="埋め込みを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
     async def tools_embed(self, interaction: discord.Interaction):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
         await interaction.response.send_modal(EmbedMake())
 
 async def setup(bot):

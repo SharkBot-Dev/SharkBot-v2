@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Form, Request
 from consts import templates
 from consts import mongodb
+from models import command_disable
 from fastapi.responses import RedirectResponse
 
 router = APIRouter(prefix="/settings")
@@ -369,3 +370,86 @@ async def expand_set(
         return {"message": "不正な値が入力されました。"}
 
     return RedirectResponse(f"/settings/{guild_id}/expand", status_code=303)
+
+# ロールパネル
+@router.get("/{guild_id}/rolepanel")
+async def rolepanel(
+    request: Request,
+    guild_id: str
+):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    return templates.templates.TemplateResponse(
+        "rolepanel.html",
+        {
+            "request": request,
+            "guild": guild
+        }
+    )
+
+# コマンドの有効化・無効化
+@router.get("/{guild_id}/commands")
+async def command_disable_(request: Request, guild_id: str):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    cmds = await mongodb.mongo["DashboardBot"].Commands.find().to_list(None)
+
+    disabled = await command_disable.get_disabled_commands(int(guild_id))
+
+    return templates.templates.TemplateResponse(
+        "commands_settings.html",
+        {
+            "request": request,
+            "guild": guild,
+            "commands": cmds,
+            "disabled_commands": disabled
+        }
+    )
+
+
+@router.post("/{guild_id}/command_disable")
+async def command_disable_set(
+    request: Request,
+    guild_id: str,
+    enabled_commands: list[str] = Form(default=[])
+):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    cmds = await mongodb.mongo["DashboardBot"].Commands.find().to_list(None)
+    all_cmd_names = [c["name"] for c in cmds]
+
+    to_disable = [c for c in all_cmd_names if c not in enabled_commands]
+
+    await command_disable.set_disabled_commands(int(guild_id), to_disable)
+
+    return RedirectResponse(f"/settings/{guild_id}/commands", status_code=303)

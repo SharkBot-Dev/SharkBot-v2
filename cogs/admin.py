@@ -4,6 +4,8 @@ import datetime
 from consts import mongodb
 from discord import app_commands
 
+from models import save_commands
+
 class AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -26,6 +28,16 @@ class AdminCog(commands.Cog):
         if ctx.author.id == 1335428061541437531:
             await self.bot.load_extension(f"cogs.{cogname}")
             await ctx.reply(f"LoadOK .. `cogs.{cogname}`")
+
+    @commands.command(name="save", hidden=True)
+    async def save(self, ctx):
+        if ctx.author.id == 1335428061541437531:
+            count = 0
+            for cmd in self.bot.tree.get_commands():
+                await save_commands.save_command(cmd)
+                count += 1
+
+            await ctx.reply(f"コマンドをセーブしました。\n{count}件。")
 
 async def setup(bot):
     await bot.add_cog(AdminCog(bot))
