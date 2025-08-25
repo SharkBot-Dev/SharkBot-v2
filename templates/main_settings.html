@@ -103,6 +103,8 @@
                 <h1>{{ guild.name }} の設定</h1>
             </div>
 
+            <h3>基本的なBotの設定</h3>
+
             <form method="post" action="/settings/{{ guild.id }}/update_prefix">
                 <div class="form-group">
                     <label for="prefix">Prefix</label>
@@ -114,7 +116,15 @@
                 </div>
             </form>
 
-            <button onclick="location.href = `{{guild.id}}/create_embed`;">埋め込み作成</button>
+            <hr>
+            <h3>必須の機能</h3>
+            <button onclick="location.href = `{{guild.id}}/welcome`;">ようこそメッセージ</button>
+
+            <hr>
+            <h3>ツール系の機能</h3>
+            <button onclick="location.href = `{{guild.id}}/create_embed`;">埋め込み作成</button>　
+            <button onclick="location.href = `{{guild.id}}/pin_message`;">固定メッセージ作成</button>　
+            <button onclick="location.href = `{{guild.id}}/expand`;">メッセージ展開</button>
         </div>
     </body>
 </html>

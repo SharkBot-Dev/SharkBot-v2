@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>SharkBot v2 | MakeEmbed</title>
+        <title>SharkBot v2 | LockMessage</title>
         <style>
             body {
                 margin: 0;
@@ -100,22 +100,22 @@
         <div class="settings-box">
             <div class="guild-header">
                 <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png?size=128" alt="Guild Icon">
-                <h1>{{ guild.name }} の埋め込み作成</h1>
+                <h1>{{ guild.name }} の固定メッセージ</h1>
             </div>
 
-            <form method="post" action="/settings/{{ guild.id }}/send_embed">
+            <form method="post" action="/settings/{{ guild.id }}/pin_message_create">
                 <div class="form-group">
                     <label for="title">タイトル</label>
-                    <input type="text" id="title" name="title" value="こんにちは世界">
+                    <input type="text" id="title" name="title" value="固定メッセージ">
                 </div>
 
                 <div class="form-group">
                     <label for="desc">説明</label>
-                    <textarea id="desc" name="desc">これは埋め込みの説明です。</textarea>
+                    <textarea id="desc" name="desc">これは固定メッセージの説明です。</textarea>
                 </div>
 
                 <div class="form-group">
-                    <label for="channel">送信先チャンネル</label>
+                    <label for="channel">設定先チャンネル</label>
                     <select id="channel" name="channel">
                         {% for ch in channels %}
                             <option value="{{ ch.id }}">{{ ch.name }}</option>
@@ -124,8 +124,11 @@
                 </div>
 
                 <div class="actions">
-                    <button type="submit">送信する</button>
+                    <button type="submit">設定する</button>
                 </div>
+
+                <h5>固定メッセージは、設定先チャンネルで一回発言すると出現します。<br>
+                削除は、固定メッセージについている「削除」ボタンで削除できます。</h5>
             </form>
         </div>
     </body>

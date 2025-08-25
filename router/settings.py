@@ -45,7 +45,7 @@ async def settings_page(request: Request, guild_id: str):
     if not guild.get("owner"):
         return RedirectResponse("/login/guilds")
 
-    prefix_doc = await mongodb.mongo["DashboardBot"].CustomPrefixBot.find_one({"Guild": guild_id})
+    prefix_doc = await mongodb.mongo["DashboardBot"].CustomPrefixBot.find_one({"Guild": int(guild_id)})
     prefix = prefix_doc.get("Prefix") if prefix_doc else "!"
 
     return templates.templates.TemplateResponse("main_settings.html", {
@@ -151,3 +151,205 @@ async def send_embed(
         return {"message": "不正な値が入力されました。"}
 
     return RedirectResponse(f"/settings/{guild_id}/create_embed", status_code=303)
+
+@router.get("/{guild_id}/pin_message")
+async def pin_message(request: Request, guild_id: str):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    channel_doc = await mongodb.mongo["DashboardBot"].guild_channels.find_one({"Guild": int(guild_id)})
+
+    channels = []
+    if channel_doc and "Channels" in channel_doc:
+        channels = [
+            {
+                "id": str(int(ch["id"])),
+                "name": ch["name"]
+            }
+            for ch in channel_doc["Channels"]
+        ]
+
+    return templates.templates.TemplateResponse(
+        "lock_message.html",
+        {
+            "request": request,
+            "guild": guild,
+            "channels": channels
+        }
+    )
+
+@router.post("/{guild_id}/pin_message_create", name="send_embed")
+async def send_embed(
+    request: Request,
+    guild_id: str,
+    title: str = Form(...),
+    desc: str = Form(...),
+    channel: str = Form(...)
+):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    try:
+
+        db = mongodb.mongo["Main"].LockMessage
+        await db.replace_one(
+            {"Channel": int(channel), "Guild": int(guild_id)}, 
+            {"Channel": int(channel), "Guild": int(guild_id), "Title": title, "Desc": desc, "MessageID": 0}, 
+            upsert=True
+        )
+    except Exception as e:
+        return {"message": "不正な値が入力されました。"}
+
+    return RedirectResponse(f"/settings/{guild_id}/pin_message", status_code=303)
+
+# よろしくメッセージ
+@router.get("/{guild_id}/welcome")
+async def welcome(request: Request, guild_id: str):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    channel_doc = await mongodb.mongo["DashboardBot"].guild_channels.find_one({"Guild": int(guild_id)})
+
+    channels = []
+    if channel_doc and "Channels" in channel_doc:
+        channels = [
+            {
+                "id": str(int(ch["id"])),
+                "name": ch["name"]
+            }
+            for ch in channel_doc["Channels"]
+        ]
+
+    return templates.templates.TemplateResponse(
+        "welcome_settings.html",
+        {
+            "request": request,
+            "guild": guild,
+            "channels": channels
+        }
+    )
+
+@router.post("/{guild_id}/welcome_set")
+async def welcome_send(
+    request: Request,
+    guild_id: str,
+    title: str = Form(...),
+    desc: str = Form(...),
+    channel: str = Form(...)
+):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    try:
+
+        db = mongodb.mongo["Main"].WelcomeMessage
+        if title == "delete_welcome":
+            await db.delete_one({
+                "Guild": int(guild_id)
+            })
+        else:
+
+            await db.replace_one(
+                {"Guild": int(guild_id)}, 
+                {"Channel": int(channel), "Guild": int(guild_id), "Title": title, "Description": desc}, 
+                upsert=True
+            )
+    except Exception as e:
+        return {"message": "不正な値が入力されました。"}
+
+    return RedirectResponse(f"/settings/{guild_id}/welcome", status_code=303)
+
+# メッセージ展開
+@router.get("/{guild_id}/expand")
+async def expand(request: Request, guild_id: str):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    return templates.templates.TemplateResponse(
+        "expand_settings.html",
+        {
+            "request": request,
+            "guild": guild
+        }
+    )
+
+@router.post("/{guild_id}/expand_set")
+async def expand_set(
+    request: Request,
+    guild_id: str,
+    setting: str = Form(...)
+):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    try:
+        if setting == "delete_expand":
+            await mongodb.mongo["Main"].ExpandSettings.delete_one({
+                "Guild": int(guild_id)
+            })
+        else:
+
+            await mongodb.mongo["Main"].ExpandSettings.replace_one(
+                {"Guild": int(guild_id)}, 
+                {"Guild": int(guild_id)}, 
+                upsert=True
+            )
+
+    except Exception as e:
+        return {"message": "不正な値が入力されました。"}
+
+    return RedirectResponse(f"/settings/{guild_id}/expand", status_code=303)

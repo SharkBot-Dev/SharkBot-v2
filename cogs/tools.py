@@ -61,7 +61,8 @@ class ToolsCog(commands.Cog):
     tools = app_commands.Group(name="tools", description="ツール系のコマンドです。")
 
     @tools.command(name="embed", description="埋め込みを作成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     async def tools_embed(self, interaction: discord.Interaction):
         await interaction.response.send_modal(EmbedMake())
 

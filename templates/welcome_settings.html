@@ -100,18 +100,18 @@
         <div class="settings-box">
             <div class="guild-header">
                 <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png?size=128" alt="Guild Icon">
-                <h1>{{ guild.name }} の埋め込み作成</h1>
+                <h1>{{ guild.name }} のようこそメッセージ設定</h1>
             </div>
 
-            <form method="post" action="/settings/{{ guild.id }}/send_embed">
+            <form method="post" action="/settings/{{ guild.id }}/welcome_set" id="form_welcome">
                 <div class="form-group">
                     <label for="title">タイトル</label>
-                    <input type="text" id="title" name="title" value="こんにちは世界">
+                    <input type="text" id="title" name="title" value="<name> さん、よろしく！">
                 </div>
 
                 <div class="form-group">
                     <label for="desc">説明</label>
-                    <textarea id="desc" name="desc">これは埋め込みの説明です。</textarea>
+                    <textarea id="desc" name="desc">あなたは <count> 人目のメンバーです！\n\nアカウント作成日: <createdat></textarea>
                 </div>
 
                 <div class="form-group">
@@ -124,9 +124,15 @@
                 </div>
 
                 <div class="actions">
-                    <button type="submit">送信する</button>
+                    <button type="submit">設定する</button>　　<button onclick="delete_welcome()">削除する</button>
                 </div>
             </form>
+            <script>
+                function delete_welcome() {
+                    document.getElementById("title").value = "delete_welcome";
+                    document.getElementById("form_welcome").submit();
+                }
+            </script>
         </div>
     </body>
 </html>

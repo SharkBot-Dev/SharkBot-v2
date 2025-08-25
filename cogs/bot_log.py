@@ -13,7 +13,6 @@ class BotLogCog(commands.Cog):
             {"id": ch.id, "name": ch.name}
             for ch in guild.text_channels
         ]
-        print(text_channels)
         await mongodb.mongo["DashboardBot"].guild_channels.update_one(
             {"Guild": guild.id},
             {"$set": {"Channels": text_channels}},

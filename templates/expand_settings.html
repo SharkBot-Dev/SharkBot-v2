@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>SharkBot v2 | MakeEmbed</title>
+        <title>SharkBot v2 | LockMessage</title>
         <style>
             body {
                 margin: 0;
@@ -100,33 +100,30 @@
         <div class="settings-box">
             <div class="guild-header">
                 <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png?size=128" alt="Guild Icon">
-                <h1>{{ guild.name }} の埋め込み作成</h1>
+                <h1>{{ guild.name }} のメッセージ展開</h1>
             </div>
 
-            <form method="post" action="/settings/{{ guild.id }}/send_embed">
-                <div class="form-group">
-                    <label for="title">タイトル</label>
-                    <input type="text" id="title" name="title" value="こんにちは世界">
-                </div>
+            <form method="post" action="/settings/{{ guild.id }}/expand_set" id="form_expand">
 
-                <div class="form-group">
-                    <label for="desc">説明</label>
-                    <textarea id="desc" name="desc">これは埋め込みの説明です。</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="channel">送信先チャンネル</label>
-                    <select id="channel" name="channel">
-                        {% for ch in channels %}
-                            <option value="{{ ch.id }}">{{ ch.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+                <input type="text" id="setting" name="setting" value="enable" hidden>
 
                 <div class="actions">
-                    <button type="submit">送信する</button>
+                    <button onclick="enable_expand()">有効化する</button>　　<button onclick="delete_expand()">無効化する</button>
                 </div>
+
+                <h5>メッセージ展開とは？<br>メッセージURLからメッセージを取得する機能です。</h5>
             </form>
+            <script>
+                function delete_expand() {
+                    document.getElementById("setting").value = "delete_expand";
+                    document.getElementById("form_expand").submit();
+                }
+
+                function enable_expand() {
+                    document.getElementById("setting").value = "enable_expand";
+                    document.getElementById("form_expand").submit();
+                }
+            </script>
         </div>
     </body>
 </html>
