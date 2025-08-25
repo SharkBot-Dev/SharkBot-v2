@@ -1,0 +1,94 @@
+<html>
+    <head>
+        <title>SharkBot v2 Dashboard</title>
+
+        <style>
+            body {
+                margin: 0;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #2f3136; /* Discordのダークテーマ背景 */
+                color: #ffffff;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+            }
+
+            .box {
+                background-color: #36393f; /* Discordのパネル色 */
+                padding: 2rem;
+                border-radius: 15px;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+                width: 90%;
+                max-width: 900px;
+            }
+
+            h1 {
+                margin-bottom: 2rem;
+                font-size: 1.8rem;
+                color: #ffffff;
+            }
+
+            .guild-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 2rem;
+                justify-items: center;
+            }
+
+            .guild-item {
+                text-align: center;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                background-color: #202225;
+                padding: 1rem;
+                border-radius: 12px;
+                width: 120px;
+            }
+
+            .guild-item:hover {
+                transform: translateY(-5px) scale(1.05);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+                background-color: #5865f2; /* Discordブルー */
+            }
+
+            .guild-item img {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                border: 3px solid #5865f2;
+                object-fit: cover;
+                margin-bottom: 0.5rem;
+                background-color: #2f3136;
+            }
+
+            .guild-item span {
+                display: block;
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: #ffffff;
+                word-break: break-word;
+            }
+
+            a {
+                text-decoration: none;
+                color: inherit;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="box">
+            <h1>{{ message }}</h1>
+
+            <div class="guild-list">
+                {% for g in guilds %}
+                    <a href="/settings/{{ g.id }}" class="guild-item">
+                        <img src="https://cdn.discordapp.com/icons/{{ g.id }}/{{ g.icon }}.png?size=128&quality=lossless" alt="Guild Icon">
+                        <span>{{ g.name }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </body>
+</html>
