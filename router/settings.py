@@ -5,26 +5,27 @@ from consts import settings, templates
 from consts import mongodb
 from models import command_disable
 from fastapi.responses import RedirectResponse
+import html
 
 router = APIRouter(prefix="/settings")
 
 req_cooldown = {}
 
-async def check_owner(user, guild_id: str):
-    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": user.get("id")})
-    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+async def check_owner(user, guild_id: str) -> bool:
+    user_guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": user.get("id")})
+    guild = next((g for g in user_guilds.get("Guilds", []) if g.get("id") == guild_id), None)
     if guild is None:
         return False
 
     if not guild.get("owner"):
         return False
 
-    guilds = await mongodb.mongo["DashboardBot"].bot_joind_guild.find_one({
+    bot_joined = await mongodb.mongo["DashboardBot"].bot_joind_guild.find_one({
         "Guild": int(guild_id)
     })
 
-    if guilds == None:
-        return 
+    if bot_joined is None:
+        return False
     
     return True
 
@@ -212,12 +213,15 @@ async def send_embed(
     if not await check_owner(u, guild_id):
         return RedirectResponse("/login/guilds")
 
+    safe_title = html.escape(title)
+    safe_desc  = html.escape(desc)
+
     try:
 
         db = mongodb.mongo["Main"].LockMessage
         await db.replace_one(
             {"Channel": int(channel), "Guild": int(guild_id)}, 
-            {"Channel": int(channel), "Guild": int(guild_id), "Title": title, "Desc": desc, "MessageID": 0}, 
+            {"Channel": int(channel), "Guild": int(guild_id), "Title": safe_title, "Desc": safe_desc, "MessageID": 0}, 
             upsert=True
         )
     except Exception as e:
@@ -297,6 +301,9 @@ async def welcome_send(
     if not await check_owner(u, guild_id):
         return RedirectResponse("/login/guilds")
 
+    safe_title = html.escape(title)
+    safe_desc  = html.escape(desc)
+
     try:
 
         db = mongodb.mongo["Main"].WelcomeMessage
@@ -308,7 +315,7 @@ async def welcome_send(
 
             await db.replace_one(
                 {"Guild": int(guild_id)}, 
-                {"Channel": int(channel), "Guild": int(guild_id), "Title": title, "Description": desc}, 
+                {"Channel": int(channel), "Guild": int(guild_id), "Title": safe_title, "Description": safe_desc}, 
                 upsert=True
             )
     except Exception as e:
@@ -491,6 +498,16 @@ async def logging_set(request: Request, guild_id: str, channel: str = Form(None)
             json={"name": "SharkBot-Log"},
             headers={"Authorization": f"Bot {settings.TOKEN}"}
         )
+
+        if webhook.status_code != 201:
+            return templates.templates.TemplateResponse(
+                "message.html",
+                {
+                    "request": request,
+                    "url": f"/settings/{guild_id}/logging",
+                    "message": f"Webhook 作成に失敗しました。"
+                }
+            )
 
     resp = webhook.json()
 
