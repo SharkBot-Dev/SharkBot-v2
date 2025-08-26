@@ -756,3 +756,92 @@ async def automod_create(
         return {"message": "不正な値が入力されました。"}
 
     return RedirectResponse(f"/settings/{guild_id}/automod", status_code=303)
+
+# 自動返信
+@router.get("/{guild_id}/autoreply")
+async def autoreply(request: Request, guild_id: str):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    db = mongodb.mongo["Main"].AutoReply
+    word_list = [b async for b in db.find({"Guild": int(guild_id)})]
+
+    return templates.templates.TemplateResponse(
+        "autoreply.html",
+        {
+            "request": request,
+            "guild": guild,
+            "autos": word_list
+        }
+    )
+
+@router.post("/{guild_id}/autoreply_set")
+async def autoreply_set(
+    request: Request,
+    guild_id: str,
+    tri: str = Form(...),
+    reply: str = Form(...)
+):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    if not tri:
+        return RedirectResponse(f"/settings/{guild_id}/autoreply", status_code=303)
+    
+    if not reply:
+        return RedirectResponse(f"/settings/{guild_id}/autoreply", status_code=303)
+
+    safe_trigger = html.escape(tri)
+    safe_replyword = html.escape(reply)
+
+    db = mongodb.mongo["Main"].AutoReply
+    await db.replace_one(
+            {"Guild": int(guild_id), "Word": safe_trigger}, 
+            {"Guild": int(guild_id), "Word": safe_trigger, "ReplyWord": safe_replyword}, 
+            upsert=True
+        )
+
+    return RedirectResponse(f"/settings/{guild_id}/autoreply", status_code=303)
+
+
+@router.post("/{guild_id}/autoreply_delete")
+async def autoreply_delete(request: Request, guild_id: str, tri: str = Form(...)):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    if not tri:
+        return RedirectResponse(f"/settings/{guild_id}/autoreply", status_code=303)
+    
+    safe_trigger = html.escape(tri)
+
+    db = mongodb.mongo["Main"].AutoReply
+    await db.delete_one({"Word": safe_trigger, "Guild": int(guild_id)})
+
+    return RedirectResponse(f"/settings/{guild_id}/autoreply", status_code=303)
