@@ -9,16 +9,15 @@ import json
 from unbelievaboat import Client
 import asyncio
 from discord import app_commands
+from models import command_disable
 
 class UpCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        with open("../Token.json") as tk:
-            self.tkj = json.loads(tk.read())
-            self.mt = self.tkj["MoneyBotToken"]
         print(f"init -> UpCog")
 
     async def add_money(self, message: discord.Message):
+        return
         db = self.bot.async_db["Main"].BumpUpEconomy
         try:
             dbfind = await db.find_one({"Channel": message.channel.id}, {"_id": False})
@@ -240,6 +239,9 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def up_dicoall(self, interaction: discord.Interaction, onか: bool):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         db = self.bot.async_db["Main"].Dicoall
         if onか:
             await db.replace_one(
@@ -259,6 +261,9 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def up_distopia(self, interaction: discord.Interaction, onか: bool):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         db = self.bot.async_db["Main"].Distopia
         if onか:
             await db.replace_one(
@@ -278,6 +283,9 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def sabachannel_vote(self, interaction: discord.Interaction, onか: bool):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         db = self.bot.async_db["Main"].SabaChannel
         if onか:
             await db.replace_one(
@@ -297,6 +305,9 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def dissoku_up(self, interaction: discord.Interaction, onか: bool):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         db = self.bot.async_db["Main"].DissokuChannel
         if onか:
             await db.replace_one(
@@ -316,6 +327,9 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def disboard_bump(self, interaction: discord.Interaction, onか: bool):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         db = self.bot.async_db["Main"].DisboardChannel
         if onか:
             await db.replace_one(
@@ -335,6 +349,9 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def dcafe_up(self, interaction: discord.Interaction, onか: bool):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         db = self.bot.async_db["Main"].DiscafeChannel
         if onか:
             await db.replace_one(
@@ -354,6 +371,9 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def mention_up(self, interaction: discord.Interaction, ロール: discord.Role = None):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         db = self.bot.async_db["Main"].BumpUpMention
         if not ロール:
             await db.delete_one(
