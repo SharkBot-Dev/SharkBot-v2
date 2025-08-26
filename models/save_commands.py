@@ -10,15 +10,18 @@ async def save_command(cmd: app_commands.Command, parent: str = None):
         for sub in cmd.commands:
             await save_command(sub, parent=full_name)
     else:
-        doc = {
-            "name": full_name,
-            "description": cmd.description or "",
-        }
-        await mongodb.mongo["DashboardBot"].Commands.replace_one(
-            {"name": full_name},
-            doc,
-            upsert=True
-        )
+
+        if not isinstance(cmd, app_commands.ContextMenu):
+
+            doc = {
+                "name": full_name,
+                "description": cmd.description or "",
+            }
+            await mongodb.mongo["DashboardBot"].Commands.replace_one(
+                {"name": full_name},
+                doc,
+                upsert=True
+            )
 
 async def get_commands(guild_id: int) -> list[str]:
     cmds = await mongodb.mongo["DashboardBot"].Commands.find_one(

@@ -200,5 +200,26 @@ class ModCog(commands.Cog):
         await interaction.channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
         await interaction.followup.send(content="🔓チャンネルを開放しました。")
 
+    @moderation.command(name="report", description="レポートチャンネルをセットアップします。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def report_channel(self, interaction: discord.Interaction, チャンネル: discord.TextChannel = None):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        await interaction.response.defer(ephemeral=True)
+        db = self.bot.async_db["Main"].ReportChannel
+        if チャンネル:
+            await db.replace_one(
+                {"Guild": interaction.guild.id}, 
+                {"Guild": interaction.guild.id, "Channel": チャンネル.id}, 
+                upsert=True
+            )
+            await interaction.followup.send(embed=discord.Embed(title="通報チャンネルをセットアップしました。", color=discord.Color.green()))
+        else:
+            await db.delete_one({"Guild": interaction.guild.id})
+            await interaction.followup.send(embed=discord.Embed(title="通報チャンネルを無効化しました。", color=discord.Color.green()))
+
 async def setup(bot):
     await bot.add_cog(ModCog(bot))

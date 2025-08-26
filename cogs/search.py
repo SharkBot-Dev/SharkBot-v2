@@ -129,7 +129,6 @@ class SearchCog(commands.Cog):
     search = app_commands.Group(name="search", description="検索系コマンドです。")
 
     @search.command(name="user", description="ユーザーを検索します。")
-    @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def user_search(self, interaction: discord.Interaction, user: discord.User):
@@ -288,7 +287,6 @@ Botを追加したユーザーは？: {add_bot_user}
             return
 
     @search.command(name="server", description="サーバー情報を確認します。")
-    @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def server_info(self, interaction: discord.Interaction):
@@ -333,6 +331,51 @@ Botを追加したユーザーは？: {add_bot_user}
             await interaction.followup.send(embed=embed.set_thumbnail(url=interaction.guild.icon.url))
         else:
             await interaction.followup.send(embed=embed)
+
+    @search.command(name="avatar", description="アバターを取得します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def avatar(self, interaction: discord.Interaction, ユーザー: discord.User):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        await interaction.response.defer()
+        if ユーザー.avatar == None:
+            class AvatarLayout(discord.ui.LayoutView):
+                container = discord.ui.Container(
+                    discord.ui.TextDisplay(
+                        f'### {ユーザー.name}さんのアバター',
+                    ),
+                    discord.ui.TextDisplay(
+                        f'ダウンロード\n[.png]({ユーザー.default_avatar.with_format("png").url})',
+                    ),
+                    discord.ui.Separator(),
+                    discord.ui.MediaGallery(discord.MediaGalleryItem(ユーザー.default_avatar.url)),
+                    accent_colour=discord.Colour.green(),
+                )
+
+            await interaction.followup.send(view=AvatarLayout())
+
+        else:
+            class AvatarLayout(discord.ui.LayoutView):
+                
+                container = discord.ui.Container(
+                    discord.ui.TextDisplay(
+                        f'### {ユーザー.name}さんのアバター',
+                    ),
+                    discord.ui.TextDisplay(
+                        f'ダウンロード\n[.png]({ユーザー.avatar.with_format("png").url}) [.jpg]({ユーザー.avatar.with_format("jpg").url}) [.webp]({ユーザー.avatar.with_format("webp").url})',
+                    ),
+                    discord.ui.Separator(),
+                    discord.ui.MediaGallery(discord.MediaGalleryItem(ユーザー.avatar.url)),
+                    discord.ui.Separator(),
+                    discord.ui.ActionRow(discord.ui.Button(label="デフォルトアバターURL", url=ユーザー.default_avatar.url)),
+                    accent_colour=discord.Colour.green(),
+                )
+
+            await interaction.followup.send(view=AvatarLayout())
+
+        return
 
 async def setup(bot):
     await bot.add_cog(SearchCog(bot))
