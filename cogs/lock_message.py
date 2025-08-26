@@ -22,6 +22,8 @@ class LockMessageCog(commands.Cog):
                     return
                 if "lockmessage_delete+" in custom_id:
                     await interaction.response.defer(ephemeral=True)
+                    if not interaction.user.guild_permissions.manage_channels:
+                        return
                     db = interaction.client.async_db["Main"].LockMessage
                     result = await db.delete_one({
                         "Channel": interaction.channel.id,
