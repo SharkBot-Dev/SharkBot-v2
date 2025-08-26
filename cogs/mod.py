@@ -94,7 +94,7 @@ class ModCog(commands.Cog):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
 
         if ユーザー.id == interaction.user.id:
-            return await interaction.response.send_message(embed=discord.Embed(title=f"自分自身はSoftBanできません。", color=discord.Color.red()), ephemeral=True)
+            return await interaction.response.send_message(embed=discord.Embed(title=f"自分自身はタイムアウトできません。", color=discord.Color.red()), ephemeral=True)
         if interaction.guild.get_member(ユーザー.id) is None:
             return await interaction.response.send_message(embed=discord.Embed(title=f"このサーバーにいないメンバーはタイムアウトできません。", color=discord.Color.red()))
         await interaction.response.defer()
@@ -104,6 +104,25 @@ class ModCog(commands.Cog):
         except:
             return await interaction.followup.send(embed=discord.Embed(title="タイムアウトに失敗しました。", description="権限が足りないかも！？", color=discord.Color.red()))
         return await interaction.followup.send(embed=discord.Embed(title=f"{ユーザー.name}をタイムアウトしました。", color=discord.Color.green()))
+    
+    @moderation.command(name="max-timeout", description="最大までタイムアウトします。")
+    @app_commands.checks.has_permissions(moderate_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def max_timeout(self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        if ユーザー.id == interaction.user.id:
+            return await interaction.response.send_message(embed=discord.Embed(title=f"自分自身はタイムアウトできません。", color=discord.Color.red()), ephemeral=True)
+        if interaction.guild.get_member(ユーザー.id) is None:
+            return await interaction.response.send_message(embed=discord.Embed(title=f"このサーバーにいないメンバーはタイムアウトできません。", color=discord.Color.red()))
+        await interaction.response.defer()
+        try:
+            await interaction.guild.get_member(ユーザー.id).edit(timeout=discord.utils.utcnow() + datetime.datetime(day=28), reason=理由)
+        except:
+            return await interaction.followup.send(embed=discord.Embed(title="タイムアウトに失敗しました。", description="権限が足りないかも！？", color=discord.Color.red()))
+        return await interaction.followup.send(embed=discord.Embed(title=f"{ユーザー.name}を最大までタイムアウトしました。", color=discord.Color.green()))
     
     @moderation.command(name="clear", description="メッセージを一斉削除します。")
     @app_commands.checks.has_permissions(manage_channels=True)
@@ -123,6 +142,63 @@ class ModCog(commands.Cog):
 
         deleted = await interaction.channel.purge(limit=メッセージ数, check=check)
         await interaction.followup.send(ephemeral=True, content=f"{len(deleted)} 件のメッセージを削除しました")
+
+    @moderation.command(name="warn", description="メンバーを警告します。")
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def warn(self, interaction: discord.Interaction, メンバー: discord.User, 理由: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        await interaction.response.defer()
+        if interaction.guild.get_member(メンバー.id) is None:
+            return await interaction.response.send_message(embed=discord.Embed(title=f"このサーバーにいないメンバーは警告できません。", color=discord.Color.red()))
+        
+        await メンバー.send(embed=discord.Embed(title=f"あなたは`{interaction.guild.name}`\nで警告されました。", color=discord.Color.yellow(), description=f"理由: {理由}"))
+
+        await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="警告しました。", color=discord.Color.green()))
+
+    @moderation.command(name="lock", description="チャンネルをロックします。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def lock(self, interaction: discord.Interaction, スレッド作成可能か: bool = False, リアクション可能か: bool = False):
+        await interaction.response.defer()
+        overwrite = interaction.channel.overwrites_for(interaction.guild.default_role)
+        overwrite.send_messages = False
+        overwrite.create_polls = False
+        overwrite.use_application_commands = False
+        overwrite.attach_files = False
+        if スレッド作成可能か:
+            overwrite.create_public_threads = True
+            overwrite.create_private_threads = True
+        else:
+            overwrite.create_public_threads = False
+            overwrite.create_private_threads = False
+        if リアクション可能か:
+            overwrite.add_reactions = True
+        else:
+            overwrite.add_reactions = False
+        await interaction.channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
+        await interaction.followup.send(content="🔒チャンネルをロックしました。")
+
+    @moderation.command(name="unlock", description="チャンネルを開放します。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def unlock(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        overwrite = interaction.channel.overwrites_for(interaction.guild.default_role)
+        overwrite.send_messages = True
+        overwrite.create_polls = True
+        overwrite.use_application_commands = True
+        overwrite.attach_files = True
+        overwrite.create_public_threads = True
+        overwrite.create_private_threads = True
+        overwrite.add_reactions = True
+        await interaction.channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
+        await interaction.followup.send(content="🔓チャンネルを開放しました。")
 
 async def setup(bot):
     await bot.add_cog(ModCog(bot))
