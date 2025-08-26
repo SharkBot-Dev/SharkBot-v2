@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Depends, Request
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, JSONResponse
 import httpx
 import uvicorn
 from router import settings as s_r
+from router import mainpage
 from starlette.middleware.sessions import SessionMiddleware
 
 from consts import mongodb
@@ -12,7 +14,10 @@ app = FastAPI()
 
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSINKEY)
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 app.include_router(s_r.router)
+app.include_router(mainpage.router)
 
 @app.get("/login")
 async def login():
