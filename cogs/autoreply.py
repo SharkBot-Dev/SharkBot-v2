@@ -10,6 +10,8 @@ import datetime
 import time
 import random
 
+from models import command_disable
+
 COOLDOWN_TIME = 10
 user_last_message_time = {}
 
@@ -116,6 +118,9 @@ class AutoReplyCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10)
     @commands.has_permissions(manage_channels=True)
     async def autoreply_create_(self, interaction: discord.Interaction, 条件: str, 結果: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         db = self.bot.async_db["Main"].AutoReply
         await db.replace_one(
             {"Guild": interaction.guild.id, "Word": 条件}, 
@@ -129,6 +134,9 @@ class AutoReplyCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10)
     @commands.has_permissions(manage_channels=True)
     async def autoreply_delete(self, interaction: discord.Interaction, 条件: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         db = self.bot.async_db["Main"].AutoReply
         result = await db.delete_one(
             {"Guild": interaction.guild.id, "Word": 条件}
@@ -142,6 +150,9 @@ class AutoReplyCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10)
     @commands.has_permissions(manage_channels=True)
     async def autoreply_list(self, interaction: discord.Interaction, 条件: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         await interaction.response.defer()
         db = self.bot.async_db["Main"].AutoReply
         word_list = [f"{b.get("Word")} - {b.get("ReplyWord")}" async for b in db.find({"Guild": interaction.guild.id})]

@@ -3,6 +3,8 @@ import discord
 from discord import app_commands
 import re
 
+from models import command_disable
+
 class AutoModCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -40,6 +42,9 @@ class AutoModCog(commands.Cog):
         app_commands.Choice(name='Everyoneとhere',value="everyone")
     ])
     async def automod_create(self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         await interaction.response.defer(ephemeral=True)
         if タイプ.value=="invite":
             await interaction.guild.create_automod_rule(
@@ -84,6 +89,9 @@ class AutoModCog(commands.Cog):
         app_commands.Choice(name='Everyoneとhere',value="everyone")
     ])
     async def automod_delete(self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         await interaction.response.defer(ephemeral=True)
         if タイプ.value=="invite":
             rule = await interaction.guild.fetch_automod_rules()
