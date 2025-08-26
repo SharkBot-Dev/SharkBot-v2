@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>SharkBot v2 | MainSetting</title>
+        <title>SharkBot v2 | Leveling</title>
         <style>
             body {
                 margin: 0;
@@ -19,7 +19,7 @@
                 padding: 2rem;
                 border-radius: 15px;
                 width: 100%;
-                max-width: 1000px;
+                max-width: 700px;
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             }
 
@@ -57,6 +57,7 @@
             }
 
             input[type="text"],
+            input[type="number"],
             textarea,
             select {
                 width: 100%;
@@ -93,6 +94,57 @@
                 text-align: right;
                 margin-top: 2rem;
             }
+
+            /* スイッチ全体 */
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 60px;
+                height: 34px;
+            }
+
+            /* デフォルトのチェックボックスを非表示 */
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            /* スライダー部分 */
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #ccc;
+                transition: 0.4s;
+                border-radius: 34px;
+            }
+
+            /* 丸い部分 */
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 26px;
+                width: 26px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                transition: 0.4s;
+                border-radius: 50%;
+            }
+
+            /* チェック時の背景色 */
+            input:checked + .slider {
+                background-color: #4caf50;
+            }
+
+            /* チェック時の丸の移動 */
+            input:checked + .slider:before {
+                transform: translateX(26px);
+            }
         </style>
     </head>
 
@@ -100,35 +152,37 @@
         <div class="settings-box">
             <div class="guild-header">
                 <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png?size=128" alt="Guild Icon">
-                <h1>{{ guild.name }} の設定</h1>
+                <h1>{{ guild.name }} のレベル</h1>
             </div>
 
-            <h3>基本的なBotの設定</h3>
-
-            <form method="post" action="/settings/{{ guild.id }}/update_prefix">
+            <form method="post" action="/settings/{{ guild.id }}/leveling_set">
                 <div class="form-group">
-                    <label for="prefix">Prefix</label>
-                    <input type="text" id="prefix" name="prefix" value="{{ settings.prefix or '!' }}">
+                    <label for="enabled">有効か</label>
+                    <label class="switch">
+                        <input type="checkbox" id="enabled" name="enabled" {{check}}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="timing">レベルアップするタイミング</label>
+                    <input type="number" id="timing" name="timing" value="{{timing}}">
+                </div>
+
+                <div class="form-group">
+                    <label for="channel">レベルアップ通知送信先チャンネル (任意)</label>
+                    <select id="channel" name="channel">
+                        <option value="0" selected>指定しない</option>
+                        {% for ch in channels %}
+                            <option value="{{ ch.id }}">{{ ch.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 <div class="actions">
-                    <button type="submit">保存する</button>
+                    <button type="submit">設定する</button>
                 </div>
             </form>
-
-            <hr>
-            <h3>必須の機能</h3>
-            <button onclick="location.href = `{{guild.id}}/commands`;">コマンドの設定</button>　
-            <button onclick="location.href = `{{guild.id}}/welcome`;">ようこそメッセージ</button>　
-            <button onclick="location.href = `{{guild.id}}/rolepanel`;">ロールパネル</button>　
-            <button onclick="location.href = `{{guild.id}}/leveling`;">レベル</button>
-
-            <hr>
-            <h3>ツール系の機能</h3>
-            <button onclick="location.href = `{{guild.id}}/create_embed`;">埋め込み作成</button>　
-            <button onclick="location.href = `{{guild.id}}/pin_message`;">固定メッセージ作成</button>　
-            <button onclick="location.href = `{{guild.id}}/logging`;">ログ記録</button>　
-            <button onclick="location.href = `{{guild.id}}/expand`;">メッセージ展開</button>
         </div>
     </body>
 </html>

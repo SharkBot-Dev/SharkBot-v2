@@ -18,7 +18,7 @@
                 padding: 2rem;
                 border-radius: 15px;
                 width: 100%;
-                max-width: 1000px;
+                max-width: 1300px;
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             }
             h1 {
@@ -80,6 +80,57 @@
             button:hover {
                 background-color: #4752c4;
             }
+
+            /* スイッチ全体 */
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 60px;
+                height: 34px;
+            }
+
+            /* デフォルトのチェックボックスを非表示 */
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            /* スライダー部分 */
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #ccc;
+                transition: 0.4s;
+                border-radius: 34px;
+            }
+
+            /* 丸い部分 */
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 26px;
+                width: 26px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                transition: 0.4s;
+                border-radius: 50%;
+            }
+
+            /* チェック時の背景色 */
+            input:checked + .slider {
+                background-color: #4caf50;
+            }
+
+            /* チェック時の丸の移動 */
+            input:checked + .slider:before {
+                transform: translateX(26px);
+            }
         </style>
     </head>
 
@@ -94,11 +145,14 @@
                 <div class="commands-grid">
                     {% for cmd in commands %}
                         <div class="command-box">
-                            <input type="checkbox" 
-                                name="enabled_commands" 
-                                value="{{ cmd.name }}" 
-                                id="cmd_{{ loop.index }}"
-                                {% if cmd.name not in disabled_commands %}checked{% endif %}>
+                            <label class="switch">
+                                <input type="checkbox" 
+                                    name="enabled_commands" 
+                                    value="{{ cmd.name }}" 
+                                    id="cmd_{{ loop.index }}"
+                                    {% if cmd.name not in disabled_commands %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
                             <label for="cmd_{{ loop.index }}">
                                 <strong>{{ cmd.name }}</strong><br>
                                 <span style="font-size: 0.85rem; color: #aaa;">{{ cmd.description }}</span>

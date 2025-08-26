@@ -602,3 +602,96 @@ async def command_disable_set(
     await command_disable.set_disabled_commands(int(guild_id), to_disable)
 
     return RedirectResponse(f"/settings/{guild_id}/commands", status_code=303)
+
+# レベル
+@router.get("/{guild_id}/leveling")
+async def leveling(request: Request, guild_id: str):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    channel_doc = await mongodb.mongo["DashboardBot"].guild_channels.find_one({"Guild": int(guild_id)})
+    channels = []
+    if channel_doc and "Channels" in channel_doc:
+        channels = [
+            {
+                "id": str(int(ch["id"])),
+                "name": ch["name"]
+            }
+            for ch in channel_doc["Channels"]
+        ]
+
+    l_t_doc = await mongodb.mongo["Main"].LevelingUpTiming.find_one({"Guild": int(guild_id)})
+    l_t = l_t_doc.get("Timing", 60) if l_t_doc else 60
+
+    level_doc = await mongodb.mongo["Main"].LevelingSetting.find_one({"Guild": int(guild_id)})
+    level_check = "checked" if level_doc else ""
+
+    return templates.templates.TemplateResponse(
+        "level.html",
+        {
+            "request": request,
+            "guild": guild,
+            "channels": channels,
+            "timing": l_t,
+            "check": level_check
+        }
+    )
+
+
+@router.post("/{guild_id}/leveling_set")
+async def leveling_set(
+    request: Request,
+    guild_id: str,
+    enabled: str = Form(None),
+    timing: int = Form(60),
+    channel: str = Form(None)
+):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+    
+    if not enabled:
+        await mongodb.mongo["Main"].LevelingSetting.delete_one({"Guild": int(guild_id)})
+        return RedirectResponse(f"/settings/{guild_id}/leveling")
+
+    await mongodb.mongo["Main"].LevelingSetting.replace_one(
+        {"Guild": int(guild_id)},
+        {"Guild": int(guild_id)},
+        upsert=True
+    )
+    
+    await mongodb.mongo["Main"].LevelingUpTiming.replace_one(
+        {"Guild": int(guild_id)}, 
+        {"Guild": int(guild_id), "Timing": timing}, 
+        upsert=True
+    )
+
+    if channel:
+        await mongodb.mongo["Main"].LevelingUpAlertChannel.replace_one(
+            {"Guild": int(guild_id)}, 
+            {"Guild": int(guild_id), "Channel": int(channel)}, 
+            upsert=True
+        )
+    elif channel == "0":
+        await mongodb.mongo["Main"].LevelingUpAlertChannel.delete_one({"Guild": int(guild_id)})
+    else:
+        await mongodb.mongo["Main"].LevelingUpAlertChannel.delete_one({"Guild": int(guild_id)})
+        
+    return RedirectResponse(f"/settings/{guild_id}/leveling", status_code=303)
