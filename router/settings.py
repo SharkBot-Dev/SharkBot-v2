@@ -1,10 +1,14 @@
+import time
 from fastapi import APIRouter, Form, Request
-from consts import templates
+import httpx
+from consts import settings, templates
 from consts import mongodb
 from models import command_disable
 from fastapi.responses import RedirectResponse
 
 router = APIRouter(prefix="/settings")
+
+req_cooldown = {}
 
 async def check_owner(user, guild_id: str):
     guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": user.get("id")})
@@ -396,6 +400,131 @@ async def rolepanel(
             "guild": guild
         }
     )
+
+# ログ設定
+@router.get("/{guild_id}/logging")
+async def logging(request: Request, guild_id: str):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+
+    channel_doc = await mongodb.mongo["DashboardBot"].guild_channels.find_one({"Guild": int(guild_id)})
+
+    channels = []
+    if channel_doc and "Channels" in channel_doc:
+        channels = [
+            {
+                "id": str(int(ch["id"])),
+                "name": ch["name"]
+            }
+            for ch in channel_doc["Channels"]
+        ]
+
+    return templates.templates.TemplateResponse(
+        "logging_setting.html",
+        {
+            "request": request,
+            "guild": guild,
+            "channels": channels
+        }
+    )
+
+@router.post("/{guild_id}/logging_set")
+async def logging_set(request: Request, guild_id: str, channel: str = Form(None)):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+    
+    if not channel:
+        return RedirectResponse(f"/settings/{guild_id}/logging")
+    
+    # --- クールダウン ---
+    current_time = time.time()
+    last_message_time = req_cooldown.get(guild_id, 0)
+    if current_time - last_message_time < 30:
+        return templates.templates.TemplateResponse(
+            "message.html",
+            {
+                "request": request,
+                "url": f"/settings/{guild_id}/logging",
+                "message": "クールダウンです。30秒後に再度お試しください。"
+            }
+        )
+    req_cooldown[guild_id] = current_time
+
+    channel_doc = await mongodb.mongo["DashboardBot"].guild_channels.find_one({"Guild": int(guild_id)})
+
+    channels = []
+    if channel_doc and "Channels" in channel_doc:
+        channels = [str(int(ch["id"])) for ch in channel_doc["Channels"]]
+
+    if channel not in channels:
+        return templates.templates.TemplateResponse(
+            "message.html",
+            {
+                "request": request,
+                "url": f"/settings/{guild_id}/logging",
+                "message": "不正なチャンネルが指定されました。"
+            }
+        )
+    
+    async with httpx.AsyncClient() as client:
+        webhook = await client.post(
+            f"{settings.DISCORD_API}/channels/{channel}/webhooks",
+            json={"name": "SharkBot-Log"},
+            headers={"Authorization": f"Bot {settings.TOKEN}"}
+        )
+
+    resp = webhook.json()
+
+    webhook_id = resp.get("id")
+    webhook_token = resp.get("token")
+
+    if not webhook_id or not webhook_token:
+        return templates.templates.TemplateResponse(
+            "message.html",
+            {
+                "request": request,
+                "url": f"/settings/{guild_id}/logging",
+                "message": "エラーが発生しました。"
+            }
+        )
+
+    await mongodb.mongo["Main"].EventLoggingChannel.replace_one(
+        {"Guild": int(guild_id)},
+        {
+            "Guild": int(guild_id),
+            "Channel": int(channel),
+            "Webhook": f"https://discord.com/api/webhooks/{webhook_id}/{webhook_token}"
+        },
+        upsert=True
+    )
+
+    return templates.templates.TemplateResponse(
+            "message.html",
+            {
+                "request": request,
+                "url": f"/settings/{guild_id}/logging",
+                "message": "ログチャンネルが指定されました。"
+            }
+        )
 
 # コマンドの有効化・無効化
 @router.get("/{guild_id}/commands")
