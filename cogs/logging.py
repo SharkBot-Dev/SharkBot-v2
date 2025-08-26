@@ -11,6 +11,8 @@ import asyncio
 from discord import Webhook
 import aiohttp
 
+from models import command_disable
+
 class LoggingCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -234,6 +236,9 @@ class LoggingCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def log_setup(self, interaction: discord.Interaction):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         db = self.bot.async_db["Main"].EventLoggingChannel
         web = await interaction.channel.create_webhook(name="SharkBot-Log")
         await db.replace_one(
@@ -248,6 +253,9 @@ class LoggingCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def log_disable(self, interaction: discord.Interaction):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         db = self.bot.async_db["Main"].EventLoggingChannel
         web = await interaction.channel.create_webhook(name="SharkBot-Log")
         await db.delete_one({"Guild": interaction.guild.id})
