@@ -27,13 +27,15 @@ class DashboardCog(commands.Cog):
                 await db.delete_one({"Guild": guild_id})
                 continue
 
+            user = g.get_member(doc.get("User", 0))
+
             ch = g.get_channel(channel_id)
             if ch:
                 embed = discord.Embed(
                     title=doc.get("Title", "タイトルです"),
                     description=doc.get("Description", "説明です"),
                     color=discord.Color.green()
-                )
+                ).set_author(name=user.name, icon_url=user.avatar.url if user.avatar else user.default_avatar.url).set_footer(text=g.name, icon_url=g.icon.url if g.icon else None)
                 await ch.send(embed=embed)
 
             await db.delete_one({"Guild": guild_id, "Channel": channel_id})

@@ -140,14 +140,17 @@ async def send_embed(
     if not await check_owner(u, guild_id):
         return RedirectResponse("/login/guilds")
 
+    safe_title = html.escape(title)
+    safe_desc  = html.escape(desc)
+
     try:
 
         await mongodb.mongo["DashboardBot"].SendEmbedQueue.replace_one(
             {"Guild": int(guild_id)},
             {
                 "Guild": int(guild_id),
-                "Title": title,
-                "Description": desc,
+                "Title": safe_title,
+                "Description": safe_desc,
                 "User": int(u.get("id")),
                 "Channel": int(channel)
             },

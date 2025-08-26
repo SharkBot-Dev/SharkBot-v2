@@ -19,6 +19,10 @@ class BotLogCog(commands.Cog):
             upsert=True
         )
 
+        await mongodb.mongo["DashboardBot"].bot_joind_guild.replace_one({
+            "Guild": guild.id
+        }, {"Guild": guild.id}, upsert=True)
+
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         await self.update_guild_channels(channel.guild)

@@ -75,6 +75,7 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
         missing_perms = [permissions_text.PERMISSION_TRANSLATIONS.get(perm, perm) for perm in error.missing_permissions]
         missing_perms_str = ", ".join(missing_perms)
         await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="コマンドを実行する権限がありません！", description=missing_perms_str, color=discord.Color.red()))
+        e = 0
         return e
     else:
         e = 0
