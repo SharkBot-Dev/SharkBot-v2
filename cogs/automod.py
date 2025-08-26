@@ -1,0 +1,104 @@
+from discord.ext import commands, tasks
+import discord
+from discord import app_commands
+import re
+
+class AutoModCog(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        print(f"init -> AutoModCog")
+
+    automod = app_commands.Group(name="automod", description="AutoMod管理のコマンドです。")
+
+    @commands.Cog.listener("on_message")
+    async def on_message_token_block(self, message: discord.Message):
+        if message.author.bot:
+            return
+        if type(message.channel) == discord.DMChannel:
+            return
+        if message.author.guild_permissions.administrator:
+            return
+        TOKEN_REGEX = r"[A-Za-z\d]{24}\.[\w-]{6}\.[\w-]{27}"
+        if re.search(TOKEN_REGEX, message.content):
+            db = self.bot.async_db["Main"].TokenBlock
+            try:
+                dbfind = await db.find_one({"Guild": message.guild.id}, {"_id": False})
+            except:
+                return
+            if dbfind is None:
+                return
+
+            await message.delete()
+
+    @automod.command(name="create", description="AutoModを作成します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.choices(タイプ=[
+        app_commands.Choice(name='招待リンク',value="invite"),
+        app_commands.Choice(name='Token',value="token"),
+        app_commands.Choice(name='Everyoneとhere',value="everyone")
+    ])
+    async def automod_create(self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]):
+        await interaction.response.defer(ephemeral=True)
+        if タイプ.value=="invite":
+            await interaction.guild.create_automod_rule(
+                name="招待リンク対策",
+                event_type=discord.AutoModRuleEventType.message_send,
+                trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, regex_patterns=[r"(discord\.(gg|com/invite|app\.com/invite)[/\\][\w-]+)", r"\b\<(\n*)?h(\n*)?t(\n*)?t(\n*)?p(\n*)?s?(\n*)?:(\n*)?\/(\n*)?\/(\n*)?(([dｄⓓᵈᴰⅮ𝒹ⅾⅮ𝔻𝕕%％𝓓]{1,}|[^\p{sc=latin}]*)(\n*)([iｉⓘsｓⓢ𝖎𝖘ɪꜱᴵⁱˢ𝓘𝓢\n]{1,}|[\p{sc=latin}\n]*)([\p{sc=latin}\nº]*|[^\p{sc=latin}\n]*)[\/\\](\n*)[^\s]*)+\b"]),
+                actions=[
+                    discord.AutoModRuleAction(
+                    type=discord.AutoModRuleActionType.block_message
+                    )
+                ],
+                enabled=True
+                )
+        elif タイプ.value == "token":
+            dbs = self.bot.async_db["Main"].TokenBlock
+            await dbs.replace_one(
+                {"Guild": interaction.guild.id}, 
+                {"Guild": interaction.guild.id}, 
+                upsert=True
+            )
+        elif タイプ.value == "everyone":
+            await interaction.guild.create_automod_rule(
+                name="Everyone対策",
+                event_type=discord.AutoModRuleEventType.message_send,
+                trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, regex_patterns=[r"@everyone", r"@here"]),
+                actions=[
+                    discord.AutoModRuleAction(
+                        type=discord.AutoModRuleActionType.block_message
+                    )
+                    ],
+                    enabled=True
+            )
+        await interaction.followup.send(ephemeral=True, content=f"AutoModの「{タイプ.name}」を作成しました。")
+
+    @automod.command(name="delete", description="Automodを削除します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.choices(タイプ=[
+        app_commands.Choice(name='招待リンク',value="invite"),
+        app_commands.Choice(name='Token',value="token"),
+        app_commands.Choice(name='Everyoneとhere',value="everyone")
+    ])
+    async def automod_delete(self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]):
+        await interaction.response.defer(ephemeral=True)
+        if タイプ.value=="invite":
+            rule = await interaction.guild.fetch_automod_rules()
+            for r in rule:
+                if r == "招待リンク対策":
+                    await r.delete()
+        elif タイプ.value == "token":
+            dbs = self.bot.async_db["Main"].TokenBlock
+            await dbs.delete_one({"Guild": interaction.guild.id})
+        elif タイプ.value == "everyone":
+            rule = await interaction.guild.fetch_automod_rules()
+            for r in rule:
+                if r == "Everyone対策":
+                    await r.delete()
+        await interaction.followup.send(ephemeral=True, content=f"AutoModの「{タイプ.name}」を削除しました。")
+
+async def setup(bot: commands.Bot):
+    await bot.add_cog(AutoModCog(bot))

@@ -278,7 +278,7 @@ class TextGroup(app_commands.Group):
                 color=discord.Color.orange()
             ))
 
-class TextGroup(app_commands.Group):
+class ImageGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="image", description="画像系の面白いコマンド")
 
@@ -399,6 +399,7 @@ class FunCog(commands.Cog):
     fun = app_commands.Group(name="fun", description="面白いコマンドです。")
 
     fun.add_command(TextGroup())
+    fun.add_command(ImageGroup())
 
     @fun.command(name="janken", description="じゃんけんをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)

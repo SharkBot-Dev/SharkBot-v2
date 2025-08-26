@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>SharkBot v2 | MainSetting</title>
+        <title>SharkBot v2 | AutoMod</title>
         <style>
             body {
                 margin: 0;
@@ -19,7 +19,7 @@
                 padding: 2rem;
                 border-radius: 15px;
                 width: 100%;
-                max-width: 1000px;
+                max-width: 700px;
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             }
 
@@ -100,36 +100,25 @@
         <div class="settings-box">
             <div class="guild-header">
                 <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png?size=128" alt="Guild Icon">
-                <h1>{{ guild.name }} の設定</h1>
+                <h1>{{ guild.name }} のAutoMod</h1>
             </div>
 
-            <h3>基本的なBotの設定</h3>
-
-            <form method="post" action="/settings/{{ guild.id }}/update_prefix">
+            <form method="post" action="/settings/{{ guild.id }}/automod_create">
                 <div class="form-group">
-                    <label for="prefix">Prefix</label>
-                    <input type="text" id="prefix" name="prefix" value="{{ settings.prefix or '!' }}">
+                    <label for="name">AutoModの種類</label>
+                    <select id="name" name="name">
+                        <option value="招待リンク">招待リンク</option>
+                        <option value="Token">Token</option>
+                        <option value="EveryoneとHere">EveryoneとHere</option>
+                    </select>
                 </div>
 
                 <div class="actions">
-                    <button type="submit">保存する</button>
+                    <button type="submit">作成する</button>
                 </div>
+
+                <h5>一度作成したAutoModは<br>/automod deleteで削除できます。</h5>
             </form>
-
-            <hr>
-            <h3>必須の機能</h3>
-            <button onclick="location.href = `{{guild.id}}/commands`;">コマンドの設定</button>　
-            <button onclick="location.href = `{{guild.id}}/welcome`;">ようこそメッセージ</button>　
-            <button onclick="location.href = `{{guild.id}}/rolepanel`;">ロールパネル</button>　
-            <button onclick="location.href = `{{guild.id}}/leveling`;">レベル</button>　
-            <button onclick="location.href = `{{guild.id}}/automod`;">自動モデレーション</button>　
-
-            <hr>
-            <h3>ツール系の機能</h3>
-            <button onclick="location.href = `{{guild.id}}/create_embed`;">埋め込み作成</button>　
-            <button onclick="location.href = `{{guild.id}}/pin_message`;">固定メッセージ作成</button>　
-            <button onclick="location.href = `{{guild.id}}/logging`;">ログ記録</button>　
-            <button onclick="location.href = `{{guild.id}}/expand`;">メッセージ展開</button>
         </div>
     </body>
 </html>

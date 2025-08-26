@@ -11,9 +11,11 @@ class DashboardCog(commands.Cog):
 
     async def cog_load(self):
         self.dashboard_sendembed.start()
+        self.create_automod.start()
 
     async def cog_unload(self):
         self.dashboard_sendembed.stop()
+        self.create_automod.stop()
 
     @tasks.loop(seconds=10)
     async def dashboard_sendembed(self):
@@ -39,6 +41,57 @@ class DashboardCog(commands.Cog):
                 await ch.send(embed=embed)
 
             await db.delete_one({"Guild": guild_id, "Channel": channel_id})
+            await asyncio.sleep(1)
+
+    @tasks.loop(seconds=10)
+    async def create_automod(self):
+        db = self.bot.async_db["DashboardBot"].CreateAutoModQueue
+        async for doc in db.find({}):
+            guild_id = int(doc["Guild"])
+            
+            g = self.bot.get_guild(guild_id)
+            if not g:
+                await db.delete_one({"Guild": guild_id})
+                continue
+
+            if doc.get("Name", "不明") == "招待リンク":
+
+                await g.create_automod_rule(
+                name="招待リンク対策",
+                event_type=discord.AutoModRuleEventType.message_send,
+                trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, regex_patterns=[r"(discord\.(gg|com/invite|app\.com/invite)[/\\][\w-]+)", r"\b\<(\n*)?h(\n*)?t(\n*)?t(\n*)?p(\n*)?s?(\n*)?:(\n*)?\/(\n*)?\/(\n*)?(([dｄⓓᵈᴰⅮ𝒹ⅾⅮ𝔻𝕕%％𝓓]{1,}|[^\p{sc=latin}]*)(\n*)([iｉⓘsｓⓢ𝖎𝖘ɪꜱᴵⁱˢ𝓘𝓢\n]{1,}|[\p{sc=latin}\n]*)([\p{sc=latin}\nº]*|[^\p{sc=latin}\n]*)[\/\\](\n*)[^\s]*)+\b"]),
+                actions=[
+                    discord.AutoModRuleAction(
+                    type=discord.AutoModRuleActionType.block_message
+                    )
+                ],
+                enabled=True
+                )
+                
+            elif doc.get("Name", "不明") == "Token":
+
+                dbs = self.bot.async_db["Main"].TokenBlock
+                await dbs.replace_one(
+                    {"Guild": g.id}, 
+                    {"Guild": g.id}, 
+                    upsert=True
+                )
+                
+            elif doc.get("Name", "不明") == "EveryoneとHere":
+
+                await g.create_automod_rule(
+                    name="everyoneとhere対策",
+                    event_type=discord.AutoModRuleEventType.message_send,
+                    trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, regex_patterns=[r"@everyone", r"@here"]),
+                    actions=[
+                        discord.AutoModRuleAction(
+                        type=discord.AutoModRuleActionType.block_message
+                        )
+                    ],
+                    enabled=True
+                    )
+
+            await db.delete_one({"Guild": guild_id})
             await asyncio.sleep(1)
 
 async def setup(bot):

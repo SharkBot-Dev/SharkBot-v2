@@ -695,3 +695,64 @@ async def leveling_set(
         await mongodb.mongo["Main"].LevelingUpAlertChannel.delete_one({"Guild": int(guild_id)})
         
     return RedirectResponse(f"/settings/{guild_id}/leveling", status_code=303)
+
+# AutoMod作成
+@router.get("/{guild_id}/automod")
+async def automod(request: Request, guild_id: str):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    return templates.templates.TemplateResponse(
+        "automod.html",
+        {
+            "request": request,
+            "guild": guild
+        }
+    )
+
+@router.post("/{guild_id}/automod_create")
+async def automod_create(
+    request: Request,
+    guild_id: str,
+    name: str = Form(None)
+):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one({"User": u.get("id")})
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+    
+    if name is None:
+        return RedirectResponse(f"/settings/{guild_id}/automod", status_code=303)
+
+    safe_name = html.escape(name)
+
+    try:
+
+        await mongodb.mongo["DashboardBot"].CreateAutoModQueue.replace_one(
+            {"Guild": int(guild_id)},
+            {
+                "Guild": int(guild_id),
+                "Name": safe_name
+            },
+            upsert=True
+        )
+    except:
+        return {"message": "不正な値が入力されました。"}
+
+    return RedirectResponse(f"/settings/{guild_id}/automod", status_code=303)
