@@ -1,5 +1,5 @@
 import time
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, Depends, Form, Request
 import httpx
 from consts import settings, templates
 from consts import mongodb
@@ -29,7 +29,10 @@ async def check_owner(user, guild_id: str) -> bool:
     
     return True
 
-@router.get("/{guild_id}")
+def rate_limiter(request: Request):
+    return request.app.state.limiter.limit("1/2 seconds")
+
+@router.get("/{guild_id}", dependencies=[Depends(rate_limiter)])
 async def settings_page(request: Request, guild_id: str):
     u = request.session.get("user")
     if u is None:
@@ -63,7 +66,7 @@ async def settings_page(request: Request, guild_id: str):
     })
 
 
-@router.post("/{guild_id}/update_prefix")
+@router.post("/{guild_id}/update_prefix", dependencies=[Depends(rate_limiter)])
 async def update_prefix(request: Request, guild_id: str, prefix: str = Form(...)):
     u = request.session.get("user")
     if u is None:
@@ -85,7 +88,7 @@ async def update_prefix(request: Request, guild_id: str, prefix: str = Form(...)
 
     return RedirectResponse(f"/settings/{guild_id}", status_code=303)
 
-@router.get("/{guild_id}/create_embed")
+@router.get("/{guild_id}/create_embed", dependencies=[Depends(rate_limiter)])
 async def create_embed(request: Request, guild_id: str):
     u = request.session.get("user")
     if u is None:
@@ -120,7 +123,7 @@ async def create_embed(request: Request, guild_id: str):
         }
     )
 
-@router.post("/{guild_id}/send_embed", name="send_embed")
+@router.post("/{guild_id}/send_embed", name="send_embed", dependencies=[Depends(rate_limiter)])
 async def send_embed(
     request: Request,
     guild_id: str,
@@ -161,7 +164,7 @@ async def send_embed(
 
     return RedirectResponse(f"/settings/{guild_id}/create_embed", status_code=303)
 
-@router.get("/{guild_id}/pin_message")
+@router.get("/{guild_id}/pin_message", dependencies=[Depends(rate_limiter)])
 async def pin_message(request: Request, guild_id: str):
     u = request.session.get("user")
     if u is None:
@@ -196,7 +199,7 @@ async def pin_message(request: Request, guild_id: str):
         }
     )
 
-@router.post("/{guild_id}/pin_message_create", name="send_embed")
+@router.post("/{guild_id}/pin_message_create", dependencies=[Depends(rate_limiter)])
 async def send_embed(
     request: Request,
     guild_id: str,
@@ -233,7 +236,7 @@ async def send_embed(
     return RedirectResponse(f"/settings/{guild_id}/pin_message", status_code=303)
 
 # よろしくメッセージ
-@router.get("/{guild_id}/welcome")
+@router.get("/{guild_id}/welcome", dependencies=[Depends(rate_limiter)])
 async def welcome(request: Request, guild_id: str):
     u = request.session.get("user")
     if u is None:
@@ -284,7 +287,7 @@ async def welcome(request: Request, guild_id: str):
         }
     )
 
-@router.post("/{guild_id}/welcome_set")
+@router.post("/{guild_id}/welcome_set", dependencies=[Depends(rate_limiter)])
 async def welcome_send(
     request: Request,
     guild_id: str,
@@ -327,7 +330,7 @@ async def welcome_send(
     return RedirectResponse(f"/settings/{guild_id}/welcome", status_code=303)
 
 # メッセージ展開
-@router.get("/{guild_id}/expand")
+@router.get("/{guild_id}/expand", dependencies=[Depends(rate_limiter)])
 async def expand(request: Request, guild_id: str):
     u = request.session.get("user")
     if u is None:
@@ -349,7 +352,7 @@ async def expand(request: Request, guild_id: str):
         }
     )
 
-@router.post("/{guild_id}/expand_set")
+@router.post("/{guild_id}/expand_set", dependencies=[Depends(rate_limiter)])
 async def expand_set(
     request: Request,
     guild_id: str,
@@ -386,7 +389,7 @@ async def expand_set(
     return RedirectResponse(f"/settings/{guild_id}/expand", status_code=303)
 
 # ロールパネル
-@router.get("/{guild_id}/rolepanel")
+@router.get("/{guild_id}/rolepanel", dependencies=[Depends(rate_limiter)])
 async def rolepanel(
     request: Request,
     guild_id: str
@@ -412,7 +415,7 @@ async def rolepanel(
     )
 
 # ログ設定
-@router.get("/{guild_id}/logging")
+@router.get("/{guild_id}/logging", dependencies=[Depends(rate_limiter)])
 async def logging(request: Request, guild_id: str):
     u = request.session.get("user")
     if u is None:
@@ -448,7 +451,7 @@ async def logging(request: Request, guild_id: str):
         }
     )
 
-@router.post("/{guild_id}/logging_set")
+@router.post("/{guild_id}/logging_set", dependencies=[Depends(rate_limiter)])
 async def logging_set(request: Request, guild_id: str, channel: str = Form(None)):
     u = request.session.get("user")
     if u is None:
@@ -547,7 +550,7 @@ async def logging_set(request: Request, guild_id: str, channel: str = Form(None)
         )
 
 # コマンドの有効化・無効化
-@router.get("/{guild_id}/commands")
+@router.get("/{guild_id}/commands", dependencies=[Depends(rate_limiter)])
 async def command_disable_(request: Request, guild_id: str):
     u = request.session.get("user")
     if u is None:
@@ -576,7 +579,7 @@ async def command_disable_(request: Request, guild_id: str):
     )
 
 
-@router.post("/{guild_id}/command_disable")
+@router.post("/{guild_id}/command_disable", dependencies=[Depends(rate_limiter)])
 async def command_disable_set(
     request: Request,
     guild_id: str,
@@ -604,7 +607,7 @@ async def command_disable_set(
     return RedirectResponse(f"/settings/{guild_id}/commands", status_code=303)
 
 # レベル
-@router.get("/{guild_id}/leveling")
+@router.get("/{guild_id}/leveling", dependencies=[Depends(rate_limiter)])
 async def leveling(request: Request, guild_id: str):
     u = request.session.get("user")
     if u is None:
@@ -647,7 +650,7 @@ async def leveling(request: Request, guild_id: str):
     )
 
 
-@router.post("/{guild_id}/leveling_set")
+@router.post("/{guild_id}/leveling_set", dependencies=[Depends(rate_limiter)])
 async def leveling_set(
     request: Request,
     guild_id: str,
@@ -697,7 +700,7 @@ async def leveling_set(
     return RedirectResponse(f"/settings/{guild_id}/leveling", status_code=303)
 
 # AutoMod作成
-@router.get("/{guild_id}/automod")
+@router.get("/{guild_id}/automod", dependencies=[Depends(rate_limiter)])
 async def automod(request: Request, guild_id: str):
     u = request.session.get("user")
     if u is None:
@@ -719,7 +722,7 @@ async def automod(request: Request, guild_id: str):
         }
     )
 
-@router.post("/{guild_id}/automod_create")
+@router.post("/{guild_id}/automod_create", dependencies=[Depends(rate_limiter)])
 async def automod_create(
     request: Request,
     guild_id: str,
@@ -758,7 +761,7 @@ async def automod_create(
     return RedirectResponse(f"/settings/{guild_id}/automod", status_code=303)
 
 # 自動返信
-@router.get("/{guild_id}/autoreply")
+@router.get("/{guild_id}/autoreply", dependencies=[Depends(rate_limiter)])
 async def autoreply(request: Request, guild_id: str):
     u = request.session.get("user")
     if u is None:
@@ -784,7 +787,7 @@ async def autoreply(request: Request, guild_id: str):
         }
     )
 
-@router.post("/{guild_id}/autoreply_set")
+@router.post("/{guild_id}/autoreply_set", dependencies=[Depends(rate_limiter)])
 async def autoreply_set(
     request: Request,
     guild_id: str,
@@ -822,7 +825,7 @@ async def autoreply_set(
     return RedirectResponse(f"/settings/{guild_id}/autoreply", status_code=303)
 
 
-@router.post("/{guild_id}/autoreply_delete")
+@router.post("/{guild_id}/autoreply_delete", dependencies=[Depends(rate_limiter)])
 async def autoreply_delete(request: Request, guild_id: str, tri: str = Form(...)):
     u = request.session.get("user")
     if u is None:

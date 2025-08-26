@@ -7,10 +7,13 @@ from models import command_disable
 from fastapi.responses import RedirectResponse
 import html
 
+from fastapi import Depends
+
+def rate_limiter(request: Request):
+    return request.app.state.limiter.limit("1/2 seconds")
+
 router = APIRouter()
 
-@router.get("/")
+@router.get("/", dependencies=[Depends(rate_limiter)])
 async def index(request: Request):
-    return templates.templates.TemplateResponse("index.html", {
-        "request": request
-    })
+    return RedirectResponse("https://www.sharkbot.xyz/")

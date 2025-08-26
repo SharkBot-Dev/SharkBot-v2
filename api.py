@@ -7,12 +7,21 @@ from router import settings as s_r
 from router import mainpage
 from starlette.middleware.sessions import SessionMiddleware
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
 from consts import mongodb
 from consts import settings, templates
 
 app = FastAPI()
 
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSINKEY)
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -27,6 +36,7 @@ async def login():
     return RedirectResponse(url)
 
 @app.get("/login/callback")
+@limiter.limit("1/minute")
 async def callback(request: Request, code: str):
     async with httpx.AsyncClient() as client:
         token = await client.post(f"{settings.DISCORD_API}/oauth2/token", data={
@@ -60,6 +70,7 @@ async def callback(request: Request, code: str):
         return RedirectResponse("/login/guilds")
 
 @app.get("/login/guilds")
+@limiter.limit("1/10 seconds")
 async def guilds(request: Request):
     if request.session.get("user") is None:
         return RedirectResponse("/login")
