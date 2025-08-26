@@ -1,3 +1,6 @@
+import asyncio
+import random
+import time
 from discord.ext import commands, tasks
 import discord
 import datetime
@@ -5,11 +8,305 @@ from consts import mongodb
 from discord import app_commands
 
 from models import command_disable
+import sys
+from PIL import Image, ImageDraw, ImageFont
+import io
+
+class AuthModal_keisan(discord.ui.Modal, title="認証をする"):
+    def __init__(self, role: discord.Role):
+        super().__init__()
+
+        a = random.randint(-999, 999)
+        self.kekka = str(abs(a))
+        self.r = role
+
+        self.name = discord.ui.TextInput(label=f"{a}の絶対値は？")
+        self.add_item(self.name)
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        if self.kekka == self.name.value:
+            await interaction.response.defer(ephemeral=True)
+            try:
+                await interaction.user.add_roles(self.r)
+                await interaction.followup.send("認証に成功しました。", ephemeral=True)
+            except:
+                await interaction.followup.send(f"認証に失敗しました。", ephemeral=True)
+        else:
+            await interaction.response.send_message("認証に失敗しました。", ephemeral=True)
+
+class PlusAuthModal_keisan(discord.ui.Modal, title="認証をする"):
+    def __init__(self, role: discord.Role, drole: discord.Role):
+        super().__init__()
+
+        a = random.randint(-999, 999)
+        self.kekka = str(abs(a))
+        self.r = role
+        self.dr = drole
+
+        self.name = discord.ui.TextInput(label=f"{a}の絶対値は？")
+        self.add_item(self.name)
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        if self.kekka == self.name.value:
+            await interaction.response.defer(ephemeral=True)
+            try:
+                await interaction.user.remove_roles(self.dr)
+                await interaction.user.add_roles(self.r)
+                await interaction.followup.send("認証に成功しました。", ephemeral=True)
+            except:
+                await interaction.followup.send(f"認証に失敗しました。", ephemeral=True)
+        else:
+            await interaction.response.send_message("認証に失敗しました。", ephemeral=True)
+
+tku_cooldown = {}
+
+class AuthGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="auth", description="認証系のコマンドです。")
+
+    @app_commands.command(name="abs-auth", description="絶対値を使った認証パネルを作ります。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def panel_authbutton(self, interaction: discord.Interaction, タイトル: str, 説明: str, ロール: discord.Role):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        await interaction.channel.send(embed=discord.Embed(title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()), view=discord.ui.View().add_item(discord.ui.Button(label="認証", custom_id=f"authpanel_v1+{ロール.id}")))
+        await interaction.response.send_message(embed=discord.Embed(title="作成しました。", color=discord.Color.green()), ephemeral=True)
+
+    @app_commands.command(name="auth", description="ワンクリック認証パネルを作ります。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def panel_authbutton_onclick(self, interaction: discord.Interaction, タイトル: str, 説明: str, ロール: discord.Role):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        await interaction.channel.send(embed=discord.Embed(title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()), view=discord.ui.View().add_item(discord.ui.Button(label="認証", custom_id=f"authpanel_v2+{ロール.id}")))
+        await interaction.response.send_message(embed=discord.Embed(title="作成しました。", color=discord.Color.green()), ephemeral=True)
+
+    @app_commands.command(name="auth-plus", description="認証したらロールが外れた後にロールが付くパネルを作ります。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def panel_authbutton_plus(self, interaction: discord.Interaction, タイトル: str, 説明: str, ロール: discord.Role, 外すロール: discord.Role):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        await interaction.channel.send(embed=discord.Embed(title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()), view=discord.ui.View().add_item(discord.ui.Button(label="認証", custom_id=f"authpanel_plus_v1+{ロール.id}+{外すロール.id}")))
+        await interaction.followup.send(embed=discord.Embed(title="作成しました。", color=discord.Color.green()), ephemeral=True)
+
+    @app_commands.command(name="webauth", description="Web認証パネルを作ります。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def panel_authboost(self, interaction: discord.Interaction, タイトル: str, 説明: str, ロール: discord.Role):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        await interaction.channel.send(embed=discord.Embed(title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()), view=discord.ui.View().add_item(discord.ui.Button(label="認証", custom_id=f"boostauth+{ロール.id}")))
+        await interaction.followup.send(embed=discord.Embed(title="作成しました。", color=discord.Color.green()), ephemeral=True)
+
+    @app_commands.command(name="image", description="画像認証パネルを作ります。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def panel_imageauth(self, interaction: discord.Interaction, タイトル: str, 説明: str, ロール: discord.Role):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        await interaction.channel.send(embed=discord.Embed(title=タイトル, description=説明, color=discord.Color.green()), view=discord.ui.View().add_item(discord.ui.Button(label="認証", custom_id=f"imageauth+{ロール.id}")))
+        await interaction.response.send_message(embed=discord.Embed(title="作成しました。", color=discord.Color.green()), ephemeral=True)
+
+    @app_commands.command(name="guideline", description="画像認証パネルを作ります。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def paneL_guideline(self, interaction: discord.Interaction, ロール: discord.Role):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        class RuleMake(discord.ui.Modal, title="ルールを入力してください。"):
+            def __init__(self):
+                super().__init__()
+
+                self.rule = discord.ui.TextInput(label=f"ルール", style=discord.TextStyle.long)
+                self.add_item(self.rule)
+            async def on_submit(self, interaction: discord.Interaction) -> None:
+                await interaction.response.defer(thinking=True)
+                await interaction.channel.send(embed=discord.Embed(title=f"このサーバーのルールに同意する必要があります。", description=self.rule.value, color=discord.Color.green()).set_thumbnail(url=interaction.client.user.avatar.url).set_footer(text="Discord コミュニティガイドライン も忘れないようにして下さい。"), view=discord.ui.View().add_item(discord.ui.Button(label="同意します", custom_id=f"authpanel_v2+{ロール.id}", style=discord.ButtonStyle.green)))
+                await asyncio.sleep(1)
+                await interaction.delete_original_response()
+        await interaction.response.send_modal(RuleMake())
+
+    async def message_autocomplete(self, interaction: discord.Interaction, current: str):
+        try:
+            messages = []
+            async for m in interaction.channel.history(limit=50):
+                messages.append(m)
+            choices = []
+
+            for message in messages:
+                if not message.embeds:
+                    continue
+                if current.lower() in message.embeds[0].title.lower():
+                    choices.append(discord.app_commands.Choice(name=message.embeds[0].title[:100], value=str(message.id)))
+
+                if len(choices) >= 25:
+                    break
+
+            return choices
+        except:
+            return [discord.app_commands.Choice(name="エラーが発生しました", value="0")]
+
+    @app_commands.command(name="auth-reqrole", description="認証パネルに必要なロールを設定します。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    @discord.app_commands.autocomplete(認証パネルのid=message_autocomplete)
+    async def panel_auth_reqrole(self, interaction: discord.Interaction, 認証パネルのid: str, 必要なロール: discord.Role = None):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            認証パネルのid_ = await interaction.channel.fetch_message(int(認証パネルのid))
+        except:
+            return await interaction.followup.send(embed=discord.Embed(title="メッセージが見つかりません", color=discord.Color.red()), ephemeral=True)
+        if 必要なロール:
+            db = self.bot.async_db["Main"].AuthReqRole
+            await db.replace_one(
+                {"Message": 認証パネルのid_.id}, 
+                {"Message": 認証パネルのid_.id, "Role": 必要なロール.id}, 
+                upsert=True
+            )
+            return await interaction.followup.send(embed=discord.Embed(title="必要なロールを設定しました。", color=discord.Color.green()))
+        else:
+            db = self.bot.async_db["Main"].AuthReqRole
+            await db.delete_one(
+                {"Message": 認証パネルのid_.id}
+            )
+            return await interaction.followup.send(embed=discord.Embed(title="必要なロールを無効化しました。", color=discord.Color.green()))
 
 class PanelCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print(f"init -> PanelCog")
+
+    async def check_ticket_cat(self, interaction: discord.Interaction):
+        db = self.bot.async_db["Main"].TicketCategory
+        try:
+            dbfind = await db.find_one({"Message": interaction.message.id}, {"_id": False})
+        except:
+            return None
+        if not dbfind is None:
+            return dbfind["Channel"]
+        return None
+    
+    async def check_ticket_alert(self, interaction: discord.Interaction):
+        db = self.bot.async_db["Main"].TicketAlert
+        try:
+            dbfind = await db.find_one({"Message": interaction.message.id}, {"_id": False})
+        except:
+            return None
+        if not dbfind is None:
+            return self.bot.get_channel(dbfind["Channel"])
+        return None
+
+    async def check_guild_bed(self, int_: discord.Interaction):
+        db = self.bot.async_db["Main"].RestoreBed
+        try:
+            dbfind = await db.find_one({"Guild": int_.guild.id, "User": int_.user.id}, {"_id": False})
+        except:
+            return False
+        if not dbfind is None:
+            return True
+        return False
+    
+    async def check_ticket_progress_channel(self, int_: discord.Interaction):
+        db = self.bot.async_db["Main"].TicketProgress
+        try:
+            dbfind = await db.find_one({"Message": int_.message.id}, {"_id": False})
+        except:
+            return None
+        if not dbfind is None:
+            try:
+                return self.bot.get_channel(dbfind.get("Channel"))
+            except:
+                return None
+        return None
+    
+    async def check_ticket_progress_channel_end(self, int_: discord.Interaction):
+        db = self.bot.async_db["Main"].TicketProgressTemp
+        try:
+            dbfind = await db.find_one({"Message": int_.message.id}, {"_id": False})
+            await db.delete_many({"Author": dbfind.get("Author")})
+        except:
+            return None, None
+        if not dbfind is None:
+            try:
+                return self.bot.get_channel(dbfind.get("Channel")), self.bot.get_user(dbfind.get("Author"))
+            except:
+                return None, None
+        return None, None
+
+    async def get_ticket_mention(self, message: discord.Message):
+        db = self.bot.async_db["Main"].TicketRole
+        try:
+            dbfind = await db.find_one({"Message": message.id}, {"_id": False})
+        except:
+            return None
+        if not dbfind is None:
+            try:
+                return message.guild.get_role(dbfind.get("Role")).mention
+            except:
+                return
+        return None
+    
+    async def get_auth_reqrole(self, message: discord.Message):
+        db = self.bot.async_db["Main"].AuthReqRole
+        try:
+            dbfind = await db.find_one({"Message": message.id}, {"_id": False})
+        except:
+            return None
+        if not dbfind is None:
+            try:
+                return message.guild.get_role(dbfind.get("Role"))
+            except:
+                return None
+        return None
+    
+    async def create_authimage(self, role: discord.Role, interaction: discord.Interaction):
+        img = Image.new(mode="RGB", size=(300, 100), color=(0, 0, 0))
+        draw = ImageDraw.Draw(img)
+        bfnt = ImageFont.truetype("data/DiscordFont.ttf", 40)
+        text = random.randint(100000, 999999)
+        draw.text((20, 20), str(text), "white", font=bfnt)
+        tmpio = io.BytesIO()
+        img.save(tmpio, format="png")
+        tmpio.seek(0)
+        try:
+            await interaction.user.send(file=discord.File(fp=tmpio, filename="auth.png"), content="画像に書いてある文字を入力をしてください。")
+        except:
+            return
+        tmpio.close()
+        try:
+            msg = await self.bot.wait_for(
+                "message",
+                check=lambda m: m.guild is None and m.author.id == interaction.user.id,
+                timeout=30,
+            )
+
+            if msg.content == str(text):
+                try:
+                    await interaction.user.add_roles(interaction.guild.get_role(role))
+                    await interaction.followup.send(ephemeral=True, content=f"{interaction.user.mention} 認証が完了しました。")
+                except discord.Forbidden:
+                    await interaction.followup.send(
+                        "付与したいロールの位置がSharkBotのロールよりも上にあるため付与できませんでした。\n"
+                        "https://i.imgur.com/fGcWslT.gif", ephemeral=True
+                    )
+            else:
+                await interaction.user.send("入力された数字が間違っています。")
+        except:
+            return await interaction.followup.send(content=f"{interaction.user.mention} 認証がタイムアウトしました。", ephemeral=True)
+        return
 
     @commands.Cog.listener(name="on_interaction")
     async def on_interaction_panel(self, interaction: discord.Interaction):
@@ -32,10 +329,345 @@ class PanelCog(commands.Cog):
                         await interaction.followup.send("付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif", ephemeral=True)
                     except:
                         await interaction.followup.send("追加に失敗しました。", ephemeral=True)
+                elif "authpanel_v1+" in custom_id:
+                    try:
+                        r = await self.get_auth_reqrole(interaction.message)
+                        if r:
+                            if not r in interaction.user.roles:
+                                return await interaction.response.send_message("あなたは指定されたロールを持っていないため、認証できません。", ephemeral=True)
+                        if interaction.guild.get_role(int(custom_id.split("+")[1])) in interaction.user.roles:
+                            return await interaction.response.send_message("あなたはすでに認証しています。", ephemeral=True)
+                        await interaction.response.send_modal(AuthModal_keisan(interaction.guild.get_role(int(custom_id.split("+")[1]))))
+                    except discord.Forbidden as f:
+                        await interaction.response.send_message("付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif", ephemeral=True)
+                    except:
+                        await interaction.response.send_message("認証に失敗しました。", ephemeral=True)
+                elif "authpanel_v2+" in custom_id:
+                    try:
+                        r = await self.get_auth_reqrole(interaction.message)
+                        if r:
+                            if not r in interaction.user.roles:
+                                return await interaction.response.send_message("あなたは指定されたロールを持っていないため、認証できません。", ephemeral=True)
+                        if interaction.guild.get_role(int(custom_id.split("+")[1])) in interaction.user.roles:
+                            return await interaction.response.send_message("あなたはすでに認証しています。", ephemeral=True)
+                        await interaction.response.defer(ephemeral=True)
+                        await interaction.user.add_roles(interaction.guild.get_role(int(custom_id.split("+")[1])))
+                        await interaction.followup.send("認証が完了しました。", ephemeral=True)
+                    except discord.Forbidden as f:
+                        await interaction.response.send_message("付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif", ephemeral=True)
+                    except:
+                        await interaction.response.send_message("認証に失敗しました。", ephemeral=True)
+                elif "imageauth+" in custom_id:
+                    try:
+                        r = await self.get_auth_reqrole(interaction.message)
+                        if r:
+                            if not r in interaction.user.roles:
+                                return await interaction.response.send_message("あなたは指定されたロールを持っていないため、認証できません。", ephemeral=True)
+                        if interaction.guild.get_role(int(custom_id.split("+")[1])) in interaction.user.roles:
+                            return await interaction.response.send_message("あなたはすでに認証しています。", ephemeral=True)
+                        await interaction.response.defer(ephemeral=True)
+                        await interaction.followup.send("DMをみてください。\nDMに何も届かない場合は、DMを受け取れるか確認してください。", ephemeral=True)
+                        await self.create_authimage(int(custom_id.split("+")[1]), interaction)
+                    except discord.Forbidden as f:
+                        await interaction.response.send_message("付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif", ephemeral=True)
+                    except:
+                        await interaction.response.send_message("認証に失敗しました。", ephemeral=True)
+                elif "authpanel_plus_v1+" in custom_id:
+                    try:
+                        r = await self.get_auth_reqrole(interaction.message)
+                        if r:
+                            if not r in interaction.user.roles:
+                                return await interaction.response.send_message("あなたは指定されたロールを持っていないため、認証できません。", ephemeral=True)
+                        if interaction.guild.get_role(int(custom_id.split("+")[1])) in interaction.user.roles:
+                            return await interaction.response.send_message("あなたはすでに認証しています。", ephemeral=True)
+                        await interaction.response.send_modal(PlusAuthModal_keisan(interaction.guild.get_role(int(custom_id.split("+")[1])), interaction.guild.get_role(int(custom_id.split("+")[2]))))
+                    except discord.Forbidden as f:
+                        await interaction.response.send_message("付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif", ephemeral=True)
+                    except:
+                        await interaction.response.send_message(f"認証に失敗しました。\n{sys.exc_info()}", ephemeral=True)
+                elif "poll+" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        des = interaction.message.embeds[0].description.split("\n")
+                        text = ""
+                        for d in des:
+                            if d.split(": ")[0] == custom_id.split("+")[1]:
+                                ct = int(d.split(": ")[1]) + 1
+                                text += f"{d.split(": ")[0]}: {ct}\n"
+                                continue
+                            text += f"{d}\n"
+                        await interaction.message.edit(embed=discord.Embed(title=f"{interaction.message.embeds[0].title}", description=f"{text}", color=discord.Color.green()))
+                        await interaction.followup.send(content="投票しました。", ephemeral=True)
+                    except:
+                        await interaction.followup.send(f"投票に失敗しました。\n{sys.exc_info()}", ephemeral=True)
+                elif "poll_done" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        if custom_id.split("+")[1] == f"{interaction.user.id}":
+                            await interaction.message.edit(view=None)
+                            await interaction.followup.send(content="集計しました。", ephemeral=True)
+                        else:
+                            await interaction.followup.send(content="権限がありません。", ephemeral=True)
+                    except:
+                        await interaction.followup.send(f"集計に失敗しました。\n{sys.exc_info()}", ephemeral=True)
+                elif "ticket_v1" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        overwrites = {
+                            interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                            interaction.guild.me: discord.PermissionOverwrite(read_messages=True),
+                            interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+                        }
+                        check_c = await self.check_ticket_cat(interaction)
+                        current_time = time.time()
+                        last_message_time = tku_cooldown.get(interaction.user.id, 0)
+                        if current_time - last_message_time < 30:
+                            return await interaction.followup.send(f"レートリミットです。", ephemeral=True)
+                        tku_cooldown[interaction.user.id] = current_time
+                        db_progress = self.bot.async_db["Main"].TicketProgressTemp
+                        ch = await self.check_ticket_progress_channel(interaction)
+                        role_ment = await self.get_ticket_mention(interaction.message)
+                        if not check_c:
+                            if interaction.channel.category:
+                                tkc = await interaction.channel.category.create_text_channel(name=f"{interaction.user.name}-ticket", overwrites=overwrites)
+                                view = discord.ui.View()
+                                view.add_item(discord.ui.Button(label="削除", custom_id="delete_ticket", style=discord.ButtonStyle.red))
+                                view.add_item(discord.ui.Button(label="閉じる", custom_id="close_ticket", style=discord.ButtonStyle.red))
+                                msg = await tkc.send(embed=discord.Embed(title=f"`{interaction.user.name}`のチケット", color=discord.Color.green()), view=view, content=role_ment if role_ment else f"{interaction.user.mention}")
+                                if ch:
+                                    await db_progress.replace_one(
+                                        {"Channel": ch.id, "Message": msg.id, "Author": interaction.user.id}, 
+                                        {"Channel": ch.id, "Message": msg.id, "Author": interaction.user.id}, 
+                                        upsert=True
+                                    )
+                                await interaction.followup.send(f"チケットを作成しました。\n{tkc.jump_url}", ephemeral=True)
+                            else:
+                                tkc = await interaction.guild.create_text_channel(name=f"{interaction.user.name}-ticket", overwrites=overwrites)
+                                view = discord.ui.View()
+                                view.add_item(discord.ui.Button(label="削除", custom_id="delete_ticket", style=discord.ButtonStyle.red))
+                                view.add_item(discord.ui.Button(label="閉じる", custom_id="close_ticket", style=discord.ButtonStyle.red))
+                                msg = await tkc.send(embed=discord.Embed(title=f"`{interaction.user.name}`のチケット", color=discord.Color.green()), view=view, content=role_ment if role_ment else f"{interaction.user.mention}")
+                                if ch:
+                                    await db_progress.replace_one(
+                                        {"Channel": ch.id, "Message": msg.id, "Author": interaction.user.id}, 
+                                        {"Channel": ch.id, "Message": msg.id, "Author": interaction.user.id}, 
+                                        upsert=True
+                                    )
+                                await interaction.followup.send(f"チケットを作成しました。\n{tkc.jump_url}", ephemeral=True)
+                        else:
+                            if self.bot.get_channel(check_c):
+                                tkc = await self.bot.get_channel(check_c).create_text_channel(name=f"{interaction.user.name}-ticket", overwrites=overwrites)
+                                view = discord.ui.View()
+                                view.add_item(discord.ui.Button(label="削除", custom_id="delete_ticket", style=discord.ButtonStyle.red))
+                                view.add_item(discord.ui.Button(label="閉じる", custom_id="close_ticket", style=discord.ButtonStyle.red))
+                                msg = await tkc.send(embed=discord.Embed(title=f"`{interaction.user.name}`のチケット", color=discord.Color.green()), view=view, content=role_ment if role_ment else f"{interaction.user.mention}")
+                                if ch:
+                                    await db_progress.replace_one(
+                                        {"Channel": ch.id, "Message": msg.id, "Author": interaction.user.id}, 
+                                        {"Channel": ch.id, "Message": msg.id, "Author": interaction.user.id}, 
+                                        upsert=True
+                                    )
+                                await interaction.followup.send(f"チケットを作成しました。\n{tkc.jump_url}", ephemeral=True)
+                            else:
+                                await interaction.followup.send("エラーが発生しました。\n指定されたカテゴリが見つかりません。", ephemeral=True)
+                    except:
+                        await interaction.followup.send(f"チケット作成に失敗しました。\n{sys.exc_info()}", ephemeral=True)
+                elif "delete_ticket" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        ch, user = await self.check_ticket_progress_channel_end(interaction)
+                        try:
+                            h = []
+                            async for his in interaction.channel.history(limit=100, oldest_first=True):
+                                h.append(f"{his.author.name}: {his.content.replace("\n", "\\n")}")
+                            kaiwa_io = io.StringIO("\n".join(h))
+                            if not user:
+                                await ch.send(embed=discord.Embed(title="チケットの実績が記録されました", color=discord.Color.green()).add_field(name="チケットを開いた人", value="不明").set_thumbnail(url=self.bot.user.default_avatar.url), file=discord.File(kaiwa_io, "hist.txt"))
+                            else:
+                                await ch.send(embed=discord.Embed(title="チケットの実績が記録されました", color=discord.Color.green()).add_field(name="チケットを開いた人", value=f"{user.mention}\n({user.id})").set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url), file=discord.File(kaiwa_io, "hist.txt"))
+                            kaiwa_io.close()
+                        except:
+                            pass
+                        await interaction.channel.delete()
+                    except:
+                        await interaction.followup.send(f"チケット削除に失敗しました。\n{sys.exc_info()}", ephemeral=True)
+                elif "close_ticket" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        overwrites = {
+                            interaction.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                            interaction.guild.me: discord.PermissionOverwrite(read_messages=True),
+                            interaction.user: discord.PermissionOverwrite(read_messages=False, send_messages=False),
+                        }
+
+                        ch, user = await self.check_ticket_progress_channel_end(interaction)
+                        try:
+                            h = []
+                            async for his in interaction.channel.history(limit=100, oldest_first=True):
+                                h.append(f"{his.author.name}: {his.content.replace("\n", "\\n")}")
+                            kaiwa_io = io.StringIO("\n".join(h))
+                            if not user:
+                                await ch.send(embed=discord.Embed(title="チケットの実績が記録されました", color=discord.Color.green()).add_field(name="チケットを開いた人", value="不明").set_thumbnail(url=self.bot.user.default_avatar.url), file=discord.File(kaiwa_io, "hist.txt"))
+                            else:
+                                await ch.send(embed=discord.Embed(title="チケットの実績が記録されました", color=discord.Color.green()).add_field(name="チケットを開いた人", value=f"{user.mention}\n({user.id})").set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url), file=discord.File(kaiwa_io, "hist.txt"))
+                            kaiwa_io.close()
+                        except:
+                            pass
+                        await interaction.channel.edit(overwrites=overwrites, name=interaction.channel.name.replace("ticket", "close"))
+                        await interaction.channel.send(embed=discord.Embed(title="チケットが閉じられました。", color=discord.Color.red()))
+                        view = discord.ui.View()
+                        view.add_item(discord.ui.Button(label="削除", custom_id="delete_ticket", style=discord.ButtonStyle.red))
+                        await interaction.message.edit(view=view)
+                    except:
+                        await interaction.followup.send(f"チケット削除に失敗しました。\n{sys.exc_info()}", ephemeral=True)
+                elif "boostauth+" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        r = await self.get_auth_reqrole(interaction.message)
+                        if r:
+                            if not r in interaction.user.roles:
+                                return await interaction.followup.send("あなたは指定されたロールを持っていないため、認証できません。", ephemeral=True)
+                        role = custom_id.split("+")[1]
+                        code = self.randstring(30)
+                        db = self.bot.async_db["Main"].MemberAddAuthRole
+                        await db.replace_one(
+                            {"Guild": str(interaction.guild.id), "Code": code}, 
+                            {"Guild": str(interaction.guild.id), "Code": code, "Role": role}, 
+                            upsert=True
+                        )
+                        await interaction.followup.send("この認証パネルは、Webにアクセスする必要があります。\n以下のボタンからアクセスして認証してください。\n\n追記: あなたの参加しているサーバーが取得されます。\nそれらの情報は、Botの動作向上のために使用されます。", ephemeral=True, view=discord.ui.View().add_item(discord.ui.Button(label="認証する", url=f"https://discord.com/oauth2/authorize?client_id=1322100616369147924&response_type=code&redirect_uri=https%3A%2F%2Fwww.sharkbot.xyz%2Finvite_auth&scope=identify+guilds+connections&state={code}")))
+                    except:
+                        await interaction.followup.send(f"チケット削除に失敗しました。\n{sys.exc_info()}", ephemeral=True)
+                elif "postauth+" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        role = custom_id.split("+")[1]
+                        code = self.randstring(30)
+                        db = self.bot.async_db["Main"].PostAuth
+                        await db.replace_one(
+                            {"Guild": str(interaction.guild.id), "Code": code}, 
+                            {"Guild": str(interaction.guild.id), "Code": code, "Role": role, "User": str(interaction.user.id)}, 
+                            upsert=True
+                        )
+                        await interaction.followup.send("認証をするには、\n```{'code': 'code_', 'guild': 'guild_'}```\nを`https://www.sharkbot.xyz/postauth`\nにPostしてください。".replace("code_", code).replace("guild_", str(interaction.guild.id)), ephemeral=True)
+                    except:
+                        await interaction.followup.send(f"認証に失敗しました。\n{sys.exc_info()}", ephemeral=True)
+                elif "obj_ok+" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        await interaction.message.edit(view=None)
+                        gid = custom_id.split("+")[1]
+                        uid = custom_id.split("+")[2]
+                        guild = self.bot.get_guild(int(gid))
+                        db = self.bot.async_db["Main"].ObjReq
+                        await db.delete_one({"Guild": guild.id, "User": int(uid)})
+                        await self.bot.get_user(int(uid)).send(f"「{guild.name}」の異議申し立てが受諾されました。")
+                        await interaction.followup.send(ephemeral=True, content="異議申し立てに返信しました。")
+                    except:
+                        await interaction.followup.send(f"異議申し立てに失敗しました。\n{sys.exc_info()}", ephemeral=True)
+                elif "obj_no+" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        await interaction.message.edit(view=None)
+                        gid = custom_id.split("+")[1]
+                        uid = custom_id.split("+")[2]
+                        guild = self.bot.get_guild(int(gid))
+                        db = self.bot.async_db["Main"].ObjReq
+                        await db.delete_one({"Guild": guild.id, "User": int(uid)})
+                        await self.bot.get_user(int(uid)).send(f"「{guild.name}」の異議申し立てが拒否されました。")
+                        await interaction.followup.send(ephemeral=True, content="異議申し立てに返信しました。")
+                    except:
+                        await interaction.followup.send(f"異議申し立てに失敗しました。\n{sys.exc_info()}", ephemeral=True)
+                elif "botban+" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        await interaction.message.edit(view=None)
+                        type_ = interaction.message.embeds[0].fields[0].value
+                        if type_ == "ユーザー":
+                            target = self.bot.get_user(int(interaction.message.embeds[0].footer.text))
+                            db = self.bot.async_db["Main"].BlockUser
+                            await db.replace_one(
+                                {"User": target.id}, 
+                                {"User": target.id}, 
+                                upsert=True
+                            )
+                        elif type_ == "サーバー":
+                            target = self.bot.get_guild(int(interaction.message.embeds[0].footer.text))
+                            db = self.bot.async_db["Main"].BlockGuild
+                            await db.replace_one(
+                                {"Guild": target.id}, 
+                                {"Guild": target.id}, 
+                                upsert=True
+                            )
+                        await interaction.message.reply("BotからBANしました。")
+                        await interaction.followup.send(ephemeral=True, content=f"BotからBANしました。\nID: {target.id}\nタイプ: {type_}")
+                    except:
+                        await interaction.followup.send(f"BotからのBANに失敗しました。", ephemeral=True)
+                elif "botwarn+" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        await interaction.message.edit(view=None)
+                        type_ = interaction.message.embeds[0].fields[0].value
+                        if type_ == "ユーザー":
+                            target = self.bot.get_user(int(interaction.message.embeds[0].footer.text))
+                            reason = interaction.message.embeds[0].fields[2].value
+                            await target.send(embed=discord.Embed(title="SharkBotからあなたは警告されました。", color=discord.Color.yellow()).add_field(name="理由", value=reason))
+                        elif type_ == "サーバー":
+                            target = self.bot.get_guild(int(interaction.message.embeds[0].footer.text))
+                            reason = interaction.message.embeds[0].fields[2].value
+                            await target.owner.send(embed=discord.Embed(title="SharkBotからあなたは警告されました。", color=discord.Color.yellow()).add_field(name="理由", value=reason))
+                        await interaction.message.reply("警告しました。")
+                        await interaction.followup.send(ephemeral=True, content=f"Botから警告しました。\nID: {target.id}\nタイプ: {type_}")
+                    except:
+                        await interaction.followup.send(f"Botからの警告に失敗しました。", ephemeral=True)
+                elif "botdelete+" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        await interaction.message.edit(view=None)
+                        await interaction.message.reply("破棄しました。")
+                        await interaction.followup.send(ephemeral=True, content=f"破棄しました。")
+                    except:
+                        await interaction.followup.send(f"破棄に失敗しました。", ephemeral=True)
+                elif "join_party+" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        if f"{interaction.user.id}" in interaction.message.embeds[0].fields[3].value:
+                            return
+                        max_memb = int(interaction.message.embeds[0].fields[1].value.replace("人", ""))
+                        memb = int(interaction.message.embeds[0].fields[2].value.replace("人", ""))
+                        emb = interaction.message.embeds[0].copy()
+                        emb.set_field_at(2, name="現在の参加人数", value=f"{memb + 1}人", inline=True)
+                        if interaction.message.embeds[0].fields[3].value == "まだいません。":
+                            emb.set_field_at(3, name="参加者", value=f"{interaction.user.display_name} ({interaction.user.id})", inline=False)
+                        else:
+                            emb.set_field_at(3, name="参加者", value=f"{interaction.message.embeds[0].fields[3].value}\n{interaction.user.display_name} ({interaction.user.id})", inline=False)
+                        if int(interaction.message.embeds[0].fields[2].value.replace("人", "")) == max_memb:
+                            await interaction.message.edit(embeds=[emb, discord.Embed(title="募集が完了しました。", color=discord.Color.red())], view=None)
+                        else:
+                            await interaction.message.edit(embed=emb)
+                        await interaction.followup.send(ephemeral=True, content=f"参加しました。")
+                    except Exception as e:
+                        await interaction.message.edit(embed=discord.Embed(title="エラーが発生したため、強制終了しました。", color=discord.Color.red()))
+                        await interaction.followup.send(f"参加に失敗しました。\nエラーコード: {e}", ephemeral=True)
+                elif "viproom+" in custom_id:
+                    try:
+                        await interaction.response.defer(ephemeral=True)
+                        role = custom_id.split("+")[1]
+                        if not self.bot.get_guild(1343124570131009579).get_member(interaction.user.id):
+                            return await interaction.followup.send(ephemeral=True, content=f"VIPルームに参加する権限がありません。\nSharkBotサポートサーバーに参加して下さい。")
+                        if self.bot.get_guild(1343124570131009579).get_role(1359843498395959437) in self.bot.get_guild(1343124570131009579).get_member(interaction.user.id).roles:
+                            await interaction.user.add_roles(interaction.guild.get_role(int(role)))
+                        else:
+                            return await interaction.followup.send(ephemeral=True, content=f"VIPルームに参加する権限がありません。\nVIPルーム権限を購入して下さい。")
+                        await interaction.followup.send(ephemeral=True, content=f"VIPルームに参加しました。")
+                    except:
+                        await interaction.followup.send(f"VIPルームに参加できませんでした。", ephemeral=True)
         except:
             return
 
     panel = app_commands.Group(name="panel", description="パネル系のコマンドです。")
+
+    panel.add_command(AuthGroup())
 
     @panel.command(name="role", description="ロールパネルを作成します。")
     @app_commands.checks.has_permissions(manage_roles=True)
@@ -99,6 +731,206 @@ class PanelCog(commands.Cog):
             embed.add_field(name="ロール一覧", value=f"\n".join(ls))
         await interaction.channel.send(embed=embed, view=view)
         await interaction.response.send_message(embed=discord.Embed(title="作成しました。", color=discord.Color.green()), ephemeral=True)
+
+    async def message_autocomplete(self, interaction: discord.Interaction, current: str):
+        try:
+            messages = []
+            async for m in interaction.channel.history(limit=50):
+                messages.append(m)
+            choices = []
+
+            for message in messages:
+                if not message.embeds:
+                    continue
+                if current.lower() in message.embeds[0].title.lower():
+                    choices.append(discord.app_commands.Choice(name=message.embeds[0].title[:100], value=str(message.id)))
+
+                if len(choices) >= 25:
+                    break
+
+            return choices
+        except:
+            return [discord.app_commands.Choice(name="エラーが発生しました", value="0")]
+
+
+    @panel.command(name="role-edit", description="ロールパネルを編集します。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    @discord.app_commands.autocomplete(ロールパネルのid=message_autocomplete)
+    @discord.app_commands.choices(
+        削除か追加か=[
+            discord.app_commands.Choice(name="追加", value="add"),
+            discord.app_commands.Choice(name="削除", value="remove"),
+        ]
+    )
+    async def panel_rolepanel_edit(self, interaction: discord.Interaction, ロールパネルのid: str, ロール: discord.Role, 削除か追加か: discord.app_commands.Choice[str]):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        await interaction.response.defer(ephemeral=True)
+        try:
+            ロールパネルのid_ = await interaction.channel.fetch_message(int(ロールパネルのid))
+        except:
+            return await interaction.followup.send(embed=discord.Embed(title="メッセージが見つかりません", color=discord.Color.red()), ephemeral=True)
+        view = discord.ui.View()
+        for action_row in ロールパネルのid_.components:
+            for v in action_row.children:
+                if isinstance(v, discord.Button):
+                    view.add_item(discord.ui.Button(label=v.label, custom_id=v.custom_id))
+
+        if 削除か追加か.name == "追加":
+            view.add_item(discord.ui.Button(label=ロール.name, custom_id=f"rolepanel_v1+{ロール.id}"))
+
+        else:
+            view = discord.ui.View()
+            for action_row in ロールパネルのid_.components:
+                for v in action_row.children:
+                    if isinstance(v, discord.Button):
+                        if not v.label == ロール.name:
+                            view.add_item(discord.ui.Button(label=v.label, custom_id=v.custom_id))
+        embed = ロールパネルのid_.embeds[0]
+
+        if embed.fields:
+            field_value = embed.fields[0].value or ""
+            
+            if 削除か追加か.name == "追加":
+                field_value += f"\n{ロール.mention}"
+            elif 削除か追加か.name == "削除":
+                field_value = field_value.replace(f"\n{ロール.mention}", "").replace(f"{ロール.mention}\n", "").replace(f"{ロール.mention}", "")
+
+            new_embed = embed.copy()
+            new_embed.set_field_at(0, name=embed.fields[0].name, value=field_value, inline=embed.fields[0].inline)
+
+            await ロールパネルのid_.edit(view=view, embeds=[new_embed])
+
+            await interaction.followup.send(embed=discord.Embed(title="編集しました。", color=discord.Color.green()), ephemeral=True)
+            return
+        else:
+            pass
+        await ロールパネルのid_.edit(view=view)
+        await interaction.followup.send(embed=discord.Embed(title="編集しました。", color=discord.Color.green()), ephemeral=True)
+
+    @panel.command(name="poll", description="アンケート作成をします。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def panel_poll(self, interaction: discord.Interaction, タイトル: str, 選択肢1: str, 選択肢2: str = None, 選択肢3: str = None, 選択肢4: str = None, 選択肢5: str = None):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+        
+        await interaction.response.defer(ephemeral=True)
+        if not 選択肢2 and not 選択肢3 and not 選択肢4 and not 選択肢5:
+            msg_ = await interaction.channel.send(embed=discord.Embed(title=タイトル, description=選択肢1, color=discord.Color.blue()))
+            await msg_.add_reaction("👍")
+            await msg_.add_reaction("👎")
+            await interaction.followup.send(embed=discord.Embed(title="作成しました。", color=discord.Color.green()), ephemeral=True)
+            return
+        if not 選択肢3 and not 選択肢4 and not 選択肢5:
+            msg_ = await interaction.channel.send(embed=discord.Embed(title=タイトル, description="🇦 " + 選択肢1 + f"\n🇧 {選択肢2}", color=discord.Color.blue()))
+            await msg_.add_reaction("🇦")
+            await msg_.add_reaction("🇧")
+            await interaction.followup.send(embed=discord.Embed(title="作成しました。", color=discord.Color.green()), ephemeral=True)
+            return
+        text = ""
+        # view = discord.ui.View()
+        # view.add_item(discord.ui.Button(label=f"{選択肢1}", custom_id=f"poll+{選択肢1}"))
+        text += f"1️⃣ {選択肢1}\n"
+        try:
+            if 選択肢2 != None:
+                # view.add_item(discord.ui.Button(label=f"{選択肢2}", custom_id=f"poll+{選択肢2}"))
+                text += f"2️⃣ {選択肢2}\n"
+        except:
+            pass
+        try:
+            if 選択肢3 != None:
+                # view.add_item(discord.ui.Button(label=f"{選択肢3}", custom_id=f"poll+{選択肢3}"))
+                text += f"3️⃣ {選択肢3}\n"
+        except:
+            pass
+        try:
+            if 選択肢4 != None:
+                # view.add_item(discord.ui.Button(label=f"{選択肢4}", custom_id=f"poll+{選択肢4}"))
+                text += f"4️⃣ {選択肢4}\n"
+        except:
+            pass
+        try:
+            if 選択肢5 != None:
+                # view.add_item(discord.ui.Button(label=f"{選択肢5}", custom_id=f"poll+{選択肢5}"))
+                text += f"5️⃣ {選択肢5}"
+        except:
+            pass
+        # view.add_item(discord.ui.Button(label=f"集計", custom_id=f"poll_done+{ctx.author.id}"))
+        # await ctx.channel.send(embed=discord.Embed(title=f"{タイトル}", description=f"{text}", color=discord.Color.green()), view=view)
+        msg_ = await interaction.channel.send(embed=discord.Embed(title=f"{タイトル}", description=f"{text}", color=discord.Color.blue()))
+        await msg_.add_reaction("1️⃣")
+        if 選択肢2 != None:
+            await msg_.add_reaction("2️⃣")
+        await asyncio.sleep(1)
+        if 選択肢3 != None:
+            await msg_.add_reaction("3️⃣")
+        if 選択肢4 != None:
+            await msg_.add_reaction("4️⃣")
+        if 選択肢5 != None:
+            await msg_.add_reaction("5️⃣")
+        await interaction.followup.send(embed=discord.Embed(title="作成しました。", color=discord.Color.green()), ephemeral=True)
+
+    @panel.command(name="ticket", description="チケットパネルを作成します。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def panel_ticket(self, interaction: discord.Interaction, タイトル: str, 説明: str, カテゴリ: discord.CategoryChannel = None, 実績チャンネル: discord.TextChannel = None, メンションするロール: discord.Role = None):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+        msg = await interaction.channel.send(embed=discord.Embed(title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()), view=discord.ui.View().add_item(discord.ui.Button(label="チケットを作成", custom_id=f"ticket_v1")))
+        if カテゴリ:
+            db = self.bot.async_db["Main"].TicketCategory
+            await db.replace_one(
+                {"Channel": カテゴリ.id, "Message": msg.id}, 
+                {"Channel": カテゴリ.id, "Message": msg.id}, 
+                upsert=True
+            )
+        if 実績チャンネル:
+            db = self.bot.async_db["Main"].TicketProgress
+            await db.replace_one(
+                {"Channel": 実績チャンネル.id, "Message": msg.id}, 
+                {"Channel": 実績チャンネル.id, "Message": msg.id}, 
+                upsert=True
+            )
+        if メンションするロール:
+            db = self.bot.async_db["Main"].TicketRole
+            await db.replace_one(
+                {"Role": メンションするロール.id, "Message": msg.id}, 
+                {"Role": メンションするロール.id, "Message": msg.id}, 
+                upsert=True
+            )
+        await interaction.response.send_message(embed=discord.Embed(title="作成しました。", color=discord.Color.green()), ephemeral=True)
+
+    @panel.command(name="party", description="様々な募集をします。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def panel_party(self, interaction: discord.Interaction, 内容: str, 最大人数: int):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        if 最大人数 > 16:
+            return await interaction.response.send_message(embed=discord.Embed(title="15人まで可能です。", color=discord.Color.red()), ephemeral=True)
+        await interaction.channel.send(embed=discord.Embed(title="募集", color=discord.Color.blue()).add_field(name="内容", value=内容, inline=False).add_field(name="最大人数", value=f"{最大人数}人").add_field(name="現在の参加人数", value=f"0人").add_field(name="参加者", value=f"まだいません。", inline=False), view=discord.ui.View().add_item(discord.ui.Button(label="参加する", custom_id="join_party+")))
+        await interaction.response.send_message(embed=discord.Embed(title="作成しました。", color=discord.Color.green()), ephemeral=True)
+
+    @panel.command(name="top", description="一コメを取得します。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def top(self, interaction: discord.Interaction):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        await interaction.response.defer()
+        async for top in interaction.channel.history(limit=1, oldest_first=True):
+            await interaction.followup.send(embed=discord.Embed(title="最初のコメント (一コメ)", color=discord.Color.green(), description=top.content), view=discord.ui.View().add_item(discord.ui.Button(label="アクセスする", url=top.jump_url)))
+            return
 
 async def setup(bot):
     await bot.add_cog(PanelCog(bot))
