@@ -15,6 +15,7 @@ from discord import Webhook
 import io
 from discord import app_commands
 
+from consts import mongodb
 from models import command_disable
 
 COOLDOWN_TIME_KEIGO = 5
@@ -51,6 +52,58 @@ class CommandDisableChannel(commands.CommandError):
 
 class BanBotError(commands.CommandError):
     pass
+
+class CommandsManageGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="commands", description="コマンド管理系コマンド")
+
+    @app_commands.command(name="disable", description="コマンドを無効化します。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def commands_disable(self, interaction: discord.Interaction, コマンド名: str):
+        await interaction.response.defer()
+
+        cmds = await mongodb.mongo["DashboardBot"].Commands.find().to_list(None)
+        all_cmds = [c.get("name") for c in cmds]
+
+        if コマンド名 not in all_cmds:
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="エラー",
+                    description=f"そのコマンドは存在しません。",
+                    color=discord.Color.red()
+                )
+            )
+
+        await command_disable.add_disabled_command(interaction.guild.id, コマンド名)
+        await interaction.followup.send(
+            embed=discord.Embed(title=f"{コマンド名} を無効化しました。", color=discord.Color.orange())
+        )
+
+    @app_commands.command(name="enable", description="コマンドを有効化します。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def commands_enable(self, interaction: discord.Interaction, コマンド名: str):
+        await interaction.response.defer()
+
+        cmds = await mongodb.mongo["DashboardBot"].Commands.find().to_list(None)
+        all_cmds = [c.get("name") for c in cmds]
+
+        if コマンド名 not in all_cmds:
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="エラー",
+                    description=f"そのコマンドは存在しません。",
+                    color=discord.Color.red()
+                )
+            )
+
+        await command_disable.remove_disabled_command(interaction.guild.id, コマンド名)
+        await interaction.followup.send(
+            embed=discord.Embed(title=f"{コマンド名} を有効化しました。", color=discord.Color.green())
+        )
 
 class RoleCommands(app_commands.Group):
     def __init__(self):
@@ -1037,6 +1090,7 @@ class SettingCog(commands.Cog):
 
     settings.add_command(RoleCommands())
     settings.add_command(WelcomeCommands())
+    settings.add_command(CommandsManageGroup())
 
     @settings.command(name="lock-message", description="メッセージを固定します。")
     @app_commands.checks.has_permissions(manage_channels=True)
