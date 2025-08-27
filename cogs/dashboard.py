@@ -90,6 +90,38 @@ class DashboardCog(commands.Cog):
                     ],
                     enabled=True
                     )
+                
+            elif doc.get("Name", "不明") == "メールアドレス":
+
+                await g.create_automod_rule(
+                            name="メールアドレス対策",
+                            event_type=discord.AutoModRuleEventType.message_send,
+                            trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, regex_patterns=[r"^[a-zA-Z0-9_+-]+(.[a-zA-Z0-9_+-]+)*@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$"]),
+                            actions=[
+                                discord.AutoModRuleAction(
+                                    type=discord.AutoModRuleActionType.block_message
+                                )
+                            ],
+                            enabled=True
+                        )
+                
+            elif doc.get("Name", "不明") == "メッセージスパム":
+
+                dbs = self.bot.async_db["Main"].SpamBlock
+                await dbs.replace_one(
+                    {"Guild": g.id}, 
+                    {"Guild": g.id}, 
+                    upsert=True
+                )
+
+            elif doc.get("Name", "不明") == "スラッシュコマンドスパム":
+
+                dbs = self.bot.async_db["Main"].UserApplicationSpamBlock
+                await dbs.replace_one(
+                    {"Guild": g.id}, 
+                    {"Guild": g.id}, 
+                    upsert=True
+                )
 
             await db.delete_one({"Guild": guild_id})
             await asyncio.sleep(1)

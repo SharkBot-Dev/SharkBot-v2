@@ -39,7 +39,10 @@ class AutoModCog(commands.Cog):
     @app_commands.choices(タイプ=[
         app_commands.Choice(name='招待リンク',value="invite"),
         app_commands.Choice(name='Token',value="token"),
-        app_commands.Choice(name='Everyoneとhere',value="everyone")
+        app_commands.Choice(name='Everyoneとhere',value="everyone"),
+        app_commands.Choice(name='メールアドレス',value="mail"),
+        app_commands.Choice(name='メッセージスパム',value="spam"),
+        app_commands.Choice(name='スラッシュコマンドスパム',value="slashspam")
     ])
     async def automod_create(self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]):
         if not await command_disable.command_enabled_check(interaction):
@@ -77,6 +80,32 @@ class AutoModCog(commands.Cog):
                     ],
                     enabled=True
             )
+        elif タイプ.value == "mail":
+            await interaction.guild.create_automod_rule(
+                            name="メールアドレス対策",
+                            event_type=discord.AutoModRuleEventType.message_send,
+                            trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, regex_patterns=[r"^[a-zA-Z0-9_+-]+(.[a-zA-Z0-9_+-]+)*@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$"]),
+                            actions=[
+                                discord.AutoModRuleAction(
+                                    type=discord.AutoModRuleActionType.block_message
+                                )
+                            ],
+                            enabled=True
+                        )
+        elif タイプ.value == "spam":
+            dbs = self.bot.async_db["Main"].SpamBlock
+            await dbs.replace_one(
+                {"Guild": interaction.guild.id}, 
+                {"Guild": interaction.guild.id}, 
+                upsert=True
+            )
+        elif タイプ.value == "slashspam":
+            dbs = self.bot.async_db["Main"].UserApplicationSpamBlock
+            await dbs.replace_one(
+                {"Guild": interaction.guild.id}, 
+                {"Guild": interaction.guild.id}, 
+                upsert=True
+            )
         await interaction.followup.send(ephemeral=True, content=f"AutoModの「{タイプ.name}」を作成しました。")
 
     @automod.command(name="delete", description="Automodを削除します。")
@@ -86,7 +115,10 @@ class AutoModCog(commands.Cog):
     @app_commands.choices(タイプ=[
         app_commands.Choice(name='招待リンク',value="invite"),
         app_commands.Choice(name='Token',value="token"),
-        app_commands.Choice(name='Everyoneとhere',value="everyone")
+        app_commands.Choice(name='Everyoneとhere',value="everyone"),
+        app_commands.Choice(name='メールアドレス',value="mail"),
+        app_commands.Choice(name='メッセージスパム',value="spam"),
+        app_commands.Choice(name='スラッシュコマンドスパム',value="slashspam")
     ])
     async def automod_delete(self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]):
         if not await command_disable.command_enabled_check(interaction):
@@ -106,6 +138,17 @@ class AutoModCog(commands.Cog):
             for r in rule:
                 if r == "Everyone対策":
                     await r.delete()
+        elif タイプ.value == "mail":
+            rule = await interaction.guild.fetch_automod_rules()
+            for r in rule:
+                if r == "メールアドレス対策":
+                    await r.delete()
+        elif タイプ.value == "spam":
+            dbs = self.bot.async_db["Main"].SpamBlock
+            await dbs.delete_one({"Guild": interaction.guild.id})
+        elif タイプ.value == "slashspam":
+            dbs = self.bot.async_db["Main"].UserApplicationSpamBlock
+            await dbs.delete_one({"Guild": interaction.guild.id})
         await interaction.followup.send(ephemeral=True, content=f"AutoModの「{タイプ.name}」を削除しました。")
 
 async def setup(bot: commands.Bot):

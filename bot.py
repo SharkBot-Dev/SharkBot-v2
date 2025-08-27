@@ -10,7 +10,6 @@ import sqlite3
 import aiofiles
 from pymongo import MongoClient
 import dotenv
-from models import permissions_text
 
 dotenv.load_dotenv()
 
@@ -62,23 +61,5 @@ async def setup_hook() -> None:
         await bot.tree.sync()
     except:
         print("スラッシュコマンドの同期に失敗しました。")
-
-@bot.tree.error
-async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
-    if isinstance(error, discord.app_commands.CommandNotFound):
-        e = 0
-        return e
-    elif isinstance(error, discord.app_commands.CommandOnCooldown):
-        e = 0
-        return e
-    elif isinstance(error, discord.app_commands.MissingPermissions):
-        missing_perms = [permissions_text.PERMISSION_TRANSLATIONS.get(perm, perm) for perm in error.missing_permissions]
-        missing_perms_str = ", ".join(missing_perms)
-        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="コマンドを実行する権限がありません！", description=missing_perms_str, color=discord.Color.red()))
-        e = 0
-        return e
-    else:
-        e = 0
-        return e
 
 bot.run(os.environ.get("Token"))
