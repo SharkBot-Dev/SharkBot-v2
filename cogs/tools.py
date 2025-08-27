@@ -92,7 +92,6 @@ class EmbedMake(discord.ui.Modal, title='埋め込みを作成'):
                     view.add_item(discord.ui.Button(label=self.button_label.value, url=self.button.value))
                 else:
                     view.add_item(discord.ui.Button(label="Webサイト", url=self.button.value))
-            view.add_item(discord.ui.Button(style=discord.ButtonStyle.blurple, label="作成者の取得", custom_id="showembedowner"))
             await interaction.channel.send(embed=discord.Embed(title=self.title_.value, description=self.desc.value, color=discord.Color.from_str(self.color.value)).set_author(name=f"{interaction.user.name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url).set_footer(text=f"{interaction.guild.name} | {interaction.guild.id}", icon_url=interaction.guild.icon.url if interaction.guild.icon else interaction.user.default_avatar.url), view=view)
         except Exception as e:
             return await interaction.followup.send("作成に失敗しました。", ephemeral=True, embed=discord.Embed(title="エラー内容", description=f"```{e}```", color=discord.Color.red()))
