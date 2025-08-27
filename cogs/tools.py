@@ -3,6 +3,7 @@ from functools import partial
 import io
 import re
 import socket
+import time
 import aiohttp
 from bs4 import BeautifulSoup
 from discord.ext import commands, tasks
@@ -96,10 +97,68 @@ class EmbedMake(discord.ui.Modal, title='埋め込みを作成'):
         except Exception as e:
             return await interaction.followup.send("作成に失敗しました。", ephemeral=True, embed=discord.Embed(title="エラー内容", description=f"```{e}```", color=discord.Color.red()))
 
+cooldown_afk = {}
+
 class ToolsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print(f"init -> ToolsCog")
+
+    async def afk_mention_get(self, user: discord.User):
+        try:
+            database = self.bot.async_db["Main"].AFKMention
+            m = [f"{self.bot.get_channel(b.get("Channel", 0)).mention if self.bot.get_channel(b.get("Channel", 0)) else b.get("Channel", 0)} - {self.bot.get_user(b.get('MentionUser')) if self.bot.get_user(b.get('MentionUser')) else b.get('MentionUser')}" async for b in database.find({"User": user.id})]
+            await database.delete_many({
+                "User": user.id,
+            })
+            return "\n".join(m)
+        except Exception as e:
+            return f"取得失敗！\n{e}"
+
+    @commands.Cog.listener("on_message")
+    async def on_message_afk(self, message: discord.Message):
+        if message.author.bot:
+            return
+        db = self.bot.async_db["Main"].AFK
+        try:
+            dbfind = await db.find_one({"User": message.author.id}, {"_id": False})
+        except:
+            return
+        if dbfind is None:
+            return
+        mens = await self.afk_mention_get(message.author)
+        if mens == "":
+            mens = "メンションなし"
+        try:
+            await message.reply(embed=discord.Embed(title="AFKを解除しました。", description=f"{dbfind["Reason"]}", color=discord.Color.green()).add_field(name="今から何する？", value=dbfind.get("End", "まだ予定がありません。"), inline=False).add_field(name="メンション一覧", value=mens, inline=False))
+        except:
+            pass
+        await db.delete_one({
+            "User": message.author.id,
+        })
+
+    @commands.Cog.listener("on_message")
+    async def on_message_afk_mention(self, message):
+        if message.author.bot:
+            return
+        if message.mentions:
+            mentioned_users = [user.id for user in message.mentions]
+            for m in mentioned_users:
+                db = self.bot.async_db["Main"].AFK
+                try:
+                    dbfind = await db.find_one({"User": m}, {"_id": False})
+                except:
+                    return
+                if dbfind is None:
+                    return
+                current_time = time.time()
+                last_message_time = cooldown_afk.get(message.author.id, 0)
+                if current_time - last_message_time < 5:
+                    return
+                cooldown_afk[message.author.id] = current_time
+                await self.afk_mention_write(m, message)
+                await message.reply(embed=discord.Embed(title=f"その人はAFKです。", description=f"理由: {dbfind["Reason"]}", color=discord.Color.red()).set_footer(text="このメッセージを5秒後に削除されます。"), delete_after=5)
+                return
 
     tools = app_commands.Group(name="tools", description="ツール系のコマンドです。")
 
@@ -260,6 +319,22 @@ class ToolsCog(commands.Cog):
                         return await interaction.response.send_message(embed=discord.Embed(title="APIのレートリミットです。", color=discord.Color.red()))
         else:
             return await interaction.response.send_message(embed=discord.Embed(title="無効なIPアドレスです。", color=discord.Color.red()))
+
+    @tools.command(name="afk", description="AFKを設定します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def afk(self, interaction: discord.Interaction, 理由: str, 終わったらやること: str = "まだ予定がありません。"):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        await interaction.response.defer()
+        database = self.bot.async_db["Main"].AFK
+        await database.replace_one(
+            {"User": interaction.user.id}, 
+            {"User": interaction.user.id, "Reason": 理由, "End": 終わったらやること}, 
+            upsert=True
+        )
+        await interaction.followup.send(embed=discord.Embed(title="AFKを設定しました。", description=f"{理由}", color=discord.Color.green()))
 
 async def setup(bot):
     await bot.add_cog(ToolsCog(bot))

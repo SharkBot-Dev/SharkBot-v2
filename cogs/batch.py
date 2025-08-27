@@ -3,6 +3,8 @@ import discord
 import datetime
 import random
 
+from models import save_commands
+
 class BatchCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -15,6 +17,8 @@ class BatchCog(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         await self.reset_db()
+        for cmd in self.bot.tree.get_commands():
+            await save_commands.save_command(cmd)
         await self.bot.get_channel(1349646266379927594).send(embed=discord.Embed(title="Botが起動しました。", color=discord.Color.green()).set_footer(text="SharkBot", icon_url=self.bot.user.avatar.url).add_field(name="導入サーバー数", value=f"{len(self.bot.guilds)}サーバー"))
         self.loop_pres.start()
 

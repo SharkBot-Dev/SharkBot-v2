@@ -1,15 +1,20 @@
 import asyncio
 from functools import partial
 import io
+import json
 import re
 import socket
+import ssl
+from urllib.parse import urlparse
 import aiohttp
 from bs4 import BeautifulSoup
+from deep_translator import GoogleTranslator
 from discord.ext import commands, tasks
 import discord
 import datetime
 
 import pyshorteners
+import requests
 from consts import mongodb
 from discord import app_commands
 from models import command_disable
@@ -20,6 +25,39 @@ STATUS_EMOJIS = {
     discord.Status.dnd: "<:dnd:1407922294130741348>",
     discord.Status.offline: "<:offline:1407922298563854496>"
 }
+
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
+
+class NomTranslater():
+    def __init__(self):
+        self.se = requests.Session()
+        self.index = self.se.get("https://racing-lagoon.info/nomu/translate.php").text
+        self.bs = BeautifulSoup(self.index, 'html.parser')
+        self.token = self.bs.find({"input": {"name": "token"}})["value"]
+
+    def translare(self, text: str):
+
+        data = {
+            'token': self.token,
+            'before': text,
+            'level': '2',
+            'options': 'nochk',
+            'transbtn': '翻訳',
+            'after1': '',
+            'options_permanent': '',
+            'new_japanese': '',
+            'new_nomulish': '',
+            'new_setugo': '',
+            'setugo': 'settou',
+        }
+
+        nom_index = self.se.post('https://racing-lagoon.info/nomu/translate.php', data=data)
+
+        bs = BeautifulSoup(nom_index.text, 'html.parser')
+
+        return bs.find_all({"textarea": {"class": "maxfield outputfield form-control selectAll"}})[1].get_text()
 
 class SearchCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -332,6 +370,24 @@ Botを追加したユーザーは？: {add_bot_user}
         else:
             await interaction.followup.send(embed=embed)
 
+    @search.command(name="invite", description="招待リンク情報を取得します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def invite_info(self, interaction: discord.Interaction, 招待リンク: str):
+        await interaction.response.defer()
+        JST = datetime.timezone(datetime.timedelta(hours=9))
+        invite = await self.bot.fetch_invite(招待リンク)
+        if not invite:
+            return await interaction.followup.send(embed=discord.Embed(title="招待リンクが見つかりません。", color=discord.Color.green()))
+        embed = discord.Embed(title="招待リンクの情報", color=discord.Color.green()).add_field(name="サーバー名", value=f"{invite.guild.name}", inline=False).add_field(name="サーバーid", value=f"{invite.guild.id}", inline=False).add_field(name="招待リンク作成者", value=f"{invite.inviter.display_name if invite.inviter else "不明"} ({invite.inviter.id if invite.inviter else "不明"})", inline=False).add_field(name="招待リンクの使用回数", value=f"{invite.uses if invite.uses else "0"} / {invite.max_uses if invite.max_uses else "無限"}", inline=False)
+        embed.add_field(name="チャンネル", value=f"{invite.channel.name if invite.channel else "不明"} ({invite.channel.id if invite.channel else "不明"})", inline=False)
+        embed.add_field(name="メンバー数", value=f"{invite.approximate_member_count if invite.approximate_member_count else "不明"}", inline=False)
+        embed.add_field(name="オンライン数", value=f"{invite.approximate_presence_count if invite.approximate_presence_count else "不明"}", inline=False)
+        embed.add_field(name="作成時刻", value=f"{invite.created_at.astimezone(JST) if invite.created_at else "不明"}", inline=False)
+        if invite.guild.icon:
+            embed.set_thumbnail(url=invite.guild.icon.url)
+        await interaction.followup.send(embed=embed)
+
     @search.command(name="avatar", description="アバターを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
@@ -376,6 +432,141 @@ Botを追加したユーザーは？: {add_bot_user}
             await interaction.followup.send(view=AvatarLayout())
 
         return
+
+    @search.command(name="translate", description="翻訳をします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    @app_commands.choices(翻訳先=[
+        app_commands.Choice(name='日本語へ',value="ja"),
+        app_commands.Choice(name='英語へ',value="en"),
+        app_commands.Choice(name='中国語へ',value="zh-CN"),
+        app_commands.Choice(name='韓国語へ',value="ko"),
+        app_commands.Choice(name='ロシア語へ',value="ru"),
+        app_commands.Choice(name='ノムリッシュ語へ',value="nom"),
+    ])
+    async def translate(self, interaction: discord.Interaction, 翻訳先: app_commands.Choice[str], *, テキスト: str):
+        await interaction.response.defer()
+
+        if 翻訳先.value == "nom":
+            loop = asyncio.get_running_loop()
+            nom = await loop.run_in_executor(None, partial(NomTranslater))
+            text = await loop.run_in_executor(None, partial(nom.translare, テキスト))
+
+            embed = discord.Embed(
+                title=f"翻訳 (ノムリッシュ語へ)",
+                description=f"```{text}```",
+                color=discord.Color.green()
+            )
+            await interaction.followup.send(embed=embed)
+            return
+
+        try:
+            translator = GoogleTranslator(source="auto", target=翻訳先.value)
+            translated_text = translator.translate(テキスト)
+
+            embed = discord.Embed(
+                title=f"翻訳 ({翻訳先.value} へ)",
+                description=f"```{translated_text}```",
+                color=discord.Color.green()
+            )
+            await interaction.followup.send(embed=embed)
+        
+        except Exception as e:
+            embed = discord.Embed(
+                title="翻訳に失敗しました",
+                description="指定された言語コードが正しいか確認してください。",
+                color=discord.Color.red()
+            )
+            await interaction.followup.send(embed=embed)
+
+    @search.command(name="news", description="翻訳をします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def news(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f'https://mainichi.jp/', ssl=ssl_context) as response:
+                soup = BeautifulSoup(await response.text(), 'html.parser')
+                title = soup.find_all('div', class_="toppickup")[0]
+                url = title.find_all('a')[0]
+                await interaction.followup.send(f"https:{url["href"]}")
+
+    @search.command(name="wikipedia", description="翻訳をします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def wikipedia(self, interaction: discord.Interaction, 検索ワード: str):
+        await interaction.response.defer()
+        loop = asyncio.get_event_loop()
+        try:
+            
+            wikipedia_api_url = "https://ja.wikipedia.org/w/api.php"
+            
+            # APIパラメータ
+            params = {
+                "action": "query",
+                "format": "json",
+                "titles": 検索ワード,
+                "prop": "info",
+                "inprop": "url"
+            }
+            
+            response = await loop.run_in_executor(None, partial(requests.get, wikipedia_api_url, params=params))
+            await loop.run_in_executor(None, partial(response.raise_for_status))
+            data = await loop.run_in_executor(None, partial(response.json))
+            
+            pages = data.get("query", {}).get("pages", {})
+            if not pages:
+                await interaction.followup.send(f"Wikipedia記事が見つかりませんでした。")
+                return
+            
+            page_id, page_info = next(iter(pages.items()))
+            if page_id == "-1":
+                await interaction.followup.send(f"Wikipedia記事が見つかりませんでした。")
+                return
+            
+            short_url = f"https://ja.wikipedia.org/w/index.php?curid={page_id}"
+            await interaction.followup.send(f"🔗 Wikipedia短縮リンク: {short_url}")
+        
+        except Exception as e:
+            await interaction.followup.send(f"エラーが発生しました: {str(e)}")
+
+    @search.command(name="safeweb", description="翻訳をします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def wikipedia(self, interaction: discord.Interaction, url: str):
+        await interaction.response.defer()
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f'https://findredirect.com/api/redirects', json={
+                'url': url
+            }) as response_expand:
+                js_short = await response_expand.json()
+
+        async with aiohttp.ClientSession() as session_safeweb:
+            if not js_short[0].get("redirect", False):
+
+                q = urlparse(url).netloc
+                async with session_safeweb.get(f'https://safeweb.norton.com/safeweb/sites/v1/details?url={q}&insert=0', ssl=ssl_context) as response:
+                    js = json.loads(await response.text())
+                    if js["rating"] == "b":
+                        await interaction.followup.send(embed=discord.Embed(title="このサイトは危険です。", description=f"URLの評価: {js["communityRating"]}", color=discord.Color.red()))
+                    elif js["rating"] == "w":
+                        await interaction.followup.send(embed=discord.Embed(title="このサイトは注意が必要です。", description=f"URLの評価: {js["communityRating"]}", color=discord.Color.yellow()))
+                    elif js["rating"] == "g":
+                        await interaction.followup.send(embed=discord.Embed(title="このサイトは評価されていません。", description=f"URLの評価: {js["communityRating"]}", color=discord.Color.blue()))
+                    else:
+                        await interaction.followup.send(embed=discord.Embed(title="このサイトは多分安全です。", description=f"URLの評価: {js["communityRating"]}", color=discord.Color.green()))
+            else:
+                q = urlparse(js_short[0].get("redirect", False)).netloc
+                async with session_safeweb.get(f'https://safeweb.norton.com/safeweb/sites/v1/details?url={q}&insert=0', ssl=ssl_context) as response:
+                    js = json.loads(await response.text())
+                    if js["rating"] == "b":
+                        await interaction.followup.send(embed=discord.Embed(title="このサイトは危険です。", description=f"URLの評価: {js["communityRating"]}", color=discord.Color.red()))
+                    elif js["rating"] == "w":
+                        await interaction.followup.send(embed=discord.Embed(title="このサイトは注意が必要です。", description=f"URLの評価: {js["communityRating"]}", color=discord.Color.yellow()))
+                    elif js["rating"] == "g":
+                        await interaction.followup.send(embed=discord.Embed(title="このサイトは評価されていません。", description=f"URLの評価: {js["communityRating"]}", color=discord.Color.blue()))
+                    else:
+                        await interaction.followup.send(embed=discord.Embed(title="このサイトは多分安全です。", description=f"URLの評価: {js["communityRating"]}", color=discord.Color.green()))
 
 async def setup(bot):
     await bot.add_cog(SearchCog(bot))
