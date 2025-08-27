@@ -159,6 +159,18 @@ class ModCog(commands.Cog):
 
         await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="警告しました。", color=discord.Color.green()))
 
+    @moderation.command(name="remake", description="チャンネルを再生成します。")
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def remake(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        ch = await interaction.channel.clone()
+        await ch.edit(position=interaction.channel.position+1)
+        await interaction.channel.delete()
+        await asyncio.sleep(1)
+        await ch.send("<:Success:1362271281302601749> 再生成しました。")
+
     @moderation.command(name="lock", description="チャンネルをロックします。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -220,6 +232,36 @@ class ModCog(commands.Cog):
         else:
             await db.delete_one({"Guild": interaction.guild.id})
             await interaction.followup.send(embed=discord.Embed(title="通報チャンネルを無効化しました。", color=discord.Color.green()))
+
+    @moderation.command(name="serverban", description="web認証時に特定のサーバーに参加してる場合に、認証できなくします。")
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def server_ban(self, interaction: discord.Interaction, サーバーid: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        db = self.bot.async_db["Main"].GuildBAN
+        await db.replace_one(
+            {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}, 
+            {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}, 
+            upsert=True
+        )
+        return await interaction.response.send_message(embed=discord.Embed(title="<:Success:1362271281302601749> サーバーをBANしました。", color=discord.Color.green()))
+
+    @moderation.command(name="serverunban", description="web認証時に特定のサーバーに参加してる場合に、認証できなくするのを解除します。")
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def server_unban(self, interaction: discord.Interaction, サーバーid: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        db = self.bot.async_db["Main"].GuildBAN
+        await db.delete_one(
+            {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}
+        )
+        return await interaction.response.send_message(embed=discord.Embed(title="<:Success:1362271281302601749> サーバーをunBANしました。", color=discord.Color.green()))
 
 async def setup(bot):
     await bot.add_cog(ModCog(bot))
