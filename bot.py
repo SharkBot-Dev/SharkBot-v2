@@ -49,7 +49,6 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    await bot.process_commands(message)
     return
 
 @bot.event
