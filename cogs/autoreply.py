@@ -116,7 +116,7 @@ class AutoReplyCog(commands.Cog):
     @autoreply.command(name="create", description="自動返信を作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
-    @commands.has_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreply_create_(self, interaction: discord.Interaction, 条件: str, 結果: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -132,7 +132,7 @@ class AutoReplyCog(commands.Cog):
     @autoreply.command(name="delete", description="自動返信を削除します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
-    @commands.has_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreply_delete(self, interaction: discord.Interaction, 条件: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -148,8 +148,8 @@ class AutoReplyCog(commands.Cog):
     @autoreply.command(name="list", description="自動返信をリストします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
-    @commands.has_permissions(manage_channels=True)
-    async def autoreply_list(self, interaction: discord.Interaction, 条件: str):
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def autoreply_list(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
 
