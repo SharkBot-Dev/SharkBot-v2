@@ -811,6 +811,86 @@ class PanelCog(commands.Cog):
         await ロールパネルのid_.edit(view=view)
         await interaction.followup.send(embed=discord.Embed(title="編集しました。", color=discord.Color.green()), ephemeral=True)
 
+    @panel.command(description="新しいGUIのロールパネルを作成します。", name="newgui-rolepanel")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    async def panel_newgui_rolepanel(self, interaction: discord.Interaction, タイトル: str, ロール1: discord.Role, ロール2: discord.Role = None, ロール3: discord.Role = None, ロール4: discord.Role = None, ロール5: discord.Role = None, 説明: str = None):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+        
+        await interaction.response.defer()
+        cont = self.bot.container(self.bot)
+        cont.add_view(cont.text(f"# {タイトル}"))
+        if 説明:
+            cont.add_view(cont.text(f"{説明}"))
+        b1 = cont.labeled_customid_button(button_label=f"取得", custom_id=f"rolepanel_v1+{ロール1.id}", style=1)
+        cont.add_view(cont.labeled_button(f"{ロール1.name} ({ロール1.id})", b1))
+        if ロール2:
+            b2 = cont.labeled_customid_button(button_label=f"取得", custom_id=f"rolepanel_v1+{ロール2.id}", style=1)
+            cont.add_view(cont.labeled_button(f"{ロール2.name} ({ロール2.id})", b2))
+        if ロール3:
+            b3 = cont.labeled_customid_button(button_label=f"取得", custom_id=f"rolepanel_v1+{ロール3.id}", style=1)
+            cont.add_view(cont.labeled_button(f"{ロール3.name} ({ロール3.id})", b3))
+        if ロール4:
+            b4 = cont.labeled_customid_button(button_label=f"取得", custom_id=f"rolepanel_v1+{ロール4.id}", style=1)
+            cont.add_view(cont.labeled_button(f"{ロール4.name} ({ロール4.id})", b4))
+        if ロール5:
+            b5 = cont.labeled_customid_button(button_label=f"取得", custom_id=f"rolepanel_v1+{ロール5.id}", style=1)
+            cont.add_view(cont.labeled_button(f"{ロール5.name} ({ロール5.id})", b5))
+        await cont.send(0, interaction.channel.id)
+        await interaction.delete_original_response()
+
+    @panel.command(name="newgui-rolepanel-edit", description="新しいGuiのロールパネルを編集します。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10)
+    @discord.app_commands.choices(
+        削除か追加か=[
+            discord.app_commands.Choice(name="追加", value="add"),
+            discord.app_commands.Choice(name="削除", value="remove"),
+        ]
+    )
+    async def panel_new_gui_rolepanel_edit(self, interaction: discord.Interaction, メッセージ: str, ロール: discord.Role, 削除か追加か: discord.app_commands.Choice[str]):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+        
+        await interaction.response.defer()
+
+        try:
+
+            メッセージ = await interaction.channel.fetch_message(int(メッセージ))
+        except:
+            await interaction.delete_original_response()
+            return
+
+        cont = self.bot.container(self.bot)
+        con = await cont.fetch(メッセージ, interaction.channel.id)
+        cont.comp = con[0].get("components", [])
+        if 削除か追加か.name == "デバッグ":
+            if not interaction.user.id == 1335428061541437531:
+                return await interaction.followup.send("オーナーのみ実行可能です。")
+            await interaction.followup.send(f"{cont.comp}")
+        elif 削除か追加か.name == "追加":
+            b1 = cont.labeled_customid_button(button_label=f"取得", custom_id=f"rolepanel_v1+{ロール.id}", style=1)
+            cont.add_view(cont.labeled_button(f"{ロール.name} ({ロール.id})", b1))
+            await cont.edit(メッセージ, interaction.channel.id)
+        elif 削除か追加か.name == "削除":
+            ls = []
+            b1 = cont.labeled_customid_button(button_label=f"取得", custom_id=f"rolepanel_v1+{ロール.id}", style=1)
+            for c in cont.comp:
+                if c.get("components", {}) == {}:
+                    ls.append(c)
+                    continue
+                if c.get("type", 0) == 9:
+                    if c.get("components", {})[0].get("content", None) == f"{ロール.name} ({ロール.id})":
+                        continue
+                    ls.append(c)
+            cont.comp = ls
+            await cont.edit(メッセージ, interaction.channel.id)
+
+        await interaction.delete_original_response()
+
     @panel.command(name="poll", description="アンケート作成をします。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)

@@ -12,6 +12,8 @@ import aiohttp
 from discord import Webhook
 from discord import app_commands
 
+from models import command_disable
+
 cooldown_python_shell = {}
 
 class RunPython(discord.ui.Modal, title='Pythonを実行'):
@@ -380,6 +382,9 @@ class ShellCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def python_shell(self, interaction: discord.Interaction, 有効化するか: bool):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         db = self.bot.async_db["Main"].PythonShell
         if 有効化するか:
             web = await interaction.channel.create_webhook(name="PythonShell")
@@ -404,6 +409,9 @@ class ShellCog(commands.Cog):
         app_commands.Choice(name='c#',value="csharp"),
     ])
     async def compile_(self, interaction: discord.Interaction, 言語: app_commands.Choice[str]):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
         if 言語.name == "python":
             await interaction.response.send_modal(RunPython())
         elif 言語.name == "nodejs":
