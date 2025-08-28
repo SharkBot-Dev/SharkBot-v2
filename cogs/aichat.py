@@ -55,7 +55,7 @@ class AICog(commands.Cog):
                 await interaction.followup.send(embed=discord.Embed(title="AIの回答", description=f"```{text}```", color=discord.Color.green())
                                                 .set_footer(text="AIの回答は100%正しいとは限りません。 by SharkAI."))
 
-    @ai.command(name="server-story", description="サーバーの歴史をAIに書いてもらいます。")
+    @ai.command(name="server-histry", description="サーバーの歴史をAIに書いてもらいます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def ai_server_story(self, interaction: discord.Interaction):
@@ -72,7 +72,7 @@ class AICog(commands.Cog):
         }
 
         json_data = {
-            'prompt': f"{interaction.guild.name}の歴史",
+            'prompt': f"{interaction.guild.name}の歴史について",
         }
 
         for n in badword.badwords:
@@ -84,6 +84,50 @@ class AICog(commands.Cog):
                 j = await cat.json()
 
                 text = f"{interaction.guild.name}の歴史{j.get("generated_text", "生成に失敗しました。")}"
+
+                for n in badword.badwords:
+                    if n in text:
+                        return await interaction.followup.send(embed=discord.Embed(title="生成に失敗しました。", color=discord.Color.red()))
+
+                await interaction.followup.send(embed=discord.Embed(title="AIの回答", description=f"```{text}```", color=discord.Color.green())
+                                                .set_footer(text="AIの回答は100%正しいとは限りません。 by SharkAI."))
+
+    @ai.command(name="user-info", description="ユーザーについて説明してもらいます。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def ai_user_info(self, interaction: discord.Interaction, ユーザー: discord.User = None):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        if not interaction.channel.nsfw:
+            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="このチャンネルでは使用できません。", description="NSFWチャンネルに移動してください。", color=discord.Color.red()))
+
+        if not ユーザー:
+            ユーザー_ = interaction.user
+        else:
+            ユーザー_ = ユーザー
+
+        name = ユーザー.display_name.replace("!", "").replace("！", "").replace("/", "").replace("?", "").replace("[", "").replace("]", "").replace("@", "")
+
+        await interaction.response.defer()
+
+        headers = {
+            'Content-Type': 'application/json',
+        }
+
+        json_data = {
+            'prompt': f"{name}について",
+        }
+
+        for n in badword.badwords:
+            if n in f"{name}について":
+                return await interaction.followup.send(embed=discord.Embed(title="生成に失敗しました。", color=discord.Color.red()))
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post("http://localhost:6000/generate", headers=headers, json=json_data) as cat:
+                j = await cat.json()
+
+                text = f"{name}について{j.get("generated_text", "生成に失敗しました。")}"
 
                 for n in badword.badwords:
                     if n in text:
