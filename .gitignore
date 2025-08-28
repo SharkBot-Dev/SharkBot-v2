@@ -209,3 +209,4 @@ __marimo__/
 /consts/settings.py
 /data
 /static
+/consts/badword.py
