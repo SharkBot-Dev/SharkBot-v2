@@ -374,9 +374,9 @@ class ShellCog(commands.Cog):
                 await webhook_.send(embed=discord.Embed(title="Python実行結果", description=f"```{data.get("stdout", "出力なし")}```", color=discord.Color.blue()), username="PythonShell", avatar_url="https://images.icon-icons.com/112/PNG/512/python_18894.png")
                 return
 
-    fun = app_commands.Group(name="shell", description="プログラム系のコマンドです。")
+    shell = app_commands.Group(name="shell", description="プログラム系のコマンドです。")
 
-    @fun.command(name="python", description="pythonシェルを使用します。")
+    @shell.command(name="python", description="pythonシェルを使用します。")
     @app_commands.checks.cooldown(2, 10, commands.BucketType.guild)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def python_shell(self, interaction: discord.Interaction, 有効化するか: bool):
@@ -395,7 +395,7 @@ class ShellCog(commands.Cog):
                 return await interaction.response.send_message(embed=discord.Embed(title="Pythonシェルは有効ではありません。", color=discord.Color.red()))
             return await interaction.response.send_message(embed=discord.Embed(title="Pythonシェルを無効化しました。", color=discord.Color.green()))
         
-    @fun.command(name="compile", description="プログラムをコンパイルします。")
+    @shell.command(name="compile", description="プログラムをコンパイルします。")
     @app_commands.checks.cooldown(2, 10, commands.BucketType.guild)
     @app_commands.choices(言語=[
         app_commands.Choice(name='python',value="python"),
