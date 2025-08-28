@@ -88,7 +88,7 @@ class AutoReactionCog(commands.Cog):
 
     @autoreact.command(name="channel", description="自動リアクションをするチャンネルを設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreact_channel(self, interaction: discord.Interaction, 絵文字: str):
         db = self.bot.async_db["Main"].AutoReactionChannel
@@ -101,7 +101,7 @@ class AutoReactionCog(commands.Cog):
 
     @autoreact.command(name="word", description="自動リアクションをするワードを設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreact_word(self, interaction: discord.Interaction, 言葉: str, 絵文字: str):
         db = self.bot.async_db["Main"].AutoReactionWord
@@ -114,7 +114,7 @@ class AutoReactionCog(commands.Cog):
 
     @autoreact.command(name="remove", description="自動リアクションを削除します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreact_remove(self, interaction: discord.Interaction, ワード: str = None):
         db = self.bot.async_db["Main"].AutoReactionChannel
@@ -130,7 +130,7 @@ class AutoReactionCog(commands.Cog):
 
     @autoreact.command(name="list", description="自動リアクションをリスト化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreact_list(self, interaction: discord.Interaction):
         await interaction.response.defer()

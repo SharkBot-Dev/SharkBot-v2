@@ -258,7 +258,7 @@ class LevelCog(commands.Cog):
     @level.command(name="setting", description="レベルを有効化&無効化します。")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def level_setting(self, interaction: discord.Interaction, 有効か: bool):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -279,7 +279,7 @@ class LevelCog(commands.Cog):
 
     @level.command(name="show", description="レベルを確認します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def level_show(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -324,7 +324,7 @@ class LevelCog(commands.Cog):
 
     @level.command(name="card", description="レベルカードを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def level_card(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -390,7 +390,7 @@ class LevelCog(commands.Cog):
 
     @level.command(name="channel", description="レベルアップの通知のチャンネルを設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def level_channel(self, interaction: discord.Interaction, チャンネル: discord.TextChannel):
         if not await command_disable.command_enabled_check(interaction):
@@ -413,7 +413,7 @@ class LevelCog(commands.Cog):
 
     @level.command(name="role", description="レベルアップ時に付与するロールを指定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_roles=True)
     async def level_role(self, interaction: discord.Interaction, レベル: int, ロール: discord.Role = None):
         if not await command_disable.command_enabled_check(interaction):
@@ -435,7 +435,7 @@ class LevelCog(commands.Cog):
 
     @level.command(name="edit", description="レベルを編集します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def level_edit(self, interaction: discord.Interaction, ユーザー: discord.User, レベル: int, xp: int):
         if not await command_disable.command_enabled_check(interaction):
@@ -453,7 +453,7 @@ class LevelCog(commands.Cog):
     
     @level.command(name="timing", description="レベルアップするタイミングを設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def level_timing(self, interaction: discord.Interaction, xp: int):
         if not await command_disable.command_enabled_check(interaction):
@@ -478,7 +478,7 @@ class LevelCog(commands.Cog):
     
     @level.command(name="rewards", description="レベルアップ時のご褒美をリスト化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def level_rewards(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -505,7 +505,7 @@ class LevelCog(commands.Cog):
 
     @level.command(name="ranking", description="レベルのランキングを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def level_ranking(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")

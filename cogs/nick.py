@@ -15,7 +15,7 @@ class NickNameCog(commands.Cog):
 
     @nick.command(name="edit", description="ニックネームを編集します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_nicknames=True)
     async def nick_edit(self, interaction: discord.Interaction, メンバー: discord.Member, 名前: str):
         if not await command_disable.command_enabled_check(interaction):
@@ -29,7 +29,7 @@ class NickNameCog(commands.Cog):
         
     @nick.command(name="reset", description="ニックネームをリセットします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_nicknames=True)
     async def nick_reset(self, interaction: discord.Interaction, メンバー: discord.Member):
         if not await command_disable.command_enabled_check(interaction):

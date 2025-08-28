@@ -24,7 +24,7 @@ class RoleCog(commands.Cog):
     @role.command(name="add", description="ロールを追加します。")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def role_add(self, interaction: discord.Interaction, メンバー: discord.User, ロール: discord.Role):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -45,7 +45,7 @@ class RoleCog(commands.Cog):
     @role.command(name="remove", description="ロールを剥奪します。")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def role_remove(self, interaction: discord.Interaction, メンバー: discord.User, ロール: discord.Role):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -66,7 +66,7 @@ class RoleCog(commands.Cog):
     @role.command(name="info", description="ロール情報を確認します。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def role_info(self, interaction: discord.Interaction, ロール: discord.Role):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")

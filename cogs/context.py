@@ -124,7 +124,7 @@ async def setup(bot: commands.Bot):
     await bot.add_cog(ContextCog(bot))
 
     @app_commands.context_menu(name="Make it a quote")
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     async def make_it_a_quote(interaction: discord.Interaction, message: discord.Message):
         await interaction.response.defer()
@@ -149,7 +149,7 @@ async def setup(bot: commands.Bot):
         image_binary.close()
 
     @app_commands.context_menu(name="通報")
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     async def report(interaction: discord.Interaction, message: discord.Message):
         if message.author.guild_permissions.administrator:
@@ -177,7 +177,7 @@ async def setup(bot: commands.Bot):
         return await interaction.followup.send(content="通報が完了しました。\n運営が確認しますので、しばらくお待ちください。", ephemeral=True)
         
     @app_commands.context_menu(name="メッセージ固定")
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def message_pin(interaction: discord.Interaction, message: discord.Message):
@@ -206,7 +206,7 @@ async def setup(bot: commands.Bot):
         await interaction.response.send_message(embed=discord.Embed(title="メッセージ固定を有効化しました。", color=discord.Color.green()), ephemeral=True)
 
     @app_commands.context_menu(name="翻訳-Translate")
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     async def message_translate(interaction: discord.Interaction, message: discord.Message):
         class TranslateMessageCommand(discord.ui.View):

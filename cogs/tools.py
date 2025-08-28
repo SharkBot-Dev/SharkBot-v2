@@ -165,7 +165,7 @@ class ToolsCog(commands.Cog):
     @tools.command(name="embed", description="埋め込みを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tools_embed(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -174,7 +174,7 @@ class ToolsCog(commands.Cog):
     @tools.command(name="invite", description="招待リンクを作成します。")
     @app_commands.checks.has_permissions(create_instant_invite=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def invite(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -189,7 +189,7 @@ class ToolsCog(commands.Cog):
     @tools.command(name="uuid", description="uuidを作成します。")
     @app_commands.checks.has_permissions(create_instant_invite=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def uuid(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -202,7 +202,7 @@ class ToolsCog(commands.Cog):
 
     @tools.command(name="short", description="短縮urlを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(ドメイン=[
         app_commands.Choice(name='tinyurl.com',value="tiny"),
         app_commands.Choice(name='urlc.net',value="urlc"),
@@ -242,7 +242,7 @@ class ToolsCog(commands.Cog):
 
     @tools.command(name="whois", description="Whoisします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def whois(self, interaction: discord.Interaction, ドメイン: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -253,7 +253,7 @@ class ToolsCog(commands.Cog):
     
     @tools.command(name="nslookup", description="DNS情報を見ます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def nslookup(self, interaction: discord.Interaction, ドメイン: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -297,7 +297,7 @@ class ToolsCog(commands.Cog):
 
     @tools.command(name="iplookup", description="IP情報を見ます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def iplookup(self, interaction: discord.Interaction, ipアドレス: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -322,7 +322,7 @@ class ToolsCog(commands.Cog):
 
     @tools.command(name="afk", description="AFKを設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def afk(self, interaction: discord.Interaction, 理由: str, 終わったらやること: str = "まだ予定がありません。"):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")

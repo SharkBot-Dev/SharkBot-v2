@@ -34,7 +34,7 @@ class AutoModCog(commands.Cog):
 
     @automod.command(name="create", description="AutoModを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.choices(タイプ=[
         app_commands.Choice(name='招待リンク',value="invite"),
@@ -110,7 +110,7 @@ class AutoModCog(commands.Cog):
 
     @automod.command(name="delete", description="Automodを削除します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.choices(タイプ=[
         app_commands.Choice(name='招待リンク',value="invite"),

@@ -307,7 +307,7 @@ class GlobalCog(commands.Cog):
     @globalchat.command(name="join", description="グローバルチャットに参加します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_join(self, interaction: discord.Interaction, 部屋名: str = None):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -349,7 +349,7 @@ class GlobalCog(commands.Cog):
     @globalchat.command(name="leave", description="グローバルチャットから脱退します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_leave(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -371,7 +371,7 @@ class GlobalCog(commands.Cog):
     @globalchat.command(name="emoji", description="グローバルチャットで使われるサーバー特有の絵文字を設定します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_emoji(self, interaction: discord.Interaction, 絵文字: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -384,7 +384,7 @@ class GlobalCog(commands.Cog):
 
     @globalchat.command(name="server", description="サーバー掲示板を確認します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_server(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -394,7 +394,7 @@ class GlobalCog(commands.Cog):
     @globalchat.command(name="register", description="サーバー掲示板に登録します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_register(self, interaction: discord.Interaction, 説明: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -422,7 +422,7 @@ class GlobalCog(commands.Cog):
 
     @globalchat.command(name="up", description="サーバー掲示板でUpします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_up(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -450,7 +450,7 @@ class GlobalCog(commands.Cog):
     @globalchat.command(name="private-create", description="プライベートグローバルチャットを作成します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_private(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -489,7 +489,7 @@ class GlobalCog(commands.Cog):
     @globalchat.command(name="private-join", description="プライベートなグローバルチャットに参加します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_private_join(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -528,7 +528,7 @@ class GlobalCog(commands.Cog):
     @globalchat.command(name="private-leave", description="プライベートなグローバルチャットから脱退します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_private_leave(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -541,7 +541,7 @@ class GlobalCog(commands.Cog):
 
     @globalchat.command(name="pass-check", description="プライベートグローバルチャットのパスワードをチェックします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_private_leave(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -813,7 +813,7 @@ class GlobalCog(commands.Cog):
     @globalchat.command(name="sgc", description="スーパーグローバルチャットに参加します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_sgc(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -831,7 +831,7 @@ class GlobalCog(commands.Cog):
 
     @globalchat.command(name="sgc-info", description="スーパーグローバルチャットに参加しているBot一覧を見ます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_sgc_info(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -859,7 +859,7 @@ class GlobalCog(commands.Cog):
 
     @globalchat.command(name="shiritori", description="グローバルしりとりに参加します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def global_shiritori(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
@@ -969,7 +969,7 @@ class GlobalCog(commands.Cog):
 
     @globalchat.command(name="ads", description="グローバル宣伝に参加します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def global_ads(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
@@ -1235,7 +1235,7 @@ class GlobalCog(commands.Cog):
 
     @globalchat.command(name="dsgc", description="デモスーパーグローバルチャットに参加・脱退します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def global_dsgc(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):

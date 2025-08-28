@@ -20,7 +20,7 @@ class PokemonGroup(app_commands.Group):
 
     @app_commands.command(name="search", description="ポケモンを検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def pokemon_search(self, interaction: discord.Interaction, ポケモン名: str):
         await interaction.response.defer()
         async with aiohttp.ClientSession() as session:
@@ -56,13 +56,13 @@ class FortniteGroup(app_commands.Group):
 
     @app_commands.command(name="map", description="フォートナイトのマップを取得するよ")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def fortnite_map(self, interaction: discord.Interaction):
         await interaction.response.send_message(embed=discord.Embed(title="フォートナイトのマップ", color=discord.Color.purple()).set_image(url="https://fortnite-api.com/images/map_ja.png"))
 
     @app_commands.command(name="player", description="フォートナイトのプレイヤーを検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def fortnite_player(self, interaction: discord.Interaction, プレイヤー名: str):
         async with aiohttp.ClientSession() as session:
             headers = {
@@ -90,7 +90,7 @@ class MinecraftGroup(app_commands.Group):
 
     @app_commands.command(name="player", description="Minecraftのプレイヤーの情報を取得するよ")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def minecraft_player(self, interaction: discord.Interaction, ユーザーネーム: str):
         await interaction.response.defer()
         try:
@@ -106,7 +106,7 @@ class MinecraftGroup(app_commands.Group):
         
     @app_commands.command(name="java-server", description="Minecraftサーバー(Java)の情報を見ます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def minecraft_server(self, interaction: discord.Interaction, アドレス: str):
         await interaction.response.defer()
         async with aiohttp.ClientSession() as session:
@@ -153,7 +153,7 @@ class GameCog(commands.Cog):
 
     @game.command(name="8ball", description="占ってもらいます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def _8ball(self, interaction: discord.Interaction, 質問: str):
         responses = [
             "はい、間違いありません。",
@@ -171,7 +171,7 @@ class GameCog(commands.Cog):
 
     @game.command(name="geo-quiz", description="地理クイズをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def geo_quiz(self, interaction: discord.Interaction):
         await interaction.response.defer()
         ans = [random.choice(self.geo_s.split(",")) for _ in range(3)]

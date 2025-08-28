@@ -168,7 +168,7 @@ class SearchCog(commands.Cog):
 
     @search.command(name="user", description="ユーザーを検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def user_search(self, interaction: discord.Interaction, user: discord.User):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -321,7 +321,7 @@ Botを追加したユーザーは？: {add_bot_user}
 
     @search.command(name="server", description="サーバー情報を確認します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def server_info(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -367,7 +367,7 @@ Botを追加したユーザーは？: {add_bot_user}
 
     @search.command(name="invite", description="招待リンク情報を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def invite_info(self, interaction: discord.Interaction, 招待リンク: str):
         await interaction.response.defer()
         JST = datetime.timezone(datetime.timedelta(hours=9))
@@ -385,7 +385,7 @@ Botを追加したユーザーは？: {add_bot_user}
 
     @search.command(name="avatar", description="アバターを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def avatar(self, interaction: discord.Interaction, ユーザー: discord.User):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -430,7 +430,7 @@ Botを追加したユーザーは？: {add_bot_user}
 
     @search.command(name="translate", description="翻訳をします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(翻訳先=[
         app_commands.Choice(name='日本語へ',value="ja"),
         app_commands.Choice(name='英語へ',value="en"),
@@ -476,7 +476,7 @@ Botを追加したユーザーは？: {add_bot_user}
 
     @search.command(name="news", description="翻訳をします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def news(self, interaction: discord.Interaction):
         await interaction.response.defer()
         async with aiohttp.ClientSession() as session:
@@ -488,7 +488,7 @@ Botを追加したユーザーは？: {add_bot_user}
 
     @search.command(name="wikipedia", description="翻訳をします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def wikipedia(self, interaction: discord.Interaction, 検索ワード: str):
         await interaction.response.defer()
         loop = asyncio.get_event_loop()
@@ -527,7 +527,7 @@ Botを追加したユーザーは？: {add_bot_user}
 
     @search.command(name="safeweb", description="翻訳をします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def wikipedia(self, interaction: discord.Interaction, url: str):
         await interaction.response.defer()
         async with aiohttp.ClientSession() as session:

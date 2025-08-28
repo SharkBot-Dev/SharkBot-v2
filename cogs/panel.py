@@ -65,7 +65,7 @@ class AuthGroup(app_commands.Group):
     @app_commands.command(name="abs-auth", description="絶対値を使った認証パネルを作ります。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_authbutton(self, interaction: discord.Interaction, タイトル: str, 説明: str, ロール: discord.Role):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -76,7 +76,7 @@ class AuthGroup(app_commands.Group):
     @app_commands.command(name="auth", description="ワンクリック認証パネルを作ります。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_authbutton_onclick(self, interaction: discord.Interaction, タイトル: str, 説明: str, ロール: discord.Role):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -87,7 +87,7 @@ class AuthGroup(app_commands.Group):
     @app_commands.command(name="auth-plus", description="認証したらロールが外れた後にロールが付くパネルを作ります。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_authbutton_plus(self, interaction: discord.Interaction, タイトル: str, 説明: str, ロール: discord.Role, 外すロール: discord.Role):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -98,7 +98,7 @@ class AuthGroup(app_commands.Group):
     @app_commands.command(name="webauth", description="Web認証パネルを作ります。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_authboost(self, interaction: discord.Interaction, タイトル: str, 説明: str, ロール: discord.Role):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -109,7 +109,7 @@ class AuthGroup(app_commands.Group):
     @app_commands.command(name="image", description="画像認証パネルを作ります。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_imageauth(self, interaction: discord.Interaction, タイトル: str, 説明: str, ロール: discord.Role):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -120,7 +120,7 @@ class AuthGroup(app_commands.Group):
     @app_commands.command(name="guideline", description="画像認証パネルを作ります。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def paneL_guideline(self, interaction: discord.Interaction, ロール: discord.Role):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -161,7 +161,7 @@ class AuthGroup(app_commands.Group):
     @app_commands.command(name="auth-reqrole", description="認証パネルに必要なロールを設定します。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @discord.app_commands.autocomplete(認証パネルのid=message_autocomplete)
     async def panel_auth_reqrole(self, interaction: discord.Interaction, 認証パネルのid: str, 必要なロール: discord.Role = None):
         await interaction.response.defer(ephemeral=True)
@@ -672,7 +672,7 @@ class PanelCog(commands.Cog):
     @panel.command(name="role", description="ロールパネルを作成します。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_role(self, interaction: discord.Interaction, タイトル: str, 説明: str, メンションを表示するか: bool, ロール1: discord.Role, ロール2: discord.Role = None, ロール3: discord.Role = None, ロール4: discord.Role = None, ロール5: discord.Role = None, ロール6: discord.Role = None, ロール7: discord.Role = None, ロール8: discord.Role = None, ロール9: discord.Role = None, ロール10: discord.Role = None):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -756,7 +756,7 @@ class PanelCog(commands.Cog):
     @panel.command(name="role-edit", description="ロールパネルを編集します。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @discord.app_commands.autocomplete(ロールパネルのid=message_autocomplete)
     @discord.app_commands.choices(
         削除か追加か=[
@@ -814,7 +814,7 @@ class PanelCog(commands.Cog):
     @panel.command(description="新しいGUIのロールパネルを作成します。", name="newgui-rolepanel")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_newgui_rolepanel(self, interaction: discord.Interaction, タイトル: str, ロール1: discord.Role, ロール2: discord.Role = None, ロール3: discord.Role = None, ロール4: discord.Role = None, ロール5: discord.Role = None, 説明: str = None):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -844,7 +844,7 @@ class PanelCog(commands.Cog):
     @panel.command(name="newgui-rolepanel-edit", description="新しいGuiのロールパネルを編集します。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @discord.app_commands.choices(
         削除か追加か=[
             discord.app_commands.Choice(name="追加", value="add"),
@@ -894,7 +894,7 @@ class PanelCog(commands.Cog):
     @panel.command(name="poll", description="アンケート作成をします。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_poll(self, interaction: discord.Interaction, タイトル: str, 選択肢1: str, 選択肢2: str = None, 選択肢3: str = None, 選択肢4: str = None, 選択肢5: str = None):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -958,7 +958,7 @@ class PanelCog(commands.Cog):
     @panel.command(name="ticket", description="チケットパネルを作成します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_ticket(self, interaction: discord.Interaction, タイトル: str, 説明: str, カテゴリ: discord.CategoryChannel = None, 実績チャンネル: discord.TextChannel = None, メンションするロール: discord.Role = None):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -989,7 +989,7 @@ class PanelCog(commands.Cog):
     @panel.command(name="party", description="様々な募集をします。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_party(self, interaction: discord.Interaction, 内容: str, 最大人数: int):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -1002,7 +1002,7 @@ class PanelCog(commands.Cog):
     @panel.command(name="top", description="一コメを取得します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def top(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")

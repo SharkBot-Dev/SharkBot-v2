@@ -60,7 +60,7 @@ class CommandsManageGroup(app_commands.Group):
     @app_commands.command(name="disable", description="コマンドを無効化します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def commands_disable(self, interaction: discord.Interaction, コマンド名: str):
         await interaction.response.defer()
 
@@ -84,7 +84,7 @@ class CommandsManageGroup(app_commands.Group):
     @app_commands.command(name="enable", description="コマンドを有効化します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def commands_enable(self, interaction: discord.Interaction, コマンド名: str):
         await interaction.response.defer()
 
@@ -112,7 +112,7 @@ class RoleCommands(app_commands.Group):
     @app_commands.command(name="sticky-roles", description="ロール復元機能を設定します。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def sticky_role(self, interaction: discord.Interaction, 有効化するか: bool):
         db = interaction.client.async_db["Main"].RoleRestore
         if 有効化するか:
@@ -135,7 +135,7 @@ class WelcomeCommands(app_commands.Group):
     @app_commands.command(name="welcome", description="ようこそメッセージを設定します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def welcome(self, interaction: discord.Interaction, 有効化するか: bool):
         if 有効化するか:
             class send(discord.ui.Modal):
@@ -165,7 +165,7 @@ class WelcomeCommands(app_commands.Group):
     @app_commands.command(name="goodbye", description="さようならメッセージを設定します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def goodbye(self, interaction: discord.Interaction, 有効化するか: bool):
         if 有効化するか:
             class send(discord.ui.Modal):
@@ -195,7 +195,7 @@ class WelcomeCommands(app_commands.Group):
     @app_commands.command(name="ban", description="BANメッセージを有効化します。")
     @app_commands.checks.has_permissions(manage_channels=True, ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def ban(self, interaction: discord.Interaction, 有効化するか: bool):
         if 有効化するか:
             class send(discord.ui.Modal):
@@ -1095,7 +1095,7 @@ class SettingCog(commands.Cog):
     @settings.command(name="lock-message", description="メッセージを固定します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def lock_message(self, interaction: discord.Interaction, 有効にするか: bool):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -1133,7 +1133,7 @@ class SettingCog(commands.Cog):
     @settings.command(name="prefix", description="頭文字を変更します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def prefix(self, interaction: discord.Interaction, prefix: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -1150,7 +1150,7 @@ class SettingCog(commands.Cog):
     @settings.command(name="score", description="スコアをチェックします。")
     @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def setting_score(self, interaction_: discord.Interaction, ユーザー: discord.User):
         if not await command_disable.command_enabled_check(interaction_):
             return await interaction_.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -1261,7 +1261,7 @@ class SettingCog(commands.Cog):
     @settings.command(name="warn-setting", description="警告時に実行するものを選択します。")
     @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def setting_warn_setting(self, interaction_: discord.Interaction, スコア: int = None):
         if not await command_disable.command_enabled_check(interaction_):
             return await interaction_.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -1371,7 +1371,7 @@ class SettingCog(commands.Cog):
             """, color=discord.Color.blue()))
 
     @settings.command(name="expand", description="メッセージ展開を有効化します。")
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_messages=True)
     async def setting_message_expand(self, interaction: discord.Interaction, 有効化するか: bool):
         db = self.bot.async_db["Main"].ExpandSettings
@@ -1400,7 +1400,7 @@ class SettingCog(commands.Cog):
             )
 
     @settings.command(name="auto-publish", description="自動アナウンス公開をします。")
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_messages=True)
     async def auto_publication(self, interaction: discord.Interaction, チャンネル: discord.TextChannel, 有効にするか: bool):
         if not await command_disable.command_enabled_check(interaction):
@@ -1414,7 +1414,7 @@ class SettingCog(commands.Cog):
             return await interaction.followup.send(embed=discord.Embed(title="自動アナウンス公開を設定できませんでした。", color=discord.Color.red(), description="権限エラーです。"))
 
     @settings.command(name="file-deletor", description="自動的に削除するファイル形式を設定します。")
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.choices(操作=[
         app_commands.Choice(name='追加',value="add"),
@@ -1441,7 +1441,7 @@ class SettingCog(commands.Cog):
             await interaction.followup.send(embed=discord.Embed(title=f"`.{拡張子.replace(".", "")}`をブロックしないようにしました。", color=discord.Color.green()))
 
     @settings.command(name="auto-translate", description="自動翻訳をします。")
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.choices(翻訳先=[
         app_commands.Choice(name='日本語へ',value="ja"),

@@ -25,7 +25,7 @@ class VCCog(commands.Cog):
 
     @vc.command(name="move", description="VCにメンバーを移動させます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(moderate_members=True)
     async def vc_move_(self, interaction: discord.Interaction, メンバー: discord.Member, チャンネル: discord.VoiceChannel = None):
         try:
@@ -42,7 +42,7 @@ class VCCog(commands.Cog):
 
     @vc.command(name="leave", description="VCからメンバーを退出させます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(moderate_members=True)
     async def vc_leave_(self, interaction: discord.Interaction, メンバー: discord.Member):
         try:
@@ -54,7 +54,7 @@ class VCCog(commands.Cog):
         
     @vc.command(name="bomb", description="VCからメンバーを退出させます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(moderate_members=True)
     async def vc_bomb_(self, interaction: discord.Interaction, ボイスチャンネル: discord.VoiceChannel = None):
         try:
@@ -75,7 +75,7 @@ class VCCog(commands.Cog):
         
     @vc.command(name="gather", description="VCに参加している全員を特定のVCに集めます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(moderate_members=True)
     async def vc_gather_(self, interaction: discord.Interaction, ボイスチャンネル: discord.VoiceChannel = None):
         try:
@@ -110,7 +110,7 @@ class VCCog(commands.Cog):
 
     @vc.command(name="temp", description="一時的なボイスチャンネルを作成するボイスチャンネルを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def vc_temp(self, interaction: discord.Interaction, チャンネル: discord.VoiceChannel = None):
         await interaction.response.defer()
@@ -121,7 +121,7 @@ class VCCog(commands.Cog):
 
     @vc.command(name="alert", description="ボイスチャンネルに参加・退出したときに通知をします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def vc_alert(self, interaction: discord.Interaction, チャンネル: discord.VoiceChannel = None):
         await interaction.response.defer()

@@ -54,7 +54,7 @@ class AlertCog(commands.Cog):
 
     @alert.command(name="event", description="イベントを通知するチャンネルを設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def alert_event(self, interaction: discord.Interaction, チャンネル: discord.TextChannel = None):
         db = self.bot.async_db["Main"].EventAlert
@@ -73,7 +73,7 @@ class AlertCog(commands.Cog):
 
     @alert.command(name="mention", description="アラート時にメンションするロールを設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def alert_mention(self, interaction: discord.Interaction, ロール: discord.Role = None):
         db = self.bot.async_db["Main"].AlertMention

@@ -71,7 +71,7 @@ class CountCog(commands.Cog):
 
     @count.command(name="setup", description="カウントゲームをセットアップします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def count_setup(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
@@ -86,7 +86,7 @@ class CountCog(commands.Cog):
 
     @count.command(name="disable", description="カウントゲームを終了します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def count_disable(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
@@ -98,7 +98,7 @@ class CountCog(commands.Cog):
     
     @count.command(name="skip", description="カウントゲームの現在の数字を設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def count_skip(self, interaction: discord.Interaction, 数字: int):
         await interaction.followup.defer()
@@ -118,7 +118,7 @@ class CountCog(commands.Cog):
 
     @count.command(name="reset", description="カウントゲームをリセットします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def count_reset(self, interaction: discord.Interaction):
         await interaction.response.defer()

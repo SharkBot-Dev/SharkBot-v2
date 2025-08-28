@@ -149,7 +149,7 @@ class TextGroup(app_commands.Group):
 
     @app_commands.command(name="suddendeath", description="突然の死を生成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def suddendeath(self, interaction: discord.Interaction, テキスト: str = "突然の死"):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -158,7 +158,7 @@ class TextGroup(app_commands.Group):
 
     @app_commands.command(name="retranslate", description="再翻訳します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def retranslate(self, interaction: discord.Interaction, テキスト: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -204,7 +204,7 @@ class TextGroup(app_commands.Group):
 
     @app_commands.command(name="text-to-emoji", description="テキストを絵文字化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def text_to_emoji(self, interaction: discord.Interaction, テキスト: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -229,7 +229,7 @@ class TextGroup(app_commands.Group):
 
     @app_commands.command(name="reencode", description="文字化けを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def reencode(self, interaction: discord.Interaction, テキスト: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -238,7 +238,7 @@ class TextGroup(app_commands.Group):
 
     @app_commands.command(name="crypt", description="文字列を暗号化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def crypt_text(self, interaction: discord.Interaction, テキスト: str = None, 暗号: str = None, 暗号化キー: str = None):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -284,7 +284,7 @@ class ImageGroup(app_commands.Group):
 
     @app_commands.command(name="cat", description="ネコの画像を生成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def cat(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -295,7 +295,7 @@ class ImageGroup(app_commands.Group):
 
     @app_commands.command(name="dog", description="犬の画像を生成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def dog(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -306,7 +306,7 @@ class ImageGroup(app_commands.Group):
 
     @app_commands.command(name="5000", description="5000兆円ほしい！")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def _5000(self, interaction: discord.Interaction, 上: str, 下: str, noアルファ: bool = None):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -321,7 +321,7 @@ class ImageGroup(app_commands.Group):
 
     @app_commands.command(name="textmoji", description="テキストを絵文字にします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(色=[
         app_commands.Choice(name='赤',value="FF0000"),
         app_commands.Choice(name='青',value="1111FF"),
@@ -340,7 +340,7 @@ class ImageGroup(app_commands.Group):
 
     @app_commands.command(name="httpcat", description="httpキャットを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def httpcat(self, interaction: discord.Interaction, ステータスコード: int):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -350,7 +350,7 @@ class ImageGroup(app_commands.Group):
 
     @app_commands.command(name="miq", description="Make it a quoteを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(色=[
         app_commands.Choice(name='カラー',value="color"),
         app_commands.Choice(name='白黒',value="black")
@@ -403,7 +403,7 @@ class FunCog(commands.Cog):
 
     @fun.command(name="janken", description="じゃんけんをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def janken(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")

@@ -160,7 +160,7 @@ class ManageGroup(app_commands.Group):
     @app_commands.command(name="add", description="お金を追加します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def economy_manage_money_add(self, interaction: discord.Interaction, メンバー: discord.Member, 金額: int):
         await interaction.response.defer()
         await Money(interaction.client).add_server_money(interaction.guild, メンバー, 金額)
@@ -169,7 +169,7 @@ class ManageGroup(app_commands.Group):
     @app_commands.command(name="remove", description="お金を減らします。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def economy_manage_money_remove(self, interaction: discord.Interaction, メンバー: discord.Member, 金額: int):
         await interaction.response.defer()
         await Money(interaction.client).add_server_money(interaction.guild, メンバー, -金額)
@@ -182,7 +182,7 @@ class ItemGroup(app_commands.Group):
     @app_commands.command(name="create", description="アイテムを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def economy_item_create_server(self, interaction: discord.Interaction, アイテム名: str, 値段: int, ロール: discord.Role = None):
         await interaction.response.defer()
         if ロール and not interaction.user.guild_permissions.administrator:
@@ -197,7 +197,7 @@ class ItemGroup(app_commands.Group):
     @app_commands.command(name="remove", description="アイテムを削除します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def economy_item_remove_server(self, interaction: discord.Interaction, アイテム名: str):
         await interaction.response.defer()
         b = await Money(interaction.client).remove_server_items(interaction.guild, アイテム名)

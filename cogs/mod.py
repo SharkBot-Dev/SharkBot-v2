@@ -32,7 +32,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="kick", description="メンバーをキックします。")
     @app_commands.checks.has_permissions(kick_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def kick(self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -51,7 +51,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="ban", description="ユーザーをBanします。")
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def ban(self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -68,7 +68,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="softban", description="ユーザーをSoftBanします。")
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def softban(self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -88,7 +88,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="timeout", description="メンバーをタイムアウトします。")
     @app_commands.checks.has_permissions(moderate_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def timeout(self, interaction: discord.Interaction, ユーザー: discord.User, 時間: str, 理由: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -108,7 +108,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="max-timeout", description="最大までタイムアウトします。")
     @app_commands.checks.has_permissions(moderate_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def max_timeout(self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -127,7 +127,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="clear", description="メッセージを一斉削除します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def clear(self, interaction: discord.Interaction, メッセージ数: int):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -146,7 +146,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="warn", description="メンバーを警告します。")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def warn(self, interaction: discord.Interaction, メンバー: discord.User, 理由: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -162,7 +162,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="remake", description="チャンネルを再生成します。")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def remake(self, interaction: discord.Interaction):
         await interaction.response.defer()
         ch = await interaction.channel.clone()
@@ -174,7 +174,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="lock", description="チャンネルをロックします。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def lock(self, interaction: discord.Interaction, スレッド作成可能か: bool = False, リアクション可能か: bool = False):
         await interaction.response.defer()
         overwrite = interaction.channel.overwrites_for(interaction.guild.default_role)
@@ -198,7 +198,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="unlock", description="チャンネルを開放します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def unlock(self, interaction: discord.Interaction):
         await interaction.response.defer()
         overwrite = interaction.channel.overwrites_for(interaction.guild.default_role)
@@ -215,7 +215,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="report", description="レポートチャンネルをセットアップします。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def report_channel(self, interaction: discord.Interaction, チャンネル: discord.TextChannel = None):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -236,7 +236,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="serverban", description="web認証時に特定のサーバーに参加してる場合に、認証できなくします。")
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def server_ban(self, interaction: discord.Interaction, サーバーid: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
@@ -252,7 +252,7 @@ class ModCog(commands.Cog):
     @moderation.command(name="serverunban", description="web認証時に特定のサーバーに参加してる場合に、認証できなくするのを解除します。")
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def server_unban(self, interaction: discord.Interaction, サーバーid: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")

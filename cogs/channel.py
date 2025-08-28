@@ -15,7 +15,7 @@ class ChannelCog(commands.Cog):
 
     @channel.command(name="info", description="チャンネルの情報を表示するよ")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def channel_info(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
@@ -37,7 +37,7 @@ class ChannelCog(commands.Cog):
 
     @channel.command(name="slowmode", description="低速モードを設定するよ")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def slowmode(self, interaction: discord.Interaction, 何秒か: int):
         if not await command_disable.command_enabled_check(interaction):
@@ -52,7 +52,7 @@ class ChannelCog(commands.Cog):
         
     @channel.command(name="command-disable", description="低速モードを設定するよ")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def command_disable(self, interaction: discord.Interaction, コマンドが使えるか: bool):
         if not await command_disable.command_enabled_check(interaction):
