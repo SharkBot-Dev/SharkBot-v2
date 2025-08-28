@@ -22,12 +22,109 @@ def parse_time(timestr: str):
         seconds=int(seconds),
     )
 
+class BanGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="ban", description="Ban系のコマンド。")
+
+    @app_commands.command(name="ban", description="ユーザーをBanをします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def ban(self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        if ユーザー.id == interaction.user.id:
+            return await interaction.response.send_message(embed=discord.Embed(title=f"自分自身はBanできません。", color=discord.Color.red()), ephemeral=True)
+        await interaction.response.defer()
+        try:
+            await interaction.guild.ban(ユーザー, reason=理由)
+        except:
+            return await interaction.followup.send(embed=discord.Embed(title="Banに失敗しました。", description="権限が足りないかも！？", color=discord.Color.red()))
+        return await interaction.followup.send(embed=discord.Embed(title=f"{ユーザー.name}をBanしました。", color=discord.Color.green()))
+
+    @app_commands.command(name="softban", description="ユーザーをSoftBanします。")
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def softban(self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+
+        if ユーザー.id == interaction.user.id:
+            return await interaction.response.send_message(embed=discord.Embed(title=f"自分自身はSoftBanできません。", color=discord.Color.red()), ephemeral=True)
+        await interaction.response.defer()
+        try:
+            await interaction.guild.ban(ユーザー, reason=理由)
+
+            await asyncio.sleep(2)
+            await interaction.guild.unban(ユーザー, reason=理由)
+        except:
+            return await interaction.followup.send(embed=discord.Embed(title="SoftBanに失敗しました。", description="権限が足りないかも！？", color=discord.Color.red()))
+        return await interaction.followup.send(embed=discord.Embed(title=f"{ユーザー.name}をSoftBanしました。", color=discord.Color.green()))
+
+    @app_commands.command(name="massban", description="複数ユーザーを一気にbanします。")
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def softban(self, interaction: discord.Interaction, ユーザーidたち: str):
+        await interaction.response.defer()
+
+        U_ids = []
+        for u in ユーザーidたち.split():
+            try:
+                uid = int(u.replace("<@", "").replace("<@!", "").replace(">", ""))
+                U_ids.append(uid)
+            except ValueError:
+                continue  # 無効なIDをスキップ
+
+        if not U_ids:
+            return await interaction.followup.send("有効なユーザーIDが見つかりませんでした。")
+
+        mentions = []
+        for uid in U_ids:
+            member = interaction.guild.get_member(uid)
+            if member:
+                mentions.append(f"{member.name} ({member.id})")
+            else:
+                mentions.append(f"不明なユーザーID: {uid}")
+
+        await interaction.followup.send("以下のユーザーをBANしてもよろしいですか？（Y/n）\n" + "\n".join(mentions))
+
+        def check(m):
+            return m.author == interaction.user and m.channel == interaction.channel
+
+        try:
+            msg = await self.bot.wait_for("message", check=check, timeout=30.0)
+            if msg.content.lower() != "y":
+                return await interaction.channel.send("キャンセルしました。")
+            await msg.add_reaction("✅")
+        except asyncio.TimeoutError:
+            return await interaction.channel.send("タイムアウトしました。")
+
+        success = 0
+        failed = 0
+        for uid in U_ids:
+            try:
+                user = await self.bot.fetch_user(uid)
+                await interaction.guild.ban(user, reason=f"Banned by {interaction.user.name}")
+                await asyncio.sleep(1)  # rate limit対策
+                success += 1
+            except Exception as e:
+                failed += 1
+                print(f"Failed to ban {uid}: {e}")
+                continue
+
+        await interaction.channel.send(f"{success}人をBANしました。失敗: {failed}人。")
+
 class ModCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print(f"init -> ModCog")
 
     moderation = app_commands.Group(name="moderation", description="モデレーション系のコマンドです。")
+
+    moderation.add_command(BanGroup())
 
     @moderation.command(name="kick", description="メンバーをキックします。")
     @app_commands.checks.has_permissions(kick_members=True)
@@ -47,43 +144,6 @@ class ModCog(commands.Cog):
         except:
             return await interaction.followup.send(embed=discord.Embed(title="キックに失敗しました。", description="権限が足りないかも！？", color=discord.Color.red()))
         return await interaction.followup.send(embed=discord.Embed(title=f"{ユーザー.name}をKickしました。", color=discord.Color.green()))
-    
-    @moderation.command(name="ban", description="ユーザーをBanします。")
-    @app_commands.checks.has_permissions(ban_members=True)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def ban(self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
-
-        if ユーザー.id == interaction.user.id:
-            return await interaction.response.send_message(embed=discord.Embed(title=f"自分自身はBanできません。", color=discord.Color.red()), ephemeral=True)
-        await interaction.response.defer()
-        try:
-            await interaction.guild.ban(ユーザー, reason=理由)
-        except:
-            return await interaction.followup.send(embed=discord.Embed(title="Banに失敗しました。", description="権限が足りないかも！？", color=discord.Color.red()))
-        return await interaction.followup.send(embed=discord.Embed(title=f"{ユーザー.name}をBanしました。", color=discord.Color.green()))
-    
-    @moderation.command(name="softban", description="ユーザーをSoftBanします。")
-    @app_commands.checks.has_permissions(ban_members=True)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def softban(self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
-
-        if ユーザー.id == interaction.user.id:
-            return await interaction.response.send_message(embed=discord.Embed(title=f"自分自身はSoftBanできません。", color=discord.Color.red()), ephemeral=True)
-        await interaction.response.defer()
-        try:
-            await interaction.guild.ban(ユーザー, reason=理由)
-
-            await asyncio.sleep(2)
-            await interaction.guild.unban(ユーザー, reason=理由)
-        except:
-            return await interaction.followup.send(embed=discord.Embed(title="SoftBanに失敗しました。", description="権限が足りないかも！？", color=discord.Color.red()))
-        return await interaction.followup.send(embed=discord.Embed(title=f"{ユーザー.name}をSoftBanしました。", color=discord.Color.green()))
     
     @moderation.command(name="timeout", description="メンバーをタイムアウトします。")
     @app_commands.checks.has_permissions(moderate_members=True)

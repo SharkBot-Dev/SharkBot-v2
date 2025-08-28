@@ -19,6 +19,8 @@ import asyncio
 import re
 from deep_translator import GoogleTranslator
 
+import urllib.parse
+
 def text_len_sudden(text):
     count = 0
     for c in text:
@@ -278,6 +280,22 @@ class TextGroup(app_commands.Group):
                 color=discord.Color.orange()
             ))
 
+class NounaiGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="nounai", description="脳内メーカー系の面白いコマンド")
+
+    @app_commands.command(name="nounai", description="脳内メーカーで遊びます")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def nounai(self, interaction: discord.Interaction, 名前: str):
+        await interaction.response.send_message(embed=discord.Embed(title="脳内メーカー", color=discord.Color.green()).set_image(url=f"https://maker.usoko.net/nounai/img/{urllib.parse.quote(名前)}.gif"))
+
+    @app_commands.command(name="kakeizu", description="家系図メーカーで遊びます")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def kakeizu(self, interaction: discord.Interaction, 名前: str):
+        await interaction.response.send_message(embed=discord.Embed(title="家系図メーカー", color=discord.Color.green()).set_image(url=f"https://usokomaker.com/kakeizu_fantasy/r/img/{urllib.parse.quote(名前)}.gif"))
+
 class ImageGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="image", description="画像系の面白いコマンド")
@@ -400,6 +418,7 @@ class FunCog(commands.Cog):
 
     fun.add_command(TextGroup())
     fun.add_command(ImageGroup())
+    fun.add_command(NounaiGroup())
 
     @fun.command(name="janken", description="じゃんけんをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
