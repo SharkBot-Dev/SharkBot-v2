@@ -107,7 +107,7 @@ class AICog(commands.Cog):
         else:
             ユーザー_ = ユーザー
 
-        name = ユーザー.display_name.replace("!", "").replace("！", "").replace("/", "").replace("?", "").replace("[", "").replace("]", "").replace("@", "")
+        name = ユーザー_.display_name.replace("!", "").replace("！", "").replace("/", "").replace("?", "").replace("[", "").replace("]", "").replace("@", "")
 
         await interaction.response.defer()
 
