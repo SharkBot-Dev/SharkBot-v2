@@ -203,12 +203,7 @@ class SearchCog(commands.Cog):
             embed.add_field(name="基本情報", value=f"ID: **{user.id}**\nユーザーネーム: **{user.name}#{user.discriminator}**\n作成日: **{user.created_at.astimezone(JST)}**\nこの鯖に？: **{isguild}**\nBot？: **{isbot}**\n認証Bot？: **{"はい" if user.public_flags.verified_bot else "いいえ"}**").add_field(name="サービス情報", value=f"権限: **{permissions}**")
             userdata = await self.get_user_savedata(user)
             if userdata:
-                guild = int(userdata["Guild"])
                 logininfo = f"**言語**: {userdata["Lang"]}\n"
-                if self.bot.get_guild(guild):
-                    gu = self.bot.get_guild(guild)
-                    logininfo += f"**最後に認証したサーバーの名前**: {gu.name}\n"
-                    logininfo += f"**最後に認証したサーバーのid**: {gu.id}"
                 embed.add_field(name="ログイン情報", value=logininfo, inline=False)
                 pre = userdata["Nitro"]
                 if pre == 0:

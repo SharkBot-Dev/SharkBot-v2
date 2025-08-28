@@ -154,9 +154,9 @@ class TextGroup(app_commands.Group):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
 
-        await interaction.response.send_message(embed=discord.Embed(description=f"{sudden_generator(テキスト)}", title="突然の死", color=discord.Color.green()))
+        await interaction.response.send_message(embed=discord.Embed(description=f"```{sudden_generator(テキスト)}```", title="突然の死", color=discord.Color.green()))
 
-    @app_commands.command(name="retranslate", description="突然の死を生成します。")
+    @app_commands.command(name="retranslate", description="再翻訳します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def retranslate(self, interaction: discord.Interaction, テキスト: str):
@@ -202,7 +202,7 @@ class TextGroup(app_commands.Group):
             )
         )
 
-    @app_commands.command(name="text-to-emoji", description="突然の死を生成します。")
+    @app_commands.command(name="text-to-emoji", description="テキストを絵文字化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10)
     async def text_to_emoji(self, interaction: discord.Interaction, テキスト: str):
