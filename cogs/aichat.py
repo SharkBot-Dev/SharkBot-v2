@@ -10,10 +10,12 @@ from discord import app_commands
 from consts import badword
 from models import command_disable
 
+cooldown_mention_reply = {}
+
 class AICog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        
+
     ai = app_commands.Group(name="ai", description="aiを使用します。")
 
     @ai.command(name="write", description="AIを使って文章を生成します。")
