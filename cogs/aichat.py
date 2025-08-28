@@ -20,7 +20,7 @@ class AICog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def ai_write(self, interaction: discord.Interaction, お題: str):
         if not interaction.channel.nsfw:
-            return await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="このチャンネルでは使用できません。", description="NSFWチャンネルに移動してください。", color=discord.Color.red()))
+            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="このチャンネルでは使用できません。", description="NSFWチャンネルに移動してください。", color=discord.Color.red()))
 
         await interaction.response.defer()
 
