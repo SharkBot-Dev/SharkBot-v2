@@ -8,6 +8,7 @@ from discord.ext import commands, tasks
 from discord import app_commands
 
 from consts import badword
+from models import command_disable
 
 class AICog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -19,6 +20,11 @@ class AICog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def ai_write(self, interaction: discord.Interaction, お題: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+        
+        print(interaction.channel.nsfw)
+
         if not interaction.channel.nsfw:
             return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="このチャンネルでは使用できません。", description="NSFWチャンネルに移動してください。", color=discord.Color.red()))
 
