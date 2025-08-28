@@ -67,7 +67,7 @@ class BanGroup(app_commands.Group):
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def softban(self, interaction: discord.Interaction, ユーザーidたち: str):
+    async def massban(self, interaction: discord.Interaction, ユーザーidたち: str):
         await interaction.response.defer()
 
         U_ids = []
