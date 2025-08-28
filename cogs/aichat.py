@@ -29,6 +29,10 @@ class AICog(commands.Cog):
             'prompt': お題,
         }
 
+        for n in badword.badwords:
+            if n in お題:
+                return await interaction.followup.send(embed=discord.Embed(title="生成に失敗しました。", color=discord.Color.red()))
+
         async with aiohttp.ClientSession() as session:
             async with session.post("http://localhost:6000/generate", headers=headers, json=json_data) as cat:
                 j = await cat.json()
@@ -39,7 +43,8 @@ class AICog(commands.Cog):
                     if n in text:
                         return await interaction.followup.send(embed=discord.Embed(title="生成に失敗しました。", color=discord.Color.red()))
 
-                await interaction.followup.send(embed=discord.Embed(title="AIの回答", description=f"```{text}```"))
+                await interaction.followup.send(embed=discord.Embed(title="AIの回答", description=f"```{text}```", color=discord.Color.green())
+                                                .set_footer(text="AIの回答は100%正しいとは限りません。 by SharkAI."))
 
 async def setup(bot):
     await bot.add_cog(AICog(bot))
