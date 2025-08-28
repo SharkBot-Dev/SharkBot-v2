@@ -9,7 +9,7 @@ from discord import app_commands
 
 from consts import badword
 
-class AlertCog(commands.Cog):
+class AICog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         
@@ -42,4 +42,4 @@ class AlertCog(commands.Cog):
                 await interaction.followup.send(embed=discord.Embed(title="AIの回答", description=f"```{text}```"))
 
 async def setup(bot):
-    await bot.add_cog(AlertCog(bot))
+    await bot.add_cog(AICog(bot))
