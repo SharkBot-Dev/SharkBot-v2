@@ -23,8 +23,6 @@ class AICog(commands.Cog):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
         
-        print(interaction.channel.nsfw)
-
         if not interaction.channel.nsfw:
             return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="このチャンネルでは使用できません。", description="NSFWチャンネルに移動してください。", color=discord.Color.red()))
 
