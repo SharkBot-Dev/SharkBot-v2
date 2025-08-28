@@ -377,7 +377,7 @@ class ShellCog(commands.Cog):
     shell = app_commands.Group(name="shell", description="プログラム系のコマンドです。")
 
     @shell.command(name="python", description="pythonシェルを使用します。")
-    @app_commands.checks.cooldown(2, 10, commands.BucketType.guild)
+    @app_commands.checks.cooldown(2, 10)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def python_shell(self, interaction: discord.Interaction, 有効化するか: bool):
         db = self.bot.async_db["Main"].PythonShell
@@ -396,7 +396,7 @@ class ShellCog(commands.Cog):
             return await interaction.response.send_message(embed=discord.Embed(title="Pythonシェルを無効化しました。", color=discord.Color.green()))
         
     @shell.command(name="compile", description="プログラムをコンパイルします。")
-    @app_commands.checks.cooldown(2, 10, commands.BucketType.guild)
+    @app_commands.checks.cooldown(2, 10)
     @app_commands.choices(言語=[
         app_commands.Choice(name='python',value="python"),
         app_commands.Choice(name='nodejs',value="nodejs"),
