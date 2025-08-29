@@ -1,9 +1,6 @@
-import time
 from fastapi import APIRouter, Form, Request
-import httpx
-from consts import settings, templates
+from consts import templates
 from consts import mongodb
-from models import command_disable
 from fastapi.responses import RedirectResponse
 import html
 
@@ -29,11 +26,7 @@ async def rankcard(request: Request):
         return RedirectResponse("/login")
 
     return templates.templates.TemplateResponse(
-        "rankcard.html",
-        {
-            "request": request,
-            "user": u
-        }
+        "rankcard.html", {"request": request, "user": u}
     )
 
 
@@ -49,7 +42,7 @@ async def rankcard_set(request: Request, color: str = Form(...)):
     await db.replace_one(
         {"User": int(u.get("id", "0"))},
         {"User": int(u.get("id", "0")), "Color": safe_color},
-        upsert=True
+        upsert=True,
     )
 
     return RedirectResponse("/rankcard", status_code=303)

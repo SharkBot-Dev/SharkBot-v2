@@ -8,29 +8,27 @@ from models import permissions_text
 
 class FreeChannelModal(discord.ui.Modal):
     def __init__(self, msgid: int):
-        super().__init__(title='チャンネルを作成', timeout=180)
+        super().__init__(title="チャンネルを作成", timeout=180)
         self.msgid = msgid
 
     channelname = discord.ui.Label(
-        text='チャンネル名を入力',
-        description='チャンネル名を入力してください。',
+        text="チャンネル名を入力",
+        description="チャンネル名を入力してください。",
         component=discord.ui.TextInput(
-            style=discord.TextStyle.short,
-            max_length=15,
-            required=True
+            style=discord.TextStyle.short, max_length=15, required=True
         ),
     )
 
     channeltype = discord.ui.Label(
-        text='チャンネルタイプを選択',
-        description='どのチャンネルを作成するかを選択してください。',
+        text="チャンネルタイプを選択",
+        description="どのチャンネルを作成するかを選択してください。",
         component=discord.ui.Select(
             options=[
-                discord.SelectOption(label='テキストチャンネル', value='text'),
-                discord.SelectOption(label='NSFWテキストチャンネル', value='nsfwtext'),
+                discord.SelectOption(label="テキストチャンネル", value="text"),
+                discord.SelectOption(label="NSFWテキストチャンネル", value="nsfwtext"),
             ],
             required=True,
-            max_values=1
+            max_values=1,
         ),
     )
 
@@ -48,17 +46,24 @@ class FreeChannelModal(discord.ui.Modal):
         nsfw = False if self.channeltype.component.values[0] == "text" else True
         if dbfind is None:
             if interaction.channel.category:
-
-                channel = await interaction.channel.category.create_text_channel(name=self.channelname.component.value, nsfw=nsfw)
+                channel = await interaction.channel.category.create_text_channel(
+                    name=self.channelname.component.value, nsfw=nsfw
+                )
             else:
-                channel = await interaction.guild.create_text_channel(name=self.channelname.component.value, nsfw=nsfw)
+                channel = await interaction.guild.create_text_channel(
+                    name=self.channelname.component.value, nsfw=nsfw
+                )
         else:
             ch = interaction.guild.get_channel(dbfind.get("Channel", 0))
             if type(ch) == discord.CategoryChannel:
-                channel = await ch.create_text_channel(name=self.channelname.component.value, nsfw=nsfw)
+                channel = await ch.create_text_channel(
+                    name=self.channelname.component.value, nsfw=nsfw
+                )
             else:
                 return
-        await channel.send(f"{interaction.user.mention}: フリーチャンネルを作成しました。")
+        await channel.send(
+            f"{interaction.user.mention}: フリーチャンネルを作成しました。"
+        )
 
 
 class FreeChannelCog(commands.Cog):
@@ -68,13 +73,15 @@ class FreeChannelCog(commands.Cog):
     @commands.Cog.listener(name="on_interaction")
     async def on_interaction_freechannel(self, interaction: discord.Interaction):
         try:
-            if interaction.data['component_type'] == 2:
+            if interaction.data["component_type"] == 2:
                 try:
                     custom_id = interaction.data["custom_id"]
                 except:
                     return
                 if custom_id.startswith("freechannel_"):
-                    await interaction.response.send_modal(FreeChannelModal(interaction.message.id))
+                    await interaction.response.send_modal(
+                        FreeChannelModal(interaction.message.id)
+                    )
         except:
             return
 

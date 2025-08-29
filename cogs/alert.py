@@ -1,8 +1,6 @@
-from datetime import datetime, timedelta
-import asyncio
 import time
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
 from discord import app_commands
 
@@ -43,53 +41,117 @@ class AlertCog(commands.Cog):
             view.add_item(discord.ui.Button(label="確認する", url=event.url))
             men = await self.get_mention(event.guild, ch.id)
             if not men:
-                await ch.send(embed=discord.Embed(title="イベントが作成されました！", description=f"{event.name}", color=discord.Color.green())
-                              .add_field(name="開始時刻", value=f"{event.start_time.strftime('%Y年%m月%d日 %H時%M分%S秒')}").set_footer(text=f"{event.guild.name} / {event.guild.id}", icon_url=event.guild.icon.url if event.guild.icon else self.bot.user.avatar.url), view=view)
+                await ch.send(
+                    embed=discord.Embed(
+                        title="イベントが作成されました！",
+                        description=f"{event.name}",
+                        color=discord.Color.green(),
+                    )
+                    .add_field(
+                        name="開始時刻",
+                        value=f"{event.start_time.strftime('%Y年%m月%d日 %H時%M分%S秒')}",
+                    )
+                    .set_footer(
+                        text=f"{event.guild.name} / {event.guild.id}",
+                        icon_url=event.guild.icon.url
+                        if event.guild.icon
+                        else self.bot.user.avatar.url,
+                    ),
+                    view=view,
+                )
                 return
-            await ch.send(content=men, embed=discord.Embed(title="イベントが作成されました！", description=f"{event.name}", color=discord.Color.green())
-                          .add_field(name="開始時刻", value=f"{event.start_time.strftime('%Y年%m月%d日 %H時%M分%S秒')}").set_footer(text=f"{event.guild.name} / {event.guild.id}", icon_url=event.guild.icon.url if event.guild.icon else self.bot.user.avatar.url), view=view)
+            await ch.send(
+                content=men,
+                embed=discord.Embed(
+                    title="イベントが作成されました！",
+                    description=f"{event.name}",
+                    color=discord.Color.green(),
+                )
+                .add_field(
+                    name="開始時刻",
+                    value=f"{event.start_time.strftime('%Y年%m月%d日 %H時%M分%S秒')}",
+                )
+                .set_footer(
+                    text=f"{event.guild.name} / {event.guild.id}",
+                    icon_url=event.guild.icon.url
+                    if event.guild.icon
+                    else self.bot.user.avatar.url,
+                ),
+                view=view,
+            )
         except:
             return
 
-    alert = app_commands.Group(name="alert", description="様々な通知を設定するコマンドです。")
+    alert = app_commands.Group(
+        name="alert", description="様々な通知を設定するコマンドです。"
+    )
 
-    @alert.command(name="event", description="イベントを通知するチャンネルを設定します。")
+    @alert.command(
+        name="event", description="イベントを通知するチャンネルを設定します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
-    async def alert_event(self, interaction: discord.Interaction, チャンネル: discord.TextChannel = None):
+    async def alert_event(
+        self, interaction: discord.Interaction, チャンネル: discord.TextChannel = None
+    ):
         db = self.bot.async_db["Main"].EventAlert
         if チャンネル:
             await db.replace_one(
                 {"Guild": interaction.guild.id},
                 {"Guild": interaction.guild.id, "Channel": チャンネル.id},
-                upsert=True
+                upsert=True,
             )
-            await interaction.response.send_message(embed=discord.Embed(title="イベント作成時に通知するチャンネルを設定しました。", color=discord.Color.green()), ephemeral=True)
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="イベント作成時に通知するチャンネルを設定しました。",
+                    color=discord.Color.green(),
+                ),
+                ephemeral=True,
+            )
         else:
-            await db.delete_one(
-                {"Guild": interaction.guild.id}
+            await db.delete_one({"Guild": interaction.guild.id})
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="イベント作成時に通知するチャンネルを削除しました。",
+                    color=discord.Color.red(),
+                ),
+                ephemeral=True,
             )
-            await interaction.response.send_message(embed=discord.Embed(title="イベント作成時に通知するチャンネルを削除しました。", color=discord.Color.red()), ephemeral=True)
 
-    @alert.command(name="mention", description="アラート時にメンションするロールを設定します。")
+    @alert.command(
+        name="mention", description="アラート時にメンションするロールを設定します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
-    async def alert_mention(self, interaction: discord.Interaction, ロール: discord.Role = None):
+    async def alert_mention(
+        self, interaction: discord.Interaction, ロール: discord.Role = None
+    ):
         db = self.bot.async_db["Main"].AlertMention
         if ロール:
             await db.replace_one(
                 {"Channel": interaction.channel.id},
                 {"Channel": interaction.channel.id, "Role": ロール.id},
-                upsert=True
+                upsert=True,
             )
-            await interaction.response.send_message(embed=discord.Embed(title="アラート時にメンションするようにしました。", description=f"{ロール.mention}", color=discord.Color.green()), ephemeral=True)
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="アラート時にメンションするようにしました。",
+                    description=f"{ロール.mention}",
+                    color=discord.Color.green(),
+                ),
+                ephemeral=True,
+            )
         else:
-            await db.delete_one(
-                {"Channel": interaction.channel.id}
+            await db.delete_one({"Channel": interaction.channel.id})
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="アラート時にメンションしなくしました。",
+                    color=discord.Color.red(),
+                ),
+                ephemeral=True,
             )
-            await interaction.response.send_message(embed=discord.Embed(title="アラート時にメンションしなくしました。", color=discord.Color.red()), ephemeral=True)
 
 
 async def setup(bot):

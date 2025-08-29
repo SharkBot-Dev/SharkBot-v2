@@ -27,37 +27,54 @@ class DictGroup(app_commands.Group):
     @app_commands.command(name="add", description="読み上げ辞書を追加します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
-    async def dict_add(self, interaction: discord.Interaction, ワード: str, 置き換えるワード: str):
+    async def dict_add(
+        self, interaction: discord.Interaction, ワード: str, 置き換えるワード: str
+    ):
         ttsdict = self.bot.async_db["Main"].TTSWord
         await ttsdict.replace_one(
             {"Guild": interaction.guild.id},
-            {"Guild": interaction.guild.id, "Word": ワード, "ReplaceWord": 置き換えるワード},
-            upsert=True
+            {
+                "Guild": interaction.guild.id,
+                "Word": ワード,
+                "ReplaceWord": 置き換えるワード,
+            },
+            upsert=True,
         )
-        await interaction.response.send_message(embed=discord.Embed(title="置き換えるワードを追加しました。", color=discord.Color.green()))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="置き換えるワードを追加しました。", color=discord.Color.green()
+            )
+        )
 
     @app_commands.command(name="remove", description="読み上げの辞書から削除します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def dict_remove(self, interaction: discord.Interaction, ワード: str):
         ttsdict = self.bot.async_db["Main"].TTSWord
-        await ttsdict.delete_one(
-            {"Guild": interaction.guild.id, "Word": ワード}
+        await ttsdict.delete_one({"Guild": interaction.guild.id, "Word": ワード})
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="置き換えるワードを削除しました。", color=discord.Color.green()
+            )
         )
-        await interaction.response.send_message(embed=discord.Embed(title="置き換えるワードを削除しました。", color=discord.Color.green()))
 
     @app_commands.command(name="list", description="読み上げの辞書をリスト化します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def dict_list(self, interaction: discord.Interaction, ワード: str):
         ttsdict = self.bot.async_db["Main"].TTSWord
-        r = await ttsdict.find({"Guild": interaction.guild.id}).limit(30).to_list(length=30)
+        r = (
+            await ttsdict.find({"Guild": interaction.guild.id})
+            .limit(30)
+            .to_list(length=30)
+        )
 
         if not r:
             return await interaction.response.send_message(
-                embed=discord.Embed(title="辞書がありません。",
-                                    color=discord.Color.red()),
-                ephemeral=True
+                embed=discord.Embed(
+                    title="辞書がありません。", color=discord.Color.red()
+                ),
+                ephemeral=True,
             )
 
         await interaction.response.defer()
@@ -67,9 +84,7 @@ class DictGroup(app_commands.Group):
         )
 
         embed = discord.Embed(
-            title="読み上げの辞書",
-            description=description,
-            color=discord.Color.green()
+            title="読み上げの辞書", description=description, color=discord.Color.green()
         )
         await interaction.followup.send(embed=embed)
 
@@ -87,19 +102,38 @@ class TTSCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def _tts_start(self, interaction: discord.Interaction):
         if not interaction.user.voice:
-            return await interaction.response.send_message(embed=discord.Embed(title="読み上げ接続に失敗しました。", description="まずボイスチャンネルに参加してから実行してください。", color=discord.Color.red()), ephemeral=True)
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="読み上げ接続に失敗しました。",
+                    description="まずボイスチャンネルに参加してから実行してください。",
+                    color=discord.Color.red(),
+                ),
+                ephemeral=True,
+            )
         try:
             await interaction.user.voice.channel.connect()
         except Exception as e:
-            return await interaction.response.send_message(embed=discord.Embed(title="エラーが発生しました。", description=f"```{e}```", color=discord.Color.red()))
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="エラーが発生しました。",
+                    description=f"```{e}```",
+                    color=discord.Color.red(),
+                )
+            )
             return
         ttscheck = self.bot.async_db["Main"].TTSCheckBeta
         await ttscheck.replace_one(
             {"Guild": interaction.guild.id},
             {"Channel": interaction.channel.id, "Guild": interaction.guild.id},
-            upsert=True
+            upsert=True,
         )
-        return await interaction.response.send_message(embed=discord.Embed(title="接続しました。", description="この機能はベータ版です。\n不具合があったらサポートサーバーに来てください。", color=discord.Color.green()))
+        return await interaction.response.send_message(
+            embed=discord.Embed(
+                title="接続しました。",
+                description="この機能はベータ版です。\n不具合があったらサポートサーバーに来てください。",
+                color=discord.Color.green(),
+            )
+        )
 
     @tts.command(name="end", description="読み上げを終了します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -107,24 +141,36 @@ class TTSCog(commands.Cog):
         try:
             await interaction.guild.voice_client.disconnect()
         except:
-            return await interaction.response.send_message(embed=discord.Embed(title="読み上げ退出に失敗しました。", color=discord.Color.red(), description="まだボイスチャンネルに接続されていません。"))
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="読み上げ退出に失敗しました。",
+                    color=discord.Color.red(),
+                    description="まだボイスチャンネルに接続されていません。",
+                )
+            )
         ttscheck = self.bot.async_db["Main"].TTSCheckBeta
-        await ttscheck.delete_one(
-            {"Guild": interaction.guild.id}
+        await ttscheck.delete_one({"Guild": interaction.guild.id})
+        return await interaction.followup.send(
+            embed=discord.Embed(title="退出しました。", color=discord.Color.green())
         )
-        return await interaction.followup.send(embed=discord.Embed(title="退出しました。", color=discord.Color.green()))
 
     @tts.command(name="voice", description="読み上げの声を変更します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tts_voice(self, interaction: discord.Interaction, 声: str = None):
         if not 声:
-            await interaction.response.send_message(embed=discord.Embed(title="読み上げの声一覧", description="""
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="読み上げの声一覧",
+                    description="""
 ID | 説明
 ミク 初音ミクの声で読み上げます
 緋惺 緋惺の声で読み上げます。
 句音 句音コノの声で読み上げます。
 霊夢 霊夢の声で読み上げます。
-""", color=discord.Color.green()))
+""",
+                    color=discord.Color.green(),
+                )
+            )
             return
         else:
             ttscheck = self.bot.async_db["Main"].TTSVoiceBeta
@@ -132,32 +178,42 @@ ID | 説明
                 await ttscheck.replace_one(
                     {"User": interaction.user.id},
                     {"User": interaction.user.id, "Voice": "miku"},
-                    upsert=True
+                    upsert=True,
                 )
-                await interaction.response.send_message(content=f"声を {声} に変更しました。", ephemeral=True)
+                await interaction.response.send_message(
+                    content=f"声を {声} に変更しました。", ephemeral=True
+                )
             elif 声 == "緋惺":
                 await ttscheck.replace_one(
                     {"User": interaction.user.id},
                     {"User": interaction.user.id, "Voice": "akesato"},
-                    upsert=True
+                    upsert=True,
                 )
-                await interaction.response.send_message(content=f"声を {声} に変更しました。", ephemeral=True)
+                await interaction.response.send_message(
+                    content=f"声を {声} に変更しました。", ephemeral=True
+                )
             elif 声 == "句音":
                 await ttscheck.replace_one(
                     {"User": interaction.user.id},
                     {"User": interaction.user.id, "Voice": "kuon"},
-                    upsert=True
+                    upsert=True,
                 )
-                await interaction.response.send_message(content=f"声を {声} に変更しました。", ephemeral=True)
+                await interaction.response.send_message(
+                    content=f"声を {声} に変更しました。", ephemeral=True
+                )
             elif 声 == "霊夢":
                 await ttscheck.replace_one(
                     {"User": interaction.user.id},
                     {"User": interaction.user.id, "Voice": "reimu"},
-                    upsert=True
+                    upsert=True,
                 )
-                await interaction.response.send_message(content=f"声を {声} に変更しました。", ephemeral=True)
+                await interaction.response.send_message(
+                    content=f"声を {声} に変更しました。", ephemeral=True
+                )
             else:
-                await interaction.response.send_message(content="指定した声が存在しません。", ephemeral=True)
+                await interaction.response.send_message(
+                    content="指定した声が存在しません。", ephemeral=True
+                )
 
     async def tts_guilds(self):
         db = self.bot.async_db["Main"].TTSCheckBeta
@@ -175,27 +231,66 @@ ID | 説明
         g_c = await self.tts_guilds()
         remaining, total = self.get_guild_queue_status(interaction.guild.id)
         if g_c < 3:
-            return await interaction.response.send_message(embeds=[discord.Embed(title="読み上げを使用しているサーバー数", description=f"{g_c}サーバー\n読み上げは快適だと思います。", color=discord.Color.blue()), discord.Embed(title="読み上げの残りキューリソース", description=f"```{remaining}/{total}```", color=discord.Color.blue())])
-        return await interaction.response.send_message(embeds=[discord.Embed(title="読み上げを使用しているサーバー数", description=f"{g_c}サーバー\n読み上げは重いかもしれないです。", color=discord.Color.blue()), discord.Embed(title="読み上げの残りキューリソース", description=f"```{remaining}/{total}```", color=discord.Color.blue())])
+            return await interaction.response.send_message(
+                embeds=[
+                    discord.Embed(
+                        title="読み上げを使用しているサーバー数",
+                        description=f"{g_c}サーバー\n読み上げは快適だと思います。",
+                        color=discord.Color.blue(),
+                    ),
+                    discord.Embed(
+                        title="読み上げの残りキューリソース",
+                        description=f"```{remaining}/{total}```",
+                        color=discord.Color.blue(),
+                    ),
+                ]
+            )
+        return await interaction.response.send_message(
+            embeds=[
+                discord.Embed(
+                    title="読み上げを使用しているサーバー数",
+                    description=f"{g_c}サーバー\n読み上げは重いかもしれないです。",
+                    color=discord.Color.blue(),
+                ),
+                discord.Embed(
+                    title="読み上げの残りキューリソース",
+                    description=f"```{remaining}/{total}```",
+                    color=discord.Color.blue(),
+                ),
+            ]
+        )
 
     @tts.command(name="autojoin", description="読み上げの自動接続を設定します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
-    async def tts_autojoin(self, interaction: discord.Interaction, チャンネル: discord.VoiceChannel, 有効化するか: bool):
+    async def tts_autojoin(
+        self,
+        interaction: discord.Interaction,
+        チャンネル: discord.VoiceChannel,
+        有効化するか: bool,
+    ):
         await interaction.response.defer()
         ttscheck = self.bot.async_db["Main"].TTSAutoJoin
         if 有効化するか:
             await ttscheck.replace_one(
                 {"Channel": チャンネル.id, "Guild": interaction.guild.id},
                 {"Channel": チャンネル.id, "Guild": interaction.guild.id},
-                upsert=True
+                upsert=True,
             )
-            await interaction.response.send_message(embed=discord.Embed(title="自動接続を有効化しました。", color=discord.Color.green()))
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="自動接続を有効化しました。", color=discord.Color.green()
+                )
+            )
         else:
             await ttscheck.delete_one(
                 {"Channel": チャンネル.id, "Guild": interaction.guild.id}
             )
-            return await interaction.response.send_message(embed=discord.Embed(title="自動接続を無効化しました。", color=discord.Color.red()))
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="自動接続を無効化しました。", color=discord.Color.red()
+                )
+            )
 
     tts.add_command(DictGroup())
 
@@ -213,17 +308,24 @@ ID | 説明
         await ttscheck.replace_one(
             {"Guild": channel.guild.id},
             {"Channel": channel.id, "Guild": channel.guild.id},
-            upsert=True
+            upsert=True,
         )
 
     @commands.Cog.listener(name="on_voice_state_update")
-    async def on_voice_state_update_autojoin(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    async def on_voice_state_update_autojoin(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ):
         try:
             if after.channel:
                 ttscheck = self.bot.async_db["Main"].TTSAutoJoin
 
                 try:
-                    ttscheckfind = await ttscheck.find_one({"Channel": after.channel.id}, {"_id": False})
+                    ttscheckfind = await ttscheck.find_one(
+                        {"Channel": after.channel.id}, {"_id": False}
+                    )
                 except:
                     return
                 if ttscheckfind is None:
@@ -235,8 +337,7 @@ ID | 説明
                 if len(non_bot_members) == 1:
                     if not channel.guild.voice_client:
                         current_time = time.time()
-                        last_message_time = cooldown_autojoin.get(
-                            member.guild.id, 0)
+                        last_message_time = cooldown_autojoin.get(member.guild.id, 0)
                         if current_time - last_message_time < 5:
                             return
                         cooldown_autojoin[member.guild.id] = current_time
@@ -247,13 +348,16 @@ ID | 説明
             return
 
     @commands.Cog.listener(name="on_voice_state_update")
-    async def on_voice_state_update_tts(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+    async def on_voice_state_update_tts(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ):
         if member.id == self.bot.user.id:
             if before.channel and not after.channel:
                 ttscheck = self.bot.async_db["Main"].TTSCheckBeta
-                await ttscheck.delete_one(
-                    {"Guild": member.guild.id}
-                )
+                await ttscheck.delete_one({"Guild": member.guild.id})
                 print("BotがVCからキックされました！")
             return
 
@@ -274,7 +378,7 @@ ID | 説明
             "miku": "htsvoice/miku.htsvoice",
             "akesato": "htsvoice/akesato.htsvoice",
             "kuon": "htsvoice/kono.htsvoice",
-            "reimu": "reimu"
+            "reimu": "reimu",
         }
 
         ttscheck = self.bot.async_db["Main"].TTSVoiceBeta
@@ -293,22 +397,26 @@ ID | 説明
         v = await self.get_voice_file(author)
         if v == "reimu":
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"https://www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f1&kanji={urllib.parse.quote(text)}") as response:
+                async with session.get(
+                    f"https://www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f1&kanji={urllib.parse.quote(text)}"
+                ) as response:
                     return await response.read()
         process = await asyncio.create_subprocess_exec(
             "open_jtalk",
-            "-x", "/var/lib/mecab/dic/open-jtalk/naist-jdic",
-            "-m", v,
-            "-ow", "/dev/stdout",
+            "-x",
+            "/var/lib/mecab/dic/open-jtalk/naist-jdic",
+            "-m",
+            v,
+            "-ow",
+            "/dev/stdout",
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stderr=asyncio.subprocess.PIPE,
         )
         try:
             stdout, _ = await asyncio.wait_for(
-                process.communicate(input=text.replace(
-                    "\n", "").encode("utf-8")),
-                timeout=10
+                process.communicate(input=text.replace("\n", "").encode("utf-8")),
+                timeout=10,
             )
         except asyncio.TimeoutError:
             process.kill()
@@ -342,8 +450,7 @@ ID | 説明
                     finished.set()
 
                 with io.BytesIO(wav_bytes) as bio:
-                    vc.play(discord.FFmpegPCMAudio(
-                        bio, pipe=True), after=after_playing)
+                    vc.play(discord.FFmpegPCMAudio(bio, pipe=True), after=after_playing)
                     await finished.wait()
 
                 queue.task_done()
@@ -367,7 +474,9 @@ ID | 説明
         try:
             ttscheck = self.bot.async_db["Main"].TTSCheckBeta
             try:
-                ttscheckfind = await ttscheck.find_one({"Channel": message.channel.id}, {"_id": False})
+                ttscheckfind = await ttscheck.find_one(
+                    {"Channel": message.channel.id}, {"_id": False}
+                )
             except:
                 return
             if ttscheckfind is None:
@@ -382,19 +491,22 @@ ID | 説明
                 )
 
             try:
-                self.guild_queues[message.guild.id].put_nowait(
-                    (message.author, text))
+                self.guild_queues[message.guild.id].put_nowait((message.author, text))
             except asyncio.QueueFull:
                 return
 
         except discord.ClientException:
             return
         except Exception as e:
-            await message.channel.send(embed=discord.Embed(title="エラーが発生しました。", description=f"```{e}```", color=discord.Color.red()))
-            ttscheck = self.bot.async_db["Main"].TTSCheckBeta
-            await ttscheck.delete_one(
-                {"Guild": message.guild.id}
+            await message.channel.send(
+                embed=discord.Embed(
+                    title="エラーが発生しました。",
+                    description=f"```{e}```",
+                    color=discord.Color.red(),
+                )
             )
+            ttscheck = self.bot.async_db["Main"].TTSCheckBeta
+            await ttscheck.delete_one({"Guild": message.guild.id})
             return await message.guild.voice_client.disconnect()
 
 

@@ -5,12 +5,15 @@ import re
 
 from models import command_disable
 
+
 class AutoModCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print(f"init -> AutoModCog")
 
-    automod = app_commands.Group(name="automod", description="AutoMod管理のコマンドです。")
+    automod = app_commands.Group(
+        name="automod", description="AutoMod管理のコマンドです。"
+    )
 
     @commands.Cog.listener("on_message")
     async def on_message_token_block(self, message: discord.Message):
@@ -36,96 +39,124 @@ class AutoModCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_guild=True)
-    @app_commands.choices(タイプ=[
-        app_commands.Choice(name='招待リンク',value="invite"),
-        app_commands.Choice(name='Token',value="token"),
-        app_commands.Choice(name='Everyoneとhere',value="everyone"),
-        app_commands.Choice(name='メールアドレス',value="mail"),
-        app_commands.Choice(name='メッセージスパム',value="spam"),
-        app_commands.Choice(name='スラッシュコマンドスパム',value="slashspam")
-    ])
-    async def automod_create(self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]):
+    @app_commands.choices(
+        タイプ=[
+            app_commands.Choice(name="招待リンク", value="invite"),
+            app_commands.Choice(name="Token", value="token"),
+            app_commands.Choice(name="Everyoneとhere", value="everyone"),
+            app_commands.Choice(name="メールアドレス", value="mail"),
+            app_commands.Choice(name="メッセージスパム", value="spam"),
+            app_commands.Choice(name="スラッシュコマンドスパム", value="slashspam"),
+        ]
+    )
+    async def automod_create(
+        self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]
+    ):
         if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
 
         await interaction.response.defer(ephemeral=True)
-        if タイプ.value=="invite":
+        if タイプ.value == "invite":
             await interaction.guild.create_automod_rule(
                 name="招待リンク対策",
                 event_type=discord.AutoModRuleEventType.message_send,
-                trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, regex_patterns=[r"(discord\.(gg|com/invite|app\.com/invite)[/\\][\w-]+)", r"\b\<(\n*)?h(\n*)?t(\n*)?t(\n*)?p(\n*)?s?(\n*)?:(\n*)?\/(\n*)?\/(\n*)?(([dｄⓓᵈᴰⅮ𝒹ⅾⅮ𝔻𝕕%％𝓓]{1,}|[^\p{sc=latin}]*)(\n*)([iｉⓘsｓⓢ𝖎𝖘ɪꜱᴵⁱˢ𝓘𝓢\n]{1,}|[\p{sc=latin}\n]*)([\p{sc=latin}\nº]*|[^\p{sc=latin}\n]*)[\/\\](\n*)[^\s]*)+\b"]),
+                trigger=discord.AutoModTrigger(
+                    type=discord.AutoModRuleTriggerType.keyword,
+                    regex_patterns=[
+                        r"(discord\.(gg|com/invite|app\.com/invite)[/\\][\w-]+)",
+                        r"\b\<(\n*)?h(\n*)?t(\n*)?t(\n*)?p(\n*)?s?(\n*)?:(\n*)?\/(\n*)?\/(\n*)?(([dｄⓓᵈᴰⅮ𝒹ⅾⅮ𝔻𝕕%％𝓓]{1,}|[^\p{sc=latin}]*)(\n*)([iｉⓘsｓⓢ𝖎𝖘ɪꜱᴵⁱˢ𝓘𝓢\n]{1,}|[\p{sc=latin}\n]*)([\p{sc=latin}\nº]*|[^\p{sc=latin}\n]*)[\/\\](\n*)[^\s]*)+\b",
+                    ],
+                ),
                 actions=[
                     discord.AutoModRuleAction(
-                    type=discord.AutoModRuleActionType.block_message
+                        type=discord.AutoModRuleActionType.block_message
                     )
                 ],
-                enabled=True
-                )
+                enabled=True,
+            )
         elif タイプ.value == "token":
             dbs = self.bot.async_db["Main"].TokenBlock
             await dbs.replace_one(
-                {"Guild": interaction.guild.id}, 
-                {"Guild": interaction.guild.id}, 
-                upsert=True
+                {"Guild": interaction.guild.id},
+                {"Guild": interaction.guild.id},
+                upsert=True,
             )
         elif タイプ.value == "everyone":
             await interaction.guild.create_automod_rule(
                 name="Everyone対策",
                 event_type=discord.AutoModRuleEventType.message_send,
-                trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, regex_patterns=[r"@everyone", r"@here"]),
+                trigger=discord.AutoModTrigger(
+                    type=discord.AutoModRuleTriggerType.keyword,
+                    regex_patterns=[r"@everyone", r"@here"],
+                ),
                 actions=[
                     discord.AutoModRuleAction(
                         type=discord.AutoModRuleActionType.block_message
                     )
-                    ],
-                    enabled=True
+                ],
+                enabled=True,
             )
         elif タイプ.value == "mail":
             await interaction.guild.create_automod_rule(
-                            name="メールアドレス対策",
-                            event_type=discord.AutoModRuleEventType.message_send,
-                            trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, regex_patterns=[r"^[a-zA-Z0-9_+-]+(.[a-zA-Z0-9_+-]+)*@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$"]),
-                            actions=[
-                                discord.AutoModRuleAction(
-                                    type=discord.AutoModRuleActionType.block_message
-                                )
-                            ],
-                            enabled=True
-                        )
+                name="メールアドレス対策",
+                event_type=discord.AutoModRuleEventType.message_send,
+                trigger=discord.AutoModTrigger(
+                    type=discord.AutoModRuleTriggerType.keyword,
+                    regex_patterns=[
+                        r"^[a-zA-Z0-9_+-]+(.[a-zA-Z0-9_+-]+)*@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$"
+                    ],
+                ),
+                actions=[
+                    discord.AutoModRuleAction(
+                        type=discord.AutoModRuleActionType.block_message
+                    )
+                ],
+                enabled=True,
+            )
         elif タイプ.value == "spam":
             dbs = self.bot.async_db["Main"].SpamBlock
             await dbs.replace_one(
-                {"Guild": interaction.guild.id}, 
-                {"Guild": interaction.guild.id}, 
-                upsert=True
+                {"Guild": interaction.guild.id},
+                {"Guild": interaction.guild.id},
+                upsert=True,
             )
         elif タイプ.value == "slashspam":
             dbs = self.bot.async_db["Main"].UserApplicationSpamBlock
             await dbs.replace_one(
-                {"Guild": interaction.guild.id}, 
-                {"Guild": interaction.guild.id}, 
-                upsert=True
+                {"Guild": interaction.guild.id},
+                {"Guild": interaction.guild.id},
+                upsert=True,
             )
-        await interaction.followup.send(ephemeral=True, content=f"AutoModの「{タイプ.name}」を作成しました。")
+        await interaction.followup.send(
+            ephemeral=True, content=f"AutoModの「{タイプ.name}」を作成しました。"
+        )
 
     @automod.command(name="delete", description="Automodを削除します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_guild=True)
-    @app_commands.choices(タイプ=[
-        app_commands.Choice(name='招待リンク',value="invite"),
-        app_commands.Choice(name='Token',value="token"),
-        app_commands.Choice(name='Everyoneとhere',value="everyone"),
-        app_commands.Choice(name='メールアドレス',value="mail"),
-        app_commands.Choice(name='メッセージスパム',value="spam"),
-        app_commands.Choice(name='スラッシュコマンドスパム',value="slashspam")
-    ])
-    async def automod_delete(self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]):
+    @app_commands.choices(
+        タイプ=[
+            app_commands.Choice(name="招待リンク", value="invite"),
+            app_commands.Choice(name="Token", value="token"),
+            app_commands.Choice(name="Everyoneとhere", value="everyone"),
+            app_commands.Choice(name="メールアドレス", value="mail"),
+            app_commands.Choice(name="メッセージスパム", value="spam"),
+            app_commands.Choice(name="スラッシュコマンドスパム", value="slashspam"),
+        ]
+    )
+    async def automod_delete(
+        self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]
+    ):
         if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
 
         await interaction.response.defer(ephemeral=True)
-        if タイプ.value=="invite":
+        if タイプ.value == "invite":
             rule = await interaction.guild.fetch_automod_rules()
             for r in rule:
                 if r == "招待リンク対策":
@@ -149,7 +180,10 @@ class AutoModCog(commands.Cog):
         elif タイプ.value == "slashspam":
             dbs = self.bot.async_db["Main"].UserApplicationSpamBlock
             await dbs.delete_one({"Guild": interaction.guild.id})
-        await interaction.followup.send(ephemeral=True, content=f"AutoModの「{タイプ.name}」を削除しました。")
+        await interaction.followup.send(
+            ephemeral=True, content=f"AutoModの「{タイプ.name}」を削除しました。"
+        )
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoModCog(bot))

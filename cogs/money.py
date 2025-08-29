@@ -15,18 +15,29 @@ import time
 user_last_message_time_work = {}
 
 
-class Money():
+class Money:
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         pass
 
-    async def add_server_money(self, guild: discord.Guild, author: discord.User, coin: int):
+    async def add_server_money(
+        self, guild: discord.Guild, author: discord.User, coin: int
+    ):
         db = self.bot.async_db["Main"].ServerMoney
         user_data = await db.find_one({"_id": f"{guild.id}-{author.id}"})
         if user_data:
-            await db.update_one({"_id": f"{guild.id}-{author.id}"}, {"$inc": {"count": coin}})
+            await db.update_one(
+                {"_id": f"{guild.id}-{author.id}"}, {"$inc": {"count": coin}}
+            )
         else:
-            await db.insert_one({"_id": f"{guild.id}-{author.id}", "count": coin, "Guild": guild.id, "User": author.id})
+            await db.insert_one(
+                {
+                    "_id": f"{guild.id}-{author.id}",
+                    "count": coin,
+                    "Guild": guild.id,
+                    "User": author.id,
+                }
+            )
         return True
 
     async def get_server_money(self, guild: discord.Guild, author: discord.User):
@@ -55,23 +66,29 @@ class Money():
         return leaderboard_text
 
     # --- アイテム管理 ---
-    async def add_server_item(self, guild: discord.Guild, author: discord.User, itemname: str, count: int):
+    async def add_server_item(
+        self, guild: discord.Guild, author: discord.User, itemname: str, count: int
+    ):
         db = self.bot.async_db["Main"].ServerMoneyItem
         _id = f"{guild.id}-{author.id}-{itemname}"
         user_data = await db.find_one({"_id": _id})
         if user_data:
             await db.update_one({"_id": _id}, {"$inc": {"count": count}})
         else:
-            await db.insert_one({
-                "_id": _id,
-                "Guild": guild.id,
-                "User": author.id,
-                "ItemName": itemname,
-                "count": count
-            })
+            await db.insert_one(
+                {
+                    "_id": _id,
+                    "Guild": guild.id,
+                    "User": author.id,
+                    "ItemName": itemname,
+                    "count": count,
+                }
+            )
         return True
 
-    async def get_server_item(self, guild: discord.Guild, author: discord.User, itemname: str):
+    async def get_server_item(
+        self, guild: discord.Guild, author: discord.User, itemname: str
+    ):
         db = self.bot.async_db["Main"].ServerMoneyItem
         _id = f"{guild.id}-{author.id}-{itemname}"
         dbfind = await db.find_one({"_id": _id}, {"_id": False})
@@ -82,13 +99,19 @@ class Money():
             return dbfind.get("count", 0), 0
         return dbfind.get("count", 0), rr.get("Role", 0)
 
-    async def create_server_items(self, guild: discord.Guild, money: int, itemname: str, role: discord.Role = None):
+    async def create_server_items(
+        self, guild: discord.Guild, money: int, itemname: str, role: discord.Role = None
+    ):
         db = self.bot.async_db["Main"].ServerMoneyItems
         await db.replace_one(
             {"Guild": guild.id, "ItemName": itemname},
-            {"Guild": guild.id, "ItemName": itemname,
-                "Role": role.id if role else 0, "Money": money},
-            upsert=True
+            {
+                "Guild": guild.id,
+                "ItemName": itemname,
+                "Role": role.id if role else 0,
+                "Money": money,
+            },
+            upsert=True,
         )
 
     async def remove_server_items(self, guild: discord.Guild, itemname: str):
@@ -98,7 +121,9 @@ class Money():
 
     async def get_server_items(self, guild: discord.Guild, itemname: str):
         db = self.bot.async_db["Main"].ServerMoneyItems
-        dbfind = await db.find_one({"Guild": guild.id, "ItemName": itemname}, {"_id": False})
+        dbfind = await db.find_one(
+            {"Guild": guild.id, "ItemName": itemname}, {"_id": False}
+        )
         return dbfind
 
     async def get_server_items_list(self, guild: discord.Guild, author: discord.User):
@@ -120,41 +145,57 @@ class GamesGroup(app_commands.Group):
 
     @app_commands.command(name="coinflip", description="コインの裏表を予想します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
-    async def economy_games_coinflip_server(self, interaction: discord.Interaction, 裏表: str, 金額: int):
+    async def economy_games_coinflip_server(
+        self, interaction: discord.Interaction, 裏表: str, 金額: int
+    ):
         if 金額 < 100:
-            return await interaction.response.send_message("金額は100以上で入力してください。", ephemeral=True)
+            return await interaction.response.send_message(
+                "金額は100以上で入力してください。", ephemeral=True
+            )
         if 裏表.lower() not in ["表", "裏"]:
-            return await interaction.response.send_message("コインの裏表を入力してください。\n例: /server-economy games coinflip 裏", ephemeral=True)
+            return await interaction.response.send_message(
+                "コインの裏表を入力してください。\n例: /server-economy games coinflip 裏",
+                ephemeral=True,
+            )
 
         await interaction.response.defer()
-        await Money(interaction.client).add_server_money(interaction.guild, interaction.user, -金額)
+        await Money(interaction.client).add_server_money(
+            interaction.guild, interaction.user, -金額
+        )
         result = random.choice(["表", "裏"])
         if 裏表.lower() == result:
-            await Money(interaction.client).add_server_money(interaction.guild, interaction.user, 金額 + 5)
-            await interaction.followup.send(embed=discord.Embed(
-                title="コインの裏表を予想しました。",
-                description=f"結果は {result} で、あなたの勝ちです！",
-                color=discord.Color.green()
-            ))
+            await Money(interaction.client).add_server_money(
+                interaction.guild, interaction.user, 金額 + 5
+            )
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="コインの裏表を予想しました。",
+                    description=f"結果は {result} で、あなたの勝ちです！",
+                    color=discord.Color.green(),
+                )
+            )
         else:
-            await interaction.followup.send(embed=discord.Embed(
-                title="コインの裏表を予想しました。",
-                description=f"結果は {result} で、あなたの負けです…",
-                color=discord.Color.red()
-            ))
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="コインの裏表を予想しました。",
+                    description=f"結果は {result} で、あなたの負けです…",
+                    color=discord.Color.red(),
+                )
+            )
 
     @app_commands.command(name="info", description="ゲームの情報を取得します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_games_info_server(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        await interaction.followup.send(embed=discord.Embed(
-            title="ゲームの情報",
-            color=discord.Color.blue()
-        ).add_field(
-            name="/server-economy games coinflip",
-            value="コインの裏表を予想します。\n勝ったら賭け金 + 5 コインが返ってきます。\n負けたら賭け金を失います。",
-            inline=False
-        ))
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="ゲームの情報", color=discord.Color.blue()
+            ).add_field(
+                name="/server-economy games coinflip",
+                value="コインの裏表を予想します。\n勝ったら賭け金 + 5 コインが返ってきます。\n負けたら賭け金を失います。",
+                inline=False,
+            )
+        )
 
 
 class ManageGroup(app_commands.Group):
@@ -165,19 +206,35 @@ class ManageGroup(app_commands.Group):
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def economy_manage_money_add(self, interaction: discord.Interaction, メンバー: discord.Member, 金額: int):
+    async def economy_manage_money_add(
+        self, interaction: discord.Interaction, メンバー: discord.Member, 金額: int
+    ):
         await interaction.response.defer()
-        await Money(interaction.client).add_server_money(interaction.guild, メンバー, 金額)
-        await interaction.followup.send(embed=discord.Embed(title="金額を追加しました。", color=discord.Color.green()))
+        await Money(interaction.client).add_server_money(
+            interaction.guild, メンバー, 金額
+        )
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="金額を追加しました。", color=discord.Color.green()
+            )
+        )
 
     @app_commands.command(name="remove", description="お金を減らします。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def economy_manage_money_remove(self, interaction: discord.Interaction, メンバー: discord.Member, 金額: int):
+    async def economy_manage_money_remove(
+        self, interaction: discord.Interaction, メンバー: discord.Member, 金額: int
+    ):
         await interaction.response.defer()
-        await Money(interaction.client).add_server_money(interaction.guild, メンバー, -金額)
-        await interaction.followup.send(embed=discord.Embed(title="金額を減らしました。", color=discord.Color.green()))
+        await Money(interaction.client).add_server_money(
+            interaction.guild, メンバー, -金額
+        )
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="金額を減らしました。", color=discord.Color.green()
+            )
+        )
 
 
 class ItemGroup(app_commands.Group):
@@ -188,28 +245,53 @@ class ItemGroup(app_commands.Group):
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def economy_item_create_server(self, interaction: discord.Interaction, アイテム名: str, 値段: int, ロール: discord.Role = None):
+    async def economy_item_create_server(
+        self,
+        interaction: discord.Interaction,
+        アイテム名: str,
+        値段: int,
+        ロール: discord.Role = None,
+    ):
         await interaction.response.defer()
         if ロール and not interaction.user.guild_permissions.administrator:
-            return await interaction.followup.send(embed=discord.Embed(title="管理者権限が必要です。", color=discord.Color.red()))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="管理者権限が必要です。", color=discord.Color.red()
+                )
+            )
 
-        await Money(interaction.client).create_server_items(interaction.guild, 値段, アイテム名, ロール)
-        await interaction.followup.send(embed=discord.Embed(
-            title="アイテムを作成しました。",
-            color=discord.Color.green()
-        ).set_footer(text="/server-economy items で確認できます。"))
+        await Money(interaction.client).create_server_items(
+            interaction.guild, 値段, アイテム名, ロール
+        )
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="アイテムを作成しました。", color=discord.Color.green()
+            ).set_footer(text="/server-economy items で確認できます。")
+        )
 
     @app_commands.command(name="remove", description="アイテムを削除します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def economy_item_remove_server(self, interaction: discord.Interaction, アイテム名: str):
+    async def economy_item_remove_server(
+        self, interaction: discord.Interaction, アイテム名: str
+    ):
         await interaction.response.defer()
-        b = await Money(interaction.client).remove_server_items(interaction.guild, アイテム名)
+        b = await Money(interaction.client).remove_server_items(
+            interaction.guild, アイテム名
+        )
         if b:
-            await interaction.followup.send(embed=discord.Embed(title="アイテムを削除しました。", color=discord.Color.green()))
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="アイテムを削除しました。", color=discord.Color.green()
+                )
+            )
         else:
-            await interaction.followup.send(embed=discord.Embed(title="アイテムが見つかりませんでした。", color=discord.Color.red()))
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="アイテムが見つかりませんでした。", color=discord.Color.red()
+                )
+            )
 
 
 class ServerMoneyCog(commands.Cog):
@@ -218,8 +300,7 @@ class ServerMoneyCog(commands.Cog):
         print(f"init -> ServerMoneyCog")
 
     server_economy = app_commands.Group(
-        name="economy",
-        description="サーバー内の経済機能"
+        name="economy", description="サーバー内の経済機能"
     )
 
     server_economy.add_command(ItemGroup())
@@ -234,78 +315,127 @@ class ServerMoneyCog(commands.Cog):
         m = random.randint(300, 1500)
         current_time = time.time()
         last_message_time = user_last_message_time_work.get(
-            f"{interaction.user.id}-{interaction.guild.id}", 0)
+            f"{interaction.user.id}-{interaction.guild.id}", 0
+        )
         if current_time - last_message_time < 1800:
-            return await interaction.followup.send(embed=discord.Embed(
-                title="30分に一回働けます。",
-                color=discord.Color.red()
-            ), ephemeral=True)
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="30分に一回働けます。", color=discord.Color.red()
+                ),
+                ephemeral=True,
+            )
 
-        user_last_message_time_work[f"{interaction.user.id}-{interaction.guild.id}"] = current_time
-        await Money(interaction.client).add_server_money(interaction.guild, interaction.user, m)
-        await interaction.followup.send(embed=discord.Embed(
-            title="働きました。",
-            description=f"{m}コイン入手しました。",
-            color=discord.Color.green()
-        ))
+        user_last_message_time_work[f"{interaction.user.id}-{interaction.guild.id}"] = (
+            current_time
+        )
+        await Money(interaction.client).add_server_money(
+            interaction.guild, interaction.user, m
+        )
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="働きました。",
+                description=f"{m}コイン入手しました。",
+                color=discord.Color.green(),
+            )
+        )
 
     # ====== balance ======
-    @server_economy.command(name="balance", description="サーバー内で残高を取得します。")
+    @server_economy.command(
+        name="balance", description="サーバー内で残高を取得します。"
+    )
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
-    async def economy_balance_server(self, interaction: discord.Interaction, メンバー: discord.User = None):
+    async def economy_balance_server(
+        self, interaction: discord.Interaction, メンバー: discord.User = None
+    ):
         await interaction.response.defer()
         target = メンバー or interaction.user
         sm = await Money(interaction.client).get_server_money(interaction.guild, target)
-        await interaction.followup.send(embed=discord.Embed(
-            title=f"{target.name}の残高です。",
-            description=f"{sm}コイン",
-            color=discord.Color.green()
-        ))
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title=f"{target.name}の残高です。",
+                description=f"{sm}コイン",
+                color=discord.Color.green(),
+            )
+        )
 
     # ====== ranking ======
     @server_economy.command(name="ranking", description="お金持ちランキングを見ます。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_ranking_server(self, interaction: discord.Interaction):
         text = await Money(interaction.client).get_server_ranking(interaction.guild)
-        await interaction.response.send_message(embed=discord.Embed(description=text, color=discord.Color.yellow()))
+        await interaction.response.send_message(
+            embed=discord.Embed(description=text, color=discord.Color.yellow())
+        )
 
     # ====== buy ======
     @server_economy.command(name="buy", description="サーバー内のアイテムを買います。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
-    async def economy_buy_server(self, interaction: discord.Interaction, アイテム名: str):
+    async def economy_buy_server(
+        self, interaction: discord.Interaction, アイテム名: str
+    ):
         await interaction.response.defer()
-        sm = await Money(interaction.client).get_server_items(interaction.guild, アイテム名)
+        sm = await Money(interaction.client).get_server_items(
+            interaction.guild, アイテム名
+        )
         if not sm:
-            return await interaction.followup.send(embed=discord.Embed(title="アイテムが見つかりません。", color=discord.Color.red()))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="アイテムが見つかりません。", color=discord.Color.red()
+                )
+            )
 
-        m = await Money(interaction.client).get_server_money(interaction.guild, interaction.user)
+        m = await Money(interaction.client).get_server_money(
+            interaction.guild, interaction.user
+        )
         if m < sm["Money"]:
-            return await interaction.followup.send(embed=discord.Embed(
-                title="残高が足りません。",
-                description=f"「{アイテム名}」を買うには {sm.get('Money', 0)}コインが必要です。",
-                color=discord.Color.red()
-            ))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="残高が足りません。",
+                    description=f"「{アイテム名}」を買うには {sm.get('Money', 0)}コインが必要です。",
+                    color=discord.Color.red(),
+                )
+            )
 
-        await Money(interaction.client).add_server_item(interaction.guild, interaction.user, アイテム名, 1)
-        await Money(interaction.client).add_server_money(interaction.guild, interaction.user, -sm["Money"])
-        await interaction.followup.send(embed=discord.Embed(
-            title="アイテムを買いました。",
-            description=f"「{アイテム名}」",
-            color=discord.Color.green()
-        ))
+        await Money(interaction.client).add_server_item(
+            interaction.guild, interaction.user, アイテム名, 1
+        )
+        await Money(interaction.client).add_server_money(
+            interaction.guild, interaction.user, -sm["Money"]
+        )
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="アイテムを買いました。",
+                description=f"「{アイテム名}」",
+                color=discord.Color.green(),
+            )
+        )
 
     # ====== use ======
     @server_economy.command(name="use", description="サーバー内のアイテムを使います。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
-    async def economy_use_server(self, interaction: discord.Interaction, アイテム名: str):
+    async def economy_use_server(
+        self, interaction: discord.Interaction, アイテム名: str
+    ):
         await interaction.response.defer()
-        sm = await Money(interaction.client).get_server_items(interaction.guild, アイテム名)
+        sm = await Money(interaction.client).get_server_items(
+            interaction.guild, アイテム名
+        )
         if not sm:
-            return await interaction.followup.send(embed=discord.Embed(title="アイテムが見つかりません。", color=discord.Color.red()))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="アイテムが見つかりません。", color=discord.Color.red()
+                )
+            )
 
-        count, role = await Money(interaction.client).get_server_item(interaction.guild, interaction.user, アイテム名)
+        count, role = await Money(interaction.client).get_server_item(
+            interaction.guild, interaction.user, アイテム名
+        )
         if count < 1:
-            return await interaction.followup.send(embed=discord.Embed(title="アイテムを持っていません。", color=discord.Color.red()))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="アイテムを持っていません。", color=discord.Color.red()
+                )
+            )
 
         flag = "アイテムが一つ使用されました。\n"
 
@@ -317,16 +447,32 @@ class ServerMoneyCog(commands.Cog):
             else:
                 flag += "ロールが追加できませんでした。"
 
-        await Money(interaction.client).add_server_item(interaction.guild, interaction.user, アイテム名, -1)
-        await interaction.followup.send(embed=discord.Embed(title="アイテムを使用しました。", description=flag, color=discord.Color.green()))
+        await Money(interaction.client).add_server_item(
+            interaction.guild, interaction.user, アイテム名, -1
+        )
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="アイテムを使用しました。",
+                description=flag,
+                color=discord.Color.green(),
+            )
+        )
 
     # ====== items ======
-    @server_economy.command(name="items", description="サーバー内のアイテム一覧を見ます。")
+    @server_economy.command(
+        name="items", description="サーバー内のアイテム一覧を見ます。"
+    )
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_items_server(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        text = await Money(interaction.client).get_server_items_list(interaction.guild, interaction.user)
-        await interaction.followup.send(embed=discord.Embed(title="アイテムリスト", description=text, color=discord.Color.green()))
+        text = await Money(interaction.client).get_server_items_list(
+            interaction.guild, interaction.user
+        )
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="アイテムリスト", description=text, color=discord.Color.green()
+            )
+        )
 
 
 async def setup(bot):

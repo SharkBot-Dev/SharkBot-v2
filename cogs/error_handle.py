@@ -11,7 +11,10 @@ class ErrorHandleCog(commands.Cog):
         self.bot = bot
 
         @bot.tree.error
-        async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+        async def on_app_command_error(
+            interaction: discord.Interaction,
+            error: discord.app_commands.AppCommandError,
+        ):
             if isinstance(error, discord.app_commands.CommandOnCooldown):
                 e = 0
                 return e
@@ -31,9 +34,9 @@ class ErrorHandleCog(commands.Cog):
                         embed=discord.Embed(
                             title="コマンドを実行する権限がありません！",
                             description=f"不足している権限: {missing_perms_str}",
-                            color=discord.Color.red()
+                            color=discord.Color.red(),
                         ),
-                        ephemeral=True
+                        ephemeral=True,
                     )
                 return
 
@@ -41,7 +44,7 @@ class ErrorHandleCog(commands.Cog):
             if not interaction.response.is_done():
                 await interaction.response.send_message(
                     "予期しないエラーが発生しました。開発者に報告してください。",
-                    ephemeral=True
+                    ephemeral=True,
                 )
 
     @commands.Cog.listener("on_error")

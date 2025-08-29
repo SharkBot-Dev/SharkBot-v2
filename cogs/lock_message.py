@@ -16,7 +16,7 @@ class LockMessageCog(commands.Cog):
     @commands.Cog.listener(name="on_interaction")
     async def on_interaction_panel(self, interaction: discord.Interaction):
         try:
-            if interaction.data['component_type'] == 2:
+            if interaction.data["component_type"] == 2:
                 try:
                     custom_id = interaction.data["custom_id"]
                 except:
@@ -26,11 +26,15 @@ class LockMessageCog(commands.Cog):
                     if not interaction.user.guild_permissions.manage_channels:
                         return
                     db = interaction.client.async_db["Main"].LockMessage
-                    result = await db.delete_one({
-                        "Channel": interaction.channel.id,
-                    })
+                    result = await db.delete_one(
+                        {
+                            "Channel": interaction.channel.id,
+                        }
+                    )
                     await interaction.message.delete()
-                    await interaction.followup.send("LockMessageを削除しました。", ephemeral=True)
+                    await interaction.followup.send(
+                        "LockMessageを削除しました。", ephemeral=True
+                    )
         except:
             return
 
@@ -38,7 +42,7 @@ class LockMessageCog(commands.Cog):
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
-        if '!.' in message.content:
+        if "!." in message.content:
             return
 
         user_id = message.author.id
@@ -56,23 +60,34 @@ class LockMessageCog(commands.Cog):
         self.working.add(message.channel.id)
 
         try:
-            if time.time() - discord.Object(id=dbfind["MessageID"]).created_at.timestamp() < 10:
+            if (
+                time.time()
+                - discord.Object(id=dbfind["MessageID"]).created_at.timestamp()
+                < 10
+            ):
                 return
             await asyncio.sleep(5)
 
             try:
-                await discord.PartialMessage(channel=message.channel, id=dbfind["MessageID"]).delete()
+                await discord.PartialMessage(
+                    channel=message.channel, id=dbfind["MessageID"]
+                ).delete()
             except discord.NotFound:
                 pass
 
             view = discord.ui.View()
-            view.add_item(discord.ui.Button(
-                style=discord.ButtonStyle.red, label="削除", custom_id="lockmessage_delete+"))
+            view.add_item(
+                discord.ui.Button(
+                    style=discord.ButtonStyle.red,
+                    label="削除",
+                    custom_id="lockmessage_delete+",
+                )
+            )
 
             embed = discord.Embed(
                 title=dbfind.get("Title", "固定メッセージ"),
                 description=dbfind.get("Desc", ""),
-                color=discord.Color.random()
+                color=discord.Color.random(),
             )
             msg = await message.channel.send(embed=embed, view=view)
 
@@ -83,9 +98,9 @@ class LockMessageCog(commands.Cog):
                     "Guild": message.guild.id,
                     "Title": dbfind.get("Title", ""),
                     "Desc": dbfind.get("Desc", ""),
-                    "MessageID": msg.id
+                    "MessageID": msg.id,
                 },
-                upsert=True
+                upsert=True,
             )
 
         finally:

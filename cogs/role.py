@@ -26,43 +26,85 @@ class RoleCog(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def role_add(self, interaction: discord.Interaction, メンバー: discord.User, ロール: discord.Role):
+    async def role_add(
+        self,
+        interaction: discord.Interaction,
+        メンバー: discord.User,
+        ロール: discord.Role,
+    ):
         if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
 
         if interaction.guild.get_member(メンバー.id) is None:
-            return await interaction.response.send_message(embed=discord.Embed(title=f"このサーバーにいないメンバーにはロールを追加できません。", color=discord.Color.red()))
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title=f"このサーバーにいないメンバーにはロールを追加できません。",
+                    color=discord.Color.red(),
+                )
+            )
 
         await interaction.response.defer()
 
         try:
-
             await interaction.guild.get_member(メンバー.id).add_roles(ロール)
         except:
-            return await interaction.followup.send(embed=discord.Embed(title="ロールを追加できませんでした。", color=discord.Color.red(), description="権限エラーです。"))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="ロールを追加できませんでした。",
+                    color=discord.Color.red(),
+                    description="権限エラーです。",
+                )
+            )
 
-        await interaction.followup.send(embed=discord.Embed(title="ロールを追加しました。", color=discord.Color.green()))
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="ロールを追加しました。", color=discord.Color.green()
+            )
+        )
 
     @role.command(name="remove", description="ロールを剥奪します。")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def role_remove(self, interaction: discord.Interaction, メンバー: discord.User, ロール: discord.Role):
+    async def role_remove(
+        self,
+        interaction: discord.Interaction,
+        メンバー: discord.User,
+        ロール: discord.Role,
+    ):
         if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
 
         if interaction.guild.get_member(メンバー.id) is None:
-            return await interaction.response.send_message(embed=discord.Embed(title=f"このサーバーにいないメンバーにはロールを追加できません。", color=discord.Color.red()))
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title=f"このサーバーにいないメンバーにはロールを追加できません。",
+                    color=discord.Color.red(),
+                )
+            )
 
         await interaction.response.defer()
 
         try:
-
             await interaction.guild.get_member(メンバー.id).remove_roles(ロール)
         except:
-            return await interaction.followup.send(embed=discord.Embed(title="ロールを剥奪できませんでした。", color=discord.Color.red(), description="権限エラーです。"))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="ロールを剥奪できませんでした。",
+                    color=discord.Color.red(),
+                    description="権限エラーです。",
+                )
+            )
 
-        await interaction.followup.send(embed=discord.Embed(title="ロールを剥奪しました。", color=discord.Color.green()))
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="ロールを剥奪しました。", color=discord.Color.green()
+            )
+        )
 
     @role.command(name="info", description="ロール情報を確認します。")
     @app_commands.checks.has_permissions(manage_roles=True)
@@ -70,7 +112,9 @@ class RoleCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def role_info(self, interaction: discord.Interaction, ロール: discord.Role):
         if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
 
         try:
             JST = datetime.timezone(datetime.timedelta(hours=9))
@@ -129,18 +173,40 @@ class RoleCog(commands.Cog):
                 "send_voice_messages": "ボイスメッセージの送信",
                 "send_polls": "投票の作成",
                 "external_stickers": "外部のスタンプの使用",
-                "use_voice_activation": "ボイスチャンネルでの音声検出の使用"
+                "use_voice_activation": "ボイスチャンネルでの音声検出の使用",
             }
-            user_perms = [PERMISSION_TRANSLATIONS.get(
-                perm, perm) for perm, value in ロール.permissions if value]
+            user_perms = [
+                PERMISSION_TRANSLATIONS.get(perm, perm)
+                for perm, value in ロール.permissions
+                if value
+            ]
             user_perms_str = ", ".join(user_perms)
-            await interaction.followup.send(embed=discord.Embed(title=f"{ロール.name} の情報", color=discord.Color.blue()).add_field(name="ID", value=str(ロール.id), inline=False)
-                                            .add_field(name="名前", value=str(ロール.name), inline=False).add_field(name="作成日時", value=str(ロール.created_at.astimezone(JST)), inline=False)
-                                            .add_field(name="色", value=ロール.color.__str__(), inline=False)
-                                            .add_field(name="権限", value=user_perms_str if user_perms_str != "" else "なし", inline=False)
-                                            )
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title=f"{ロール.name} の情報", color=discord.Color.blue()
+                )
+                .add_field(name="ID", value=str(ロール.id), inline=False)
+                .add_field(name="名前", value=str(ロール.name), inline=False)
+                .add_field(
+                    name="作成日時",
+                    value=str(ロール.created_at.astimezone(JST)),
+                    inline=False,
+                )
+                .add_field(name="色", value=ロール.color.__str__(), inline=False)
+                .add_field(
+                    name="権限",
+                    value=user_perms_str if user_perms_str != "" else "なし",
+                    inline=False,
+                )
+            )
         except discord.Forbidden as e:
-            return await interaction.followup.send(embed=discord.Embed(title="ロールの情報を取得できませんでした。", color=discord.Color.red(), description="権限エラーです。"))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="ロールの情報を取得できませんでした。",
+                    color=discord.Color.red(),
+                    description="権限エラーです。",
+                )
+            )
 
 
 async def setup(bot):

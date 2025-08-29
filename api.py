@@ -1,6 +1,6 @@
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse
 import httpx
 import uvicorn
 from router import settings as s_r
@@ -100,7 +100,7 @@ async def guilds(request: Request):
         {
             "request": request,
             "guilds": [g for g in guilds.get("Guilds", []) if g.get("owner")],
-            "message": f'{u.get("username", "ゲスト")}さん、よろしく！',
+            "message": f"{u.get('username', 'ゲスト')}さん、よろしく！",
         },
     )
 

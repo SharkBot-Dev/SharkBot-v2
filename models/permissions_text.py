@@ -52,5 +52,5 @@ PERMISSION_TRANSLATIONS = {
     "send_voice_messages": "ボイスメッセージの送信",
     "send_polls": "投票の作成",
     "external_stickers": "外部のスタンプの使用",
-    "use_voice_activation": "ボイスチャンネルでの音声検出の使用"
+    "use_voice_activation": "ボイスチャンネルでの音声検出の使用",
 }

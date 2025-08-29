@@ -52,21 +52,32 @@ class ExpandCog(commands.Cog):
                 continue
 
             if not type(channel) == discord.Thread:
-
                 if channel.nsfw:
                     if message.channel.nsfw:
                         msg = await channel.fetch_message(int(message_id))
                         embed = discord.Embed(
-                            description=msg.content[:1500] if msg.content else "[メッセージなし]",
+                            description=msg.content[:1500]
+                            if msg.content
+                            else "[メッセージなし]",
                             color=discord.Color.green(),
-                            timestamp=msg.created_at
+                            timestamp=msg.created_at,
                         )
-                        embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar.url if msg.author.avatar else msg.author.default_avatar.url,
-                                         url=f"https://discord.com/users/{msg.author.id}")
+                        embed.set_author(
+                            name=msg.author.display_name,
+                            icon_url=msg.author.avatar.url
+                            if msg.author.avatar
+                            else msg.author.default_avatar.url,
+                            url=f"https://discord.com/users/{msg.author.id}",
+                        )
                         embed.add_field(
-                            name="元のメッセージ", value=f"[リンクを開く]({msg.jump_url})", inline=False)
-                        embed.set_footer(text=f"{msg.guild.name} | {msg.channel.name}",
-                                         icon_url=msg.guild.icon if msg.guild.icon else None)
+                            name="元のメッセージ",
+                            value=f"[リンクを開く]({msg.jump_url})",
+                            inline=False,
+                        )
+                        embed.set_footer(
+                            text=f"{msg.guild.name} | {msg.channel.name}",
+                            icon_url=msg.guild.icon if msg.guild.icon else None,
+                        )
 
                         await message.channel.send(embed=embed)
 
@@ -77,16 +88,28 @@ class ExpandCog(commands.Cog):
             try:
                 msg = await channel.fetch_message(int(message_id))
                 embed = discord.Embed(
-                    description=msg.content[:1500] if msg.content else "[メッセージなし]",
+                    description=msg.content[:1500]
+                    if msg.content
+                    else "[メッセージなし]",
                     color=discord.Color.green(),
-                    timestamp=msg.created_at
+                    timestamp=msg.created_at,
                 )
-                embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar.url if msg.author.avatar else msg.author.default_avatar.url,
-                                 url=f"https://discord.com/users/{msg.author.id}")
+                embed.set_author(
+                    name=msg.author.display_name,
+                    icon_url=msg.author.avatar.url
+                    if msg.author.avatar
+                    else msg.author.default_avatar.url,
+                    url=f"https://discord.com/users/{msg.author.id}",
+                )
                 embed.add_field(
-                    name="元のメッセージ", value=f"[リンクを開く]({msg.jump_url})", inline=False)
-                embed.set_footer(text=f"{msg.guild.name} | {msg.channel.name}",
-                                 icon_url=msg.guild.icon if msg.guild.icon else None)
+                    name="元のメッセージ",
+                    value=f"[リンクを開く]({msg.jump_url})",
+                    inline=False,
+                )
+                embed.set_footer(
+                    text=f"{msg.guild.name} | {msg.channel.name}",
+                    icon_url=msg.guild.icon if msg.guild.icon else None,
+                )
 
                 await message.channel.send(embed=embed)
 

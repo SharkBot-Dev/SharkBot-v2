@@ -46,9 +46,7 @@ async def add_disabled_command(guild_id: int, cmdname: str) -> bool:
     ギルドに無効コマンドを追加
     """
     await mongodb.mongo["DashboardBot"].CommandDisabled.update_one(
-        {"Guild": guild_id},
-        {"$addToSet": {"commands": cmdname}},
-        upsert=True
+        {"Guild": guild_id}, {"$addToSet": {"commands": cmdname}}, upsert=True
     )
     return True
 
@@ -58,9 +56,7 @@ async def remove_disabled_command(guild_id: int, cmdname: str) -> bool:
     ギルドの無効コマンドから削除
     """
     await mongodb.mongo["DashboardBot"].CommandDisabled.update_one(
-        {"Guild": guild_id},
-        {"$pull": {"commands": cmdname}},
-        upsert=True
+        {"Guild": guild_id}, {"$pull": {"commands": cmdname}}, upsert=True
     )
     return True
 
@@ -68,9 +64,7 @@ async def remove_disabled_command(guild_id: int, cmdname: str) -> bool:
 async def set_disabled_commands(guild_id: int, commands: list[str]) -> bool:
     """ギルドの無効化コマンド一覧を丸ごと置き換える"""
     await mongodb.mongo["DashboardBot"].CommandDisabled.update_one(
-        {"Guild": guild_id},
-        {"$set": {"commands": commands}},
-        upsert=True
+        {"Guild": guild_id}, {"$set": {"commands": commands}}, upsert=True
     )
     return True
 

@@ -45,8 +45,12 @@ class PrivateGlobalCog(commands.Cog):
             return "👑"
 
         try:
-
-            if self.bot.get_guild(1343124570131009579).get_role(1344470846995169310) in self.bot.get_guild(1343124570131009579).get_member(message.author.id).roles:
+            if (
+                self.bot.get_guild(1343124570131009579).get_role(1344470846995169310)
+                in self.bot.get_guild(1343124570131009579)
+                .get_member(message.author.id)
+                .roles
+            ):
                 return "🛠️"
         except:
             return "😀"
@@ -54,8 +58,17 @@ class PrivateGlobalCog(commands.Cog):
         return "😀"
 
     def filter_global(self, message: discord.Message) -> bool:
-        blocked_words = ["discord.com", "discord.gg", "x.gd",
-                         "shorturl.asia", "tiny.cc", "<sound:", "niga", "everyone", "here"]
+        blocked_words = [
+            "discord.com",
+            "discord.gg",
+            "x.gd",
+            "shorturl.asia",
+            "tiny.cc",
+            "<sound:",
+            "niga",
+            "everyone",
+            "here",
+        ]
         return not any(word in message.content for word in blocked_words)
 
     async def get_guild_emoji(self, guild: discord.Guild):
@@ -68,29 +81,34 @@ class PrivateGlobalCog(commands.Cog):
         except Exception as e:
             return "😎"
 
-    async def send_one_globalchat(self, webhook: str, message: discord.Message, ref_msg: discord.Message = None):
+    async def send_one_globalchat(
+        self, webhook: str, message: discord.Message, ref_msg: discord.Message = None
+    ):
         if not self.filter_global(message):
             return
 
         async with aiohttp.ClientSession() as session:
             webhook_ = Webhook.from_url(webhook, session=session)
             embed = discord.Embed(
-                description=message.content, color=discord.Color.blue())
+                description=message.content, color=discord.Color.blue()
+            )
             em = await self.get_guild_emoji(message.guild)
-            embed.set_footer(
-                text=f"[{em}] {message.guild.name}/{message.guild.id}")
+            embed.set_footer(text=f"[{em}] {message.guild.name}/{message.guild.id}")
 
             bag = await self.badge_build(message)
 
             if message.author.avatar:
                 embed.set_author(
-                    name=f"[{bag}] {message.author.name}/{message.author.id}", icon_url=message.author.avatar.url)
+                    name=f"[{bag}] {message.author.name}/{message.author.id}",
+                    icon_url=message.author.avatar.url,
+                )
             else:
                 embed.set_author(
-                    name=f"[{bag}] {message.author.name}/{message.author.id}", icon_url=message.author.default_avatar.url)
+                    name=f"[{bag}] {message.author.name}/{message.author.id}",
+                    icon_url=message.author.default_avatar.url,
+                )
             if not message.attachments == []:
-                embed.add_field(
-                    name="添付ファイル", value=message.attachments[0].url)
+                embed.add_field(name="添付ファイル", value=message.attachments[0].url)
                 for kaku in [".png", ".jpg", ".jpeg", ".gif", ".webm"]:
                     if message.attachments[0].filename.endswith(kaku):
                         embed.set_image(url=message.attachments[0].url)
@@ -101,8 +119,13 @@ class PrivateGlobalCog(commands.Cog):
                 embed_ = ref_msg.embeds
                 if wh:
                     try:
-                        name = embed_[0].author.name.replace("[👑]", "").replace(
-                            "[😀]", "").replace("[🛠️]", "").split("/")[0]
+                        name = (
+                            embed_[0]
+                            .author.name.replace("[👑]", "")
+                            .replace("[😀]", "")
+                            .replace("[🛠️]", "")
+                            .split("/")[0]
+                        )
                         value = embed_[0].description
                     except:
                         name = ref_msg.author.name
@@ -112,11 +135,18 @@ class PrivateGlobalCog(commands.Cog):
                     value = ref_msg.content
                 embed.add_field(name=name, value=value)
             try:
-                await webhook_.send(embed=embed, avatar_url=self.bot.user.avatar.url, username="SharkBot-PrivateGlobal", allowed_mentions=discord.AllowedMentions.none())
+                await webhook_.send(
+                    embed=embed,
+                    avatar_url=self.bot.user.avatar.url,
+                    username="SharkBot-PrivateGlobal",
+                    allowed_mentions=discord.AllowedMentions.none(),
+                )
             except:
                 return
 
-    async def send_global_chat(self, room: str, message: discord.Message, ref_msg: discord.Message = None):
+    async def send_global_chat(
+        self, room: str, message: discord.Message, ref_msg: discord.Message = None
+    ):
         db = self.bot.async_db["Main"].PrivateGlobal
         channels = db.find({"Name": room})
 

@@ -46,22 +46,37 @@ class WelcomeCog(commands.Cog):
             return
 
         async def rep_name(msg: str, member: discord.Member):
-            return msg.replace("<name>", member.name).replace("<count>", f"{member.guild.member_count}").replace("<guild>", member.guild.name).replace("<createdat>", f"{member.created_at}")
+            return (
+                msg.replace("<name>", member.name)
+                .replace("<count>", f"{member.guild.member_count}")
+                .replace("<guild>", member.guild.name)
+                .replace("<createdat>", f"{member.created_at}")
+            )
+
         try:
             wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
             webhooks = discord.utils.get(wb, name="SharkBot")
             if webhooks is None:
-                webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(name=f"SharkBot")
+                webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
+                    name=f"SharkBot"
+                )
             color = dbfind.get("Color", "66, 135, 245").split(", ")
             r, g, b = map(int, color)
             async with aiohttp.ClientSession() as session:
-                async with session.post("http://localhost:3001/welcome_card", json={
-                    "Text": await rep_name(dbfind.get("Message"), member),
-                    "Avatar": member.avatar.url if member.avatar else member.default_avatar.url,
-                    "WebHook": webhooks.url,
-                    "Color": [r, g, b, 255],
-                    "Image": dbfind.get("Image", "http://192.168.11.2:5002/static/welcome_card.png")
-                }) as resp:
+                async with session.post(
+                    "http://localhost:3001/welcome_card",
+                    json={
+                        "Text": await rep_name(dbfind.get("Message"), member),
+                        "Avatar": member.avatar.url
+                        if member.avatar
+                        else member.default_avatar.url,
+                        "WebHook": webhooks.url,
+                        "Color": [r, g, b, 255],
+                        "Image": dbfind.get(
+                            "Image", "http://192.168.11.2:5002/static/welcome_card.png"
+                        ),
+                    },
+                ) as resp:
                     return
         except Exception as e:
             return
@@ -78,17 +93,33 @@ class WelcomeCog(commands.Cog):
             return
 
         async def rep_name(msg: str, member: discord.Member):
-            return msg.replace("<name>", member.name).replace("<count>", f"{member.guild.member_count}").replace("<guild>", member.guild.name).replace("<createdat>", f"{member.created_at}")
+            return (
+                msg.replace("<name>", member.name)
+                .replace("<count>", f"{member.guild.member_count}")
+                .replace("<guild>", member.guild.name)
+                .replace("<createdat>", f"{member.created_at}")
+            )
+
         try:
             wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
             webhooks = discord.utils.get(wb, name="SharkBot")
             if webhooks is None:
-                webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(name=f"SharkBot")
+                webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
+                    name=f"SharkBot"
+                )
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(webhooks.url, session=session)
                 try:
                     col = await self.get_user_color_welcome(member)
-                    await webhook.send(embed=discord.Embed(title=f"{await rep_name(dbfind["Title"], member=member)}", description=f"{await rep_name(dbfind["Description"], member=member)}", color=col), username="SharkBot Welcome", avatar_url=self.bot.user.avatar.url)
+                    await webhook.send(
+                        embed=discord.Embed(
+                            title=f"{await rep_name(dbfind['Title'], member=member)}",
+                            description=f"{await rep_name(dbfind['Description'], member=member)}",
+                            color=col,
+                        ),
+                        username="SharkBot Welcome",
+                        avatar_url=self.bot.user.avatar.url,
+                    )
                 except:
                     return
         except:
@@ -106,17 +137,33 @@ class WelcomeCog(commands.Cog):
             return
 
         async def rep_name(msg: str, member: discord.Member):
-            return msg.replace("<name>", member.name).replace("<count>", f"{member.guild.member_count}").replace("<guild>", member.guild.name).replace("<createdat>", f"{member.created_at}")
+            return (
+                msg.replace("<name>", member.name)
+                .replace("<count>", f"{member.guild.member_count}")
+                .replace("<guild>", member.guild.name)
+                .replace("<createdat>", f"{member.created_at}")
+            )
+
         try:
             wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
             webhooks = discord.utils.get(wb, name="SharkBot")
             if webhooks is None:
-                webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(name=f"SharkBot")
+                webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
+                    name=f"SharkBot"
+                )
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(webhooks.url, session=session)
                 try:
                     col = await self.get_user_color_welcome(member)
-                    await webhook.send(embed=discord.Embed(title=f"{await rep_name(dbfind["Title"], member=member)}", description=f"{await rep_name(dbfind["Description"], member=member)}", color=col), username="SharkBot Goodbye", avatar_url=self.bot.user.avatar.url)
+                    await webhook.send(
+                        embed=discord.Embed(
+                            title=f"{await rep_name(dbfind['Title'], member=member)}",
+                            description=f"{await rep_name(dbfind['Description'], member=member)}",
+                            color=col,
+                        ),
+                        username="SharkBot Goodbye",
+                        avatar_url=self.bot.user.avatar.url,
+                    )
                 except:
                     return
         except:
@@ -135,18 +182,30 @@ class WelcomeCog(commands.Cog):
 
         async def rep_name(msg: str, member: discord.User):
             m = msg.replace("<name>", member.name).replace(
-                "<createdat>", f"{member.created_at}")
+                "<createdat>", f"{member.created_at}"
+            )
             return m
+
         try:
             wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
             webhooks = discord.utils.get(wb, name="SharkBot")
             if webhooks is None:
-                webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(name=f"SharkBot")
+                webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
+                    name=f"SharkBot"
+                )
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(webhooks.url, session=session)
                 try:
                     col = await self.get_user_color_welcome(member)
-                    await webhook.send(embed=discord.Embed(title=f"{await rep_name(dbfind["Title"], member=member)}", description=f"{await rep_name(dbfind["Description"], member=member)}", color=col), username="SharkBot Ban", avatar_url=self.bot.user.avatar.url)
+                    await webhook.send(
+                        embed=discord.Embed(
+                            title=f"{await rep_name(dbfind['Title'], member=member)}",
+                            description=f"{await rep_name(dbfind['Description'], member=member)}",
+                            color=col,
+                        ),
+                        username="SharkBot Ban",
+                        avatar_url=self.bot.user.avatar.url,
+                    )
                 except:
                     return
         except:

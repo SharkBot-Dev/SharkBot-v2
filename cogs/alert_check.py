@@ -13,21 +13,31 @@ class AlertCheckCog(commands.Cog):
     def cog_unload(self):
         self.check_alert.cancel()
 
-    async def alert_add(self, id: str, channelid: int, text: str, title: str, description: str, time: int):
+    async def alert_add(
+        self,
+        id: str,
+        channelid: int,
+        text: str,
+        title: str,
+        description: str,
+        time: int,
+    ):
         notify_time = datetime.now() + timedelta(seconds=time)
 
         db = self.bot.async_db["Main"].AlertQueue
 
         await db.update_one(
             {"Channel": channelid, "ID": id},
-            {"$set": {
-                "NotifyAt": notify_time,
-                "Text": text,
-                "Title": title,
-                "Description": description,
-                "ID": id
-            }},
-            upsert=True
+            {
+                "$set": {
+                    "NotifyAt": notify_time,
+                    "Text": text,
+                    "Title": title,
+                    "Description": description,
+                    "ID": id,
+                }
+            },
+            upsert=True,
         )
 
         return True
@@ -41,10 +51,15 @@ class AlertCheckCog(commands.Cog):
             if ch:
                 await ch.send(
                     content=doc.get("Text", "メンションするロールがありません。"),
-                    embed=discord.Embed(title=doc.get("Title", "タイトルです"), description=doc.get(
-                        "Description", "説明です"), color=discord.Color.green())
+                    embed=discord.Embed(
+                        title=doc.get("Title", "タイトルです"),
+                        description=doc.get("Description", "説明です"),
+                        color=discord.Color.green(),
+                    ),
                 )
-            await db.delete_one({"Channel": doc["Channel"], "ID": doc.get("ID", "none")})
+            await db.delete_one(
+                {"Channel": doc["Channel"], "ID": doc.get("ID", "none")}
+            )
             await asyncio.sleep(1)
 
 

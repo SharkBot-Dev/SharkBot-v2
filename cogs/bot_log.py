@@ -10,19 +10,14 @@ class BotLogCog(commands.Cog):
         print(f"init -> BotLogCog")
 
     async def update_guild_channels(self, guild: discord.Guild):
-        text_channels = [
-            {"id": ch.id, "name": ch.name}
-            for ch in guild.text_channels
-        ]
+        text_channels = [{"id": ch.id, "name": ch.name} for ch in guild.text_channels]
         await mongodb.mongo["DashboardBot"].guild_channels.update_one(
-            {"Guild": guild.id},
-            {"$set": {"Channels": text_channels}},
-            upsert=True
+            {"Guild": guild.id}, {"$set": {"Channels": text_channels}}, upsert=True
         )
 
-        await mongodb.mongo["DashboardBot"].bot_joind_guild.replace_one({
-            "Guild": guild.id
-        }, {"Guild": guild.id}, upsert=True)
+        await mongodb.mongo["DashboardBot"].bot_joind_guild.replace_one(
+            {"Guild": guild.id}, {"Guild": guild.id}, upsert=True
+        )
 
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
@@ -34,15 +29,15 @@ class BotLogCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
-        await mongodb.mongo["DashboardBot"].bot_joind_guild.replace_one({
-            "Guild": guild.id
-        }, {"Guild": guild.id}, upsert=True)
+        await mongodb.mongo["DashboardBot"].bot_joind_guild.replace_one(
+            {"Guild": guild.id}, {"Guild": guild.id}, upsert=True
+        )
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: discord.Guild):
-        await mongodb.mongo["DashboardBot"].bot_joind_guild.delete_one({
-            "Guild": guild.id
-        })
+        await mongodb.mongo["DashboardBot"].bot_joind_guild.delete_one(
+            {"Guild": guild.id}
+        )
 
 
 async def setup(bot):

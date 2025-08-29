@@ -26,7 +26,9 @@ class StarBoardCog(commands.Cog):
     async def get_reaction_channel(self, guild: discord.Guild, emoji: str):
         db = self.bot.async_db["Main"].ReactionBoard
         try:
-            dbfind = await db.find_one({"Guild": guild.id, "Emoji": emoji}, {"_id": False})
+            dbfind = await db.find_one(
+                {"Guild": guild.id, "Emoji": emoji}, {"_id": False}
+            )
         except:
             return None
         if dbfind is None:
@@ -48,13 +50,16 @@ class StarBoardCog(commands.Cog):
         await db.replace_one(
             {"Guild": message.guild.id},
             {"Guild": message.guild.id, "ID": message.id, "ReactMessageID": msg.id},
-            upsert=True
+            upsert=True,
         )
 
     async def read_message(self, message: discord.Message):
         db = self.bot.async_db["Main"].ReactionBoardMessage
         try:
-            dbfind = await db.find_one({"Guild": message.guild.id, "ReactMessageID": message.id}, {"_id": False})
+            dbfind = await db.find_one(
+                {"Guild": message.guild.id, "ReactMessageID": message.id},
+                {"_id": False},
+            )
         except:
             return None
         if dbfind is None:
@@ -72,7 +77,23 @@ class StarBoardCog(commands.Cog):
                 if emoji == emoji_:
                     if count == 1:
                         cha = await self.get_reaction_channel(message.guild, emoji_)
-                        msg = await cha.send(embed=discord.Embed(title=f"{emoji}x1", description=f"{message.content}", color=discord.Color.blue()).set_author(name=message.author.name, icon_url=message.author.avatar.url if message.author.avatar else message.author.default_avatar.url), view=discord.ui.View().add_item(discord.ui.Button(label="メッセージに飛ぶ", url=message.jump_url)))
+                        msg = await cha.send(
+                            embed=discord.Embed(
+                                title=f"{emoji}x1",
+                                description=f"{message.content}",
+                                color=discord.Color.blue(),
+                            ).set_author(
+                                name=message.author.name,
+                                icon_url=message.author.avatar.url
+                                if message.author.avatar
+                                else message.author.default_avatar.url,
+                            ),
+                            view=discord.ui.View().add_item(
+                                discord.ui.Button(
+                                    label="メッセージに飛ぶ", url=message.jump_url
+                                )
+                            ),
+                        )
                         await self.save_message(msg, message)
                     else:
                         cha = await self.get_channel(message.guild)
@@ -81,7 +102,18 @@ class StarBoardCog(commands.Cog):
                             m = await cha.fetch_message(msg)
                         except:
                             return
-                        msg = await m.edit(embed=discord.Embed(title=f"{emoji}x{count}", description=f"{message.content}", color=discord.Color.blue()).set_author(name=message.author.name, icon_url=message.author.avatar.url if message.author.avatar else message.author.default_avatar.url))
+                        msg = await m.edit(
+                            embed=discord.Embed(
+                                title=f"{emoji}x{count}",
+                                description=f"{message.content}",
+                                color=discord.Color.blue(),
+                            ).set_author(
+                                name=message.author.name,
+                                icon_url=message.author.avatar.url
+                                if message.author.avatar
+                                else message.author.default_avatar.url,
+                            )
+                        )
                     return
 
     async def reaction_add_2(self, message: discord.Message, emoji_: str):
@@ -99,43 +131,61 @@ class StarBoardCog(commands.Cog):
                         m = await cha.fetch_message(msg)
                     except:
                         return
-                    msg = await m.edit(embed=discord.Embed(title=f"{emoji}x{count}", description=f"{message.content}", color=discord.Color.blue()).set_author(name=message.author.name, icon_url=message.author.avatar.url if message.author.avatar else message.author.default_avatar.url))
+                    msg = await m.edit(
+                        embed=discord.Embed(
+                            title=f"{emoji}x{count}",
+                            description=f"{message.content}",
+                            color=discord.Color.blue(),
+                        ).set_author(
+                            name=message.author.name,
+                            icon_url=message.author.avatar.url
+                            if message.author.avatar
+                            else message.author.default_avatar.url,
+                        )
+                    )
                     return
 
     @commands.Cog.listener("on_reaction_add")
-    async def on_reaction_add_reaction_board(self, reaction: discord.Reaction, user: discord.User):
+    async def on_reaction_add_reaction_board(
+        self, reaction: discord.Reaction, user: discord.User
+    ):
         if user.bot:
             return
         check = await self.get_reaction_channel(reaction.message.guild, reaction.emoji)
         if check:
             current_time = time.time()
-            last_message_time = cooldown_reaction.get(
-                reaction.message.guild.id, 0)
+            last_message_time = cooldown_reaction.get(reaction.message.guild.id, 0)
             if current_time - last_message_time < 1:
                 return
             cooldown_reaction[reaction.message.guild.id] = current_time
             await self.reaction_add(reaction.message, reaction.emoji)
 
     @commands.Cog.listener("on_reaction_remove")
-    async def on_reaction_remove_reaction_board(self, reaction: discord.Reaction, user: discord.User):
+    async def on_reaction_remove_reaction_board(
+        self, reaction: discord.Reaction, user: discord.User
+    ):
         if user.bot:
             return
         check = await self.get_reaction_channel(reaction.message.guild, reaction.emoji)
         if check:
             current_time = time.time()
-            last_message_time = cooldown_reaction.get(
-                reaction.message.guild.id, 0)
+            last_message_time = cooldown_reaction.get(reaction.message.guild.id, 0)
             if current_time - last_message_time < 1:
                 return
             cooldown_reaction[reaction.message.guild.id] = current_time
             await self.reaction_add_2(reaction.message, reaction.emoji)
 
-    async def set_reaction_board(self, interaction: discord.Interaction, チャンネル: discord.TextChannel, 絵文字: str):
+    async def set_reaction_board(
+        self,
+        interaction: discord.Interaction,
+        チャンネル: discord.TextChannel,
+        絵文字: str,
+    ):
         db = self.bot.async_db["Main"].ReactionBoard
         await db.replace_one(
             {"Guild": interaction.guild.id, "Emoji": 絵文字, "Channel": チャンネル.id},
             {"Guild": interaction.guild.id, "Channel": チャンネル.id, "Emoji": 絵文字},
-            upsert=True
+            upsert=True,
         )
 
     async def delete_reaction_board(self, interaction: discord.Interaction):
@@ -143,22 +193,42 @@ class StarBoardCog(commands.Cog):
         await db.delete_one({"Guild": interaction.channel.id})
 
     starboard = app_commands.Group(
-        name="starboard", description="スターボードのコマンドです。")
+        name="starboard", description="スターボードのコマンドです。"
+    )
 
     @starboard.command(name="setup", description="スターボードをセットアップします。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def reactionboard_setup(self, interaction: discord.Interaction, チャンネル: discord.TextChannel, 絵文字: str):
+    async def reactionboard_setup(
+        self,
+        interaction: discord.Interaction,
+        チャンネル: discord.TextChannel,
+        絵文字: str,
+    ):
         if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
 
         try:
             await interaction.response.defer()
             await self.set_reaction_board(interaction, チャンネル, 絵文字)
-            await interaction.followup.send(embed=discord.Embed(title="リアクションボードをセットアップしました。", color=discord.Color.green(), description=f"{チャンネル.mention}"))
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="リアクションボードをセットアップしました。",
+                    color=discord.Color.green(),
+                    description=f"{チャンネル.mention}",
+                )
+            )
         except discord.Forbidden as e:
-            return await interaction.followup.send(embed=discord.Embed(title="リアクションボードをセットアップできませんでした。", color=discord.Color.red(), description="権限エラーです。"))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="リアクションボードをセットアップできませんでした。",
+                    color=discord.Color.red(),
+                    description="権限エラーです。",
+                )
+            )
 
     @starboard.command(name="disable", description="スターボードを無効化します。")
     @app_commands.checks.has_permissions(manage_channels=True)
@@ -166,14 +236,27 @@ class StarBoardCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def reation_board_disable(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
 
         try:
             await interaction.response.defer()
             await self.delete_reaction_board(interaction)
-            await interaction.followup.send(embed=discord.Embed(title="リアクションボードを無効にしました。", color=discord.Color.green()))
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="リアクションボードを無効にしました。",
+                    color=discord.Color.green(),
+                )
+            )
         except discord.Forbidden as e:
-            return await interaction.followup.send(embed=discord.Embed(title="リアクションボードを無効にできませんでした。", color=discord.Color.red(), description="権限エラーです。"))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="リアクションボードを無効にできませんでした。",
+                    color=discord.Color.red(),
+                    description="権限エラーです。",
+                )
+            )
 
 
 async def setup(bot):

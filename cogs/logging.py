@@ -47,7 +47,21 @@ class LoggingCog(commands.Cog):
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
-                await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Minus:1367039494322262096> メッセージが削除されました", description=f"{message.content}", color=discord.Color.red()).set_footer(text=f"mid:{message.id}").set_author(name=f"{message.author.name}", icon_url=message.author.avatar.url if message.author.avatar else message.author.default_avatar.url))
+                await webhook_.send(
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=discord.Embed(
+                        title="<:Minus:1367039494322262096> メッセージが削除されました",
+                        description=f"{message.content}",
+                        color=discord.Color.red(),
+                    )
+                    .set_footer(text=f"mid:{message.id}")
+                    .set_author(
+                        name=f"{message.author.name}",
+                        icon_url=message.author.avatar.url
+                        if message.author.avatar
+                        else message.author.default_avatar.url,
+                    ),
+                )
         except Exception as e:
             return
 
@@ -59,7 +73,21 @@ class LoggingCog(commands.Cog):
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
-                await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Minus:1367039494322262096> メンバーがBANされました", description=f"{member.mention}\nメンバーがBANされました: {datetime.datetime.now()}", color=discord.Color.red()).set_footer(text=f"uid:{member.id}").set_author(name=f"{member.name}", icon_url=member.avatar.url if member.avatar else member.default_avatar.url))
+                await webhook_.send(
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=discord.Embed(
+                        title="<:Minus:1367039494322262096> メンバーがBANされました",
+                        description=f"{member.mention}\nメンバーがBANされました: {datetime.datetime.now()}",
+                        color=discord.Color.red(),
+                    )
+                    .set_footer(text=f"uid:{member.id}")
+                    .set_author(
+                        name=f"{member.name}",
+                        icon_url=member.avatar.url
+                        if member.avatar
+                        else member.default_avatar.url,
+                    ),
+                )
         except:
             return
 
@@ -73,12 +101,28 @@ class LoggingCog(commands.Cog):
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
-                await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Edit:1367039517868953600> メンバーが編集されました", description=f"編集前の名前: {before.display_name}\nメンバーの編集時間: {datetime.datetime.now()}\n編集後の名前: {after.display_name}", color=discord.Color.yellow()).set_footer(text=f"uid:{after.id}").set_author(name=f"{after.name}", icon_url=after.avatar.url if after.avatar else after.default_avatar.url))
+                await webhook_.send(
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=discord.Embed(
+                        title="<:Edit:1367039517868953600> メンバーが編集されました",
+                        description=f"編集前の名前: {before.display_name}\nメンバーの編集時間: {datetime.datetime.now()}\n編集後の名前: {after.display_name}",
+                        color=discord.Color.yellow(),
+                    )
+                    .set_footer(text=f"uid:{after.id}")
+                    .set_author(
+                        name=f"{after.name}",
+                        icon_url=after.avatar.url
+                        if after.avatar
+                        else after.default_avatar.url,
+                    ),
+                )
         except:
             return
 
     @commands.Cog.listener("on_member_update")
-    async def on_member_update_timeout_log(self, before: discord.Member, after: discord.Member):
+    async def on_member_update_timeout_log(
+        self, before: discord.Member, after: discord.Member
+    ):
         try:
             wh = await self.get_logging_webhook(after.guild)
             if not wh:
@@ -87,12 +131,28 @@ class LoggingCog(commands.Cog):
             if before.timed_out_until is None and after.timed_out_until is not None:
                 async with aiohttp.ClientSession() as session:
                     webhook_ = Webhook.from_url(wh, session=session)
-                    await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Plus:1367039505865113670> メンバーがタイムアウトされました。", description=f"メンバー: {after.mention}", color=discord.Color.green()).set_footer(text=f"uid:{after.id}").set_author(name=f"{after.name}", icon_url=after.avatar.url if after.avatar else after.default_avatar.url))
+                    await webhook_.send(
+                        avatar_url=self.bot.user.avatar.url,
+                        embed=discord.Embed(
+                            title="<:Plus:1367039505865113670> メンバーがタイムアウトされました。",
+                            description=f"メンバー: {after.mention}",
+                            color=discord.Color.green(),
+                        )
+                        .set_footer(text=f"uid:{after.id}")
+                        .set_author(
+                            name=f"{after.name}",
+                            icon_url=after.avatar.url
+                            if after.avatar
+                            else after.default_avatar.url,
+                        ),
+                    )
         except:
             return
 
     @commands.Cog.listener("on_member_update")
-    async def on_member_update_role_log(self, before: discord.Member, after: discord.Member):
+    async def on_member_update_role_log(
+        self, before: discord.Member, after: discord.Member
+    ):
         try:
             before_roles = set(before.roles)
             after_roles = set(after.roles)
@@ -107,17 +167,47 @@ class LoggingCog(commands.Cog):
             if added_roles:
                 async with aiohttp.ClientSession() as session:
                     webhook_ = Webhook.from_url(wh, session=session)
-                    await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Plus:1367039505865113670> ロールが追加されました", description=f"メンバー: {after.mention}\nロール: {'\n'.join([rr.mention for rr in added_roles])}", color=discord.Color.green()).set_footer(text=f"uid:{after.id}").set_author(name=f"{after.name}", icon_url=after.avatar.url if after.avatar else after.default_avatar.url))
+                    await webhook_.send(
+                        avatar_url=self.bot.user.avatar.url,
+                        embed=discord.Embed(
+                            title="<:Plus:1367039505865113670> ロールが追加されました",
+                            description=f"メンバー: {after.mention}\nロール: {'\n'.join([rr.mention for rr in added_roles])}",
+                            color=discord.Color.green(),
+                        )
+                        .set_footer(text=f"uid:{after.id}")
+                        .set_author(
+                            name=f"{after.name}",
+                            icon_url=after.avatar.url
+                            if after.avatar
+                            else after.default_avatar.url,
+                        ),
+                    )
 
             if removed_roles:
                 async with aiohttp.ClientSession() as session:
                     webhook_ = Webhook.from_url(wh, session=session)
-                    await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Minus:1367039494322262096> ロールが削除されました", description=f"メンバー: {after.mention}\nロール: {'\n'.join([rr.mention for rr in removed_roles])}", color=discord.Color.red()).set_footer(text=f"uid:{after.id}").set_author(name=f"{after.name}", icon_url=after.avatar.url if after.avatar else after.default_avatar.url))
+                    await webhook_.send(
+                        avatar_url=self.bot.user.avatar.url,
+                        embed=discord.Embed(
+                            title="<:Minus:1367039494322262096> ロールが削除されました",
+                            description=f"メンバー: {after.mention}\nロール: {'\n'.join([rr.mention for rr in removed_roles])}",
+                            color=discord.Color.red(),
+                        )
+                        .set_footer(text=f"uid:{after.id}")
+                        .set_author(
+                            name=f"{after.name}",
+                            icon_url=after.avatar.url
+                            if after.avatar
+                            else after.default_avatar.url,
+                        ),
+                    )
         except:
             return
 
     @commands.Cog.listener("on_message_edit")
-    async def on_message_edit_log(self, before: discord.Message, after: discord.Message):
+    async def on_message_edit_log(
+        self, before: discord.Message, after: discord.Message
+    ):
         try:
             if after.author.id == self.bot.user.id:
                 return
@@ -130,7 +220,21 @@ class LoggingCog(commands.Cog):
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
-                await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Edit:1367039517868953600> メッセージが編集されました", description=f"編集前:\n{before.content}\n編集後:\n{after.content}", color=discord.Color.yellow()).set_footer(text=f"mid:{after.id}").set_author(name=f"{after.author.name}", icon_url=after.author.avatar.url if after.author.avatar else after.author.default_avatar.url))
+                await webhook_.send(
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=discord.Embed(
+                        title="<:Edit:1367039517868953600> メッセージが編集されました",
+                        description=f"編集前:\n{before.content}\n編集後:\n{after.content}",
+                        color=discord.Color.yellow(),
+                    )
+                    .set_footer(text=f"mid:{after.id}")
+                    .set_author(
+                        name=f"{after.author.name}",
+                        icon_url=after.author.avatar.url
+                        if after.author.avatar
+                        else after.author.default_avatar.url,
+                    ),
+                )
         except:
             return
 
@@ -142,7 +246,14 @@ class LoggingCog(commands.Cog):
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
-                await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Plus:1367039505865113670> チャンネルが作成されました", description=f"名前: {channel.name}\n作成時間: {channel.created_at}", color=discord.Color.green()).set_footer(text=f"cid:{channel.id}"))
+                await webhook_.send(
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=discord.Embed(
+                        title="<:Plus:1367039505865113670> チャンネルが作成されました",
+                        description=f"名前: {channel.name}\n作成時間: {channel.created_at}",
+                        color=discord.Color.green(),
+                    ).set_footer(text=f"cid:{channel.id}"),
+                )
         except:
             return
 
@@ -154,7 +265,14 @@ class LoggingCog(commands.Cog):
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
-                await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Minus:1367039494322262096> チャンネルが削除されました", description=f"名前: {channel.name}", color=discord.Color.red()).set_footer(text=f"cid:{channel.id}"))
+                await webhook_.send(
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=discord.Embed(
+                        title="<:Minus:1367039494322262096> チャンネルが削除されました",
+                        description=f"名前: {channel.name}",
+                        color=discord.Color.red(),
+                    ).set_footer(text=f"cid:{channel.id}"),
+                )
         except:
             return
 
@@ -166,7 +284,21 @@ class LoggingCog(commands.Cog):
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
-                await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Plus:1367039505865113670> 招待リンクが作成されました", description=f"チャンネル: {invite.channel.name}\n招待リンク作成時間: {datetime.datetime.now()}\nurl: {invite.url}", color=discord.Color.green()).set_footer(text=f"invid:{invite.id}").set_author(name=f"{invite.inviter.name}", icon_url=invite.inviter.avatar.url if invite.inviter.avatar else invite.inviter.default_avatar.url))
+                await webhook_.send(
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=discord.Embed(
+                        title="<:Plus:1367039505865113670> 招待リンクが作成されました",
+                        description=f"チャンネル: {invite.channel.name}\n招待リンク作成時間: {datetime.datetime.now()}\nurl: {invite.url}",
+                        color=discord.Color.green(),
+                    )
+                    .set_footer(text=f"invid:{invite.id}")
+                    .set_author(
+                        name=f"{invite.inviter.name}",
+                        icon_url=invite.inviter.avatar.url
+                        if invite.inviter.avatar
+                        else invite.inviter.default_avatar.url,
+                    ),
+                )
         except:
             return
 
@@ -178,7 +310,14 @@ class LoggingCog(commands.Cog):
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
-                await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Plus:1367039505865113670> ロールが作成されました", description=f"名前: {role.name}", color=discord.Color.green()).set_footer(text=f"rid:{role.id}"))
+                await webhook_.send(
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=discord.Embed(
+                        title="<:Plus:1367039505865113670> ロールが作成されました",
+                        description=f"名前: {role.name}",
+                        color=discord.Color.green(),
+                    ).set_footer(text=f"rid:{role.id}"),
+                )
         except:
             return
 
@@ -190,7 +329,14 @@ class LoggingCog(commands.Cog):
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
-                await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Minus:1367039494322262096> ロールが削除されました", description=f"名前: {role.name}", color=discord.Color.red()).set_footer(text=f"rid:{role.id}"))
+                await webhook_.send(
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=discord.Embed(
+                        title="<:Minus:1367039494322262096> ロールが削除されました",
+                        description=f"名前: {role.name}",
+                        color=discord.Color.red(),
+                    ).set_footer(text=f"rid:{role.id}"),
+                )
         except:
             return
 
@@ -202,7 +348,21 @@ class LoggingCog(commands.Cog):
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
-                await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Plus:1367039505865113670> メンバーが参加しました", description=f"名前: {member.name}\nアカウント作成日: {member.created_at}\n参加時間: {datetime.datetime.now()}", color=discord.Color.green()).set_footer(text=f"mid:{member.id}").set_author(name=f"{member.name}", icon_url=member.avatar.url if member.avatar else member.default_avatar.url))
+                await webhook_.send(
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=discord.Embed(
+                        title="<:Plus:1367039505865113670> メンバーが参加しました",
+                        description=f"名前: {member.name}\nアカウント作成日: {member.created_at}\n参加時間: {datetime.datetime.now()}",
+                        color=discord.Color.green(),
+                    )
+                    .set_footer(text=f"mid:{member.id}")
+                    .set_author(
+                        name=f"{member.name}",
+                        icon_url=member.avatar.url
+                        if member.avatar
+                        else member.default_avatar.url,
+                    ),
+                )
         except:
             return
 
@@ -214,7 +374,21 @@ class LoggingCog(commands.Cog):
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
-                await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Minus:1367039494322262096> メンバーが退出しました", description=f"名前: {member.name}\nアカウント作成日: {member.created_at}\n参加時間: {datetime.datetime.now()}", color=discord.Color.red()).set_footer(text=f"mid:{member.id}").set_author(name=f"{member.name}", icon_url=member.avatar.url if member.avatar else member.default_avatar.url))
+                await webhook_.send(
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=discord.Embed(
+                        title="<:Minus:1367039494322262096> メンバーが退出しました",
+                        description=f"名前: {member.name}\nアカウント作成日: {member.created_at}\n参加時間: {datetime.datetime.now()}",
+                        color=discord.Color.red(),
+                    )
+                    .set_footer(text=f"mid:{member.id}")
+                    .set_author(
+                        name=f"{member.name}",
+                        icon_url=member.avatar.url
+                        if member.avatar
+                        else member.default_avatar.url,
+                    ),
+                )
         except:
             return
 
@@ -226,7 +400,21 @@ class LoggingCog(commands.Cog):
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
-                await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Plus:1367039505865113670> AutoModで処罰されました", description=f"名前: {execution.member.name}\nチャンネル: {execution.channel.name}\n処罰時間: {datetime.datetime.now()}", color=discord.Color.green()).set_footer(text=f"mid:{execution.member.id}").set_author(name=f"{execution.member.name}", icon_url=execution.member.avatar.url if execution.member.avatar else execution.member.default_avatar.url))
+                await webhook_.send(
+                    avatar_url=self.bot.user.avatar.url,
+                    embed=discord.Embed(
+                        title="<:Plus:1367039505865113670> AutoModで処罰されました",
+                        description=f"名前: {execution.member.name}\nチャンネル: {execution.channel.name}\n処罰時間: {datetime.datetime.now()}",
+                        color=discord.Color.green(),
+                    )
+                    .set_footer(text=f"mid:{execution.member.id}")
+                    .set_author(
+                        name=f"{execution.member.name}",
+                        icon_url=execution.member.avatar.url
+                        if execution.member.avatar
+                        else execution.member.default_avatar.url,
+                    ),
+                )
         except:
             return
 
@@ -238,17 +426,26 @@ class LoggingCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def log_setup(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
 
         db = self.bot.async_db["Main"].EventLoggingChannel
         web = await interaction.channel.create_webhook(name="SharkBot-Log")
         await db.replace_one(
             {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-            {"Guild": interaction.guild.id,
-                "Channel": interaction.channel.id, "Webhook": web.url},
-            upsert=True
+            {
+                "Guild": interaction.guild.id,
+                "Channel": interaction.channel.id,
+                "Webhook": web.url,
+            },
+            upsert=True,
         )
-        await interaction.response.send_message(embed=discord.Embed(title="ログをセットアップしました。", color=discord.Color.green()))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="ログをセットアップしました。", color=discord.Color.green()
+            )
+        )
 
     @log.command(name="disable", description="ログを無効化します。")
     @app_commands.checks.has_permissions(administrator=True)
@@ -256,12 +453,18 @@ class LoggingCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def log_disable(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
 
         db = self.bot.async_db["Main"].EventLoggingChannel
         web = await interaction.channel.create_webhook(name="SharkBot-Log")
         await db.delete_one({"Guild": interaction.guild.id})
-        await interaction.response.send_message(embed=discord.Embed(title="ログをセットアップしました。", color=discord.Color.green()))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="ログをセットアップしました。", color=discord.Color.green()
+            )
+        )
 
 
 async def setup(bot):

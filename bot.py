@@ -1,13 +1,7 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import os
-import asyncio
-import logging
-import sys
-import json
 from motor.motor_asyncio import AsyncIOMotorClient
-import sqlite3
-import aiofiles
 from pymongo import MongoClient
 import dotenv
 from models import custom_tree
@@ -23,7 +17,7 @@ class NewSharkBot(commands.AutoShardedBot):
             command_prefix=self.ChangePrefix,
             help_command=None,
             intents=intent,
-            tree_cls=custom_tree.CustomTree
+            tree_cls=custom_tree.CustomTree,
         )
         print("InitDone")
         self.async_db = AsyncIOMotorClient("mongodb://localhost:27017")
@@ -45,8 +39,12 @@ bot = NewSharkBot()
 
 @bot.event
 async def on_ready():
-    await bot.load_extension('jishaku')
-    await bot.change_presence(activity=discord.CustomActivity(name=f"/help | {len(bot.guilds)}鯖 | {bot.shard_count}Shard | {round(bot.latency * 1000)}ms"))
+    await bot.load_extension("jishaku")
+    await bot.change_presence(
+        activity=discord.CustomActivity(
+            name=f"/help | {len(bot.guilds)}鯖 | {bot.shard_count}Shard | {round(bot.latency * 1000)}ms"
+        )
+    )
     os.system("clear")
     print("---[Logging]-------------------------------")
     print(f"BotName: {bot.user.name}")
@@ -67,5 +65,6 @@ async def setup_hook() -> None:
         await bot.tree.sync()
     except:
         print("スラッシュコマンドの同期に失敗しました。")
+
 
 bot.run(os.environ.get("Token"))
