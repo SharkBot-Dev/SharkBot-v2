@@ -46,7 +46,11 @@ class FreeChannelModal(discord.ui.Modal):
             return
         nsfw = False if self.channeltype.component.values[0] == "text" else True
         if dbfind is None:
-            channel = await interaction.guild.create_text_channel(name=self.channelname.component.value, nsfw=nsfw)
+            if interaction.channel.category:
+                    
+                channel = await interaction.channel.category.create_text_channel(name=self.channelname.component.value, nsfw=nsfw)
+            else:
+                channel = await interaction.guild.create_text_channel(name=self.channelname.component.value, nsfw=nsfw)
         else:
             ch = interaction.guild.get_channel(dbfind.get("Channel", 0))
             if type(ch) == discord.CategoryChannel:
