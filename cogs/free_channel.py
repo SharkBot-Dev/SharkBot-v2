@@ -39,7 +39,7 @@ class FreeChannelModal(discord.ui.Modal):
         assert isinstance(self.channeltype.component, discord.ui.Select)
         assert isinstance(self.channelname.component, discord.ui.TextInput)
 
-        db = self.bot.async_db["Main"].FreeChannelCategory
+        db = interaction.client.async_db["Main"].FreeChannelCategory
         try:
             dbfind = await db.find_one({"Message": self.msgid}, {"_id": False})
         except:
