@@ -1,3 +1,4 @@
+import traceback
 from discord.ext import commands, tasks
 import discord
 import datetime
@@ -41,6 +42,15 @@ class ErrorHandleCog(commands.Cog):
                     "予期しないエラーが発生しました。開発者に報告してください。",
                     ephemeral=True
                 )
+
+    @commands.Cog.listener("on_error")
+    async def on_error(self, event: str, *args, **kwargs):
+        error_text = traceback.format_exc()
+
+        if "Unknown interaction" in error_text:
+            print(f"Unknown interaction エラーが発生しました (event={event})")
+        else:
+            traceback.print_exc()
 
 async def setup(bot):
     await bot.add_cog(ErrorHandleCog(bot))

@@ -1012,5 +1012,22 @@ class PanelCog(commands.Cog):
             await interaction.followup.send(embed=discord.Embed(title="最初のコメント (一コメ)", color=discord.Color.green(), description=top.content), view=discord.ui.View().add_item(discord.ui.Button(label="アクセスする", url=top.jump_url)))
             return
 
+    @panel.command(name="free-channel", description="フリーチャンネルを作成します。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def panel_free_channel(self, interaction: discord.Interaction, タイトル: str, 説明: str, カテゴリ: discord.CategoryChannel = None):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
+        msg = await interaction.channel.send(embed=discord.Embed(title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()), view=discord.ui.View().add_item(discord.ui.Button(label="チケットを作成", custom_id=f"freechannel_")))
+        if カテゴリ:
+            db = self.bot.async_db["Main"].FreeChannelCategory
+            await db.replace_one(
+                {"Channel": カテゴリ.id, "Message": msg.id}, 
+                {"Channel": カテゴリ.id, "Message": msg.id}, 
+                upsert=True
+            )
+        await interaction.response.send_message(ephemeral=True, content="フリーチャンネルパネルを作成しました。")
+
 async def setup(bot):
     await bot.add_cog(PanelCog(bot))
