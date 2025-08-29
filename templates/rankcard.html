@@ -201,8 +201,6 @@
         </div>
 
         <script>
-            generateRankCard("{{user.username}}", "https://cdn.discordapp.com/avatars/{{user.id}}/{{user.avatar}}");
-
             document.addEventListener('change', function(event) {
                 if (event.target.type === 'radio' && event.target.name === 'color') {
                     
@@ -263,6 +261,8 @@
                 // Return the canvas as a blob or data URL
                 return;
             }
+
+            generateRankCard("{{user.username}}", "https://cdn.discordapp.com/avatars/{{user.id}}/{{user.avatar}}");
         </script>
     </body>
 </html>

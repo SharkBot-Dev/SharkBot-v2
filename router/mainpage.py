@@ -25,7 +25,7 @@ async def rankcard(request: Request):
         return RedirectResponse("/login")
     
     return templates.templates.TemplateResponse(
-        "autoreply.html",
+        "rankcard.html",
         {
             "request": request,
             "user": u
@@ -46,3 +46,5 @@ async def rankcard_set(request: Request, color: str = Form(...)):
             {"User": int(u.get("id", "0")), "Color": safe_color}, 
             upsert=True
         )
+    
+    return RedirectResponse("/rankcard", status_code=303)
