@@ -32,6 +32,8 @@ class AdminCog(commands.Cog):
     @commands.command(name="save", hidden=True)
     async def save(self, ctx):
         if ctx.author.id == 1335428061541437531:
+            save_commands.clear_commands()
+
             count = 0
             for cmd in self.bot.tree.get_commands():
                 await save_commands.save_command(cmd)

@@ -28,3 +28,7 @@ async def get_commands(guild_id: int) -> list[str]:
         {"Guild": guild_id}
     )
     return cmds.get("commands", []) if cmds else []
+
+async def clear_commands() -> list[str]:
+    cmds = await mongodb.mongo["DashboardBot"].Commands.delete_many({})
+    return
