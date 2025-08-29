@@ -211,3 +211,4 @@ __marimo__/
 /static
 /consts/badword.py
 /Graph/test.py
+/htsvoice/*
