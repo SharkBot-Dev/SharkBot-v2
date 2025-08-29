@@ -1,14 +1,9 @@
 from discord.ext import commands
 import discord
 from discord import app_commands
-import traceback
-import sys
-import logging
-import asyncio
 import re
 import datetime
 import time
-import random
 
 from models import command_disable
 
@@ -48,7 +43,7 @@ blacklist_word = [
 class AutoReplyCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        print(f"init -> AutoReplyCog")
+        print("init -> AutoReplyCog")
 
     @commands.Cog.listener("on_message")
     async def on_message_ul(self, message):

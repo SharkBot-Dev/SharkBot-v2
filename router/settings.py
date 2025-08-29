@@ -248,7 +248,7 @@ async def send_embed(
             },
             upsert=True,
         )
-    except Exception as e:
+    except Exception:
         return {"message": "不正な値が入力されました。"}
 
     return RedirectResponse(f"/settings/{guild_id}/pin_message", status_code=303)
@@ -353,7 +353,7 @@ async def welcome_send(
                 },
                 upsert=True,
             )
-    except Exception as e:
+    except Exception:
         return {"message": "不正な値が入力されました。"}
 
     return RedirectResponse(f"/settings/{guild_id}/welcome", status_code=303)
@@ -409,7 +409,7 @@ async def expand_set(request: Request, guild_id: str, setting: str = Form(...)):
                 {"Guild": int(guild_id)}, {"Guild": int(guild_id)}, upsert=True
             )
 
-    except Exception as e:
+    except Exception:
         return {"message": "不正な値が入力されました。"}
 
     return RedirectResponse(f"/settings/{guild_id}/expand", status_code=303)
@@ -539,7 +539,7 @@ async def logging_set(request: Request, guild_id: str, channel: str = Form(None)
                 {
                     "request": request,
                     "url": f"/settings/{guild_id}/logging",
-                    "message": f"Webhook 作成に失敗しました。",
+                    "message": "Webhook 作成に失敗しました。",
                 },
             )
 

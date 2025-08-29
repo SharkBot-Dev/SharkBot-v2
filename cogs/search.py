@@ -1,21 +1,16 @@
 import asyncio
 from functools import partial
-import io
 import json
-import re
-import socket
 import ssl
 from urllib.parse import urlparse
 import aiohttp
 from bs4 import BeautifulSoup
 from deep_translator import GoogleTranslator
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
 import datetime
 
-import pyshorteners
 import requests
-from consts import mongodb
 from discord import app_commands
 from models import command_disable
 
@@ -67,7 +62,7 @@ class NomTranslater:
 class SearchCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> SearchCog")
+        print("init -> SearchCog")
 
     async def get_user_savedata(self, user: discord.User):
         db = self.bot.async_db["Main"].LoginData
@@ -586,7 +581,7 @@ Botを追加したユーザーは？: {add_bot_user}
             text = await loop.run_in_executor(None, partial(nom.translare, テキスト))
 
             embed = discord.Embed(
-                title=f"翻訳 (ノムリッシュ語へ)",
+                title="翻訳 (ノムリッシュ語へ)",
                 description=f"```{text}```",
                 color=discord.Color.green(),
             )
@@ -604,7 +599,7 @@ Botを追加したユーザーは？: {add_bot_user}
             )
             await interaction.followup.send(embed=embed)
 
-        except Exception as e:
+        except Exception:
             embed = discord.Embed(
                 title="翻訳に失敗しました",
                 description="指定された言語コードが正しいか確認してください。",
@@ -619,7 +614,7 @@ Botを追加したユーザーは？: {add_bot_user}
         await interaction.response.defer()
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                f"https://mainichi.jp/", ssl=ssl_context
+                "https://mainichi.jp/", ssl=ssl_context
             ) as response:
                 soup = BeautifulSoup(await response.text(), "html.parser")
                 title = soup.find_all("div", class_="toppickup")[0]
@@ -653,14 +648,14 @@ Botを追加したユーザーは？: {add_bot_user}
             pages = data.get("query", {}).get("pages", {})
             if not pages:
                 await interaction.followup.send(
-                    f"Wikipedia記事が見つかりませんでした。"
+                    "Wikipedia記事が見つかりませんでした。"
                 )
                 return
 
             page_id, page_info = next(iter(pages.items()))
             if page_id == "-1":
                 await interaction.followup.send(
-                    f"Wikipedia記事が見つかりませんでした。"
+                    "Wikipedia記事が見つかりませんでした。"
                 )
                 return
 
@@ -677,7 +672,7 @@ Botを追加したユーザーは？: {add_bot_user}
         await interaction.response.defer()
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                f"https://findredirect.com/api/redirects", json={"url": url}
+                "https://findredirect.com/api/redirects", json={"url": url}
             ) as response_expand:
                 js_short = await response_expand.json()
 

@@ -1,17 +1,9 @@
 import asyncio
-from functools import partial
-import io
-import re
-import socket
 import time
-import aiohttp
-from bs4 import BeautifulSoup
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
-import datetime
 
 from discord import app_commands
-from models import command_disable
 
 cooldown_tempvc = {}
 cooldown_alert = {}
@@ -20,7 +12,7 @@ cooldown_alert = {}
 class VCCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> VCCog")
+        print("init -> VCCog")
 
     vc = app_commands.Group(name="vc", description="vc管理系のコマンドです。")
 
@@ -40,7 +32,7 @@ class VCCog(commands.Cog):
                 if not interaction.user.voice:
                     return await interaction.followup.send(
                         embed=discord.Embed(
-                            title=f"移動させる先が見つかりません。",
+                            title="移動させる先が見つかりません。",
                             color=discord.Color.green(),
                         )
                     )
@@ -49,10 +41,10 @@ class VCCog(commands.Cog):
                 await メンバー.edit(voice_channel=チャンネル)
             await interaction.followup.send(
                 embed=discord.Embed(
-                    title=f"メンバーを移動しました。", color=discord.Color.green()
+                    title="メンバーを移動しました。", color=discord.Color.green()
                 )
             )
-        except discord.Forbidden as e:
+        except discord.Forbidden:
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="メンバーを移動できませんでした。",
@@ -76,7 +68,7 @@ class VCCog(commands.Cog):
                     title="メンバーを退出させました。", color=discord.Color.green()
                 )
             )
-        except discord.Forbidden as e:
+        except discord.Forbidden:
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="メンバーを退出させれませんでした。",
@@ -100,7 +92,7 @@ class VCCog(commands.Cog):
                 if not interaction.user.voice:
                     return await interaction.followup.send(
                         embed=discord.Embed(
-                            title=f"解散させるvcが見つかりません。",
+                            title="解散させるvcが見つかりません。",
                             color=discord.Color.green(),
                         )
                     )
@@ -116,7 +108,7 @@ class VCCog(commands.Cog):
                     title="VCを解散させました。", color=discord.Color.green()
                 )
             )
-        except discord.Forbidden as e:
+        except discord.Forbidden:
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="VCを解散できませんでした。",
@@ -140,7 +132,7 @@ class VCCog(commands.Cog):
                 if not interaction.user.voice:
                     return await interaction.followup.send(
                         embed=discord.Embed(
-                            title=f"集めたいVCが見つかりません。",
+                            title="集めたいVCが見つかりません。",
                             color=discord.Color.green(),
                         )
                     )
@@ -158,7 +150,7 @@ class VCCog(commands.Cog):
                     title="VCに集めました。", color=discord.Color.green()
                 )
             )
-        except discord.Forbidden as e:
+        except discord.Forbidden:
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="VCに集められませんでした。",

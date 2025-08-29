@@ -1,9 +1,5 @@
-import traceback
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
-import datetime
-import random
-from models import permissions_text
 
 
 class FreeChannelModal(discord.ui.Modal):

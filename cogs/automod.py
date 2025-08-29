@@ -1,4 +1,4 @@
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
 from discord import app_commands
 import re
@@ -9,7 +9,7 @@ from models import command_disable
 class AutoModCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> AutoModCog")
+        print("init -> AutoModCog")
 
     automod = app_commands.Group(
         name="automod", description="AutoMod管理のコマンドです。"

@@ -6,12 +6,10 @@ import socket
 import time
 import aiohttp
 from bs4 import BeautifulSoup
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
-import datetime
 
 import pyshorteners
-from consts import mongodb
 from discord import app_commands
 from models import command_disable
 
@@ -139,7 +137,7 @@ cooldown_afk = {}
 class ToolsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> ToolsCog")
+        print("init -> ToolsCog")
 
     async def afk_mention_get(self, user: discord.User):
         try:
@@ -215,7 +213,7 @@ class ToolsCog(commands.Cog):
                 await self.afk_mention_write(m, message)
                 await message.reply(
                     embed=discord.Embed(
-                        title=f"その人はAFKです。",
+                        title="その人はAFKです。",
                         description=f"理由: {dbfind['Reason']}",
                         color=discord.Color.red(),
                     ).set_footer(text="このメッセージを5秒後に削除されます。"),
@@ -308,7 +306,7 @@ class ToolsCog(commands.Cog):
         elif ドメイン.value == "urlc":
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    f"https://urlc.net/", params={"url": url, "keyword": ""}
+                    "https://urlc.net/", params={"url": url, "keyword": ""}
                 ) as response:
                     soup = BeautifulSoup(await response.text(), "html.parser")
                     url_ = soup.find(

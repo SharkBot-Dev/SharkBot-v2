@@ -1,6 +1,5 @@
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
-import datetime
 from consts import settings
 from discord import app_commands
 from models import command_disable
@@ -9,7 +8,7 @@ from models import command_disable
 class HelpCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> HelpCog")
+        print("init -> HelpCog")
 
     @app_commands.command(name="help", description="ヘルプを表示します")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)

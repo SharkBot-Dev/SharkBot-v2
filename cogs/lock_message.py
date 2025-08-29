@@ -1,8 +1,5 @@
 from discord.ext import commands
 import discord
-import traceback
-import sys
-import logging
 import time
 import asyncio
 
@@ -11,7 +8,7 @@ class LockMessageCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.working = set()
-        print(f"init -> LockMessageCog")
+        print("init -> LockMessageCog")
 
     @commands.Cog.listener(name="on_interaction")
     async def on_interaction_panel(self, interaction: discord.Interaction):
@@ -49,7 +46,7 @@ class LockMessageCog(commands.Cog):
         db = self.bot.async_db["Main"].LockMessage
         try:
             dbfind = await db.find_one({"Channel": message.channel.id}, {"_id": False})
-        except Exception as e:
+        except Exception:
             return
 
         if dbfind is None:

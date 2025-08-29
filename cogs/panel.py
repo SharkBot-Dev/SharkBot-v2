@@ -1,10 +1,8 @@
 import asyncio
 import random
 import time
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
-import datetime
-from consts import mongodb
 from discord import app_commands
 
 from models import command_disable
@@ -31,7 +29,7 @@ class AuthModal_keisan(discord.ui.Modal, title="認証をする"):
                 await interaction.user.add_roles(self.r)
                 await interaction.followup.send("認証に成功しました。", ephemeral=True)
             except:
-                await interaction.followup.send(f"認証に失敗しました。", ephemeral=True)
+                await interaction.followup.send("認証に失敗しました。", ephemeral=True)
         else:
             await interaction.response.send_message(
                 "認証に失敗しました。", ephemeral=True
@@ -58,7 +56,7 @@ class PlusAuthModal_keisan(discord.ui.Modal, title="認証をする"):
                 await interaction.user.add_roles(self.r)
                 await interaction.followup.send("認証に成功しました。", ephemeral=True)
             except:
-                await interaction.followup.send(f"認証に失敗しました。", ephemeral=True)
+                await interaction.followup.send("認証に失敗しました。", ephemeral=True)
         else:
             await interaction.response.send_message(
                 "認証に失敗しました。", ephemeral=True
@@ -243,7 +241,7 @@ class AuthGroup(app_commands.Group):
                 super().__init__()
 
                 self.rule = discord.ui.TextInput(
-                    label=f"ルール", style=discord.TextStyle.long
+                    label="ルール", style=discord.TextStyle.long
                 )
                 self.add_item(self.rule)
 
@@ -251,7 +249,7 @@ class AuthGroup(app_commands.Group):
                 await interaction.response.defer(thinking=True)
                 await interaction.channel.send(
                     embed=discord.Embed(
-                        title=f"このサーバーのルールに同意する必要があります。",
+                        title="このサーバーのルールに同意する必要があります。",
                         description=self.rule.value,
                         color=discord.Color.green(),
                     )
@@ -348,7 +346,7 @@ class AuthGroup(app_commands.Group):
 class PanelCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> PanelCog")
+        print("init -> PanelCog")
 
     async def check_ticket_cat(self, interaction: discord.Interaction):
         db = self.bot.async_db["Main"].TicketCategory
@@ -358,7 +356,7 @@ class PanelCog(commands.Cog):
             )
         except:
             return None
-        if not dbfind is None:
+        if dbfind is not None:
             return dbfind["Channel"]
         return None
 
@@ -370,7 +368,7 @@ class PanelCog(commands.Cog):
             )
         except:
             return None
-        if not dbfind is None:
+        if dbfind is not None:
             return self.bot.get_channel(dbfind["Channel"])
         return None
 
@@ -382,7 +380,7 @@ class PanelCog(commands.Cog):
             )
         except:
             return False
-        if not dbfind is None:
+        if dbfind is not None:
             return True
         return False
 
@@ -392,7 +390,7 @@ class PanelCog(commands.Cog):
             dbfind = await db.find_one({"Message": int_.message.id}, {"_id": False})
         except:
             return None
-        if not dbfind is None:
+        if dbfind is not None:
             try:
                 return self.bot.get_channel(dbfind.get("Channel"))
             except:
@@ -406,7 +404,7 @@ class PanelCog(commands.Cog):
             await db.delete_many({"Author": dbfind.get("Author")})
         except:
             return None, None
-        if not dbfind is None:
+        if dbfind is not None:
             try:
                 return self.bot.get_channel(dbfind.get("Channel")), self.bot.get_user(
                     dbfind.get("Author")
@@ -421,7 +419,7 @@ class PanelCog(commands.Cog):
             dbfind = await db.find_one({"Message": message.id}, {"_id": False})
         except:
             return None
-        if not dbfind is None:
+        if dbfind is not None:
             try:
                 return message.guild.get_role(dbfind.get("Role")).mention
             except:
@@ -434,7 +432,7 @@ class PanelCog(commands.Cog):
             dbfind = await db.find_one({"Message": message.id}, {"_id": False})
         except:
             return None
-        if not dbfind is None:
+        if dbfind is not None:
             try:
                 return message.guild.get_role(dbfind.get("Role"))
             except:
@@ -501,8 +499,7 @@ class PanelCog(commands.Cog):
                     try:
                         await interaction.response.defer(ephemeral=True)
                         if (
-                            not interaction.guild.get_role(int(custom_id.split("+")[1]))
-                            in interaction.user.roles
+                            interaction.guild.get_role(int(custom_id.split("+")[1])) not in interaction.user.roles
                         ):
                             await interaction.user.add_roles(
                                 interaction.guild.get_role(int(custom_id.split("+")[1]))
@@ -517,7 +514,7 @@ class PanelCog(commands.Cog):
                             await interaction.followup.send(
                                 "ロールを剥奪しました。", ephemeral=True
                             )
-                    except discord.Forbidden as f:
+                    except discord.Forbidden:
                         await interaction.followup.send(
                             "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
                             ephemeral=True,
@@ -530,7 +527,7 @@ class PanelCog(commands.Cog):
                     try:
                         r = await self.get_auth_reqrole(interaction.message)
                         if r:
-                            if not r in interaction.user.roles:
+                            if r not in interaction.user.roles:
                                 return await interaction.response.send_message(
                                     "あなたは指定されたロールを持っていないため、認証できません。",
                                     ephemeral=True,
@@ -547,7 +544,7 @@ class PanelCog(commands.Cog):
                                 interaction.guild.get_role(int(custom_id.split("+")[1]))
                             )
                         )
-                    except discord.Forbidden as f:
+                    except discord.Forbidden:
                         await interaction.response.send_message(
                             "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
                             ephemeral=True,
@@ -560,7 +557,7 @@ class PanelCog(commands.Cog):
                     try:
                         r = await self.get_auth_reqrole(interaction.message)
                         if r:
-                            if not r in interaction.user.roles:
+                            if r not in interaction.user.roles:
                                 return await interaction.response.send_message(
                                     "あなたは指定されたロールを持っていないため、認証できません。",
                                     ephemeral=True,
@@ -579,7 +576,7 @@ class PanelCog(commands.Cog):
                         await interaction.followup.send(
                             "認証が完了しました。", ephemeral=True
                         )
-                    except discord.Forbidden as f:
+                    except discord.Forbidden:
                         await interaction.response.send_message(
                             "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
                             ephemeral=True,
@@ -592,7 +589,7 @@ class PanelCog(commands.Cog):
                     try:
                         r = await self.get_auth_reqrole(interaction.message)
                         if r:
-                            if not r in interaction.user.roles:
+                            if r not in interaction.user.roles:
                                 return await interaction.response.send_message(
                                     "あなたは指定されたロールを持っていないため、認証できません。",
                                     ephemeral=True,
@@ -612,7 +609,7 @@ class PanelCog(commands.Cog):
                         await self.create_authimage(
                             int(custom_id.split("+")[1]), interaction
                         )
-                    except discord.Forbidden as f:
+                    except discord.Forbidden:
                         await interaction.response.send_message(
                             "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
                             ephemeral=True,
@@ -625,7 +622,7 @@ class PanelCog(commands.Cog):
                     try:
                         r = await self.get_auth_reqrole(interaction.message)
                         if r:
-                            if not r in interaction.user.roles:
+                            if r not in interaction.user.roles:
                                 return await interaction.response.send_message(
                                     "あなたは指定されたロールを持っていないため、認証できません。",
                                     ephemeral=True,
@@ -647,7 +644,7 @@ class PanelCog(commands.Cog):
                                 ),
                             )
                         )
-                    except discord.Forbidden as f:
+                    except discord.Forbidden:
                         await interaction.response.send_message(
                             "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
                             ephemeral=True,
@@ -716,7 +713,7 @@ class PanelCog(commands.Cog):
                         last_message_time = tku_cooldown.get(interaction.user.id, 0)
                         if current_time - last_message_time < 30:
                             return await interaction.followup.send(
-                                f"レートリミットです。", ephemeral=True
+                                "レートリミットです。", ephemeral=True
                             )
                         tku_cooldown[interaction.user.id] = current_time
                         db_progress = self.bot.async_db["Main"].TicketProgressTemp
@@ -1021,7 +1018,7 @@ class PanelCog(commands.Cog):
                         await interaction.response.defer(ephemeral=True)
                         r = await self.get_auth_reqrole(interaction.message)
                         if r:
-                            if not r in interaction.user.roles:
+                            if r not in interaction.user.roles:
                                 return await interaction.followup.send(
                                     "あなたは指定されたロールを持っていないため、認証できません。",
                                     ephemeral=True,
@@ -1147,7 +1144,7 @@ class PanelCog(commands.Cog):
                         )
                     except:
                         await interaction.followup.send(
-                            f"BotからのBANに失敗しました。", ephemeral=True
+                            "BotからのBANに失敗しました。", ephemeral=True
                         )
                 elif "botwarn+" in custom_id:
                     try:
@@ -1183,7 +1180,7 @@ class PanelCog(commands.Cog):
                         )
                     except:
                         await interaction.followup.send(
-                            f"Botからの警告に失敗しました。", ephemeral=True
+                            "Botからの警告に失敗しました。", ephemeral=True
                         )
                 elif "botdelete+" in custom_id:
                     try:
@@ -1191,11 +1188,11 @@ class PanelCog(commands.Cog):
                         await interaction.message.edit(view=None)
                         await interaction.message.reply("破棄しました。")
                         await interaction.followup.send(
-                            ephemeral=True, content=f"破棄しました。"
+                            ephemeral=True, content="破棄しました。"
                         )
                     except:
                         await interaction.followup.send(
-                            f"破棄に失敗しました。", ephemeral=True
+                            "破棄に失敗しました。", ephemeral=True
                         )
                 elif "join_party+" in custom_id:
                     try:
@@ -1257,7 +1254,7 @@ class PanelCog(commands.Cog):
                         else:
                             await interaction.message.edit(embed=emb)
                         await interaction.followup.send(
-                            ephemeral=True, content=f"参加しました。"
+                            ephemeral=True, content="参加しました。"
                         )
                     except Exception as e:
                         await interaction.message.edit(
@@ -1278,7 +1275,7 @@ class PanelCog(commands.Cog):
                         ):
                             return await interaction.followup.send(
                                 ephemeral=True,
-                                content=f"VIPルームに参加する権限がありません。\nSharkBotサポートサーバーに参加して下さい。",
+                                content="VIPルームに参加する権限がありません。\nSharkBotサポートサーバーに参加して下さい。",
                             )
                         if (
                             self.bot.get_guild(1343124570131009579).get_role(
@@ -1294,14 +1291,14 @@ class PanelCog(commands.Cog):
                         else:
                             return await interaction.followup.send(
                                 ephemeral=True,
-                                content=f"VIPルームに参加する権限がありません。\nVIPルーム権限を購入して下さい。",
+                                content="VIPルームに参加する権限がありません。\nVIPルーム権限を購入して下さい。",
                             )
                         await interaction.followup.send(
-                            ephemeral=True, content=f"VIPルームに参加しました。"
+                            ephemeral=True, content="VIPルームに参加しました。"
                         )
                     except:
                         await interaction.followup.send(
-                            f"VIPルームに参加できませんでした。", ephemeral=True
+                            "VIPルームに参加できませんでした。", ephemeral=True
                         )
         except:
             return
@@ -1429,7 +1426,7 @@ class PanelCog(commands.Cog):
             title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
         )
         if メンションを表示するか:
-            embed.add_field(name="ロール一覧", value=f"\n".join(ls))
+            embed.add_field(name="ロール一覧", value="\n".join(ls))
         await interaction.channel.send(embed=embed, view=view)
         await interaction.response.send_message(
             embed=discord.Embed(title="作成しました。", color=discord.Color.green()),
@@ -1588,27 +1585,27 @@ class PanelCog(commands.Cog):
         if 説明:
             cont.add_view(cont.text(f"{説明}"))
         b1 = cont.labeled_customid_button(
-            button_label=f"取得", custom_id=f"rolepanel_v1+{ロール1.id}", style=1
+            button_label="取得", custom_id=f"rolepanel_v1+{ロール1.id}", style=1
         )
         cont.add_view(cont.labeled_button(f"{ロール1.name} ({ロール1.id})", b1))
         if ロール2:
             b2 = cont.labeled_customid_button(
-                button_label=f"取得", custom_id=f"rolepanel_v1+{ロール2.id}", style=1
+                button_label="取得", custom_id=f"rolepanel_v1+{ロール2.id}", style=1
             )
             cont.add_view(cont.labeled_button(f"{ロール2.name} ({ロール2.id})", b2))
         if ロール3:
             b3 = cont.labeled_customid_button(
-                button_label=f"取得", custom_id=f"rolepanel_v1+{ロール3.id}", style=1
+                button_label="取得", custom_id=f"rolepanel_v1+{ロール3.id}", style=1
             )
             cont.add_view(cont.labeled_button(f"{ロール3.name} ({ロール3.id})", b3))
         if ロール4:
             b4 = cont.labeled_customid_button(
-                button_label=f"取得", custom_id=f"rolepanel_v1+{ロール4.id}", style=1
+                button_label="取得", custom_id=f"rolepanel_v1+{ロール4.id}", style=1
             )
             cont.add_view(cont.labeled_button(f"{ロール4.name} ({ロール4.id})", b4))
         if ロール5:
             b5 = cont.labeled_customid_button(
-                button_label=f"取得", custom_id=f"rolepanel_v1+{ロール5.id}", style=1
+                button_label="取得", custom_id=f"rolepanel_v1+{ロール5.id}", style=1
             )
             cont.add_view(cont.labeled_button(f"{ロール5.name} ({ロール5.id})", b5))
         await cont.send(0, interaction.channel.id)
@@ -1656,14 +1653,14 @@ class PanelCog(commands.Cog):
             await interaction.followup.send(f"{cont.comp}")
         elif 削除か追加か.name == "追加":
             b1 = cont.labeled_customid_button(
-                button_label=f"取得", custom_id=f"rolepanel_v1+{ロール.id}", style=1
+                button_label="取得", custom_id=f"rolepanel_v1+{ロール.id}", style=1
             )
             cont.add_view(cont.labeled_button(f"{ロール.name} ({ロール.id})", b1))
             await cont.edit(メッセージ, interaction.channel.id)
         elif 削除か追加か.name == "削除":
             ls = []
             b1 = cont.labeled_customid_button(
-                button_label=f"取得", custom_id=f"rolepanel_v1+{ロール.id}", style=1
+                button_label="取得", custom_id=f"rolepanel_v1+{ロール.id}", style=1
             )
             for c in cont.comp:
                 if c.get("components", {}) == {}:
@@ -1805,7 +1802,7 @@ class PanelCog(commands.Cog):
                 title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
             ),
             view=discord.ui.View().add_item(
-                discord.ui.Button(label="チケットを作成", custom_id=f"ticket_v1")
+                discord.ui.Button(label="チケットを作成", custom_id="ticket_v1")
             ),
         )
         if カテゴリ:
@@ -1857,8 +1854,8 @@ class PanelCog(commands.Cog):
             embed=discord.Embed(title="募集", color=discord.Color.blue())
             .add_field(name="内容", value=内容, inline=False)
             .add_field(name="最大人数", value=f"{最大人数}人")
-            .add_field(name="現在の参加人数", value=f"0人")
-            .add_field(name="参加者", value=f"まだいません。", inline=False),
+            .add_field(name="現在の参加人数", value="0人")
+            .add_field(name="参加者", value="まだいません。", inline=False),
             view=discord.ui.View().add_item(
                 discord.ui.Button(label="参加する", custom_id="join_party+")
             ),
@@ -1912,7 +1909,7 @@ class PanelCog(commands.Cog):
                 title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
             ),
             view=discord.ui.View().add_item(
-                discord.ui.Button(label="チャンネルを作成", custom_id=f"freechannel_")
+                discord.ui.Button(label="チャンネルを作成", custom_id="freechannel_")
             ),
         )
         if カテゴリ:

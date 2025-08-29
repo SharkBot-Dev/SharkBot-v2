@@ -1,20 +1,13 @@
 from discord.ext import commands
 import discord
-import traceback
-import sys
-import logging
-import random
-import time
-import asyncio
 import aiohttp
 from discord import Webhook
-import io
 
 
 class WelcomeCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> WelcomeCog")
+        print("init -> WelcomeCog")
 
     async def get_user_color_welcome(self, user: discord.User):
         db = self.bot.async_db["Main"].UserColor
@@ -58,7 +51,7 @@ class WelcomeCog(commands.Cog):
             webhooks = discord.utils.get(wb, name="SharkBot")
             if webhooks is None:
                 webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
-                    name=f"SharkBot"
+                    name="SharkBot"
                 )
             color = dbfind.get("Color", "66, 135, 245").split(", ")
             r, g, b = map(int, color)
@@ -78,7 +71,7 @@ class WelcomeCog(commands.Cog):
                     },
                 ) as resp:
                     return
-        except Exception as e:
+        except Exception:
             return
 
     @commands.Cog.listener("on_member_join")
@@ -105,7 +98,7 @@ class WelcomeCog(commands.Cog):
             webhooks = discord.utils.get(wb, name="SharkBot")
             if webhooks is None:
                 webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
-                    name=f"SharkBot"
+                    name="SharkBot"
                 )
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(webhooks.url, session=session)
@@ -149,7 +142,7 @@ class WelcomeCog(commands.Cog):
             webhooks = discord.utils.get(wb, name="SharkBot")
             if webhooks is None:
                 webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
-                    name=f"SharkBot"
+                    name="SharkBot"
                 )
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(webhooks.url, session=session)
@@ -191,7 +184,7 @@ class WelcomeCog(commands.Cog):
             webhooks = discord.utils.get(wb, name="SharkBot")
             if webhooks is None:
                 webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
-                    name=f"SharkBot"
+                    name="SharkBot"
                 )
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(webhooks.url, session=session)

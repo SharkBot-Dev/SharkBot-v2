@@ -1,4 +1,4 @@
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
 from discord import app_commands
 
@@ -8,7 +8,7 @@ from models import command_disable
 class BotCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> BotCog")
+        print("init -> BotCog")
 
     bot = app_commands.Group(name="bot", description="Bot系のコマンドです。")
 
@@ -37,8 +37,8 @@ class BotCog(commands.Cog):
         em.add_field(
             name="サーバー数", value=f"{len(self.bot.guilds)}サーバー"
         ).add_field(name="ユーザー数", value=f"{len(self.bot.users)}人")
-        em.add_field(name="サブ管理者", value=f"3人")
-        em.add_field(name="モデレーター", value=f"8人")
+        em.add_field(name="サブ管理者", value="3人")
+        em.add_field(name="モデレーター", value="8人")
         await interaction.response.send_message(embed=em)
 
     @bot.command(name="ping", description="Pingを見ます。")

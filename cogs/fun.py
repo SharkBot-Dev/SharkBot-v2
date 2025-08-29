@@ -6,17 +6,14 @@ import random
 from PIL import Image, ImageDraw, ImageFont
 import unicodedata
 import aiohttp
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
-import datetime
 
 from cryptography.fernet import Fernet, InvalidToken
 import pykakasi
-from consts import settings
 from discord import app_commands
 from models import command_disable
 import asyncio
-import re
 from deep_translator import GoogleTranslator
 
 import urllib.parse
@@ -542,7 +539,7 @@ class ImageGroup(app_commands.Group):
 class FunCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> FunCog")
+        print("init -> FunCog")
 
     fun = app_commands.Group(name="fun", description="面白いコマンドです。")
 

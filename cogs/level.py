@@ -1,13 +1,8 @@
 from discord.ext import commands
 from discord import app_commands
 import discord
-import traceback
-import sys
-import logging
 import asyncio
 from PIL import Image, ImageDraw, ImageFont
-import asyncio
-import aiohttp
 import io
 from concurrent.futures import ThreadPoolExecutor
 import random
@@ -18,7 +13,7 @@ from models import command_disable
 class LevelCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        print(f"init -> LevelCog")
+        print("init -> LevelCog")
 
     async def check_level_enabled(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].LevelingSetting
@@ -168,7 +163,7 @@ class LevelCog(commands.Cog):
                 {"Guild": guild.id, "Level": level}, {"_id": False}
             )
             return dbfind["Role"] if dbfind else None
-        except Exception as e:
+        except Exception:
             return None
 
     async def get_timing(self, guild: discord.Guild):
@@ -176,7 +171,7 @@ class LevelCog(commands.Cog):
         try:
             dbfind = await db.find_one({"Guild": guild.id}, {"_id": False})
             return dbfind["Timing"] if dbfind else None
-        except Exception as e:
+        except Exception:
             return None
 
     @commands.Cog.listener("on_reaction_add")
@@ -209,7 +204,7 @@ class LevelCog(commands.Cog):
                 xp = await self.get_xp(user.guild, user)
                 timing = await self.get_timing(user.guild)
                 tm = 100
-                if not timing is None:
+                if timing is not None:
                     tm = timing
                 if xp > tm:
                     lv = await self.get_level(user.guild, user)
@@ -267,7 +262,7 @@ class LevelCog(commands.Cog):
                 xp = await self.get_xp(message.guild, message.author)
                 timing = await self.get_timing(message.guild)
                 tm = 100
-                if not timing is None:
+                if timing is not None:
                     tm = timing
                 if xp > tm:
                     lv = await self.get_level(message.guild, message.author)
@@ -348,7 +343,7 @@ class LevelCog(commands.Cog):
                 return await interaction.followup.send(
                     embed=discord.Embed(
                         title=f"`{interaction.user.name}`のレベル",
-                        description=f"レベル: 「0レベル」\nXP: 「0XP」",
+                        description="レベル: 「0レベル」\nXP: 「0XP」",
                         color=discord.Color.blue(),
                     ).set_thumbnail(url=avatar)
                 )
@@ -357,7 +352,7 @@ class LevelCog(commands.Cog):
                 return await interaction.followup.send(
                     embed=discord.Embed(
                         title=f"`{interaction.user.name}`のレベル",
-                        description=f"レベル: 「0レベル」\nXP: 「0XP」",
+                        description="レベル: 「0レベル」\nXP: 「0XP」",
                         color=discord.Color.blue(),
                     ).set_thumbnail(url=avatar)
                 )
@@ -714,7 +709,7 @@ class LevelCog(commands.Cog):
         await interaction.followup.send(
             embed=discord.Embed(
                 title="レベルアップ時のご褒美リスト", color=discord.Color.yellow()
-            ).add_field(name="ご褒美ロール", value=f"\n".join(description_lines))
+            ).add_field(name="ご褒美ロール", value="\n".join(description_lines))
         )
 
     @level.command(name="ranking", description="レベルのランキングを取得します。")

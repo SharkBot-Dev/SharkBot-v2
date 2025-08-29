@@ -1,16 +1,9 @@
 from discord.ext import commands
 import discord
 from discord import Webhook
-import traceback
-import sys
-import logging
-import random
 import time
 import asyncio
 import aiohttp
-import re
-from functools import partial
-import time
 
 user_last_message_time_pgc = {}
 
@@ -18,7 +11,7 @@ user_last_message_time_pgc = {}
 class PrivateGlobalCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        print(f"init -> PrivateGlobalCog")
+        print("init -> PrivateGlobalCog")
 
     async def check_channel_message(self, message: discord.Message):
         db = self.bot.async_db["Main"].PrivateGlobal
@@ -27,7 +20,7 @@ class PrivateGlobalCog(commands.Cog):
             if dbfind is None:
                 return False
             return dbfind.get("Name", None)
-        except Exception as e:
+        except Exception:
             return False
 
     async def user_block(self, message: discord.Message):
@@ -36,7 +29,7 @@ class PrivateGlobalCog(commands.Cog):
             dbfind = await db.find_one({"User": message.author.id}, {"_id": False})
         except:
             return False
-        if not dbfind is None:
+        if dbfind is not None:
             return True
         return False
 
@@ -78,7 +71,7 @@ class PrivateGlobalCog(commands.Cog):
             if dbfind is None:
                 return "😎"
             return dbfind.get("Emoji", "😎")
-        except Exception as e:
+        except Exception:
             return "😎"
 
     async def send_one_globalchat(

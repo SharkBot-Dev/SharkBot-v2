@@ -1,7 +1,6 @@
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
 import datetime
-from consts import settings
 from discord import app_commands
 from models import command_disable
 import asyncio
@@ -43,7 +42,7 @@ class BanGroup(app_commands.Group):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=discord.Embed(
-                    title=f"自分自身はBanできません。", color=discord.Color.red()
+                    title="自分自身はBanできません。", color=discord.Color.red()
                 ),
                 ephemeral=True,
             )
@@ -79,7 +78,7 @@ class BanGroup(app_commands.Group):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=discord.Embed(
-                    title=f"自分自身はSoftBanできません。", color=discord.Color.red()
+                    title="自分自身はSoftBanできません。", color=discord.Color.red()
                 ),
                 ephemeral=True,
             )
@@ -167,7 +166,7 @@ class BanGroup(app_commands.Group):
 class ModCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> ModCog")
+        print("init -> ModCog")
 
     moderation = app_commands.Group(
         name="moderation", description="モデレーション系のコマンドです。"
@@ -190,14 +189,14 @@ class ModCog(commands.Cog):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=discord.Embed(
-                    title=f"自分自身はキックできません。", color=discord.Color.red()
+                    title="自分自身はキックできません。", color=discord.Color.red()
                 ),
                 ephemeral=True,
             )
         if interaction.guild.get_member(ユーザー.id) is None:
             return await interaction.response.send_message(
                 embed=discord.Embed(
-                    title=f"このサーバーにいないメンバーはキックできません。",
+                    title="このサーバーにいないメンバーはキックできません。",
                     color=discord.Color.red(),
                 )
             )
@@ -237,7 +236,7 @@ class ModCog(commands.Cog):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=discord.Embed(
-                    title=f"自分自身はタイムアウトできません。",
+                    title="自分自身はタイムアウトできません。",
                     color=discord.Color.red(),
                 ),
                 ephemeral=True,
@@ -245,7 +244,7 @@ class ModCog(commands.Cog):
         if interaction.guild.get_member(ユーザー.id) is None:
             return await interaction.response.send_message(
                 embed=discord.Embed(
-                    title=f"このサーバーにいないメンバーはタイムアウトできません。",
+                    title="このサーバーにいないメンバーはタイムアウトできません。",
                     color=discord.Color.red(),
                 )
             )
@@ -285,7 +284,7 @@ class ModCog(commands.Cog):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=discord.Embed(
-                    title=f"自分自身はタイムアウトできません。",
+                    title="自分自身はタイムアウトできません。",
                     color=discord.Color.red(),
                 ),
                 ephemeral=True,
@@ -293,7 +292,7 @@ class ModCog(commands.Cog):
         if interaction.guild.get_member(ユーザー.id) is None:
             return await interaction.response.send_message(
                 embed=discord.Embed(
-                    title=f"このサーバーにいないメンバーはタイムアウトできません。",
+                    title="このサーバーにいないメンバーはタイムアウトできません。",
                     color=discord.Color.red(),
                 )
             )
@@ -356,7 +355,7 @@ class ModCog(commands.Cog):
         if interaction.guild.get_member(メンバー.id) is None:
             return await interaction.response.send_message(
                 embed=discord.Embed(
-                    title=f"このサーバーにいないメンバーは警告できません。",
+                    title="このサーバーにいないメンバーは警告できません。",
                     color=discord.Color.red(),
                 )
             )

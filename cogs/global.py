@@ -1,17 +1,9 @@
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
-import traceback
-import sys
-import logging
-import random
 import time
 import asyncio
-import re
 import json
 from discord import Webhook
-from functools import partial
-import urllib.parse
-import time
 from discord import app_commands
 import aiohttp
 
@@ -30,7 +22,7 @@ cooldown_up = {}
 class GlobalCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> GlobalCog")
+        print("init -> GlobalCog")
 
     async def check_edit_ticket(self, message: discord.Message):
         try:
@@ -49,7 +41,7 @@ class GlobalCog(commands.Cog):
             dbfind = await db.find_one({"User": message.author.id}, {"_id": False})
         except:
             return False
-        if not dbfind is None:
+        if dbfind is not None:
             return True
         return False
 
@@ -60,7 +52,7 @@ class GlobalCog(commands.Cog):
             if dbfind is None:
                 return "😎"
             return dbfind.get("Emoji", "😎")
-        except Exception as e:
+        except Exception:
             return "😎"
 
     async def send_one_join_globalchat(self, webhook: str, ctx: discord.Interaction):
@@ -178,7 +170,7 @@ class GlobalCog(commands.Cog):
             if dbfind is None:
                 return False
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     async def globalchat_check_channel(self, message: discord.Message):
@@ -188,7 +180,7 @@ class GlobalCog(commands.Cog):
             if dbfind is None:
                 return False
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     def filter_global(self, message: discord.Message) -> bool:
@@ -314,7 +306,7 @@ class GlobalCog(commands.Cog):
                 title="ランダムなBotが選択されました！",
                 color=discord.Color.blue(),
             )
-            embed.set_footer(text=f"ランダムなBot")
+            embed.set_footer(text="ランダムなBot")
             embed.set_thumbnail(
                 url=bot.avatar.url if bot.avatar else bot.default_avatar.url
             )
@@ -356,7 +348,7 @@ class GlobalCog(commands.Cog):
             if dbfind is None:
                 return False
             return dbfind.get("Name", None)
-        except Exception as e:
+        except Exception:
             return False
 
     async def globalchat_room_join(self, ctx: discord.Interaction, roomname: str):
@@ -653,7 +645,7 @@ class GlobalCog(commands.Cog):
                 label="グローバルチャットのパスワードを入力",
                 required=True,
                 style=discord.TextStyle.short,
-                placeholder=f"password",
+                placeholder="password",
             )
 
             async def on_submit(self, interaction: discord.Interaction):
@@ -678,7 +670,7 @@ class GlobalCog(commands.Cog):
                     )
                     await interaction.followup.send(
                         embed=discord.Embed(
-                            title=f"プライベートグローバルチャットを作成しました。",
+                            title="プライベートグローバルチャットを作成しました。",
                             color=discord.Color.green(),
                         )
                     )
@@ -720,7 +712,7 @@ class GlobalCog(commands.Cog):
                 label="グローバルチャットのパスワードを入力",
                 required=True,
                 style=discord.TextStyle.short,
-                placeholder=f"password",
+                placeholder="password",
             )
 
             async def on_submit(self, interaction: discord.Interaction):
@@ -730,7 +722,7 @@ class GlobalCog(commands.Cog):
                     {"Name": self.name.value, "Password": self.password.value},
                     {"_id": False},
                 )
-                if not dbfind is None:
+                if dbfind is not None:
                     web = await interaction.channel.create_webhook(
                         name="SharkBot-PrivateGlobal"
                     )
@@ -748,7 +740,7 @@ class GlobalCog(commands.Cog):
                     )
                     await interaction.followup.send(
                         embed=discord.Embed(
-                            title=f"プライベートグローバルチャットに参加しました。",
+                            title="プライベートグローバルチャットに参加しました。",
                             color=discord.Color.green(),
                         )
                     )
@@ -970,7 +962,7 @@ class GlobalCog(commands.Cog):
             if dbfind is None:
                 return False
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     async def super_globalchat_check_message(self, message: discord.Message):
@@ -980,7 +972,7 @@ class GlobalCog(commands.Cog):
             if dbfind is None:
                 return False
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     @commands.Cog.listener("on_message")
@@ -996,7 +988,7 @@ class GlobalCog(commands.Cog):
 
         try:
             dic = json.loads(message.content)
-        except json.decoder.JSONDecodeError as e:
+        except json.decoder.JSONDecodeError:
             return
 
         if "type" in dic and dic["type"] != "message":
@@ -1066,7 +1058,7 @@ class GlobalCog(commands.Cog):
                                     past_dic = json.loads(
                                         past_message.content
                                     )  # 過去ログのJSONを辞書型リストに変換
-                                except json.decoder.JSONDecodeError as e:  # JSON読み込みエラー→そもそもJSONでは無い可能性があるのでスルー
+                                except json.decoder.JSONDecodeError:  # JSON読み込みエラー→そもそもJSONでは無い可能性があるのでスルー
                                     continue
                                 if (
                                     "type" in past_dic and past_dic["type"] != "message"
@@ -1074,7 +1066,7 @@ class GlobalCog(commands.Cog):
                                     continue
 
                                 if (
-                                    not "messageId" in past_dic
+                                    "messageId" not in past_dic
                                 ):  # キーにメッセージIDが存在しない時はスルー
                                     continue
 
@@ -1288,7 +1280,7 @@ class GlobalCog(commands.Cog):
             if dbfind is None:
                 return False
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     async def globalads_join(self, interaction: discord.Interaction):
@@ -1318,7 +1310,7 @@ class GlobalCog(commands.Cog):
             if dbfind is None:
                 return False
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     async def send_one_ads_message(
@@ -1571,7 +1563,7 @@ class GlobalCog(commands.Cog):
             if dbfind is None:
                 return False
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     async def send_one_globalshiritori(self, webhook: str, message: discord.Message):
@@ -1669,7 +1661,7 @@ class GlobalCog(commands.Cog):
             if dbfind is None:
                 return False
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     async def demo_super_globalchat_check_message(self, message: discord.Message):
@@ -1679,7 +1671,7 @@ class GlobalCog(commands.Cog):
             if dbfind is None:
                 return False
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     async def debug_super_join_global_chat(self, interaction: discord.Interaction):
@@ -1917,7 +1909,7 @@ class GlobalCog(commands.Cog):
 
         try:
             dic = json.loads(message.content)
-        except json.decoder.JSONDecodeError as e:
+        except json.decoder.JSONDecodeError:
             return
 
         if "type" in dic and dic["type"] != "message":
@@ -1987,7 +1979,7 @@ class GlobalCog(commands.Cog):
                                     past_dic = json.loads(
                                         past_message.content
                                     )  # 過去ログのJSONを辞書型リストに変換
-                                except json.decoder.JSONDecodeError as e:  # JSON読み込みエラー→そもそもJSONでは無い可能性があるのでスルー
+                                except json.decoder.JSONDecodeError:  # JSON読み込みエラー→そもそもJSONでは無い可能性があるのでスルー
                                     continue
                                 if (
                                     "type" in past_dic and past_dic["type"] != "message"
@@ -1995,7 +1987,7 @@ class GlobalCog(commands.Cog):
                                     continue
 
                                 if (
-                                    not "messageId" in past_dic
+                                    "messageId" not in past_dic
                                 ):  # キーにメッセージIDが存在しない時はスルー
                                     continue
 

@@ -1,14 +1,12 @@
 from discord.ext import commands, tasks
 import discord
-from datetime import datetime, timedelta
-from consts import mongodb
 import asyncio
 
 
 class DashboardCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> DashboardCog")
+        print("init -> DashboardCog")
 
     async def cog_load(self):
         self.dashboard_sendembed.start()

@@ -1,8 +1,6 @@
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
 from discord import app_commands
-import datetime
-import random
 
 from models import command_disable
 
@@ -10,7 +8,7 @@ from models import command_disable
 class NickNameCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> NickNameCog")
+        print("init -> NickNameCog")
 
     nick = app_commands.Group(
         name="nick", description="ニックネーム関連のコマンドです。"
@@ -35,7 +33,7 @@ class NickNameCog(commands.Cog):
                     title="ニックネームを編集しました。", color=discord.Color.green()
                 )
             )
-        except discord.Forbidden as e:
+        except discord.Forbidden:
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="ニックネームを編集できませんでした。",
@@ -64,7 +62,7 @@ class NickNameCog(commands.Cog):
                     color=discord.Color.green(),
                 )
             )
-        except discord.Forbidden as e:
+        except discord.Forbidden:
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="ニックネームをリセットできませんでした。",

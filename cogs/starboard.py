@@ -1,17 +1,7 @@
-import asyncio
-from functools import partial
-import io
-import re
-import socket
 import time
-import aiohttp
-from bs4 import BeautifulSoup
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
-import datetime
 
-import pyshorteners
-from consts import mongodb
 from discord import app_commands
 from models import command_disable
 
@@ -21,7 +11,7 @@ cooldown_reaction = {}
 class StarBoardCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> StarBoardCog")
+        print("init -> StarBoardCog")
 
     async def get_reaction_channel(self, guild: discord.Guild, emoji: str):
         db = self.bot.async_db["Main"].ReactionBoard
@@ -221,7 +211,7 @@ class StarBoardCog(commands.Cog):
                     description=f"{チャンネル.mention}",
                 )
             )
-        except discord.Forbidden as e:
+        except discord.Forbidden:
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="リアクションボードをセットアップできませんでした。",
@@ -249,7 +239,7 @@ class StarBoardCog(commands.Cog):
                     color=discord.Color.green(),
                 )
             )
-        except discord.Forbidden as e:
+        except discord.Forbidden:
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="リアクションボードを無効にできませんでした。",

@@ -1,16 +1,7 @@
-import asyncio
-from functools import partial
-import io
-import re
-import socket
-import aiohttp
-from bs4 import BeautifulSoup
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
 import datetime
 
-import pyshorteners
-from consts import mongodb
 from discord import app_commands
 from models import command_disable
 
@@ -18,7 +9,7 @@ from models import command_disable
 class RoleCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> RoleCog")
+        print("init -> RoleCog")
 
     role = app_commands.Group(name="role", description="ロール系のコマンドです。")
 
@@ -40,7 +31,7 @@ class RoleCog(commands.Cog):
         if interaction.guild.get_member(メンバー.id) is None:
             return await interaction.response.send_message(
                 embed=discord.Embed(
-                    title=f"このサーバーにいないメンバーにはロールを追加できません。",
+                    title="このサーバーにいないメンバーにはロールを追加できません。",
                     color=discord.Color.red(),
                 )
             )
@@ -82,7 +73,7 @@ class RoleCog(commands.Cog):
         if interaction.guild.get_member(メンバー.id) is None:
             return await interaction.response.send_message(
                 embed=discord.Embed(
-                    title=f"このサーバーにいないメンバーにはロールを追加できません。",
+                    title="このサーバーにいないメンバーにはロールを追加できません。",
                     color=discord.Color.red(),
                 )
             )
@@ -199,7 +190,7 @@ class RoleCog(commands.Cog):
                     inline=False,
                 )
             )
-        except discord.Forbidden as e:
+        except discord.Forbidden:
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="ロールの情報を取得できませんでした。",

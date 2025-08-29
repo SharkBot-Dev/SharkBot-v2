@@ -1,9 +1,5 @@
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
-import datetime
-from consts import mongodb
-from discord import app_commands
-import random
 import time
 import re
 
@@ -16,7 +12,7 @@ URL_REGEX = re.compile(r"https://discord.com/channels/(\d+)/(\d+)/(\d+)")
 class ExpandCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> ExpandCog")
+        print("init -> ExpandCog")
 
     @commands.Cog.listener("on_message")
     async def on_message_expand(self, message: discord.Message):
@@ -114,7 +110,7 @@ class ExpandCog(commands.Cog):
                 await message.channel.send(embed=embed)
 
                 return
-            except Exception as e:
+            except Exception:
                 return await message.add_reaction("❌")
 
 

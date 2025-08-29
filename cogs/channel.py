@@ -1,7 +1,5 @@
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
-import datetime
-import random
 from discord import app_commands
 
 from models import command_disable
@@ -10,7 +8,7 @@ from models import command_disable
 class ChannelCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> ChannelCog")
+        print("init -> ChannelCog")
 
     channel = app_commands.Group(
         name="channel", description="チャンネル系のコマンドです。"
@@ -58,7 +56,7 @@ class ChannelCog(commands.Cog):
                     title="スローモードを設定しました。", color=discord.Color.green()
                 )
             )
-        except discord.Forbidden as e:
+        except discord.Forbidden:
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="スローモードを設定できませんでした。",

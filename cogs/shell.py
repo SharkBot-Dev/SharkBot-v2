@@ -1,13 +1,7 @@
 from discord.ext import commands
 import discord
-import traceback
 import sys
-import logging
-import random
 import time
-import json
-from unbelievaboat import Client
-import asyncio
 import aiohttp
 from discord import Webhook
 from discord import app_commands
@@ -341,7 +335,7 @@ class RunCSharp(discord.ui.Modal, title="C#を実行"):
 class ShellCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> ShellCog")
+        print("init -> ShellCog")
 
     @commands.Cog.listener("on_message")
     async def on_message_python_shell(self, message: discord.Message):

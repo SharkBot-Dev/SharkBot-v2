@@ -1,14 +1,11 @@
-import asyncio
 import base64
 import io
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
-import datetime
 import random
 from discord import app_commands
 import urllib
 
-from models import command_disable
 from consts import settings
 
 import aiohttp
@@ -30,7 +27,7 @@ class PokemonGroup(app_commands.Group):
             ) as resp:
                 if resp.status != 200:
                     await interaction.followup.send(
-                        f"ポケモンが見つかりませんでした。", ephemeral=True
+                        "ポケモンが見つかりませんでした。", ephemeral=True
                     )
                     return
 
@@ -204,7 +201,7 @@ class MinecraftGroup(app_commands.Group):
                                 await interaction.followup.send(
                                     embed=embed, file=discord.File(ii, "f.png")
                                 )
-                            except Exception as e:
+                            except Exception:
                                 await interaction.followup.send(
                                     embed=embed,
                                     content="サーバーアイコンの読み込みに失敗しました。",
@@ -216,15 +213,15 @@ class MinecraftGroup(app_commands.Group):
                         await interaction.followup.send(
                             f"サーバー情報を取得できませんでした。ステータスコード: {response.status}"
                         )
-            except Exception as e:
-                await interaction.followup.send(f"予期せぬエラーが発生しました。")
+            except Exception:
+                await interaction.followup.send("予期せぬエラーが発生しました。")
 
 
 class GameCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.geo_s = "北海道,青森県,宮城県,秋田県,山形県,福島県,茨城県,栃木県,群馬県,埼玉県,千葉県,東京都,神奈川県,山梨県,長野県,新潟県,富山県,石川県,福井県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県,沖縄県"
-        print(f"init -> GameCog")
+        print("init -> GameCog")
 
     game = app_commands.Group(name="game", description="ゲーム系のコマンドです。")
 

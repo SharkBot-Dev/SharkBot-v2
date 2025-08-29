@@ -7,7 +7,7 @@ async def disable_channel(interaction: Interaction):
         dbfind = await db.find_one({"Channel": interaction.channel.id}, {"_id": False})
     except:
         return True
-    if not dbfind is None:
+    if dbfind is not None:
         try:
             if interaction.user.guild_permissions.manage_guild:
                 return True

@@ -7,7 +7,7 @@ from models import save_commands
 class AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> AdminCog")
+        print("init -> AdminCog")
 
     @commands.command(name="reload", aliases=["r"], hidden=True)
     async def reload(self, ctx: commands.Context, cogname: str):

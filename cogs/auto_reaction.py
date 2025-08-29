@@ -3,7 +3,6 @@ import discord
 import random
 import time
 from discord import app_commands
-import time
 
 cooldown_auto_reaction = {}
 
@@ -11,7 +10,7 @@ cooldown_auto_reaction = {}
 class AutoReactionCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        print(f"init -> AutoReactionCog")
+        print("init -> AutoReactionCog")
 
     @commands.Cog.listener("on_message")
     async def on_message_auto_reaction_channel(self, message: discord.Message):

@@ -1,21 +1,12 @@
 from discord.ext import commands
 import discord
-import traceback
-import sys
-import logging
-import random
-import time
-import asyncio
-import aiohttp
-from discord import Webhook
 from discord import app_commands
-import io
 
 
 class CountCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> CountCog")
+        print("init -> CountCog")
 
     async def get_counting_setting(self, message: discord.Message):
         db_settings = self.bot.async_db["Main"].CountingSettings
@@ -216,7 +207,7 @@ class CountCog(commands.Cog):
         return await interaction.followup.send(
             embed=discord.Embed(
                 title="カウントゲームの現在の数字をリセットしました。",
-                description=f"次は1からカウントしましょう！",
+                description="次は1からカウントしましょう！",
                 color=discord.Color.green(),
             )
         )

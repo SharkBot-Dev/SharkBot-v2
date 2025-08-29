@@ -4,9 +4,7 @@ from deep_translator import GoogleTranslator
 from discord.ext import commands
 import discord
 from discord import app_commands
-from models import command_disable
-import traceback
-from PIL import Image, ImageSequence, ImageEnhance, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageFont
 import datetime
 from models.permissions_text import PERMISSION_TRANSLATIONS
 
@@ -129,7 +127,7 @@ def create_quote_image(author, text, avatar_bytes, background, textcolor, color:
 class ContextCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> ContextCog")
+        print("init -> ContextCog")
 
 
 async def setup(bot: commands.Bot):
@@ -344,13 +342,13 @@ async def setup(bot: commands.Bot):
                             )
 
                             embed = discord.Embed(
-                                title=f"翻訳 (日本語 へ)",
+                                title="翻訳 (日本語 へ)",
                                 description=f"{translated_text}",
                                 color=discord.Color.green(),
                             )
                             await interaction.followup.send(embed=embed)
 
-                        except Exception as e:
+                        except Exception:
                             embed = discord.Embed(
                                 title="翻訳に失敗しました", color=discord.Color.red()
                             )
@@ -362,13 +360,13 @@ async def setup(bot: commands.Bot):
                         translated_text = translator.translate(message.content)
 
                         embed = discord.Embed(
-                            title=f"翻訳 (日本語 へ)",
+                            title="翻訳 (日本語 へ)",
                             description=f"{translated_text}",
                             color=discord.Color.green(),
                         )
                         await interaction.followup.send(embed=embed)
 
-                    except Exception as e:
+                    except Exception:
                         embed = discord.Embed(
                             title="翻訳に失敗しました", color=discord.Color.red()
                         )
@@ -398,13 +396,13 @@ async def setup(bot: commands.Bot):
                             )
 
                             embed = discord.Embed(
-                                title=f"翻訳 (英語 へ)",
+                                title="翻訳 (英語 へ)",
                                 description=f"{translated_text}",
                                 color=discord.Color.green(),
                             )
                             await interaction.followup.send(embed=embed)
 
-                        except Exception as e:
+                        except Exception:
                             embed = discord.Embed(
                                 title="翻訳に失敗しました", color=discord.Color.red()
                             )
@@ -416,13 +414,13 @@ async def setup(bot: commands.Bot):
                         translated_text = translator.translate(message.content)
 
                         embed = discord.Embed(
-                            title=f"翻訳 (英語 へ)",
+                            title="翻訳 (英語 へ)",
                             description=f"{translated_text}",
                             color=discord.Color.green(),
                         )
                         await interaction.followup.send(embed=embed)
 
-                    except Exception as e:
+                    except Exception:
                         embed = discord.Embed(
                             title="翻訳に失敗しました", color=discord.Color.red()
                         )

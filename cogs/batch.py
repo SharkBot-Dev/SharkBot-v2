@@ -1,7 +1,5 @@
 from discord.ext import commands, tasks
 import discord
-import datetime
-import random
 
 from models import save_commands
 
@@ -9,7 +7,7 @@ from models import save_commands
 class BatchCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> BatchCog")
+        print("init -> BatchCog")
 
     async def reset_db(self):
         await self.bot.async_db.Main.TTSCheckBeta.delete_many({})

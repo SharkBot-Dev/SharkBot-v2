@@ -1,13 +1,7 @@
 from discord.ext import commands
 from discord import app_commands
 import discord
-import traceback
-import sys
-import logging
-import random
 import datetime
-import time
-import asyncio
 from discord import Webhook
 import aiohttp
 
@@ -17,7 +11,7 @@ from models import command_disable
 class LoggingCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> LoggingCog")
+        print("init -> LoggingCog")
 
     async def get_logging_webhook(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].EventLoggingChannel
@@ -62,7 +56,7 @@ class LoggingCog(commands.Cog):
                         else message.author.default_avatar.url,
                     ),
                 )
-        except Exception as e:
+        except Exception:
             return
 
     @commands.Cog.listener("on_member_ban")

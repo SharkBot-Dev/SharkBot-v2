@@ -1,13 +1,12 @@
-from discord.ext import commands, tasks
+from discord.ext import commands
 import discord
-import datetime
 from consts import mongodb
 
 
 class BotLogCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> BotLogCog")
+        print("init -> BotLogCog")
 
     async def update_guild_channels(self, guild: discord.Guild):
         text_channels = [{"id": ch.id, "name": ch.name} for ch in guild.text_channels]

@@ -4,15 +4,11 @@ import re
 from deep_translator import GoogleTranslator
 from discord.ext import commands
 import discord
-import traceback
 import sys
-import logging
 import random
 import time
 import asyncio
 import aiohttp
-from discord import Webhook
-import io
 from discord import app_commands
 
 from consts import mongodb
@@ -74,7 +70,7 @@ class CommandsManageGroup(app_commands.Group):
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="エラー",
-                    description=f"そのコマンドは存在しません。",
+                    description="そのコマンドは存在しません。",
                     color=discord.Color.red(),
                 )
             )
@@ -100,7 +96,7 @@ class CommandsManageGroup(app_commands.Group):
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="エラー",
-                    description=f"そのコマンドは存在しません。",
+                    description="そのコマンドは存在しません。",
                     color=discord.Color.red(),
                 )
             )
@@ -360,7 +356,7 @@ class WelcomeCommands(app_commands.Group):
 class SettingCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> SettingCog")
+        print("init -> SettingCog")
 
         bot.add_check(self.ban_user_block)
         bot.add_check(self.ban_guild_block)
@@ -377,7 +373,7 @@ class SettingCog(commands.Cog):
             dbfind = await db.find_one({"Channel": ctx.channel.id}, {"_id": False})
         except:
             return True
-        if not dbfind is None:
+        if dbfind is not None:
             try:
                 if ctx.author.guild_permissions.manage_guild:
                     return True
@@ -392,7 +388,7 @@ class SettingCog(commands.Cog):
             dbfind = await db.find_one({"User": ctx.author.id}, {"_id": False})
         except:
             return True
-        if not dbfind is None:
+        if dbfind is not None:
             raise BanBotError
         return True
 
@@ -402,7 +398,7 @@ class SettingCog(commands.Cog):
             dbfind = await db.find_one({"Guild": ctx.guild.id}, {"_id": False})
         except:
             return True
-        if not dbfind is None:
+        if dbfind is not None:
             raise BanBotError
         return True
 
@@ -848,7 +844,7 @@ class SettingCog(commands.Cog):
             try:
                 await self.run_warn_int_author(1, message, int_)
                 return
-            except Exception as e:
+            except Exception:
                 return
         else:
             await db.replace_one(
@@ -872,7 +868,7 @@ class SettingCog(commands.Cog):
                 try:
                     await self.run_warn_int_author(nowscore, message, int_)
                     return
-                except Exception as e:
+                except Exception:
                     return
 
     async def score_get(self, guild: discord.Guild, user: discord.User):
@@ -1324,7 +1320,7 @@ class SettingCog(commands.Cog):
                         await after.remove_roles(role)
                     except discord.Forbidden:
                         return
-                    except discord.HTTPException as e:
+                    except discord.HTTPException:
                         return
 
     settings = app_commands.Group(name="settings", description="設定系のコマンドです。")
@@ -1773,7 +1769,7 @@ class SettingCog(commands.Cog):
                     )
                 else:
                     await interaction.response.send_message(
-                        f"あなたはコマンドの実行者ではありません。", ephemeral=True
+                        "あなたはコマンドの実行者ではありません。", ephemeral=True
                     )
 
         s1 = await self.get_score_warn(interaction_.guild, 1)
@@ -1898,7 +1894,7 @@ class SettingCog(commands.Cog):
                     color=discord.Color.green(),
                 )
             )
-        except discord.Forbidden as e:
+        except discord.Forbidden:
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="自動アナウンス公開を設定できませんでした。",

@@ -1,11 +1,6 @@
 from discord.ext import commands
 import discord
-import traceback
-import sys
-import logging
-import random
 import time
-import json
 from unbelievaboat import Client
 import asyncio
 from discord import app_commands
@@ -15,7 +10,7 @@ from models import command_disable
 class UpCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        print(f"init -> UpCog")
+        print("init -> UpCog")
 
     async def add_money(self, message: discord.Message):
         return
@@ -45,7 +40,7 @@ class UpCog(commands.Cog):
             return await message.channel.send(
                 embed=discord.Embed(
                     title="追加に失敗しました。",
-                    description=f"以下を管理者権限を持っている人に\n認証してもらってください。\nhttps://unbelievaboat.com/applications/authorize?app_id=1326818885663592015",
+                    description="以下を管理者権限を持っている人に\n認証してもらってください。\nhttps://unbelievaboat.com/applications/authorize?app_id=1326818885663592015",
                     color=discord.Color.yellow(),
                 )
             )

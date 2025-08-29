@@ -1,16 +1,8 @@
 from discord.ext import commands
-import datetime
 import discord
-import traceback
-import sys
-import logging
 import random
 import time
-import asyncio
-import re
 from discord import app_commands
-from functools import partial
-import time
 
 user_last_message_time_work = {}
 
@@ -297,7 +289,7 @@ class ItemGroup(app_commands.Group):
 class ServerMoneyCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        print(f"init -> ServerMoneyCog")
+        print("init -> ServerMoneyCog")
 
     server_economy = app_commands.Group(
         name="economy", description="サーバー内の経済機能"

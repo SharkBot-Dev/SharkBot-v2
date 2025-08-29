@@ -1,20 +1,11 @@
 from discord.ext import commands
 import discord
-import traceback
-import sys
-import logging
-import random
 import time
 import asyncio
-import re
-from functools import partial
-import time
-import uuid
 import io
 import aiohttp
 import urllib.parse
 from discord import app_commands
-import aiofiles.os
 
 cooldown_autojoin = {}
 cooldown_tts = {}
@@ -94,7 +85,7 @@ class TTSCog(commands.Cog):
         self.bot = bot
         self.guild_queues: dict[int, asyncio.Queue] = {}
         self.guild_tasks: dict[int, asyncio.Task] = {}
-        print(f"init -> TTSCog")
+        print("init -> TTSCog")
 
     tts = app_commands.Group(name="tts", description="読み上げ関連のコマンドです。")
 

@@ -1,18 +1,8 @@
 from discord.ext import commands
 import discord
-import traceback
-import sys
-import logging
-import random
 import io
-import time
-import asyncio
-import re
 import datetime
-from functools import partial
 import aiohttp
-import time
-import matplotlib.pyplot as plt
 from discord import app_commands
 
 
@@ -43,7 +33,7 @@ class Paginator(discord.ui.View):
 class ListingCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        print(f"init -> ListingCog")
+        print("init -> ListingCog")
 
     listing = app_commands.Group(
         name="listing", description="メンバーをリスト化します。"
@@ -483,7 +473,7 @@ class ListingCog(commands.Cog):
                 self.next.disabled = self.current_page >= len(split_ranking)
 
                 embed = discord.Embed(
-                    title=f"招待回数ランキング",
+                    title="招待回数ランキング",
                     description=return_rankinginfos(self.current_page),
                     color=discord.Color.blue(),
                 ).set_footer(text=f"{self.current_page}/{len(split_ranking)}")
@@ -516,7 +506,7 @@ class ListingCog(commands.Cog):
         view.next.disabled = len(split_ranking) <= 1
 
         embed = discord.Embed(
-            title=f"招待回数ランキング",
+            title="招待回数ランキング",
             description=return_rankinginfos(1),
             color=discord.Color.blue(),
         ).set_footer(text=f"1/{len(split_ranking)}")
@@ -870,7 +860,7 @@ class ListingCog(commands.Cog):
                             values.append(int(value))
                         if len(labels) != len(values):
                             raise ValueError("ラベルとデータの数が一致しません。")
-                    except Exception as e:
+                    except Exception:
                         return await interaction.followup.send(
                             ephemeral=True, content="エラーが発生しました。"
                         )
@@ -932,7 +922,7 @@ class ListingCog(commands.Cog):
                                 ephemeral=True,
                                 content="XとYのデータの数が一致しません。",
                             )
-                    except Exception as e:
+                    except Exception:
                         return await interaction.followup.send(
                             ephemeral=True, content="エラーが発生しました。"
                         )
