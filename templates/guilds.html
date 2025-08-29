@@ -74,6 +74,22 @@
                 text-decoration: none;
                 color: inherit;
             }
+
+            button {
+                background-color: #5865f2;
+                border: none;
+                border-radius: 8px;
+                padding: 0.8rem 1.5rem;
+                color: #ffffff;
+                font-size: 1rem;
+                font-weight: bold;
+                cursor: pointer;
+                transition: background 0.2s ease;
+            }
+
+            button:hover {
+                background-color: #4752c4;
+            }
         </style>
     </head>
 
@@ -88,7 +104,9 @@
                         <span>{{ g.name }}</span>
                     </a>
                 {% endfor %}
-            </div>
+            </div><br>
+
+            <button onclick="location.href = '/rankcard';">ランクカードの編集</button>
         </div>
     </body>
 </html>
