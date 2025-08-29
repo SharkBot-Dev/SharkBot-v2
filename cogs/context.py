@@ -10,6 +10,7 @@ from PIL import Image, ImageSequence, ImageEnhance, ImageDraw, ImageFont, ImageO
 import datetime
 from models.permissions_text import PERMISSION_TRANSLATIONS
 
+
 async def fetch_avatar(user: discord.User):
     if user.avatar:
         url_a = f"https://cdn.discordapp.com/avatars/{user.id}/{user.avatar.key}"
@@ -18,7 +19,8 @@ async def fetch_avatar(user: discord.User):
     async with aiohttp.ClientSession() as session:
         async with session.get(url_a, timeout=10) as resp:
             return await resp.read()
-        
+
+
 def wrap_text_with_ellipsis(text, font, draw, max_width, max_height, line_height):
     lines = []
     for raw_line in text.split("\n"):
@@ -36,7 +38,8 @@ def wrap_text_with_ellipsis(text, font, draw, max_width, max_height, line_height
             if len(lines) * line_height >= max_height - line_height * 2:
                 ellipsis = "…"
                 while True:
-                    bbox = draw.textbbox((0, 0), current_line + ellipsis, font=font)
+                    bbox = draw.textbbox(
+                        (0, 0), current_line + ellipsis, font=font)
                     if bbox[2] - bbox[0] <= max_width:
                         break
                     if len(current_line) == 0:
@@ -50,77 +53,83 @@ def wrap_text_with_ellipsis(text, font, draw, max_width, max_height, line_height
 
     return lines
 
+
 def create_quote_image(author, text, avatar_bytes, background, textcolor, color: bool):
-        width, height = 800, 400
-        background_color = background
-        text_color = textcolor
+    width, height = 800, 400
+    background_color = background
+    text_color = textcolor
 
-        img = Image.new('RGB', (width, height), background_color)
-        draw = ImageDraw.Draw(img)
+    img = Image.new('RGB', (width, height), background_color)
+    draw = ImageDraw.Draw(img)
 
-        avatar_size = (400, 400)
-        avatar = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA")
-        avatar = avatar.resize(avatar_size)
+    avatar_size = (400, 400)
+    avatar = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA")
+    avatar = avatar.resize(avatar_size)
 
-        mask = Image.new("L", avatar_size, 255)
-        for x in range(avatar_size[0]):
-            alpha = 255 if x < avatar_size[0] // 2 else int(255 * (1 - (x - avatar_size[0] // 2) / (avatar_size[0] / 2)))
-            for y in range(avatar_size[1]):
-                mask.putpixel((x, y), alpha)
-        avatar.putalpha(mask)
+    mask = Image.new("L", avatar_size, 255)
+    for x in range(avatar_size[0]):
+        alpha = 255 if x < avatar_size[0] // 2 else int(
+            255 * (1 - (x - avatar_size[0] // 2) / (avatar_size[0] / 2)))
+        for y in range(avatar_size[1]):
+            mask.putpixel((x, y), alpha)
+    avatar.putalpha(mask)
 
-        img.paste(avatar, (0, height - avatar_size[1]), avatar)
+    img.paste(avatar, (0, height - avatar_size[1]), avatar)
 
-        try:
-            font = ImageFont.truetype("data/DiscordFont.ttf", 30)
-            name_font = ImageFont.truetype("data/DiscordFont.ttf", 20)
-        except:
-            font = ImageFont.load_default()
-            name_font = ImageFont.load_default()
+    try:
+        font = ImageFont.truetype("data/DiscordFont.ttf", 30)
+        name_font = ImageFont.truetype("data/DiscordFont.ttf", 20)
+    except:
+        font = ImageFont.load_default()
+        name_font = ImageFont.load_default()
 
-        text_x = 420
-        max_text_width = width - text_x - 50
+    text_x = 420
+    max_text_width = width - text_x - 50
 
-        max_text_height = height - 80
-        line_height = font.size + 10
+    max_text_height = height - 80
+    line_height = font.size + 10
 
-        lines = wrap_text_with_ellipsis(text, font, draw, max_text_width, max_text_height, line_height)
+    lines = wrap_text_with_ellipsis(
+        text, font, draw, max_text_width, max_text_height, line_height)
 
-        total_lines = len(lines)
-        line_height = font.size + 10
-        text_block_height = total_lines * line_height
-        text_y = (height - text_block_height) // 2
+    total_lines = len(lines)
+    line_height = font.size + 10
+    text_block_height = total_lines * line_height
+    text_y = (height - text_block_height) // 2
 
-        for i, line in enumerate(lines):
-            bbox = draw.textbbox((0, 0), line, font=font)
-            line_width = bbox[2] - bbox[0]
-            draw.text(
-                ((width + text_x - 50 - line_width) // 2, text_y + i * line_height),
-                line,
-                fill=text_color,
-                font=font
-            )
+    for i, line in enumerate(lines):
+        bbox = draw.textbbox((0, 0), line, font=font)
+        line_width = bbox[2] - bbox[0]
+        draw.text(
+            ((width + text_x - 50 - line_width) // 2, text_y + i * line_height),
+            line,
+            fill=text_color,
+            font=font
+        )
 
-        author_text = f"- {author}"
-        bbox = draw.textbbox((0, 0), author_text, font=name_font)
-        author_width = bbox[2] - bbox[0]
-        author_x = (width + text_x - 50 - author_width) // 2
-        author_y = text_y + len(lines) * line_height + 10
+    author_text = f"- {author}"
+    bbox = draw.textbbox((0, 0), author_text, font=name_font)
+    author_width = bbox[2] - bbox[0]
+    author_x = (width + text_x - 50 - author_width) // 2
+    author_y = text_y + len(lines) * line_height + 10
 
-        draw.text((author_x, author_y), author_text, font=name_font, fill=text_color)
+    draw.text((author_x, author_y), author_text,
+              font=name_font, fill=text_color)
 
-        draw.text((700, 0), "SharkBot", font=name_font, fill=text_color)
+    draw.text((700, 0), "SharkBot", font=name_font, fill=text_color)
 
-        if color:
+    if color:
 
-            return img
-        else:
-            return img.convert("L")
+        return img
+    else:
+        return img.convert("L")
+
 
 class ContextCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print(f"init -> ContextCog")
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ContextCog(bot))
@@ -168,23 +177,24 @@ async def setup(bot: commands.Bot):
         channel = bot.get_channel(dbfind.get("Channel", None))
         if not channel:
             return await interaction.followup.send(content="通報するチャンネルが見つかりませんでした", ephemeral=True)
-        
+
         await channel.send(embed=discord.Embed(title=f"{interaction.user.name} が通報しました。", color=discord.Color.yellow())
                            .add_field(name="通報されたメッセージ", value=message.jump_url, inline=False)
                            .add_field(name="通報されたメッセージのあるチャンネル", value=message.channel.mention, inline=False)
                            .add_field(name="通報された人", value=f"{message.author.mention} ({message.author.id})", inline=False)
                            .add_field(name="通報した人", value=f"{interaction.user.mention} ({interaction.user.id})", inline=False)
                            .set_thumbnail(url=message.author.avatar.url if message.author.avatar else message.author.default_avatar.url))
-        
+
         return await interaction.followup.send(content="通報が完了しました。\n運営が確認しますので、しばらくお待ちください。", ephemeral=True)
-        
+
     @app_commands.context_menu(name="メッセージ固定")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def message_pin(interaction: discord.Interaction, message: discord.Message):
         view = discord.ui.View()
-        view.add_item(discord.ui.Button(style=discord.ButtonStyle.red, label="削除", custom_id="lockmessage_delete+"))
+        view.add_item(discord.ui.Button(style=discord.ButtonStyle.red,
+                      label="削除", custom_id="lockmessage_delete+"))
 
         if not message.content:
             if not message.embeds:
@@ -193,16 +203,19 @@ async def setup(bot: commands.Bot):
                 msg = await interaction.channel.send(embed=discord.Embed(title=message.embeds[0].title, description=message.embeds[0].description, color=discord.Color.random()), view=view)
                 db = interaction.client.async_db["Main"].LockMessage
                 await db.replace_one(
-                    {"Channel": interaction.channel.id, "Guild": interaction.guild.id}, 
-                    {"Channel": interaction.channel.id, "Guild": interaction.guild.id, "Title": message.embeds[0].title, "Desc": message.embeds[0].description, "MessageID": msg.id}, 
+                    {"Channel": interaction.channel.id,
+                        "Guild": interaction.guild.id},
+                    {"Channel": interaction.channel.id, "Guild": interaction.guild.id,
+                        "Title": message.embeds[0].title, "Desc": message.embeds[0].description, "MessageID": msg.id},
                     upsert=True
                 )
                 return await interaction.response.send_message(embed=discord.Embed(title="メッセージ固定を有効化しました。", color=discord.Color.green()), ephemeral=True)
         msg = await interaction.channel.send(embed=discord.Embed(title="固定済みメッセージ", description=message.content[:1500], color=discord.Color.random()), view=view)
         db = interaction.client.async_db["Main"].LockMessage
         await db.replace_one(
-            {"Channel": interaction.channel.id, "Guild": interaction.guild.id}, 
-            {"Channel": interaction.channel.id, "Guild": interaction.guild.id, "Title": "固定済みメッセージ", "Desc": message.content[:1500], "MessageID": msg.id}, 
+            {"Channel": interaction.channel.id, "Guild": interaction.guild.id},
+            {"Channel": interaction.channel.id, "Guild": interaction.guild.id,
+                "Title": "固定済みメッセージ", "Desc": message.content[:1500], "MessageID": msg.id},
             upsert=True
         )
         await interaction.response.send_message(embed=discord.Embed(title="メッセージ固定を有効化しました。", color=discord.Color.green()), ephemeral=True)
@@ -224,7 +237,6 @@ async def setup(bot: commands.Bot):
                     discord.SelectOption(label="英語へ (to en)"),
                 ]
             )
-
             async def select(self, interaction: discord.Interaction, select: discord.ui.Select):
 
                 if select.values[0] == "日本語へ (to ja)":
@@ -238,7 +250,7 @@ async def setup(bot: commands.Bot):
                             )
                             await interaction.followup.send(embed=embed)
                             return
-                        
+
                         if not message.embeds[0].description:
                             embed = discord.Embed(
                                 title="翻訳に失敗しました",
@@ -246,10 +258,12 @@ async def setup(bot: commands.Bot):
                             )
                             await interaction.followup.send(embed=embed)
                             return
-                        
+
                         try:
-                            translator = GoogleTranslator(source="auto", target="ja")
-                            translated_text = translator.translate(message.embeds[0].description)
+                            translator = GoogleTranslator(
+                                source="auto", target="ja")
+                            translated_text = translator.translate(
+                                message.embeds[0].description)
 
                             embed = discord.Embed(
                                 title=f"翻訳 (日本語 へ)",
@@ -257,7 +271,7 @@ async def setup(bot: commands.Bot):
                                 color=discord.Color.green()
                             )
                             await interaction.followup.send(embed=embed)
-                        
+
                         except Exception as e:
                             embed = discord.Embed(
                                 title="翻訳に失敗しました",
@@ -267,7 +281,8 @@ async def setup(bot: commands.Bot):
                         return
 
                     try:
-                        translator = GoogleTranslator(source="auto", target="ja")
+                        translator = GoogleTranslator(
+                            source="auto", target="ja")
                         translated_text = translator.translate(message.content)
 
                         embed = discord.Embed(
@@ -276,7 +291,7 @@ async def setup(bot: commands.Bot):
                             color=discord.Color.green()
                         )
                         await interaction.followup.send(embed=embed)
-                    
+
                     except Exception as e:
                         embed = discord.Embed(
                             title="翻訳に失敗しました",
@@ -294,7 +309,7 @@ async def setup(bot: commands.Bot):
                             )
                             await interaction.followup.send(embed=embed)
                             return
-                        
+
                         if not message.embeds[0].description:
                             embed = discord.Embed(
                                 title="翻訳に失敗しました",
@@ -302,10 +317,12 @@ async def setup(bot: commands.Bot):
                             )
                             await interaction.followup.send(embed=embed)
                             return
-                        
+
                         try:
-                            translator = GoogleTranslator(source="auto", target="en")
-                            translated_text = translator.translate(message.embeds[0].description)
+                            translator = GoogleTranslator(
+                                source="auto", target="en")
+                            translated_text = translator.translate(
+                                message.embeds[0].description)
 
                             embed = discord.Embed(
                                 title=f"翻訳 (英語 へ)",
@@ -313,7 +330,7 @@ async def setup(bot: commands.Bot):
                                 color=discord.Color.green()
                             )
                             await interaction.followup.send(embed=embed)
-                        
+
                         except Exception as e:
                             embed = discord.Embed(
                                 title="翻訳に失敗しました",
@@ -323,7 +340,8 @@ async def setup(bot: commands.Bot):
                         return
 
                     try:
-                        translator = GoogleTranslator(source="auto", target="en")
+                        translator = GoogleTranslator(
+                            source="auto", target="en")
                         translated_text = translator.translate(message.content)
 
                         embed = discord.Embed(
@@ -332,7 +350,7 @@ async def setup(bot: commands.Bot):
                             color=discord.Color.green()
                         )
                         await interaction.followup.send(embed=embed)
-                    
+
                     except Exception as e:
                         embed = discord.Embed(
                             title="翻訳に失敗しました",
@@ -355,15 +373,18 @@ async def setup(bot: commands.Bot):
             isbot = "はい"
         else:
             isbot = "いいえ"
-        embed = discord.Embed(title=f"{member.display_name}の情報 (ページ1)", color=discord.Color.green())
-        embed.add_field(name="基本情報", value=f"ID: **{member.id}**\nユーザーネーム: **{member.name}#{member.discriminator}**\n作成日: **{member.created_at.astimezone(JST)}**\nこの鯖に？: **{isguild}**\nBot？: **{isbot}**\n認証Bot？: **{"はい" if member.public_flags.verified_bot else "いいえ"}**")
+        embed = discord.Embed(
+            title=f"{member.display_name}の情報 (ページ1)", color=discord.Color.green())
+        embed.add_field(
+            name="基本情報", value=f"ID: **{member.id}**\nユーザーネーム: **{member.name}#{member.discriminator}**\n作成日: **{member.created_at.astimezone(JST)}**\nこの鯖に？: **{isguild}**\nBot？: **{isbot}**\n認証Bot？: **{"はい" if member.public_flags.verified_bot else "いいえ"}**")
 
     @app_commands.context_menu(name="権限を見る")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     async def permissions_check(interaction: discord.Interaction, member: discord.Member):
         try:
-            user_perms = [PERMISSION_TRANSLATIONS.get(perm, perm) for perm, value in member.guild_permissions if value]
+            user_perms = [PERMISSION_TRANSLATIONS.get(
+                perm, perm) for perm, value in member.guild_permissions if value]
             user_perms_str = ", ".join(user_perms)
             avatar = member.avatar.url if member.avatar else member.display_avatar.url
             await interaction.followup.send(embed=discord.Embed(title=f"{member.name}さんの権限", description=user_perms_str, color=discord.Color.green()).set_thumbnail(url=avatar))

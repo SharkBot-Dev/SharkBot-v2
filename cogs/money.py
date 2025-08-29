@@ -14,6 +14,7 @@ import time
 
 user_last_message_time_work = {}
 
+
 class Money():
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -34,7 +35,7 @@ class Money():
         if not dbfind:
             return 0
         return dbfind.get("count", 0)
-    
+
     async def get_server_ranking(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].ServerMoney
 
@@ -85,7 +86,8 @@ class Money():
         db = self.bot.async_db["Main"].ServerMoneyItems
         await db.replace_one(
             {"Guild": guild.id, "ItemName": itemname},
-            {"Guild": guild.id, "ItemName": itemname, "Role": role.id if role else 0, "Money": money},
+            {"Guild": guild.id, "ItemName": itemname,
+                "Role": role.id if role else 0, "Money": money},
             upsert=True
         )
 
@@ -110,6 +112,7 @@ class Money():
             count = dbfind.get("count") if dbfind else 0
             text += f"{i_n}({b.get('Money', 0)}コイン) .. {count}個\n"
         return text
+
 
 class GamesGroup(app_commands.Group):
     def __init__(self):
@@ -153,6 +156,7 @@ class GamesGroup(app_commands.Group):
             inline=False
         ))
 
+
 class ManageGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="manage", description="お金を管理します。")
@@ -174,6 +178,7 @@ class ManageGroup(app_commands.Group):
         await interaction.response.defer()
         await Money(interaction.client).add_server_money(interaction.guild, メンバー, -金額)
         await interaction.followup.send(embed=discord.Embed(title="金額を減らしました。", color=discord.Color.green()))
+
 
 class ItemGroup(app_commands.Group):
     def __init__(self):
@@ -206,6 +211,7 @@ class ItemGroup(app_commands.Group):
         else:
             await interaction.followup.send(embed=discord.Embed(title="アイテムが見つかりませんでした。", color=discord.Color.red()))
 
+
 class ServerMoneyCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -227,7 +233,8 @@ class ServerMoneyCog(commands.Cog):
         await interaction.response.defer()
         m = random.randint(300, 1500)
         current_time = time.time()
-        last_message_time = user_last_message_time_work.get(f"{interaction.user.id}-{interaction.guild.id}", 0)
+        last_message_time = user_last_message_time_work.get(
+            f"{interaction.user.id}-{interaction.guild.id}", 0)
         if current_time - last_message_time < 1800:
             return await interaction.followup.send(embed=discord.Embed(
                 title="30分に一回働けます。",
@@ -320,6 +327,7 @@ class ServerMoneyCog(commands.Cog):
         await interaction.response.defer()
         text = await Money(interaction.client).get_server_items_list(interaction.guild, interaction.user)
         await interaction.followup.send(embed=discord.Embed(title="アイテムリスト", description=text, color=discord.Color.green()))
+
 
 async def setup(bot):
     await bot.add_cog(ServerMoneyCog(bot))

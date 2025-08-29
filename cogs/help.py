@@ -5,6 +5,7 @@ from consts import settings
 from discord import app_commands
 from models import command_disable
 
+
 class HelpCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -22,9 +23,11 @@ class HelpCog(commands.Cog):
 
         for c in self.bot.tree.get_commands():
             if type(c) == app_commands.Command:
-                pages.append(discord.Embed(title=f"/{c.name}", description=f"{c.description}", color=discord.Color.blue()))
+                pages.append(discord.Embed(
+                    title=f"/{c.name}", description=f"{c.description}", color=discord.Color.blue()))
             elif type(c) == app_commands.Group:
-                embed = discord.Embed(title=f"/{c.name}", color=discord.Color.blue())
+                embed = discord.Embed(
+                    title=f"/{c.name}", color=discord.Color.blue())
                 text = ""
                 for cc in c.commands:
                     text += f"{cc.name} .. {cc.description}\n"
@@ -40,10 +43,14 @@ class HelpCog(commands.Cog):
 
             def update_buttons(self):
                 self.clear_items()
-                self.add_item(discord.ui.Button(emoji="◀️", style=discord.ButtonStyle.secondary, custom_id="help_prev"))
-                self.add_item(discord.ui.Button(label=f"{self.current_page + 1}/{len(pages)}", style=discord.ButtonStyle.secondary, disabled=True))
-                self.add_item(discord.ui.Button(emoji="▶️", style=discord.ButtonStyle.secondary, custom_id="help_next"))
-                self.add_item(discord.ui.Button(label="カスタムコマンド", style=discord.ButtonStyle.red, custom_id="help_custom"))
+                self.add_item(discord.ui.Button(
+                    emoji="◀️", style=discord.ButtonStyle.secondary, custom_id="help_prev"))
+                self.add_item(discord.ui.Button(
+                    label=f"{self.current_page + 1}/{len(pages)}", style=discord.ButtonStyle.secondary, disabled=True))
+                self.add_item(discord.ui.Button(
+                    emoji="▶️", style=discord.ButtonStyle.secondary, custom_id="help_next"))
+                self.add_item(discord.ui.Button(
+                    label="カスタムコマンド", style=discord.ButtonStyle.red, custom_id="help_custom"))
 
             async def interaction_check(self, interaction: discord.Interaction) -> bool:
                 try:
@@ -78,6 +85,7 @@ class HelpCog(commands.Cog):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
 
         await interaction.response.send_message(f"以下のリンクからアクセスできます。\n{settings.DASHBOARD_URL}", ephemeral=True)
+
 
 async def setup(bot):
     await bot.add_cog(HelpCog(bot))

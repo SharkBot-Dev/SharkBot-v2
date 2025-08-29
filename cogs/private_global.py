@@ -14,6 +14,7 @@ import time
 
 user_last_message_time_pgc = {}
 
+
 class PrivateGlobalCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -53,7 +54,8 @@ class PrivateGlobalCog(commands.Cog):
         return "😀"
 
     def filter_global(self, message: discord.Message) -> bool:
-        blocked_words = ["discord.com", "discord.gg", "x.gd", "shorturl.asia", "tiny.cc", "<sound:", "niga", "everyone", "here"]
+        blocked_words = ["discord.com", "discord.gg", "x.gd",
+                         "shorturl.asia", "tiny.cc", "<sound:", "niga", "everyone", "here"]
         return not any(word in message.content for word in blocked_words)
 
     async def get_guild_emoji(self, guild: discord.Guild):
@@ -72,18 +74,23 @@ class PrivateGlobalCog(commands.Cog):
 
         async with aiohttp.ClientSession() as session:
             webhook_ = Webhook.from_url(webhook, session=session)
-            embed = discord.Embed(description=message.content, color=discord.Color.blue())
+            embed = discord.Embed(
+                description=message.content, color=discord.Color.blue())
             em = await self.get_guild_emoji(message.guild)
-            embed.set_footer(text=f"[{em}] {message.guild.name}/{message.guild.id}")
+            embed.set_footer(
+                text=f"[{em}] {message.guild.name}/{message.guild.id}")
 
             bag = await self.badge_build(message)
 
             if message.author.avatar:
-                embed.set_author(name=f"[{bag}] {message.author.name}/{message.author.id}", icon_url=message.author.avatar.url)
+                embed.set_author(
+                    name=f"[{bag}] {message.author.name}/{message.author.id}", icon_url=message.author.avatar.url)
             else:
-                embed.set_author(name=f"[{bag}] {message.author.name}/{message.author.id}", icon_url=message.author.default_avatar.url)
+                embed.set_author(
+                    name=f"[{bag}] {message.author.name}/{message.author.id}", icon_url=message.author.default_avatar.url)
             if not message.attachments == []:
-                embed.add_field(name="添付ファイル", value=message.attachments[0].url)
+                embed.add_field(
+                    name="添付ファイル", value=message.attachments[0].url)
                 for kaku in [".png", ".jpg", ".jpeg", ".gif", ".webm"]:
                     if message.attachments[0].filename.endswith(kaku):
                         embed.set_image(url=message.attachments[0].url)
@@ -94,7 +101,8 @@ class PrivateGlobalCog(commands.Cog):
                 embed_ = ref_msg.embeds
                 if wh:
                     try:
-                        name = embed_[0].author.name.replace("[👑]", "").replace("[😀]", "").replace("[🛠️]", "").split("/")[0]
+                        name = embed_[0].author.name.replace("[👑]", "").replace(
+                            "[😀]", "").replace("[🛠️]", "").split("/")[0]
                         value = embed_[0].description
                     except:
                         name = ref_msg.author.name
@@ -124,7 +132,7 @@ class PrivateGlobalCog(commands.Cog):
                     await self.send_one_globalchat(channel["Webhook"], message, ref_msg)
             else:
                 continue
-            
+
             await asyncio.sleep(1)
 
     @commands.Cog.listener("on_message")
@@ -134,7 +142,7 @@ class PrivateGlobalCog(commands.Cog):
 
         if type(message.channel) == discord.DMChannel:
             return
-        
+
         if "!." in message.content:
             return
 
@@ -165,6 +173,7 @@ class PrivateGlobalCog(commands.Cog):
         await message.remove_reaction("🔄", self.bot.user)
 
         await message.add_reaction("✅")
+
 
 async def setup(bot):
     await bot.add_cog(PrivateGlobalCog(bot))

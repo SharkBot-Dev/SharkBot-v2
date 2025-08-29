@@ -14,6 +14,7 @@ import random
 
 from models import command_disable
 
+
 class LevelCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -34,24 +35,24 @@ class LevelCog(commands.Cog):
         try:
             db = self.bot.async_db["Main"].Leveling
             await db.replace_one(
-                {"Guild": guild.id, "User": user.id}, 
-                {"Guild": guild.id, "User": user.id, "Level": 0, "XP": 1}, 
+                {"Guild": guild.id, "User": user.id},
+                {"Guild": guild.id, "User": user.id, "Level": 0, "XP": 1},
                 upsert=True
             )
         except:
             return
-        
+
     async def user_write(self, guild: discord.Guild, user: discord.User, level: int, xp: int):
         try:
             db = self.bot.async_db["Main"].Leveling
             await db.replace_one(
-                {"Guild": guild.id, "User": user.id}, 
-                {"Guild": guild.id, "User": user.id, "Level": level, "XP": xp}, 
+                {"Guild": guild.id, "User": user.id},
+                {"Guild": guild.id, "User": user.id, "Level": level, "XP": xp},
                 upsert=True
             )
         except:
             return
-        
+
     async def get_level(self, guild: discord.Guild, user: discord.User):
         try:
             db = self.bot.async_db["Main"].Leveling
@@ -65,7 +66,7 @@ class LevelCog(commands.Cog):
                 return dbfind["Level"]
         except:
             return
-        
+
     async def get_xp(self, guild: discord.Guild, user: discord.User):
         try:
             db = self.bot.async_db["Main"].Leveling
@@ -79,18 +80,18 @@ class LevelCog(commands.Cog):
                 return dbfind["XP"]
         except:
             return
-        
+
     async def set_user_image(self, user: discord.User, url: str):
         try:
             db = self.bot.async_db["Main"].LevelingBackImage
             await db.replace_one(
-                {"User": user.id}, 
-                {"User": user.id, "Image": url}, 
+                {"User": user.id},
+                {"User": user.id, "Image": url},
                 upsert=True
             )
         except:
             return
-        
+
     async def get_user_image(self, user: discord.User):
         try:
             db = self.bot.async_db["Main"].LevelingBackImage
@@ -104,7 +105,7 @@ class LevelCog(commands.Cog):
                 return dbfind["Image"]
         except:
             return
-        
+
     async def set_channel(self, guild: discord.Guild, channel: discord.TextChannel = None):
         try:
             if channel == None:
@@ -115,8 +116,8 @@ class LevelCog(commands.Cog):
                 return
             db = self.bot.async_db["Main"].LevelingUpAlertChannel
             await db.replace_one(
-                {"Guild": guild.id, "Channel": channel.id}, 
-                {"Guild": guild.id, "Channel": channel.id}, 
+                {"Guild": guild.id, "Channel": channel.id},
+                {"Guild": guild.id, "Channel": channel.id},
                 upsert=True
             )
         except:
@@ -135,17 +136,17 @@ class LevelCog(commands.Cog):
                 return dbfind["Channel"]
         except:
             return
-        
+
     async def set_role(self, guild: discord.Guild, level: int, role: discord.Role = None, ):
         db = self.bot.async_db["Main"].LevelingUpRole
         try:
             if role is None:
                 await db.delete_one({"Guild": guild.id})
                 return
-            
+
             await db.replace_one(
-                {"Guild": guild.id}, 
-                {"Guild": guild.id, "Role": role.id, "Level": level}, 
+                {"Guild": guild.id},
+                {"Guild": guild.id, "Role": role.id, "Level": level},
                 upsert=True
             )
         except Exception as e:
@@ -158,7 +159,7 @@ class LevelCog(commands.Cog):
             return dbfind["Role"] if dbfind else None
         except Exception as e:
             return None
-        
+
     async def get_timing(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].LevelingUpTiming
         try:
@@ -328,7 +329,7 @@ class LevelCog(commands.Cog):
     async def level_card(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
-        
+
         try:
             enabled = await self.check_level_enabled(interaction.guild)
         except:
@@ -336,6 +337,7 @@ class LevelCog(commands.Cog):
         if not enabled:
             return await interaction.response.send_message(embed=discord.Embed(title="レベルは無効です。", color=discord.Color.red()), ephemeral=True)
         await interaction.response.defer()
+
         def generate_rank_card(color, username: str, gu_a: bytes, avatar_bytes: bytes, level: int, xp: int) -> io.BytesIO:
             try:
                 font = ImageFont.truetype("data/DiscordFont.ttf", 20)
@@ -348,9 +350,11 @@ class LevelCog(commands.Cog):
             draw.text((120, 20), username, "#000000", font=font)
             draw.text((120, 50), f"レベル: {level}", "#000000", font=font)
             draw.text((120, 80), f"XP: {xp}", "#000000", font=font)
-            draw.text((150, 110), f"{interaction.guild.name}", "#000000", font=font)
+            draw.text(
+                (150, 110), f"{interaction.guild.name}", "#000000", font=font)
 
-            avatar = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA").resize((100, 100))
+            avatar = Image.open(io.BytesIO(avatar_bytes)).convert(
+                "RGBA").resize((100, 100))
 
             mask = Image.new("L", (100, 100), 0)
             mask_draw = ImageDraw.Draw(mask)
@@ -370,7 +374,7 @@ class LevelCog(commands.Cog):
             img.save(output, format="PNG")
             output.seek(0)
             return output
-                            
+
         executor = ThreadPoolExecutor()
 
         target_user = interaction.user
@@ -382,7 +386,8 @@ class LevelCog(commands.Cog):
         color = await self.get_user_color(target_user)
 
         rank_card_file = await asyncio.get_running_loop().run_in_executor(
-            executor, generate_rank_card, color, interaction.user.name + f"#{interaction.user.discriminator}", guild_bytes, avatar_bytes, level, xp
+            executor, generate_rank_card, color, interaction.user.name +
+            f"#{interaction.user.discriminator}", guild_bytes, avatar_bytes, level, xp
         )
 
         await interaction.followup.send(file=discord.File(rank_card_file, "rank_card.png"))
@@ -450,7 +455,7 @@ class LevelCog(commands.Cog):
             return await interaction.followup.send(embed=discord.Embed(title="レベルは無効です。", color=discord.Color.red()))
         await self.user_write(interaction.guild, ユーザー, レベル, xp)
         return await interaction.followup.send(embed=discord.Embed(title="レベルを編集しました。", description=f"ユーザー: 「{ユーザー.name}」\nレベル: 「{レベル}レベル」\nXP: 「{xp}XP」", color=discord.Color.green()))
-    
+
     @level.command(name="timing", description="レベルアップするタイミングを設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -470,12 +475,12 @@ class LevelCog(commands.Cog):
             return await interaction.followup.send(embed=discord.Embed(title="レベルアップするタイミングは20以上でお願いします。", color=discord.Color.green()))
         db = self.bot.async_db["Main"].LevelingUpTiming
         await db.replace_one(
-            {"Guild": interaction.guild.id}, 
-            {"Guild": interaction.guild.id, "Timing": xp}, 
+            {"Guild": interaction.guild.id},
+            {"Guild": interaction.guild.id, "Timing": xp},
             upsert=True
         )
         return await interaction.followup.send(embed=discord.Embed(title="レベルアップするタイミングを設定しました。", color=discord.Color.green(), description=f"タイミング: {xp}XP"))
-    
+
     @level.command(name="rewards", description="レベルアップ時のご褒美をリスト化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -493,7 +498,7 @@ class LevelCog(commands.Cog):
         db = self.bot.async_db["Main"].LevelingUpRole
         roles_cursor = db.find({"Guild": interaction.guild.id})
         roles_list = await roles_cursor.to_list(length=None)
-        
+
         description_lines = []
         for r in roles_list:
             role_id = r.get("Role", 0)
@@ -525,6 +530,7 @@ class LevelCog(commands.Cog):
             username = f"{member.display_name}" if member else f"Unknown ({user_data["User"]})"
             msg += f"{index}.**{username}** - {user_data["Level"]}レベル\n"
         return await interaction.followup.send(embed=discord.Embed(title="このサーバーでのランキング", description=msg, color=discord.Color.yellow()))
+
 
 async def setup(bot):
     await bot.add_cog(LevelCog(bot))

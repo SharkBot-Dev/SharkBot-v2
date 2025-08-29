@@ -5,6 +5,7 @@ import random
 
 from models import save_commands
 
+
 class BatchCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -28,6 +29,7 @@ class BatchCog(commands.Cog):
             await self.bot.change_presence(activity=discord.CustomActivity(name=f"/help | {len(self.bot.guilds)}鯖 | {self.bot.shard_count}Shard | {round(self.bot.latency * 1000)}ms"))
         except:
             pass
+
 
 async def setup(bot):
     await bot.add_cog(BatchCog(bot))

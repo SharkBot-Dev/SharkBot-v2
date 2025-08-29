@@ -17,6 +17,7 @@ from models import command_disable
 
 cooldown_reaction = {}
 
+
 class StarBoardCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -31,7 +32,7 @@ class StarBoardCog(commands.Cog):
         if dbfind is None:
             return None
         return self.bot.get_channel(dbfind["Channel"])
-    
+
     async def get_channel(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].ReactionBoard
         try:
@@ -45,8 +46,8 @@ class StarBoardCog(commands.Cog):
     async def save_message(self, message: discord.Message, msg: discord.Message):
         db = self.bot.async_db["Main"].ReactionBoardMessage
         await db.replace_one(
-            {"Guild": message.guild.id}, 
-            {"Guild": message.guild.id, "ID": message.id, "ReactMessageID": msg.id}, 
+            {"Guild": message.guild.id},
+            {"Guild": message.guild.id, "ID": message.id, "ReactMessageID": msg.id},
             upsert=True
         )
 
@@ -82,7 +83,7 @@ class StarBoardCog(commands.Cog):
                             return
                         msg = await m.edit(embed=discord.Embed(title=f"{emoji}x{count}", description=f"{message.content}", color=discord.Color.blue()).set_author(name=message.author.name, icon_url=message.author.avatar.url if message.author.avatar else message.author.default_avatar.url))
                     return
-                
+
     async def reaction_add_2(self, message: discord.Message, emoji_: str):
         reaction_counts = {}
         for reaction in message.reactions:
@@ -108,7 +109,8 @@ class StarBoardCog(commands.Cog):
         check = await self.get_reaction_channel(reaction.message.guild, reaction.emoji)
         if check:
             current_time = time.time()
-            last_message_time = cooldown_reaction.get(reaction.message.guild.id, 0)
+            last_message_time = cooldown_reaction.get(
+                reaction.message.guild.id, 0)
             if current_time - last_message_time < 1:
                 return
             cooldown_reaction[reaction.message.guild.id] = current_time
@@ -121,7 +123,8 @@ class StarBoardCog(commands.Cog):
         check = await self.get_reaction_channel(reaction.message.guild, reaction.emoji)
         if check:
             current_time = time.time()
-            last_message_time = cooldown_reaction.get(reaction.message.guild.id, 0)
+            last_message_time = cooldown_reaction.get(
+                reaction.message.guild.id, 0)
             if current_time - last_message_time < 1:
                 return
             cooldown_reaction[reaction.message.guild.id] = current_time
@@ -130,8 +133,8 @@ class StarBoardCog(commands.Cog):
     async def set_reaction_board(self, interaction: discord.Interaction, チャンネル: discord.TextChannel, 絵文字: str):
         db = self.bot.async_db["Main"].ReactionBoard
         await db.replace_one(
-            {"Guild": interaction.guild.id, "Emoji": 絵文字, "Channel": チャンネル.id}, 
-            {"Guild": interaction.guild.id, "Channel": チャンネル.id, "Emoji": 絵文字}, 
+            {"Guild": interaction.guild.id, "Emoji": 絵文字, "Channel": チャンネル.id},
+            {"Guild": interaction.guild.id, "Channel": チャンネル.id, "Emoji": 絵文字},
             upsert=True
         )
 
@@ -139,7 +142,8 @@ class StarBoardCog(commands.Cog):
         db = self.bot.async_db["Main"].ReactionBoard
         await db.delete_one({"Guild": interaction.channel.id})
 
-    starboard = app_commands.Group(name="starboard", description="スターボードのコマンドです。")
+    starboard = app_commands.Group(
+        name="starboard", description="スターボードのコマンドです。")
 
     @starboard.command(name="setup", description="スターボードをセットアップします。")
     @app_commands.checks.has_permissions(manage_channels=True)
@@ -170,6 +174,7 @@ class StarBoardCog(commands.Cog):
             await interaction.followup.send(embed=discord.Embed(title="リアクションボードを無効にしました。", color=discord.Color.green()))
         except discord.Forbidden as e:
             return await interaction.followup.send(embed=discord.Embed(title="リアクションボードを無効にできませんでした。", color=discord.Color.red(), description="権限エラーです。"))
+
 
 async def setup(bot):
     await bot.add_cog(StarBoardCog(bot))

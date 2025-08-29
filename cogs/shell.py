@@ -16,6 +16,7 @@ from models import command_disable
 
 cooldown_python_shell = {}
 
+
 class RunPython(discord.ui.Modal, title='Pythonを実行'):
     code = discord.ui.TextInput(
         label='コードを入力',
@@ -41,7 +42,7 @@ class RunPython(discord.ui.Modal, title='Pythonを実行'):
             'sec-fetch-site': 'same-origin',
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
         }
-        
+
         json_data = {
             'name': 'Python',
             'title': 'Python Hello World',
@@ -75,7 +76,7 @@ class RunPython(discord.ui.Modal, title='Pythonを実行'):
             },
             'visibility': 'public',
         }
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.post('https://onecompiler.com/api/code/exec', headers=headers, json=json_data) as response:
                 data = await response.json()
@@ -83,6 +84,7 @@ class RunPython(discord.ui.Modal, title='Pythonを実行'):
 
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.followup.send('エラー。\nWhileなどは使用できません。')
+
 
 class RunNodeJS(discord.ui.Modal, title='NodoJSを実行'):
     code = discord.ui.TextInput(
@@ -156,6 +158,7 @@ class RunNodeJS(discord.ui.Modal, title='NodoJSを実行'):
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.followup.send('エラー。')
 
+
 class RunCPlapla(discord.ui.Modal, title='C++を実行'):
     code = discord.ui.TextInput(
         label='コードを入力',
@@ -228,6 +231,7 @@ class RunCPlapla(discord.ui.Modal, title='C++を実行'):
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.followup.send(f'エラー。\n{sys.exc_info()}')
 
+
 class RunCSharp(discord.ui.Modal, title='C#を実行'):
     code = discord.ui.TextInput(
         label='コードを入力',
@@ -293,6 +297,7 @@ class RunCSharp(discord.ui.Modal, title='C#を実行'):
     async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
         await interaction.followup.send('エラー。')
 
+
 class ShellCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -302,7 +307,7 @@ class ShellCog(commands.Cog):
     async def on_message_python_shell(self, message: discord.Message):
         if message.author.bot:
             return
-        
+
         db = self.bot.async_db["Main"].PythonShell
         try:
             dbfind = await db.find_one({"Channel": message.channel.id}, {"_id": False})
@@ -332,7 +337,7 @@ class ShellCog(commands.Cog):
             'sec-fetch-site': 'same-origin',
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
         }
-        
+
         json_data = {
             'name': 'Python',
             'title': 'Python Hello World',
@@ -366,11 +371,12 @@ class ShellCog(commands.Cog):
             },
             'visibility': 'public',
         }
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.post('https://onecompiler.com/api/code/exec', headers=headers, json=json_data) as response:
                 data = await response.json()
-                webhook_ = Webhook.from_url(dbfind.get("WebHook"), session=session)
+                webhook_ = Webhook.from_url(
+                    dbfind.get("WebHook"), session=session)
                 if data.get("exception", None):
                     return await webhook_.send(embed=discord.Embed(title="Python実行結果", description=f"```{data.get("exception", "出力なし")}```", color=discord.Color.red()), username="PythonShell", avatar_url="https://images.icon-icons.com/112/PNG/512/python_18894.png")
                 await webhook_.send(embed=discord.Embed(title="Python実行結果", description=f"```{data.get("stdout", "出力なし")}```", color=discord.Color.blue()), username="PythonShell", avatar_url="https://images.icon-icons.com/112/PNG/512/python_18894.png")
@@ -389,8 +395,9 @@ class ShellCog(commands.Cog):
         if 有効化するか:
             web = await interaction.channel.create_webhook(name="PythonShell")
             await db.replace_one(
-                {"Guild": interaction.guild.id, "Channel": interaction.channel.id}, 
-                {"Guild": interaction.guild.id, "Channel": interaction.channel.id, "WebHook": web.url}, 
+                {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+                {"Guild": interaction.guild.id,
+                    "Channel": interaction.channel.id, "WebHook": web.url},
                 upsert=True
             )
             return await interaction.response.send_message(embed=discord.Embed(title="Pythonシェルを有効化しました。", color=discord.Color.green()))
@@ -399,14 +406,14 @@ class ShellCog(commands.Cog):
             if result.deleted_count == 0:
                 return await interaction.response.send_message(embed=discord.Embed(title="Pythonシェルは有効ではありません。", color=discord.Color.red()))
             return await interaction.response.send_message(embed=discord.Embed(title="Pythonシェルを無効化しました。", color=discord.Color.green()))
-        
+
     @shell.command(name="compile", description="プログラムをコンパイルします。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(言語=[
-        app_commands.Choice(name='python',value="python"),
-        app_commands.Choice(name='nodejs',value="nodejs"),
-        app_commands.Choice(name='c++',value="cpp"),
-        app_commands.Choice(name='c#',value="csharp"),
+        app_commands.Choice(name='python', value="python"),
+        app_commands.Choice(name='nodejs', value="nodejs"),
+        app_commands.Choice(name='c++', value="cpp"),
+        app_commands.Choice(name='c#', value="csharp"),
     ])
     async def compile_(self, interaction: discord.Interaction, 言語: app_commands.Choice[str]):
         if not await command_disable.command_enabled_check(interaction):
@@ -420,6 +427,7 @@ class ShellCog(commands.Cog):
             await interaction.response.send_modal(RunCPlapla())
         elif 言語.name == "c#":
             await interaction.response.send_modal(RunCSharp())
+
 
 async def setup(bot):
     await bot.add_cog(ShellCog(bot))

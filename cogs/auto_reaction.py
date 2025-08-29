@@ -15,6 +15,7 @@ import time
 
 cooldown_auto_reaction = {}
 
+
 class AutoReactionCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -84,7 +85,8 @@ class AutoReactionCog(commands.Cog):
         except:
             return
 
-    autoreact = app_commands.Group(name="autoreact", description="自動リアクション関連の設定です。")
+    autoreact = app_commands.Group(
+        name="autoreact", description="自動リアクション関連の設定です。")
 
     @autoreact.command(name="channel", description="自動リアクションをするチャンネルを設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -93,8 +95,9 @@ class AutoReactionCog(commands.Cog):
     async def autoreact_channel(self, interaction: discord.Interaction, 絵文字: str):
         db = self.bot.async_db["Main"].AutoReactionChannel
         await db.replace_one(
-            {"Guild": interaction.guild.id, "Channel": interaction.channel.id}, 
-            {"Guild": interaction.guild.id, "Channel": interaction.channel.id, "Emoji": 絵文字}, 
+            {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+            {"Guild": interaction.guild.id,
+                "Channel": interaction.channel.id, "Emoji": 絵文字},
             upsert=True
         )
         await interaction.response.send_message(embed=discord.Embed(title="自動リアクションを設定しました。", description=f"絵文字: {絵文字}\nチャンネル: {interaction.channel.mention}", color=discord.Color.green()))
@@ -106,8 +109,8 @@ class AutoReactionCog(commands.Cog):
     async def autoreact_word(self, interaction: discord.Interaction, 言葉: str, 絵文字: str):
         db = self.bot.async_db["Main"].AutoReactionWord
         await db.replace_one(
-            {"Guild": interaction.guild.id, "Word": 言葉}, 
-            {"Guild": interaction.guild.id, "Word": 言葉, "Emoji": 絵文字}, 
+            {"Guild": interaction.guild.id, "Word": 言葉},
+            {"Guild": interaction.guild.id, "Word": 言葉, "Emoji": 絵文字},
             upsert=True
         )
         await interaction.response.send_message(embed=discord.Embed(title="自動リアクションを設定しました。", description=f"絵文字: {絵文字}", color=discord.Color.green()))
@@ -139,6 +142,7 @@ class AutoReactionCog(commands.Cog):
         db_channel = self.bot.async_db["Main"].AutoReactionChannel
         channel_list = [f"{interaction.guild.get_channel(b.get("Channel")).mention} - {b.get("Emoji")}" async for b in db_channel.find({"Guild": interaction.guild.id})]
         await interaction.followup.send(embed=discord.Embed(title="自動リアクションのリスト", color=discord.Color.green()).add_field(name="特定のワードに対して", value="\n".join(word_list)).add_field(name="チャンネルに対して", value="\n".join(channel_list)))
+
 
 async def setup(bot):
     await bot.add_cog(AutoReactionCog(bot))

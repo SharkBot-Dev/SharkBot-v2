@@ -19,6 +19,7 @@ import aiofiles.os
 cooldown_autojoin = {}
 cooldown_tts = {}
 
+
 class DictGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="dict", description="読み上げ辞書を設定します。")
@@ -54,10 +55,11 @@ class DictGroup(app_commands.Group):
 
         if not r:
             return await interaction.response.send_message(
-                embed=discord.Embed(title="辞書がありません。", color=discord.Color.red()),
+                embed=discord.Embed(title="辞書がありません。",
+                                    color=discord.Color.red()),
                 ephemeral=True
             )
-        
+
         await interaction.response.defer()
 
         description = "\n".join(
@@ -70,6 +72,7 @@ class DictGroup(app_commands.Group):
             color=discord.Color.green()
         )
         await interaction.followup.send(embed=embed)
+
 
 class TTSCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -174,7 +177,7 @@ ID | 説明
         if g_c < 3:
             return await interaction.response.send_message(embeds=[discord.Embed(title="読み上げを使用しているサーバー数", description=f"{g_c}サーバー\n読み上げは快適だと思います。", color=discord.Color.blue()), discord.Embed(title="読み上げの残りキューリソース", description=f"```{remaining}/{total}```", color=discord.Color.blue())])
         return await interaction.response.send_message(embeds=[discord.Embed(title="読み上げを使用しているサーバー数", description=f"{g_c}サーバー\n読み上げは重いかもしれないです。", color=discord.Color.blue()), discord.Embed(title="読み上げの残りキューリソース", description=f"```{remaining}/{total}```", color=discord.Color.blue())])
-    
+
     @tts.command(name="autojoin", description="読み上げの自動接続を設定します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
@@ -193,7 +196,7 @@ ID | 説明
                 {"Channel": チャンネル.id, "Guild": interaction.guild.id}
             )
             return await interaction.response.send_message(embed=discord.Embed(title="自動接続を無効化しました。", color=discord.Color.red()))
-        
+
     tts.add_command(DictGroup())
 
     async def replace_word(self, word: str, guild: discord.Guild):
@@ -232,7 +235,8 @@ ID | 説明
                 if len(non_bot_members) == 1:
                     if not channel.guild.voice_client:
                         current_time = time.time()
-                        last_message_time = cooldown_autojoin.get(member.guild.id, 0)
+                        last_message_time = cooldown_autojoin.get(
+                            member.guild.id, 0)
                         if current_time - last_message_time < 5:
                             return
                         cooldown_autojoin[member.guild.id] = current_time
@@ -264,7 +268,7 @@ ID | 説明
             return "省略しました。"
         r_w = await self.replace_word(message.content, message.guild)
         return r_w
-            
+
     async def get_voice_file(self, author: discord.User):
         voices = {
             "miku": "htsvoice/miku.htsvoice",
@@ -302,7 +306,8 @@ ID | 説明
         )
         try:
             stdout, _ = await asyncio.wait_for(
-                process.communicate(input=text.replace("\n", "").encode("utf-8")),
+                process.communicate(input=text.replace(
+                    "\n", "").encode("utf-8")),
                 timeout=10
             )
         except asyncio.TimeoutError:
@@ -337,7 +342,8 @@ ID | 説明
                     finished.set()
 
                 with io.BytesIO(wav_bytes) as bio:
-                    vc.play(discord.FFmpegPCMAudio(bio, pipe=True), after=after_playing)
+                    vc.play(discord.FFmpegPCMAudio(
+                        bio, pipe=True), after=after_playing)
                     await finished.wait()
 
                 queue.task_done()
@@ -366,7 +372,7 @@ ID | 説明
                 return
             if ttscheckfind is None:
                 return
-                
+
             text = await self.make_text(message)
 
             if message.guild.id not in self.guild_queues:
@@ -376,10 +382,11 @@ ID | 説明
                 )
 
             try:
-                self.guild_queues[message.guild.id].put_nowait((message.author, text))
+                self.guild_queues[message.guild.id].put_nowait(
+                    (message.author, text))
             except asyncio.QueueFull:
                 return
-            
+
         except discord.ClientException:
             return
         except Exception as e:
@@ -389,6 +396,7 @@ ID | 説明
                 {"Guild": message.guild.id}
             )
             return await message.guild.voice_client.disconnect()
+
 
 async def setup(bot):
     await bot.add_cog(TTSCog(bot))

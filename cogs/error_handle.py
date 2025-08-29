@@ -5,6 +5,7 @@ import datetime
 import random
 from models import permissions_text
 
+
 class ErrorHandleCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -14,7 +15,7 @@ class ErrorHandleCog(commands.Cog):
             if isinstance(error, discord.app_commands.CommandOnCooldown):
                 e = 0
                 return e
-            
+
             if isinstance(error, discord.app_commands.CommandNotFound):
                 e = 0
                 return e
@@ -51,6 +52,7 @@ class ErrorHandleCog(commands.Cog):
             print(f"Unknown interaction エラーが発生しました (event={event})")
         else:
             traceback.print_exc()
+
 
 async def setup(bot):
     await bot.add_cog(ErrorHandleCog(bot))

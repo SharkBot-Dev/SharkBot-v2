@@ -12,6 +12,7 @@ cooldown_expand_time = {}
 
 URL_REGEX = re.compile(r"https://discord.com/channels/(\d+)/(\d+)/(\d+)")
 
+
 class ExpandCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -40,7 +41,7 @@ class ExpandCog(commands.Cog):
         urls = URL_REGEX.findall(message.content)
         if not urls:
             return
-        
+
         for guild_id, channel_id, message_id in urls:
             guild = self.bot.get_guild(int(guild_id))
             if not guild:
@@ -60,9 +61,12 @@ class ExpandCog(commands.Cog):
                             color=discord.Color.green(),
                             timestamp=msg.created_at
                         )
-                        embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar.url if msg.author.avatar else msg.author.default_avatar.url, url=f"https://discord.com/users/{msg.author.id}")
-                        embed.add_field(name="元のメッセージ", value=f"[リンクを開く]({msg.jump_url})", inline=False)
-                        embed.set_footer(text=f"{msg.guild.name} | {msg.channel.name}", icon_url=msg.guild.icon if msg.guild.icon else None)
+                        embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar.url if msg.author.avatar else msg.author.default_avatar.url,
+                                         url=f"https://discord.com/users/{msg.author.id}")
+                        embed.add_field(
+                            name="元のメッセージ", value=f"[リンクを開く]({msg.jump_url})", inline=False)
+                        embed.set_footer(text=f"{msg.guild.name} | {msg.channel.name}",
+                                         icon_url=msg.guild.icon if msg.guild.icon else None)
 
                         await message.channel.send(embed=embed)
 
@@ -77,15 +81,19 @@ class ExpandCog(commands.Cog):
                     color=discord.Color.green(),
                     timestamp=msg.created_at
                 )
-                embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar.url if msg.author.avatar else msg.author.default_avatar.url, url=f"https://discord.com/users/{msg.author.id}")
-                embed.add_field(name="元のメッセージ", value=f"[リンクを開く]({msg.jump_url})", inline=False)
-                embed.set_footer(text=f"{msg.guild.name} | {msg.channel.name}", icon_url=msg.guild.icon if msg.guild.icon else None)
+                embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar.url if msg.author.avatar else msg.author.default_avatar.url,
+                                 url=f"https://discord.com/users/{msg.author.id}")
+                embed.add_field(
+                    name="元のメッセージ", value=f"[リンクを開く]({msg.jump_url})", inline=False)
+                embed.set_footer(text=f"{msg.guild.name} | {msg.channel.name}",
+                                 icon_url=msg.guild.icon if msg.guild.icon else None)
 
                 await message.channel.send(embed=embed)
 
                 return
             except Exception as e:
                 return await message.add_reaction("❌")
+
 
 async def setup(bot):
     await bot.add_cog(ExpandCog(bot))

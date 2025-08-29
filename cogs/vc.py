@@ -16,6 +16,7 @@ from models import command_disable
 cooldown_tempvc = {}
 cooldown_alert = {}
 
+
 class VCCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -51,7 +52,7 @@ class VCCog(commands.Cog):
             await interaction.followup.send(embed=discord.Embed(title="メンバーを退出させました。", color=discord.Color.green()))
         except discord.Forbidden as e:
             return await interaction.followup.send(embed=discord.Embed(title="メンバーを退出させれませんでした。", color=discord.Color.red(), description="権限エラーです。"))
-        
+
     @vc.command(name="bomb", description="VCからメンバーを退出させます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -72,7 +73,7 @@ class VCCog(commands.Cog):
             await interaction.followup.send(embed=discord.Embed(title="VCを解散させました。", color=discord.Color.green()))
         except discord.Forbidden as e:
             return await interaction.followup.send(embed=discord.Embed(title="VCを解散できませんでした。", color=discord.Color.red(), description="権限エラーです。"))
-        
+
     @vc.command(name="gather", description="VCに参加している全員を特定のVCに集めます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -102,8 +103,8 @@ class VCCog(commands.Cog):
             await db.delete_one({"Guild": guild.id})
             return True
         await db.replace_one(
-            {"Guild": guild.id}, 
-            {"Guild": guild.id, "Channel": vc.id}, 
+            {"Guild": guild.id},
+            {"Guild": guild.id, "Channel": vc.id},
             upsert=True
         )
         return True
@@ -128,8 +129,8 @@ class VCCog(commands.Cog):
         db = self.bot.async_db["Main"].VoiceAlert
         if チャンネル:
             await db.replace_one(
-                {"Guild": interaction.guild.id}, 
-                {"Guild": interaction.guild.id, "Channel": チャンネル.id}, 
+                {"Guild": interaction.guild.id},
+                {"Guild": interaction.guild.id, "Channel": チャンネル.id},
                 upsert=True
             )
             await interaction.followup.send(embed=discord.Embed(title="ボイスチャンネル通知を有効化しました。", color=discord.Color.green()))
@@ -148,7 +149,7 @@ class VCCog(commands.Cog):
             return
         if dbfind is None:
             return
-        try: 
+        try:
             channel = after.channel or before.channel
             if before.channel is None and after.channel is not None:
                 msg = f"{member.mention}が「{after.channel.mention}」に参加しました。"
@@ -179,7 +180,7 @@ class VCCog(commands.Cog):
             return
         if dbfind is None:
             return
-        try: 
+        try:
             if not after.channel.id == dbfind.get("Channel", 0):
                 return
             current_time = time.time()
@@ -194,7 +195,8 @@ class VCCog(commands.Cog):
                 vc = await member.guild.create_voice_channel(name=f"tempvc-{member.name}")
             await asyncio.sleep(2)
             view = discord.ui.View()
-            view.add_item(discord.ui.Button(label="削除", style=discord.ButtonStyle.red, custom_id="tempvc_remove"))
+            view.add_item(discord.ui.Button(
+                label="削除", style=discord.ButtonStyle.red, custom_id="tempvc_remove"))
             await vc.send(embed=discord.Embed(title="一時的なVCの管理パネル", color=discord.Color.blue()), view=view)
             await member.edit(voice_channel=vc)
         except:
@@ -213,6 +215,7 @@ class VCCog(commands.Cog):
                     await interaction.channel.delete(reason="一時的なVCチャンネルの削除のため。")
         except:
             return
+
 
 async def setup(bot):
     await bot.add_cog(VCCog(bot))

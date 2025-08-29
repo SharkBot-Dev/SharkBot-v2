@@ -8,6 +8,7 @@ from discord import app_commands
 
 cooldown_eventalert = {}
 
+
 class AlertCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -43,13 +44,13 @@ class AlertCog(commands.Cog):
             men = await self.get_mention(event.guild, ch.id)
             if not men:
                 await ch.send(embed=discord.Embed(title="イベントが作成されました！", description=f"{event.name}", color=discord.Color.green())
-                          .add_field(name="開始時刻", value=f"{event.start_time.strftime('%Y年%m月%d日 %H時%M分%S秒')}").set_footer(text=f"{event.guild.name} / {event.guild.id}", icon_url=event.guild.icon.url if event.guild.icon else self.bot.user.avatar.url), view=view)
+                              .add_field(name="開始時刻", value=f"{event.start_time.strftime('%Y年%m月%d日 %H時%M分%S秒')}").set_footer(text=f"{event.guild.name} / {event.guild.id}", icon_url=event.guild.icon.url if event.guild.icon else self.bot.user.avatar.url), view=view)
                 return
             await ch.send(content=men, embed=discord.Embed(title="イベントが作成されました！", description=f"{event.name}", color=discord.Color.green())
                           .add_field(name="開始時刻", value=f"{event.start_time.strftime('%Y年%m月%d日 %H時%M分%S秒')}").set_footer(text=f"{event.guild.name} / {event.guild.id}", icon_url=event.guild.icon.url if event.guild.icon else self.bot.user.avatar.url), view=view)
         except:
             return
-        
+
     alert = app_commands.Group(name="alert", description="様々な通知を設定するコマンドです。")
 
     @alert.command(name="event", description="イベントを通知するチャンネルを設定します。")
@@ -58,10 +59,10 @@ class AlertCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_channels=True)
     async def alert_event(self, interaction: discord.Interaction, チャンネル: discord.TextChannel = None):
         db = self.bot.async_db["Main"].EventAlert
-        if  チャンネル:
+        if チャンネル:
             await db.replace_one(
-                {"Guild": interaction.guild.id}, 
-                {"Guild": interaction.guild.id, "Channel": チャンネル.id}, 
+                {"Guild": interaction.guild.id},
+                {"Guild": interaction.guild.id, "Channel": チャンネル.id},
                 upsert=True
             )
             await interaction.response.send_message(embed=discord.Embed(title="イベント作成時に通知するチャンネルを設定しました。", color=discord.Color.green()), ephemeral=True)
@@ -77,10 +78,10 @@ class AlertCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_channels=True)
     async def alert_mention(self, interaction: discord.Interaction, ロール: discord.Role = None):
         db = self.bot.async_db["Main"].AlertMention
-        if  ロール:
+        if ロール:
             await db.replace_one(
-                {"Channel": interaction.channel.id}, 
-                {"Channel": interaction.channel.id, "Role": ロール.id}, 
+                {"Channel": interaction.channel.id},
+                {"Channel": interaction.channel.id, "Role": ロール.id},
                 upsert=True
             )
             await interaction.response.send_message(embed=discord.Embed(title="アラート時にメンションするようにしました。", description=f"{ロール.mention}", color=discord.Color.green()), ephemeral=True)
@@ -89,6 +90,7 @@ class AlertCog(commands.Cog):
                 {"Channel": interaction.channel.id}
             )
             await interaction.response.send_message(embed=discord.Embed(title="アラート時にメンションしなくしました。", color=discord.Color.red()), ephemeral=True)
+
 
 async def setup(bot):
     await bot.add_cog(AlertCog(bot))

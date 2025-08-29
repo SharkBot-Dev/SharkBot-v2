@@ -1,5 +1,6 @@
 from discord import Interaction
 
+
 async def disable_channel(interaction: Interaction):
     db = interaction.client.async_db["Main"].CommandDisable
     try:

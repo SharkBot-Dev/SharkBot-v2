@@ -30,10 +30,12 @@ ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
+
 class NomTranslater():
     def __init__(self):
         self.se = requests.Session()
-        self.index = self.se.get("https://racing-lagoon.info/nomu/translate.php").text
+        self.index = self.se.get(
+            "https://racing-lagoon.info/nomu/translate.php").text
         self.bs = BeautifulSoup(self.index, 'html.parser')
         self.token = self.bs.find({"input": {"name": "token"}})["value"]
 
@@ -53,11 +55,13 @@ class NomTranslater():
             'setugo': 'settou',
         }
 
-        nom_index = self.se.post('https://racing-lagoon.info/nomu/translate.php', data=data)
+        nom_index = self.se.post(
+            'https://racing-lagoon.info/nomu/translate.php', data=data)
 
         bs = BeautifulSoup(nom_index.text, 'html.parser')
 
         return bs.find_all({"textarea": {"class": "maxfield outputfield form-control selectAll"}})[1].get_text()
+
 
 class SearchCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -73,7 +77,7 @@ class SearchCog(commands.Cog):
         if dbfind is None:
             return None
         return dbfind
-    
+
     async def get_user_point(self, user: discord.User):
         db = self.bot.async_db["Main"].SharkBotInstallPoint
         try:
@@ -132,7 +136,7 @@ class SearchCog(commands.Cog):
             return dbfind.get("count", 0)
         except:
             return 0
-        
+
     async def pfact_user_data(self, user: discord.User):
         db = self.bot.async_db["Main"].SharkBotPointFactory
         try:
@@ -199,8 +203,10 @@ class SearchCog(commands.Cog):
             add_bot_user = await self.get_bot_adder_from_audit_log(interaction.guild, user)
             tag = await self.get_user_tag_(user)
             col = await self.get_user_color(user)
-            embed = discord.Embed(title=f"{user.display_name}の情報 (ページ1)", color=col)
-            embed.add_field(name="基本情報", value=f"ID: **{user.id}**\nユーザーネーム: **{user.name}#{user.discriminator}**\n作成日: **{user.created_at.astimezone(JST)}**\nこの鯖に？: **{isguild}**\nBot？: **{isbot}**\n認証Bot？: **{"はい" if user.public_flags.verified_bot else "いいえ"}**").add_field(name="サービス情報", value=f"権限: **{permissions}**")
+            embed = discord.Embed(
+                title=f"{user.display_name}の情報 (ページ1)", color=col)
+            embed.add_field(name="基本情報", value=f"ID: **{user.id}**\nユーザーネーム: **{user.name}#{user.discriminator}**\n作成日: **{user.created_at.astimezone(JST)}**\nこの鯖に？: **{isguild}**\nBot？: **{isbot}**\n認証Bot？: **{"はい" if user.public_flags.verified_bot else "いいえ"}**").add_field(
+                name="サービス情報", value=f"権限: **{permissions}**")
             userdata = await self.get_user_savedata(user)
             if userdata:
                 logininfo = f"**言語**: {userdata["Lang"]}\n"
@@ -209,11 +215,13 @@ class SearchCog(commands.Cog):
                 if pre == 0:
                     embed.add_field(name="Nitro", value="なし", inline=False)
                 elif pre == 1:
-                    embed.add_field(name="Nitro", value="Nitro Classic", inline=False)
+                    embed.add_field(
+                        name="Nitro", value="Nitro Classic", inline=False)
                 elif pre == 2:
                     embed.add_field(name="Nitro", value="Nitro", inline=False)
                 elif pre == 3:
-                    embed.add_field(name="Nitro", value="Nitro Basic", inline=False)
+                    embed.add_field(
+                        name="Nitro", value="Nitro Basic", inline=False)
             if not user.bot:
 
                 p_g = user.primary_guild
@@ -226,7 +234,7 @@ class SearchCog(commands.Cog):
             else:
                 t_name = "なし"
                 t_bag = "リクエストなし"
-            
+
             if interaction.guild.get_member(user.id):
                 mem_status = interaction.guild.get_member(user.id)
 
@@ -280,14 +288,18 @@ Botを追加したユーザーは？: {add_bot_user}
                 bag += "<:HypeSquadBalance:1399751701669478511> "
             if bag != "":
                 embed.add_field(name="バッジ", value=bag, inline=False)
-            embed2 = discord.Embed(title=f"{user.display_name}の情報 (ページ2)", color=col)
+            embed2 = discord.Embed(
+                title=f"{user.display_name}の情報 (ページ2)", color=col)
             point_check = await self.get_user_point(user)
-            embed2.add_field(name="Sharkポイント", value=f"{point_check}P", inline=True)
+            embed2.add_field(name="Sharkポイント",
+                             value=f"{point_check}P", inline=True)
             embed2.add_field(name="称号", value=f"{tag}", inline=True)
             embed2.set_image(url=user.banner.url if user.banner else None)
             roles = await self.roles_get(interaction.guild, user)
-            embed3 = discord.Embed(title=f"{user.display_name}の情報 (ページ3)", color=discord.Color.green(), description=roles)
+            embed3 = discord.Embed(
+                title=f"{user.display_name}の情報 (ページ3)", color=discord.Color.green(), description=roles)
             pages = [embed, embed2, embed3]
+
             class PaginatorView(discord.ui.View):
                 def __init__(self):
                     super().__init__(timeout=60)
@@ -310,8 +322,10 @@ Botを追加したユーザーは？: {add_bot_user}
                         await self.update_message(interaction)
 
             view = PaginatorView()
-            view.add_item(discord.ui.Button(label="/shopでSharkポイントを使って装飾アイテムを買えます。", disabled=True))
-            view.add_item(discord.ui.Button(label="サポートサーバー", url="https://discord.gg/mUyByHYMGk"))
+            view.add_item(discord.ui.Button(
+                label="/shopでSharkポイントを使って装飾アイテムを買えます。", disabled=True))
+            view.add_item(discord.ui.Button(label="サポートサーバー",
+                          url="https://discord.gg/mUyByHYMGk"))
             if user.avatar:
                 await interaction.followup.send(embed=embed.set_thumbnail(url=user.avatar.url), view=view)
             else:
@@ -327,24 +341,34 @@ Botを追加したユーザーは？: {add_bot_user}
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
 
         await interaction.response.defer()
-        embed = discord.Embed(title=f"{interaction.guild.name}の情報", color=discord.Color.green())
+        embed = discord.Embed(
+            title=f"{interaction.guild.name}の情報", color=discord.Color.green())
         embed.add_field(name="サーバー名", value=interaction.guild.name)
         embed.add_field(name="サーバーID", value=str(interaction.guild.id))
-        embed.add_field(name="チャンネル数", value=f"{len(interaction.guild.channels)}個")
+        embed.add_field(
+            name="チャンネル数", value=f"{len(interaction.guild.channels)}個")
         embed.add_field(name="絵文字数", value=f"{len(interaction.guild.emojis)}個")
         embed.add_field(name="ロール数", value=f"{len(interaction.guild.roles)}個")
         embed.add_field(name="ロールリスト", value="`/listing role`\nで見れます。")
-        embed.add_field(name="メンバー数", value=f"{interaction.guild.member_count}人")
-        embed.add_field(name="Nitroブースト", value=f"{interaction.guild.premium_subscription_count}人")
-        embed.add_field(name="オーナー名", value=self.bot.get_user(interaction.guild.owner_id).name if self.bot.get_user(interaction.guild.owner_id) else "取得失敗")
+        embed.add_field(
+            name="メンバー数", value=f"{interaction.guild.member_count}人")
+        embed.add_field(
+            name="Nitroブースト", value=f"{interaction.guild.premium_subscription_count}人")
+        embed.add_field(name="オーナー名", value=self.bot.get_user(
+            interaction.guild.owner_id).name if self.bot.get_user(interaction.guild.owner_id) else "取得失敗")
         embed.add_field(name="オーナーID", value=str(interaction.guild.owner_id))
         JST = datetime.timezone(datetime.timedelta(hours=9))
-        embed.add_field(name="作成日", value=interaction.guild.created_at.astimezone(JST))
-        
-        onlines = [m for m in interaction.guild.members if m.status == discord.Status.online]
-        idles = [m for m in interaction.guild.members if m.status == discord.Status.idle]
-        dnds = [m for m in interaction.guild.members if m.status == discord.Status.dnd]
-        offlines = [m for m in interaction.guild.members if m.status == discord.Status.offline]
+        embed.add_field(
+            name="作成日", value=interaction.guild.created_at.astimezone(JST))
+
+        onlines = [m for m in interaction.guild.members if m.status ==
+                   discord.Status.online]
+        idles = [m for m in interaction.guild.members if m.status ==
+                 discord.Status.idle]
+        dnds = [m for m in interaction.guild.members if m.status ==
+                discord.Status.dnd]
+        offlines = [
+            m for m in interaction.guild.members if m.status == discord.Status.offline]
 
         pcs = [m for m in interaction.guild.members if m.client_status.desktop]
         sms = [m for m in interaction.guild.members if m.client_status.mobile]
@@ -374,11 +398,16 @@ Botを追加したユーザーは？: {add_bot_user}
         invite = await self.bot.fetch_invite(招待リンク)
         if not invite:
             return await interaction.followup.send(embed=discord.Embed(title="招待リンクが見つかりません。", color=discord.Color.green()))
-        embed = discord.Embed(title="招待リンクの情報", color=discord.Color.green()).add_field(name="サーバー名", value=f"{invite.guild.name}", inline=False).add_field(name="サーバーid", value=f"{invite.guild.id}", inline=False).add_field(name="招待リンク作成者", value=f"{invite.inviter.display_name if invite.inviter else "不明"} ({invite.inviter.id if invite.inviter else "不明"})", inline=False).add_field(name="招待リンクの使用回数", value=f"{invite.uses if invite.uses else "0"} / {invite.max_uses if invite.max_uses else "無限"}", inline=False)
-        embed.add_field(name="チャンネル", value=f"{invite.channel.name if invite.channel else "不明"} ({invite.channel.id if invite.channel else "不明"})", inline=False)
-        embed.add_field(name="メンバー数", value=f"{invite.approximate_member_count if invite.approximate_member_count else "不明"}", inline=False)
-        embed.add_field(name="オンライン数", value=f"{invite.approximate_presence_count if invite.approximate_presence_count else "不明"}", inline=False)
-        embed.add_field(name="作成時刻", value=f"{invite.created_at.astimezone(JST) if invite.created_at else "不明"}", inline=False)
+        embed = discord.Embed(title="招待リンクの情報", color=discord.Color.green()).add_field(name="サーバー名", value=f"{invite.guild.name}", inline=False).add_field(name="サーバーid", value=f"{invite.guild.id}", inline=False).add_field(
+            name="招待リンク作成者", value=f"{invite.inviter.display_name if invite.inviter else "不明"} ({invite.inviter.id if invite.inviter else "不明"})", inline=False).add_field(name="招待リンクの使用回数", value=f"{invite.uses if invite.uses else "0"} / {invite.max_uses if invite.max_uses else "無限"}", inline=False)
+        embed.add_field(
+            name="チャンネル", value=f"{invite.channel.name if invite.channel else "不明"} ({invite.channel.id if invite.channel else "不明"})", inline=False)
+        embed.add_field(
+            name="メンバー数", value=f"{invite.approximate_member_count if invite.approximate_member_count else "不明"}", inline=False)
+        embed.add_field(
+            name="オンライン数", value=f"{invite.approximate_presence_count if invite.approximate_presence_count else "不明"}", inline=False)
+        embed.add_field(
+            name="作成時刻", value=f"{invite.created_at.astimezone(JST) if invite.created_at else "不明"}", inline=False)
         if invite.guild.icon:
             embed.set_thumbnail(url=invite.guild.icon.url)
         await interaction.followup.send(embed=embed)
@@ -401,7 +430,8 @@ Botを追加したユーザーは？: {add_bot_user}
                         f'ダウンロード\n[.png]({ユーザー.default_avatar.with_format("png").url})',
                     ),
                     discord.ui.Separator(),
-                    discord.ui.MediaGallery(discord.MediaGalleryItem(ユーザー.default_avatar.url)),
+                    discord.ui.MediaGallery(
+                        discord.MediaGalleryItem(ユーザー.default_avatar.url)),
                     accent_colour=discord.Colour.green(),
                 )
 
@@ -409,7 +439,7 @@ Botを追加したユーザーは？: {add_bot_user}
 
         else:
             class AvatarLayout(discord.ui.LayoutView):
-                
+
                 container = discord.ui.Container(
                     discord.ui.TextDisplay(
                         f'### {ユーザー.name}さんのアバター',
@@ -418,9 +448,11 @@ Botを追加したユーザーは？: {add_bot_user}
                         f'ダウンロード\n[.png]({ユーザー.avatar.with_format("png").url}) [.jpg]({ユーザー.avatar.with_format("jpg").url}) [.webp]({ユーザー.avatar.with_format("webp").url})',
                     ),
                     discord.ui.Separator(),
-                    discord.ui.MediaGallery(discord.MediaGalleryItem(ユーザー.avatar.url)),
+                    discord.ui.MediaGallery(
+                        discord.MediaGalleryItem(ユーザー.avatar.url)),
                     discord.ui.Separator(),
-                    discord.ui.ActionRow(discord.ui.Button(label="デフォルトアバターURL", url=ユーザー.default_avatar.url)),
+                    discord.ui.ActionRow(discord.ui.Button(
+                        label="デフォルトアバターURL", url=ユーザー.default_avatar.url)),
                     accent_colour=discord.Colour.green(),
                 )
 
@@ -432,12 +464,12 @@ Botを追加したユーザーは？: {add_bot_user}
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(翻訳先=[
-        app_commands.Choice(name='日本語へ',value="ja"),
-        app_commands.Choice(name='英語へ',value="en"),
-        app_commands.Choice(name='中国語へ',value="zh-CN"),
-        app_commands.Choice(name='韓国語へ',value="ko"),
-        app_commands.Choice(name='ロシア語へ',value="ru"),
-        app_commands.Choice(name='ノムリッシュ語へ',value="nom"),
+        app_commands.Choice(name='日本語へ', value="ja"),
+        app_commands.Choice(name='英語へ', value="en"),
+        app_commands.Choice(name='中国語へ', value="zh-CN"),
+        app_commands.Choice(name='韓国語へ', value="ko"),
+        app_commands.Choice(name='ロシア語へ', value="ru"),
+        app_commands.Choice(name='ノムリッシュ語へ', value="nom"),
     ])
     async def translate(self, interaction: discord.Interaction, 翻訳先: app_commands.Choice[str], *, テキスト: str):
         await interaction.response.defer()
@@ -465,7 +497,7 @@ Botを追加したユーザーは？: {add_bot_user}
                 color=discord.Color.green()
             )
             await interaction.followup.send(embed=embed)
-        
+
         except Exception as e:
             embed = discord.Embed(
                 title="翻訳に失敗しました",
@@ -493,9 +525,9 @@ Botを追加したユーザーは？: {add_bot_user}
         await interaction.response.defer()
         loop = asyncio.get_event_loop()
         try:
-            
+
             wikipedia_api_url = "https://ja.wikipedia.org/w/api.php"
-            
+
             # APIパラメータ
             params = {
                 "action": "query",
@@ -504,24 +536,24 @@ Botを追加したユーザーは？: {add_bot_user}
                 "prop": "info",
                 "inprop": "url"
             }
-            
+
             response = await loop.run_in_executor(None, partial(requests.get, wikipedia_api_url, params=params))
             await loop.run_in_executor(None, partial(response.raise_for_status))
             data = await loop.run_in_executor(None, partial(response.json))
-            
+
             pages = data.get("query", {}).get("pages", {})
             if not pages:
                 await interaction.followup.send(f"Wikipedia記事が見つかりませんでした。")
                 return
-            
+
             page_id, page_info = next(iter(pages.items()))
             if page_id == "-1":
                 await interaction.followup.send(f"Wikipedia記事が見つかりませんでした。")
                 return
-            
+
             short_url = f"https://ja.wikipedia.org/w/index.php?curid={page_id}"
             await interaction.followup.send(f"🔗 Wikipedia短縮リンク: {short_url}")
-        
+
         except Exception as e:
             await interaction.followup.send(f"エラーが発生しました: {str(e)}")
 
@@ -562,6 +594,7 @@ Botを追加したユーザーは？: {add_bot_user}
                         await interaction.followup.send(embed=discord.Embed(title="このサイトは評価されていません。", description=f"URLの評価: {js["communityRating"]}", color=discord.Color.blue()))
                     else:
                         await interaction.followup.send(embed=discord.Embed(title="このサイトは多分安全です。", description=f"URLの評価: {js["communityRating"]}", color=discord.Color.green()))
+
 
 async def setup(bot):
     await bot.add_cog(SearchCog(bot))

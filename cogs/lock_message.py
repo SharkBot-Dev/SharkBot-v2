@@ -6,6 +6,7 @@ import logging
 import time
 import asyncio
 
+
 class LockMessageCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -65,7 +66,8 @@ class LockMessageCog(commands.Cog):
                 pass
 
             view = discord.ui.View()
-            view.add_item(discord.ui.Button(style=discord.ButtonStyle.red, label="削除", custom_id="lockmessage_delete+"))
+            view.add_item(discord.ui.Button(
+                style=discord.ButtonStyle.red, label="削除", custom_id="lockmessage_delete+"))
 
             embed = discord.Embed(
                 title=dbfind.get("Title", "固定メッセージ"),
@@ -88,6 +90,7 @@ class LockMessageCog(commands.Cog):
 
         finally:
             self.working.remove(message.channel.id)
+
 
 async def setup(bot):
     await bot.add_cog(LockMessageCog(bot))

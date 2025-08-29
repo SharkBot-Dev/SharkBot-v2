@@ -16,6 +16,7 @@ dotenv.load_dotenv()
 
 intent = discord.Intents.all()
 
+
 class NewSharkBot(commands.AutoShardedBot):
     def __init__(self):
         super().__init__(
@@ -37,8 +38,10 @@ class NewSharkBot(commands.AutoShardedBot):
         if dbfind is None:
             return ["!.", "?."]
         return [dbfind["Prefix"], "!.", "?."]
-    
+
+
 bot = NewSharkBot()
+
 
 @bot.event
 async def on_ready():
@@ -49,9 +52,11 @@ async def on_ready():
     print(f"BotName: {bot.user.name}")
     print("Ready.")
 
+
 @bot.event
 async def on_message(message):
     return
+
 
 @bot.event
 async def setup_hook() -> None:

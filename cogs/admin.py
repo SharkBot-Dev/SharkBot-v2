@@ -6,6 +6,7 @@ from discord import app_commands
 
 from models import save_commands
 
+
 class AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -48,8 +49,8 @@ class AdminCog(commands.Cog):
                 return
             db = self.bot.async_db["Main"].BlockUser
             await db.replace_one(
-                {"User": user.id}, 
-                {"User": user.id}, 
+                {"User": user.id},
+                {"User": user.id},
                 upsert=True
             )
             await ctx.reply(embed=discord.Embed(title=f"{user.name}をBotからBANしました。", color=discord.Color.red()))
@@ -70,8 +71,8 @@ class AdminCog(commands.Cog):
         if self.bot.get_guild(1343124570131009579).get_role(1344470846995169310) in self.bot.get_guild(1343124570131009579).get_member(ctx.author.id).roles:
             db = self.bot.async_db["Main"].BlockGuild
             await db.replace_one(
-                {"Guild": guild.id}, 
-                {"Guild": guild.id}, 
+                {"Guild": guild.id},
+                {"Guild": guild.id},
                 upsert=True
             )
             await ctx.reply(embed=discord.Embed(title=f"{guild.name}をBotからBANしました。", color=discord.Color.red()))
@@ -98,6 +99,7 @@ class AdminCog(commands.Cog):
                 return
         except:
             return
+
 
 async def setup(bot):
     await bot.add_cog(AdminCog(bot))

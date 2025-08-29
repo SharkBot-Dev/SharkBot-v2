@@ -9,6 +9,7 @@ import re
 
 timeout_pattern = re.compile(r"(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?")
 
+
 def parse_time(timestr: str):
     match = timeout_pattern.fullmatch(timestr.strip().lower())
     if not match:
@@ -21,6 +22,7 @@ def parse_time(timestr: str):
         minutes=int(minutes),
         seconds=int(seconds),
     )
+
 
 class BanGroup(app_commands.Group):
     def __init__(self):
@@ -73,7 +75,8 @@ class BanGroup(app_commands.Group):
         U_ids = []
         for u in ユーザーidたち.split():
             try:
-                uid = int(u.replace("<@", "").replace("<@!", "").replace(">", ""))
+                uid = int(
+                    u.replace("<@", "").replace("<@!", "").replace(">", ""))
                 U_ids.append(uid)
             except ValueError:
                 continue  # 無効なIDをスキップ
@@ -117,12 +120,14 @@ class BanGroup(app_commands.Group):
 
         await interaction.channel.send(f"{success}人をBANしました。失敗: {failed}人。")
 
+
 class ModCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print(f"init -> ModCog")
 
-    moderation = app_commands.Group(name="moderation", description="モデレーション系のコマンドです。")
+    moderation = app_commands.Group(
+        name="moderation", description="モデレーション系のコマンドです。")
 
     moderation.add_command(BanGroup())
 
@@ -144,7 +149,7 @@ class ModCog(commands.Cog):
         except:
             return await interaction.followup.send(embed=discord.Embed(title="キックに失敗しました。", description="権限が足りないかも！？", color=discord.Color.red()))
         return await interaction.followup.send(embed=discord.Embed(title=f"{ユーザー.name}をKickしました。", color=discord.Color.green()))
-    
+
     @moderation.command(name="timeout", description="メンバーをタイムアウトします。")
     @app_commands.checks.has_permissions(moderate_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -164,7 +169,7 @@ class ModCog(commands.Cog):
         except:
             return await interaction.followup.send(embed=discord.Embed(title="タイムアウトに失敗しました。", description="権限が足りないかも！？", color=discord.Color.red()))
         return await interaction.followup.send(embed=discord.Embed(title=f"{ユーザー.name}をタイムアウトしました。", color=discord.Color.green()))
-    
+
     @moderation.command(name="max-timeout", description="最大までタイムアウトします。")
     @app_commands.checks.has_permissions(moderate_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -183,7 +188,7 @@ class ModCog(commands.Cog):
         except:
             return await interaction.followup.send(embed=discord.Embed(title="タイムアウトに失敗しました。", description="権限が足りないかも！？", color=discord.Color.red()))
         return await interaction.followup.send(embed=discord.Embed(title=f"{ユーザー.name}を最大までタイムアウトしました。", color=discord.Color.green()))
-    
+
     @moderation.command(name="clear", description="メッセージを一斉削除します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -214,7 +219,7 @@ class ModCog(commands.Cog):
         await interaction.response.defer()
         if interaction.guild.get_member(メンバー.id) is None:
             return await interaction.response.send_message(embed=discord.Embed(title=f"このサーバーにいないメンバーは警告できません。", color=discord.Color.red()))
-        
+
         await メンバー.send(embed=discord.Embed(title=f"あなたは`{interaction.guild.name}`\nで警告されました。", color=discord.Color.yellow(), description=f"理由: {理由}"))
 
         await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="警告しました。", color=discord.Color.green()))
@@ -237,7 +242,8 @@ class ModCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def lock(self, interaction: discord.Interaction, スレッド作成可能か: bool = False, リアクション可能か: bool = False):
         await interaction.response.defer()
-        overwrite = interaction.channel.overwrites_for(interaction.guild.default_role)
+        overwrite = interaction.channel.overwrites_for(
+            interaction.guild.default_role)
         overwrite.send_messages = False
         overwrite.create_polls = False
         overwrite.use_application_commands = False
@@ -261,7 +267,8 @@ class ModCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def unlock(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        overwrite = interaction.channel.overwrites_for(interaction.guild.default_role)
+        overwrite = interaction.channel.overwrites_for(
+            interaction.guild.default_role)
         overwrite.send_messages = True
         overwrite.create_polls = True
         overwrite.use_application_commands = True
@@ -284,8 +291,8 @@ class ModCog(commands.Cog):
         db = self.bot.async_db["Main"].ReportChannel
         if チャンネル:
             await db.replace_one(
-                {"Guild": interaction.guild.id}, 
-                {"Guild": interaction.guild.id, "Channel": チャンネル.id}, 
+                {"Guild": interaction.guild.id},
+                {"Guild": interaction.guild.id, "Channel": チャンネル.id},
                 upsert=True
             )
             await interaction.followup.send(embed=discord.Embed(title="通報チャンネルをセットアップしました。", color=discord.Color.green()))
@@ -303,8 +310,8 @@ class ModCog(commands.Cog):
 
         db = self.bot.async_db["Main"].GuildBAN
         await db.replace_one(
-            {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}, 
-            {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}, 
+            {"Guild": str(interaction.guild.id), "BANGuild": サーバーid},
+            {"Guild": str(interaction.guild.id), "BANGuild": サーバーid},
             upsert=True
         )
         return await interaction.response.send_message(embed=discord.Embed(title="<:Success:1362271281302601749> サーバーをBANしました。", color=discord.Color.green()))
@@ -322,6 +329,7 @@ class ModCog(commands.Cog):
             {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}
         )
         return await interaction.response.send_message(embed=discord.Embed(title="<:Success:1362271281302601749> サーバーをunBANしました。", color=discord.Color.green()))
+
 
 async def setup(bot):
     await bot.add_cog(ModCog(bot))

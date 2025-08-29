@@ -31,9 +31,11 @@ domain_regex = re.compile(
     r"^(?!\-)(?:[a-zA-Z0-9\-]{1,63}\.)+[a-zA-Z]{2,}$"
 )
 
+
 async def fetch_whois(target_domain):
     if not domain_regex.match(target_domain):
         return io.StringIO("Whoisに失敗しました。")
+
     def whois_query(domain: str, server="whois.iana.org") -> str:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((server, 43))
@@ -48,6 +50,7 @@ async def fetch_whois(target_domain):
     loop = asyncio.get_running_loop()
     res = await loop.run_in_executor(None, partial(whois_query, target_domain))
     return io.StringIO(res)
+
 
 class EmbedMake(discord.ui.Modal, title='埋め込みを作成'):
     title_ = discord.ui.TextInput(
@@ -90,14 +93,18 @@ class EmbedMake(discord.ui.Modal, title='埋め込みを作成'):
             view = discord.ui.View()
             if self.button.value:
                 if self.button_label.value:
-                    view.add_item(discord.ui.Button(label=self.button_label.value, url=self.button.value))
+                    view.add_item(discord.ui.Button(
+                        label=self.button_label.value, url=self.button.value))
                 else:
-                    view.add_item(discord.ui.Button(label="Webサイト", url=self.button.value))
+                    view.add_item(discord.ui.Button(
+                        label="Webサイト", url=self.button.value))
             await interaction.channel.send(embed=discord.Embed(title=self.title_.value, description=self.desc.value, color=discord.Color.from_str(self.color.value)).set_author(name=f"{interaction.user.name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url).set_footer(text=f"{interaction.guild.name} | {interaction.guild.id}", icon_url=interaction.guild.icon.url if interaction.guild.icon else interaction.user.default_avatar.url), view=view)
         except Exception as e:
             return await interaction.followup.send("作成に失敗しました。", ephemeral=True, embed=discord.Embed(title="エラー内容", description=f"```{e}```", color=discord.Color.red()))
 
+
 cooldown_afk = {}
+
 
 class ToolsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -204,9 +211,9 @@ class ToolsCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(ドメイン=[
-        app_commands.Choice(name='tinyurl.com',value="tiny"),
-        app_commands.Choice(name='urlc.net',value="urlc"),
-        app_commands.Choice(name='oooooo.ooo',value="ooo")
+        app_commands.Choice(name='tinyurl.com', value="tiny"),
+        app_commands.Choice(name='urlc.net', value="urlc"),
+        app_commands.Choice(name='oooooo.ooo', value="ooo")
     ])
     async def short_url(self, interaction: discord.Interaction, ドメイン: app_commands.Choice[str], url: str):
         if not await command_disable.command_enabled_check(interaction):
@@ -219,9 +226,10 @@ class ToolsCog(commands.Cog):
             url_ = await loop.run_in_executor(None, partial(s.tinyurl.short, url))
         elif ドメイン.value == "urlc":
             async with aiohttp.ClientSession() as session:
-                async with session.get(f'https://urlc.net/', params={'url': url,'keyword': ''}) as response:
+                async with session.get(f'https://urlc.net/', params={'url': url, 'keyword': ''}) as response:
                     soup = BeautifulSoup(await response.text(), 'html.parser')
-                    url_ = soup.find({"button": {"class": "short-url-button noselect"}})["data-clipboard-text"]
+                    url_ = soup.find(
+                        {"button": {"class": "short-url-button noselect"}})["data-clipboard-text"]
         elif ドメイン.value == "ooo":
             class OOO:
                 enc = ["o", "ο", "о", "ᴏ"]
@@ -229,8 +237,9 @@ class ToolsCog(commands.Cog):
 
                 def encode_url(self, url: str) -> str:
                     utf8_bytes = url.encode("utf-8")
-                    base4_digits = ''.join(format(byte, '04b').zfill(8) for byte in utf8_bytes)
-                    
+                    base4_digits = ''.join(
+                        format(byte, '04b').zfill(8) for byte in utf8_bytes)
+
                     b4str = ''
                     for i in range(0, len(base4_digits), 2):
                         b4str += str(int(base4_digits[i:i+2], 2))
@@ -250,7 +259,7 @@ class ToolsCog(commands.Cog):
         await interaction.response.defer()
         data = await fetch_whois(ドメイン)
         return await interaction.followup.send(file=discord.File(data, "whois.txt"))
-    
+
     @tools.command(name="nslookup", description="DNS情報を見ます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -274,25 +283,27 @@ class ToolsCog(commands.Cog):
                 for record_type, record_info in records_data.items():
                     response = record_info.get("response", {})
                     answers = response.get("answer", [])
-                    
+
                     for answer in answers:
                         record_details = answer.get("record", {})
                         ip_info = answer.get("ipInfo", {})
-                        
+
                         record_entry = (
                             f"{record_details.get('raw', 'N/A')}"
                         )
-                        
+
                         if record_type not in categorized_records:
                             categorized_records[record_type] = []
                         categorized_records[record_type].append(record_entry)
 
-                embed = discord.Embed(title="NSLookup DNS情報", color=discord.Color.blue())
-                
+                embed = discord.Embed(
+                    title="NSLookup DNS情報", color=discord.Color.blue())
+
                 for record_type, entries in categorized_records.items():
                     value_text = "\n".join(entries)
-                    embed.add_field(name=record_type.upper(), value=value_text[:1024], inline=False)
-                
+                    embed.add_field(name=record_type.upper(),
+                                    value=value_text[:1024], inline=False)
+
                 await interaction.followup.send(embed=embed)
 
     @tools.command(name="iplookup", description="IP情報を見ます。")
@@ -330,11 +341,12 @@ class ToolsCog(commands.Cog):
         await interaction.response.defer()
         database = self.bot.async_db["Main"].AFK
         await database.replace_one(
-            {"User": interaction.user.id}, 
-            {"User": interaction.user.id, "Reason": 理由, "End": 終わったらやること}, 
+            {"User": interaction.user.id},
+            {"User": interaction.user.id, "Reason": 理由, "End": 終わったらやること},
             upsert=True
         )
         await interaction.followup.send(embed=discord.Embed(title="AFKを設定しました。", description=f"{理由}", color=discord.Color.green()))
+
 
 async def setup(bot):
     await bot.add_cog(ToolsCog(bot))

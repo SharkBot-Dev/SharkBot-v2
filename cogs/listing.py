@@ -15,6 +15,7 @@ import time
 import matplotlib.pyplot as plt
 from discord import app_commands
 
+
 class Paginator(discord.ui.View):
     def __init__(self, embeds: list[discord.Embed]):
         super().__init__(timeout=60)
@@ -34,6 +35,7 @@ class Paginator(discord.ui.View):
         self.current = (self.current + 1) % len(self.embeds)
         await self.update_message(interaction)
 
+
 class ListingCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -47,14 +49,19 @@ class ListingCog(commands.Cog):
     async def listing_member(self,  interaction: discord.Interaction):
         await interaction.response.defer()
         member_list = interaction.guild.members
-        spliting_member_list = [member_list[i: i+20] for i in range(0, len(member_list), 20)]
+        spliting_member_list = [member_list[i: i+20]
+                                for i in range(0, len(member_list), 20)]
+
         def return_memberinfos(page: int):
             return "\n".join([f"{sm.name}({sm.id})" for sm in spliting_member_list[page-1]])
+
         class send(discord.ui.Modal):
             def __init__(self) -> None:
                 super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(label="ページ番号",placeholder="数字を入力",style=discord.TextStyle.short,required=True)
+                self.page = discord.ui.TextInput(
+                    label="ページ番号", placeholder="数字を入力", style=discord.TextStyle.short, required=True)
                 self.add_item(self.page)
+
             async def on_submit(self, interaction: discord.Interaction) -> None:
                 try:
                     await interaction.response.defer(ephemeral=True)
@@ -62,16 +69,16 @@ class ListingCog(commands.Cog):
                     await interaction.message.edit(embed=discord.Embed(title=f"メンバーリスト ({len(member_list)}人)", description=return_memberinfos(int(self.page.value)), color=discord.Color.blue()).set_footer(text=f"{self.page.value}/{len(spliting_member_list)}"))
                 except:
                     return await interaction.followup.send(ephemeral=True, content="数字以外を入れないでください。")
+
         class SendModal(discord.ui.View):
             def __init__(self):
                 super().__init__(timeout=60)
-            
+
             @discord.ui.button(label="ページ移動", style=discord.ButtonStyle.blurple)
             async def page_move(self, interaction: discord.Interaction, button: discord.ui.Button):
                 await interaction.response.send_modal(send())
 
         await interaction.followup.send(embed=discord.Embed(title=f"メンバーリスト ({len(member_list)}人)", description=return_memberinfos(1), color=discord.Color.blue()).set_footer(text=f"1/{len(spliting_member_list)}"), view=SendModal())
-
 
     @listing.command(name="role", description="ロールをリスト化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -84,7 +91,8 @@ class ListingCog(commands.Cog):
         if len(member_list) == 0:
             return await interaction.followup.send("ロールがありません。")
 
-        spliting_member_list = [member_list[i: i + 20] for i in range(0, len(member_list), 20)]
+        spliting_member_list = [member_list[i: i + 20]
+                                for i in range(0, len(member_list), 20)]
 
         def return_memberinfos(page: int):
             return "\n".join([f"{sm.name.replace('@', '')} ({sm.id})" for sm in spliting_member_list[page - 1]])
@@ -92,7 +100,8 @@ class ListingCog(commands.Cog):
         class send(discord.ui.Modal):
             def __init__(self, view: discord.ui.View):
                 super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(label="ページ番号", placeholder="数字を入力", style=discord.TextStyle.short, required=True)
+                self.page = discord.ui.TextInput(
+                    label="ページ番号", placeholder="数字を入力", style=discord.TextStyle.short, required=True)
                 self.add_item(self.page)
                 self.view_ref = view
 
@@ -122,7 +131,8 @@ class ListingCog(commands.Cog):
 
             async def update_embed(self, interaction: discord.Interaction):
                 self.previous.disabled = self.current_page <= 1
-                self.next.disabled = self.current_page >= len(spliting_member_list)
+                self.next.disabled = self.current_page >= len(
+                    spliting_member_list)
 
                 embed = discord.Embed(
                     title=f"ロールリスト ({len(member_list)}個)",
@@ -167,7 +177,8 @@ class ListingCog(commands.Cog):
         if len(emoji_list) == 0:
             return await interaction.followup.send("絵文字がありません。")
 
-        spliting_member_list = [emoji_list[i: i + 20] for i in range(0, len(emoji_list), 20)]
+        spliting_member_list = [emoji_list[i: i + 20]
+                                for i in range(0, len(emoji_list), 20)]
 
         def return_memberinfos(page: int):
             return "\n".join([f"{sm} `{sm}`" for sm in spliting_member_list[page - 1]])
@@ -175,7 +186,8 @@ class ListingCog(commands.Cog):
         class send(discord.ui.Modal):
             def __init__(self, view: discord.ui.View):
                 super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(label="ページ番号", placeholder="数字を入力", style=discord.TextStyle.short, required=True)
+                self.page = discord.ui.TextInput(
+                    label="ページ番号", placeholder="数字を入力", style=discord.TextStyle.short, required=True)
                 self.add_item(self.page)
                 self.view_ref = view
 
@@ -197,7 +209,8 @@ class ListingCog(commands.Cog):
 
             async def update_embed(self, interaction: discord.Interaction):
                 self.previous.disabled = self.current_page <= 1
-                self.next.disabled = self.current_page >= len(spliting_member_list)
+                self.next.disabled = self.current_page >= len(
+                    spliting_member_list)
 
                 embed = discord.Embed(
                     title=f"絵文字リスト ({len(emoji_list)}個)",
@@ -243,7 +256,8 @@ class ListingCog(commands.Cog):
         if len(invite_list) == 0:
             return await interaction.followup.send("招待リンクがありません。")
 
-        spliting_member_list = [invite_list[i: i + 20] for i in range(0, len(invite_list), 20)]
+        spliting_member_list = [invite_list[i: i + 20]
+                                for i in range(0, len(invite_list), 20)]
 
         def return_memberinfos(page: int):
             return "\n".join([f"{sm.inviter.mention} {sm.url}" for sm in spliting_member_list[page - 1]])
@@ -251,7 +265,8 @@ class ListingCog(commands.Cog):
         class send(discord.ui.Modal):
             def __init__(self, view: discord.ui.View):
                 super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(label="ページ番号", placeholder="数字を入力", style=discord.TextStyle.short, required=True)
+                self.page = discord.ui.TextInput(
+                    label="ページ番号", placeholder="数字を入力", style=discord.TextStyle.short, required=True)
                 self.add_item(self.page)
                 self.view_ref = view
 
@@ -273,7 +288,8 @@ class ListingCog(commands.Cog):
 
             async def update_embed(self, interaction: discord.Interaction):
                 self.previous.disabled = self.current_page <= 1
-                self.next.disabled = self.current_page >= len(spliting_member_list)
+                self.next.disabled = self.current_page >= len(
+                    spliting_member_list)
 
                 embed = discord.Embed(
                     title=f"招待リスト ({len(invite_list)}個)",
@@ -323,9 +339,11 @@ class ListingCog(commands.Cog):
             inviter = invite.inviter.mention if invite.inviter else "不明"
             ranking[inviter] = ranking.get(inviter, 0) + invite.uses
 
-        sorted_ranking = sorted(ranking.items(), key=lambda x: x[1], reverse=True)
+        sorted_ranking = sorted(
+            ranking.items(), key=lambda x: x[1], reverse=True)
 
-        split_ranking = [sorted_ranking[i:i + 20] for i in range(0, len(sorted_ranking), 20)]
+        split_ranking = [sorted_ranking[i:i + 20]
+                         for i in range(0, len(sorted_ranking), 20)]
 
         def return_rankinginfos(page: int):
             start_rank = (page - 1) * 20
@@ -406,14 +424,19 @@ class ListingCog(commands.Cog):
         member_list = [b async for b in interaction.guild.bans()]
         if len(member_list) == 0:
             return await interaction.followup.send("Banされているメンバーはいません。")
-        spliting_member_list = [member_list[i: i+20] for i in range(0, len(member_list), 20)]
+        spliting_member_list = [member_list[i: i+20]
+                                for i in range(0, len(member_list), 20)]
+
         def return_memberinfos(page: int):
             return "\n".join([f"{sm.user.name}({sm.user.id})" for sm in spliting_member_list[page-1]])
+
         class send(discord.ui.Modal):
             def __init__(self) -> None:
                 super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(label="ページ番号",placeholder="数字を入力",style=discord.TextStyle.short,required=True)
+                self.page = discord.ui.TextInput(
+                    label="ページ番号", placeholder="数字を入力", style=discord.TextStyle.short, required=True)
                 self.add_item(self.page)
+
             async def on_submit(self, interaction: discord.Interaction) -> None:
                 try:
                     await interaction.response.defer(ephemeral=True)
@@ -421,10 +444,11 @@ class ListingCog(commands.Cog):
                     await interaction.message.edit(embed=discord.Embed(title=f"BANリスト ({len(member_list)}人)", description=return_memberinfos(int(self.page.value)), color=discord.Color.blue()).set_footer(text=f"{self.page.value}/{len(spliting_member_list)}"))
                 except:
                     return await interaction.followup.send(ephemeral=True, content="数字以外を入れないでください。")
+
         class SendModal(discord.ui.View):
             def __init__(self):
                 super().__init__(timeout=60)
-            
+
             @discord.ui.button(label="ページ移動", style=discord.ButtonStyle.blurple)
             async def page_move(self, interaction: discord.Interaction, button: discord.ui.Button):
                 await interaction.response.send_modal(send())
@@ -441,14 +465,19 @@ class ListingCog(commands.Cog):
         member_list = [b async for b in db.find({"Guild": str(interaction.guild.id)})]
         if len(member_list) == 0:
             return await interaction.followup.send("Banされているサーバーはありません。")
-        spliting_member_list = [member_list[i: i+20] for i in range(0, len(member_list), 20)]
+        spliting_member_list = [member_list[i: i+20]
+                                for i in range(0, len(member_list), 20)]
+
         def return_memberinfos(page: int):
             return "\n".join([f"{sm["BANGuild"]}" for sm in spliting_member_list[page-1]])
+
         class send(discord.ui.Modal):
             def __init__(self) -> None:
                 super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(label="ページ番号",placeholder="数字を入力",style=discord.TextStyle.short,required=True)
+                self.page = discord.ui.TextInput(
+                    label="ページ番号", placeholder="数字を入力", style=discord.TextStyle.short, required=True)
                 self.add_item(self.page)
+
             async def on_submit(self, interaction: discord.Interaction) -> None:
                 try:
                     await interaction.response.defer(ephemeral=True)
@@ -456,10 +485,11 @@ class ListingCog(commands.Cog):
                     await interaction.message.edit(embed=discord.Embed(title=f"BANサーバーリスト ({len(member_list)}サーバー)", description=return_memberinfos(int(self.page.value)), color=discord.Color.blue()).set_footer(text=f"{self.page.value}/{len(spliting_member_list)}"))
                 except:
                     return await interaction.followup.send(ephemeral=True, content="数字以外を入れないでください。")
+
         class SendModal(discord.ui.View):
             def __init__(self):
                 super().__init__(timeout=60)
-            
+
             @discord.ui.button(label="ページ移動", style=discord.ButtonStyle.blurple)
             async def page_move(self, interaction: discord.Interaction, button: discord.ui.Button):
                 await interaction.response.send_modal(send())
@@ -470,18 +500,19 @@ class ListingCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(内容=[
-        app_commands.Choice(name='メンバーとBotの比率',value="mb"),
-        app_commands.Choice(name='1ヶ月間の1日ごとのメンバー参加数',value="one_mem"),
-        app_commands.Choice(name='メンバーの機種の割合',value="pc_sm"),
-        app_commands.Choice(name='メンバーのステータスの割合',value="mem_status"),
-        app_commands.Choice(name='グローバルなユーザーとBotの比率',value="gl_mb"),
+        app_commands.Choice(name='メンバーとBotの比率', value="mb"),
+        app_commands.Choice(name='1ヶ月間の1日ごとのメンバー参加数', value="one_mem"),
+        app_commands.Choice(name='メンバーの機種の割合', value="pc_sm"),
+        app_commands.Choice(name='メンバーのステータスの割合', value="mem_status"),
+        app_commands.Choice(name='グローバルなユーザーとBotの比率', value="gl_mb"),
     ])
     async def analysis_guild_or_user(self, interaction: discord.Interaction, 内容: app_commands.Choice[str]):
         await interaction.response.defer()
         if 内容.value == "mb":
             member_list = len(interaction.guild.members)
             bot_list = len([m for m in interaction.guild.members if m.bot])
-            human_list = len([m for m in interaction.guild.members if not m.bot])
+            human_list = len(
+                [m for m in interaction.guild.members if not m.bot])
             json_data = {
                 'labels': [
                     f'Members ({human_list})',
@@ -548,9 +579,12 @@ class ListingCog(commands.Cog):
                     io_.close()
         elif 内容.value == "pc_sm":
             member_list = len(interaction.guild.members)
-            browser = len([m for m in interaction.guild.members if m.client_status.web])
-            phone = len([m for m in interaction.guild.members if m.client_status.mobile])
-            desktop = len([m for m in interaction.guild.members if m.client_status.desktop])
+            browser = len(
+                [m for m in interaction.guild.members if m.client_status.web])
+            phone = len(
+                [m for m in interaction.guild.members if m.client_status.mobile])
+            desktop = len(
+                [m for m in interaction.guild.members if m.client_status.desktop])
             json_data = {
                 'labels': [
                     f'Borwser ({browser})',
@@ -571,10 +605,14 @@ class ListingCog(commands.Cog):
                     io_.close()
         elif 内容.value == "mem_status":
             member_list = len(interaction.guild.members)
-            online = len([m for m in interaction.guild.members if m.status == discord.Status.online])
-            idle = len([m for m in interaction.guild.members if m.status == discord.Status.idle])
-            dnd = len([m for m in interaction.guild.members if m.status == discord.Status.dnd])
-            ofline = len([m for m in interaction.guild.members if m.status == discord.Status.offline])
+            online = len(
+                [m for m in interaction.guild.members if m.status == discord.Status.online])
+            idle = len(
+                [m for m in interaction.guild.members if m.status == discord.Status.idle])
+            dnd = len(
+                [m for m in interaction.guild.members if m.status == discord.Status.dnd])
+            ofline = len(
+                [m for m in interaction.guild.members if m.status == discord.Status.offline])
             json_data = {
                 'labels': [
                     f'Online ({online})',
@@ -600,7 +638,7 @@ class ListingCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(内容=[
-        app_commands.Choice(name='円グラフ',value="pie"),
+        app_commands.Choice(name='円グラフ', value="pie"),
         app_commands.Choice(name='折れ線グラフ', value="line"),
     ])
     async def graph_make(self, interaction_: discord.Interaction, 内容: app_commands.Choice[str], タイトル: str = "Graph"):
@@ -608,7 +646,8 @@ class ListingCog(commands.Cog):
             class send(discord.ui.Modal):
                 def __init__(self) -> None:
                     super().__init__(title="円グラフの設定", timeout=None)
-                    self.datas = discord.ui.TextInput(label="データ (「ラベル|データ」 と入力)",placeholder="タイトルを入力",style=discord.TextStyle.long,required=True)
+                    self.datas = discord.ui.TextInput(
+                        label="データ (「ラベル|データ」 と入力)", placeholder="タイトルを入力", style=discord.TextStyle.long, required=True)
                     self.add_item(self.datas)
 
                 async def on_submit(self, interaction: discord.Interaction) -> None:
@@ -640,9 +679,11 @@ class ListingCog(commands.Cog):
             class send(discord.ui.Modal):
                 def __init__(self) -> None:
                     super().__init__(title="折れ線グラフの設定", timeout=None)
-                    self.xdatas = discord.ui.TextInput(label="Xのデータ (,で区切る)",placeholder="1,2,3",style=discord.TextStyle.long,required=True)
+                    self.xdatas = discord.ui.TextInput(
+                        label="Xのデータ (,で区切る)", placeholder="1,2,3", style=discord.TextStyle.long, required=True)
                     self.add_item(self.xdatas)
-                    self.ydatas = discord.ui.TextInput(label="Yのデータ (,で区切る)",placeholder="1,2,3",style=discord.TextStyle.long,required=True)
+                    self.ydatas = discord.ui.TextInput(
+                        label="Yのデータ (,で区切る)", placeholder="1,2,3", style=discord.TextStyle.long, required=True)
                     self.add_item(self.ydatas)
 
                 async def on_submit(self, interaction: discord.Interaction) -> None:
@@ -675,6 +716,7 @@ class ListingCog(commands.Cog):
                             await interaction.followup.send(file=discord.File(io_, filename="plot.png"))
                             io_.close()
             await interaction_.response.send_modal(send())
+
 
 async def setup(bot):
     await bot.add_cog(ListingCog(bot))

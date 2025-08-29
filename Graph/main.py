@@ -7,6 +7,7 @@ matplotlib.use('Agg')
 
 app = Flask(__name__)
 
+
 @app.route('/piechart', methods=['POST'])
 def create_pie_chart():
     data = request.json
@@ -33,6 +34,7 @@ def create_pie_chart():
     plt.close(fig)
 
     return send_file(buf, mimetype='image/png')
+
 
 @app.route('/plot', methods=['POST'])
 def create_plot():
@@ -63,6 +65,7 @@ def create_plot():
     plt.close(fig)
 
     return send_file(buf, mimetype='image/png')
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=3067, host="0.0.0.0")

@@ -3,6 +3,7 @@ from discord.ext import commands
 from consts import mongodb
 from discord import app_commands
 
+
 async def save_command(cmd: app_commands.Command, parent: str = None):
     full_name = f"{parent} {cmd.name}" if parent else cmd.name
 
@@ -23,11 +24,13 @@ async def save_command(cmd: app_commands.Command, parent: str = None):
                 upsert=True
             )
 
+
 async def get_commands(guild_id: int) -> list[str]:
     cmds = await mongodb.mongo["DashboardBot"].Commands.find_one(
         {"Guild": guild_id}
     )
     return cmds.get("commands", []) if cmds else []
+
 
 async def clear_commands() -> list[str]:
     cmds = await mongodb.mongo["DashboardBot"].Commands.delete_many({})

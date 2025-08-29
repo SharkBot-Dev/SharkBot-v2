@@ -11,6 +11,7 @@ import asyncio
 from discord import app_commands
 from models import command_disable
 
+
 class UpCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -45,7 +46,7 @@ class UpCog(commands.Cog):
             return "メンションするロールがありません。"
         if dbfind is None:
             return "メンションするロールがありません。"
-        
+
         try:
 
             role = message.guild.get_role(dbfind.get("Role", None))
@@ -120,7 +121,8 @@ class UpCog(commands.Cog):
                         return
                     if dbfind is None:
                         return
-                    next = message.embeds[0].fields[0].value.replace("<t:","").replace(":R>","")
+                    next = message.embeds[0].fields[0].value.replace(
+                        "<t:", "").replace(":R>", "")
                     ment = await self.mention_get(message)
                     await message.reply(embed=discord.Embed(title="Voteを検知しました。", description=f"<t:{next}:R>に通知します。\n以下のロールに通知します。\n{ment}", color=discord.Color.green()))
                     await self.add_money(message)
@@ -128,7 +130,7 @@ class UpCog(commands.Cog):
                     await message.channel.send(embed=discord.Embed(title="鯖チャンネルをVoteしてね！", description="</vote:1233256792507682860> でVote。", color=discord.Color.green()), content=ment)
             except:
                 return
-            
+
     @commands.Cog.listener("on_message")
     async def on_message_bump_disboard(self, message: discord.Message):
         if message.author.id == 302050872383242240:
@@ -161,7 +163,7 @@ class UpCog(commands.Cog):
                     # await message.channel.send(embed=discord.Embed(title="DisboardをBumpしてね！", description="</bump:947088344167366698> でBump。", color=discord.Color.green()), content=ment)
             except:
                 return
-            
+
     @commands.Cog.listener("on_message")
     async def on_message_up_discafe(self, message: discord.Message):
         if message.author.id == 850493201064132659:
@@ -186,16 +188,18 @@ class UpCog(commands.Cog):
         try:
             if not message.embeds:
                 return "取得失敗"
-            embed = message.embeds[0].fields[0].value.split("_**ActiveLevel ... ")[1].replace("**_", "")
+            embed = message.embeds[0].fields[0].value.split(
+                "_**ActiveLevel ... ")[1].replace("**_", "")
             return f"{embed}"
         except:
             return "取得失敗"
-        
+
     async def get_nokori_time(self, message: discord.Message):
         try:
             if not message.embeds:
                 return "取得失敗"
-            embed = message.embeds[0].fields[0].value.replace("間隔をあけてください(", "").replace(")", "")
+            embed = message.embeds[0].fields[0].value.replace(
+                "間隔をあけてください(", "").replace(")", "")
             return embed
         except:
             return "取得失敗"
@@ -230,7 +234,7 @@ class UpCog(commands.Cog):
                     nokori = await self.get_nokori_time(after)
                     await after.reply(embed=discord.Embed(title="Upに失敗しました。", description="しばらく待ってから</up:1363739182672904354>を実行してください。", color=discord.Color.red()).add_field(name="次Upできるまでの時間", value=f"{nokori}"))
             except:
-                return    
+                return
 
     bump = app_commands.Group(name="bump", description="Bump通知のコマンドです。")
 
@@ -299,7 +303,7 @@ class UpCog(commands.Cog):
                 {"Channel": interaction.channel.id}
             )
             await interaction.response.send_message(embed=discord.Embed(title="鯖チャンネルの通知をOFFにしました。", color=discord.Color.red()))
-        
+
     @bump.command(name="dissoku", description="ディス速の通知をします。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -386,6 +390,7 @@ class UpCog(commands.Cog):
             upsert=True
         )
         await interaction.response.send_message(embed=discord.Embed(title="Up・Bump通知時にロールを\n通知するようにしました。", color=discord.Color.green()))
+
 
 async def setup(bot):
     await bot.add_cog(UpCog(bot))

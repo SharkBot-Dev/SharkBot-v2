@@ -12,6 +12,7 @@ from models import command_disable
 
 cooldown_mention_reply = {}
 
+
 class AICog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -24,7 +25,7 @@ class AICog(commands.Cog):
     async def ai_write(self, interaction: discord.Interaction, お題: str):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
-        
+
         if not interaction.channel.nsfw:
             return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="このチャンネルでは使用できません。", description="NSFWチャンネルに移動してください。", color=discord.Color.red()))
 
@@ -54,6 +55,7 @@ class AICog(commands.Cog):
 
                 await interaction.followup.send(embed=discord.Embed(title="AIの回答", description=f"```{text}```", color=discord.Color.green())
                                                 .set_footer(text="AIの回答は100%正しいとは限りません。 by SharkAI."))
+
 
 async def setup(bot):
     await bot.add_cog(AICog(bot))

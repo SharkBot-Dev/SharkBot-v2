@@ -11,6 +11,7 @@ from discord import Webhook
 from discord import app_commands
 import io
 
+
 class CountCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -33,7 +34,7 @@ class CountCog(commands.Cog):
     async def on_message_count(self, message: discord.Message):
         if message.author.bot:
             return
-        
+
         db = self.bot.async_db["Main"].Counting
         try:
             dbfind = await db.find_one({"Channel": message.channel.id}, {"_id": False})
@@ -41,7 +42,7 @@ class CountCog(commands.Cog):
             return
         if dbfind is None:
             return
-        
+
         try:
 
             if dbfind.get("Now", 0) + 1 != int(message.content):
@@ -50,8 +51,9 @@ class CountCog(commands.Cog):
                     if not dbfind.get("Now", 0) + 1 == 1:
                         await message.reply(embed=discord.Embed(title="カウントに失敗しました・・", description="1から数えなおそう！", color=discord.Color.red()))
                     await db.replace_one(
-                        {"Guild": message.guild.id, "Channel": message.channel.id}, 
-                        {"Guild": message.guild.id, "Channel": message.channel.id, "Now": 0}, 
+                        {"Guild": message.guild.id, "Channel": message.channel.id},
+                        {"Guild": message.guild.id,
+                            "Channel": message.channel.id, "Now": 0},
                         upsert=True
                     )
                     return
@@ -77,8 +79,9 @@ class CountCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         db = self.bot.async_db["Main"].Counting
         await db.replace_one(
-            {"Guild": interaction.guild.id, "Channel": interaction.channel.id}, 
-            {"Guild": interaction.guild.id, "Channel": interaction.channel.id, "Now": 0}, 
+            {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+            {"Guild": interaction.guild.id,
+                "Channel": interaction.channel.id, "Now": 0},
             upsert=True
         )
         await interaction.channel.send(embed=discord.Embed(title="カウントをセットアップしました。", description="1から数えてみよう！", color=discord.Color.green()))
@@ -95,7 +98,7 @@ class CountCog(commands.Cog):
         if result.deleted_count == 0:
             return await interaction.followup.send(embed=discord.Embed(title="このチャンネルではカウントは有効ではありません。", color=discord.Color.red()))
         return await interaction.followup.send(embed=discord.Embed(title="カウントを無効化しました。", color=discord.Color.red()))
-    
+
     @count.command(name="skip", description="カウントゲームの現在の数字を設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -110,8 +113,9 @@ class CountCog(commands.Cog):
         if dbfind is None:
             return await interaction.followup.send(embed=discord.Embed(title="このチャンネルではカウントは有効ではありません。", color=discord.Color.red()))
         await db.replace_one(
-            {"Guild": interaction.guild.id, "Channel": interaction.channel.id}, 
-            {"Guild": interaction.guild.id, "Channel": interaction.channel.id, "Now": 数字}, 
+            {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+            {"Guild": interaction.guild.id,
+                "Channel": interaction.channel.id, "Now": 数字},
             upsert=True
         )
         return await interaction.followup.send(embed=discord.Embed(title="カウントゲームの現在の数字を変更しました。", description=f"次は{数字+1}からカウントしましょう！", color=discord.Color.green()))
@@ -130,11 +134,13 @@ class CountCog(commands.Cog):
         if dbfind is None:
             return await interaction.followup.send(embed=discord.Embed(title="このチャンネルではカウントは有効ではありません。", color=discord.Color.red()))
         await db.replace_one(
-            {"Guild": interaction.guild.id, "Channel": interaction.channel.id}, 
-            {"Guild": interaction.guild.id, "Channel": interaction.channel.id, "Now": 0}, 
+            {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+            {"Guild": interaction.guild.id,
+                "Channel": interaction.channel.id, "Now": 0},
             upsert=True
         )
         return await interaction.followup.send(embed=discord.Embed(title="カウントゲームの現在の数字をリセットしました。", description=f"次は1からカウントしましょう！", color=discord.Color.green()))
+
 
 async def setup(bot):
     await bot.add_cog(CountCog(bot))

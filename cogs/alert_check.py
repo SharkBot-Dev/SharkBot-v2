@@ -3,6 +3,7 @@ import asyncio
 import discord
 from discord.ext import commands, tasks
 
+
 class AlertCheckCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -40,10 +41,12 @@ class AlertCheckCog(commands.Cog):
             if ch:
                 await ch.send(
                     content=doc.get("Text", "メンションするロールがありません。"),
-                    embed=discord.Embed(title=doc.get("Title", "タイトルです"), description=doc.get("Description", "説明です"), color=discord.Color.green())
+                    embed=discord.Embed(title=doc.get("Title", "タイトルです"), description=doc.get(
+                        "Description", "説明です"), color=discord.Color.green())
                 )
             await db.delete_one({"Channel": doc["Channel"], "ID": doc.get("ID", "none")})
             await asyncio.sleep(1)
+
 
 async def setup(bot):
     await bot.add_cog(AlertCheckCog(bot))

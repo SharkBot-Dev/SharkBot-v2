@@ -29,20 +29,21 @@ blacklist_word = [
     "死ね",
     "氏ね",
     "ファック",
-	"セックス",
-	"ペニス",
-	"ちんこ",
-	"ちんぽ",
-	"喘",
-	"孕",
-	"まんこ",
-	"ちんちん",
-	"おっぱい",
-	"くそ",
-	"タヒね",
-	"ﾀﾋね",
-	"オナホ"
+    "セックス",
+    "ペニス",
+    "ちんこ",
+    "ちんぽ",
+    "喘",
+    "孕",
+    "まんこ",
+    "ちんちん",
+    "おっぱい",
+    "くそ",
+    "タヒね",
+    "ﾀﾋね",
+    "オナホ"
 ]
+
 
 class AutoReplyCog(commands.Cog):
     def __init__(self, bot):
@@ -111,7 +112,8 @@ class AutoReplyCog(commands.Cog):
         except:
             return
 
-    autoreply = app_commands.Group(name="autoreply", description="自動返信関連の設定です。")
+    autoreply = app_commands.Group(
+        name="autoreply", description="自動返信関連の設定です。")
 
     @autoreply.command(name="create", description="自動返信を作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -123,8 +125,8 @@ class AutoReplyCog(commands.Cog):
 
         db = self.bot.async_db["Main"].AutoReply
         await db.replace_one(
-            {"Guild": interaction.guild.id, "Word": 条件}, 
-            {"Guild": interaction.guild.id, "Word": 条件, "ReplyWord": 結果}, 
+            {"Guild": interaction.guild.id, "Word": 条件},
+            {"Guild": interaction.guild.id, "Word": 条件, "ReplyWord": 結果},
             upsert=True
         )
         await interaction.response.send_message(embed=discord.Embed(title="自動返信を追加しました。", color=discord.Color.green()))
@@ -160,6 +162,7 @@ class AutoReplyCog(commands.Cog):
             if b in "\n".join(word_list):
                 return await interaction.followup.send("不適切なワードが検出されました。")
         await interaction.followup.send(embed=discord.Embed(title="自動返信のリスト", color=discord.Color.green()).add_field(name="特定のワードに対して", value="\n".join(word_list)))
+
 
 async def setup(bot):
     await bot.add_cog(AutoReplyCog(bot))

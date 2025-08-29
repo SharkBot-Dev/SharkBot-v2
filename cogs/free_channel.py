@@ -5,6 +5,7 @@ import datetime
 import random
 from models import permissions_text
 
+
 class FreeChannelModal(discord.ui.Modal):
     def __init__(self, msgid: int):
         super().__init__(title='チャンネルを作成', timeout=180)
@@ -47,7 +48,7 @@ class FreeChannelModal(discord.ui.Modal):
         nsfw = False if self.channeltype.component.values[0] == "text" else True
         if dbfind is None:
             if interaction.channel.category:
-                    
+
                 channel = await interaction.channel.category.create_text_channel(name=self.channelname.component.value, nsfw=nsfw)
             else:
                 channel = await interaction.guild.create_text_channel(name=self.channelname.component.value, nsfw=nsfw)
@@ -58,6 +59,7 @@ class FreeChannelModal(discord.ui.Modal):
             else:
                 return
         await channel.send(f"{interaction.user.mention}: フリーチャンネルを作成しました。")
+
 
 class FreeChannelCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -75,6 +77,7 @@ class FreeChannelCog(commands.Cog):
                     await interaction.response.send_modal(FreeChannelModal(interaction.message.id))
         except:
             return
+
 
 async def setup(bot):
     await bot.add_cog(FreeChannelCog(bot))

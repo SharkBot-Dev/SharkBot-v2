@@ -3,6 +3,7 @@ import discord
 import datetime
 from consts import mongodb
 
+
 class BotLogCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -32,16 +33,17 @@ class BotLogCog(commands.Cog):
         await self.update_guild_channels(channel.guild)
 
     @commands.Cog.listener()
-    async def on_guild_join(self, guild:discord.Guild):
+    async def on_guild_join(self, guild: discord.Guild):
         await mongodb.mongo["DashboardBot"].bot_joind_guild.replace_one({
             "Guild": guild.id
         }, {"Guild": guild.id}, upsert=True)
 
     @commands.Cog.listener()
-    async def on_guild_remove(self, guild:discord.Guild):
+    async def on_guild_remove(self, guild: discord.Guild):
         await mongodb.mongo["DashboardBot"].bot_joind_guild.delete_one({
             "Guild": guild.id
         })
+
 
 async def setup(bot):
     await bot.add_cog(BotLogCog(bot))

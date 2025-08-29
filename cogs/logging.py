@@ -13,6 +13,7 @@ import aiohttp
 
 from models import command_disable
 
+
 class LoggingCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -27,7 +28,7 @@ class LoggingCog(commands.Cog):
         if dbfind is None:
             return None
         return dbfind.get("Webhook", None)
-    
+
     async def get_logging_channel(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].EventLoggingChannel
         try:
@@ -61,7 +62,7 @@ class LoggingCog(commands.Cog):
                 await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Minus:1367039494322262096> メンバーがBANされました", description=f"{member.mention}\nメンバーがBANされました: {datetime.datetime.now()}", color=discord.Color.red()).set_footer(text=f"uid:{member.id}").set_author(name=f"{member.name}", icon_url=member.avatar.url if member.avatar else member.default_avatar.url))
         except:
             return
-        
+
     @commands.Cog.listener("on_member_update")
     async def on_member_update_log(self, before: discord.Member, after: discord.Member):
         try:
@@ -132,7 +133,7 @@ class LoggingCog(commands.Cog):
                 await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Edit:1367039517868953600> メッセージが編集されました", description=f"編集前:\n{before.content}\n編集後:\n{after.content}", color=discord.Color.yellow()).set_footer(text=f"mid:{after.id}").set_author(name=f"{after.author.name}", icon_url=after.author.avatar.url if after.author.avatar else after.author.default_avatar.url))
         except:
             return
-        
+
     @commands.Cog.listener("on_guild_channel_create")
     async def on_guild_channel_create_log(self, channel: discord.abc.GuildChannel):
         try:
@@ -144,7 +145,7 @@ class LoggingCog(commands.Cog):
                 await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Plus:1367039505865113670> チャンネルが作成されました", description=f"名前: {channel.name}\n作成時間: {channel.created_at}", color=discord.Color.green()).set_footer(text=f"cid:{channel.id}"))
         except:
             return
-        
+
     @commands.Cog.listener("on_guild_channel_delete")
     async def on_guild_channel_delete_log(self, channel: discord.abc.GuildChannel):
         try:
@@ -156,7 +157,7 @@ class LoggingCog(commands.Cog):
                 await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Minus:1367039494322262096> チャンネルが削除されました", description=f"名前: {channel.name}", color=discord.Color.red()).set_footer(text=f"cid:{channel.id}"))
         except:
             return
-        
+
     @commands.Cog.listener("on_invite_create")
     async def on_invite_create_log(self, invite: discord.Invite):
         try:
@@ -180,7 +181,7 @@ class LoggingCog(commands.Cog):
                 await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Plus:1367039505865113670> ロールが作成されました", description=f"名前: {role.name}", color=discord.Color.green()).set_footer(text=f"rid:{role.id}"))
         except:
             return
-        
+
     @commands.Cog.listener("on_guild_role_delete")
     async def on_guild_role_delete_log(self, role: discord.Role):
         try:
@@ -204,7 +205,7 @@ class LoggingCog(commands.Cog):
                 await webhook_.send(avatar_url=self.bot.user.avatar.url, embed=discord.Embed(title="<:Plus:1367039505865113670> メンバーが参加しました", description=f"名前: {member.name}\nアカウント作成日: {member.created_at}\n参加時間: {datetime.datetime.now()}", color=discord.Color.green()).set_footer(text=f"mid:{member.id}").set_author(name=f"{member.name}", icon_url=member.avatar.url if member.avatar else member.default_avatar.url))
         except:
             return
-        
+
     @commands.Cog.listener("on_member_remove")
     async def on_member_remove_log(self, member: discord.Member):
         try:
@@ -242,8 +243,9 @@ class LoggingCog(commands.Cog):
         db = self.bot.async_db["Main"].EventLoggingChannel
         web = await interaction.channel.create_webhook(name="SharkBot-Log")
         await db.replace_one(
-            {"Guild": interaction.guild.id, "Channel": interaction.channel.id}, 
-            {"Guild": interaction.guild.id, "Channel": interaction.channel.id, "Webhook": web.url}, 
+            {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+            {"Guild": interaction.guild.id,
+                "Channel": interaction.channel.id, "Webhook": web.url},
             upsert=True
         )
         await interaction.response.send_message(embed=discord.Embed(title="ログをセットアップしました。", color=discord.Color.green()))
@@ -260,6 +262,7 @@ class LoggingCog(commands.Cog):
         web = await interaction.channel.create_webhook(name="SharkBot-Log")
         await db.delete_one({"Guild": interaction.guild.id})
         await interaction.response.send_message(embed=discord.Embed(title="ログをセットアップしました。", color=discord.Color.green()))
+
 
 async def setup(bot):
     await bot.add_cog(LoggingCog(bot))

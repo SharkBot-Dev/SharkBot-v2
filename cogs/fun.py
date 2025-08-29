@@ -21,11 +21,13 @@ from deep_translator import GoogleTranslator
 
 import urllib.parse
 
+
 def text_len_sudden(text):
     count = 0
     for c in text:
         count += 2 if unicodedata.east_asian_width(c) in 'FWA' else 1
     return count
+
 
 def sudden_generator(msg):
     length = text_len_sudden(msg)
@@ -38,6 +40,7 @@ def sudden_generator(msg):
     generating += '^Y￣'
     return generating
 
+
 async def fetch_avatar(user: discord.User):
     if user.avatar:
         url_a = f"https://cdn.discordapp.com/avatars/{user.id}/{user.avatar.key}"
@@ -46,6 +49,7 @@ async def fetch_avatar(user: discord.User):
     async with aiohttp.ClientSession() as session:
         async with session.get(url_a, timeout=10) as resp:
             return await resp.read()
+
 
 def wrap_text_with_ellipsis(text, font, draw, max_width, max_height, line_height):
     lines = []
@@ -64,7 +68,8 @@ def wrap_text_with_ellipsis(text, font, draw, max_width, max_height, line_height
             if len(lines) * line_height >= max_height - line_height * 2:
                 ellipsis = "…"
                 while True:
-                    bbox = draw.textbbox((0, 0), current_line + ellipsis, font=font)
+                    bbox = draw.textbbox(
+                        (0, 0), current_line + ellipsis, font=font)
                     if bbox[2] - bbox[0] <= max_width:
                         break
                     if len(current_line) == 0:
@@ -78,72 +83,78 @@ def wrap_text_with_ellipsis(text, font, draw, max_width, max_height, line_height
 
     return lines
 
+
 def create_quote_image(author, text, avatar_bytes, background, textcolor, color: bool):
-        width, height = 800, 400
-        background_color = background
-        text_color = textcolor
+    width, height = 800, 400
+    background_color = background
+    text_color = textcolor
 
-        img = Image.new('RGB', (width, height), background_color)
-        draw = ImageDraw.Draw(img)
+    img = Image.new('RGB', (width, height), background_color)
+    draw = ImageDraw.Draw(img)
 
-        avatar_size = (400, 400)
-        avatar = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA")
-        avatar = avatar.resize(avatar_size)
+    avatar_size = (400, 400)
+    avatar = Image.open(io.BytesIO(avatar_bytes)).convert("RGBA")
+    avatar = avatar.resize(avatar_size)
 
-        mask = Image.new("L", avatar_size, 255)
-        for x in range(avatar_size[0]):
-            alpha = 255 if x < avatar_size[0] // 2 else int(255 * (1 - (x - avatar_size[0] // 2) / (avatar_size[0] / 2)))
-            for y in range(avatar_size[1]):
-                mask.putpixel((x, y), alpha)
-        avatar.putalpha(mask)
+    mask = Image.new("L", avatar_size, 255)
+    for x in range(avatar_size[0]):
+        alpha = 255 if x < avatar_size[0] // 2 else int(
+            255 * (1 - (x - avatar_size[0] // 2) / (avatar_size[0] / 2)))
+        for y in range(avatar_size[1]):
+            mask.putpixel((x, y), alpha)
+    avatar.putalpha(mask)
 
-        img.paste(avatar, (0, height - avatar_size[1]), avatar)
+    img.paste(avatar, (0, height - avatar_size[1]), avatar)
 
-        try:
-            font = ImageFont.truetype("data/DiscordFont.ttf", 30)
-            name_font = ImageFont.truetype("data/DiscordFont.ttf", 20)
-        except:
-            font = ImageFont.load_default()
-            name_font = ImageFont.load_default()
+    try:
+        font = ImageFont.truetype("data/DiscordFont.ttf", 30)
+        name_font = ImageFont.truetype("data/DiscordFont.ttf", 20)
+    except:
+        font = ImageFont.load_default()
+        name_font = ImageFont.load_default()
 
-        text_x = 420
-        max_text_width = width - text_x - 50
+    text_x = 420
+    max_text_width = width - text_x - 50
 
-        max_text_height = height - 80
-        line_height = font.size + 10
+    max_text_height = height - 80
+    line_height = font.size + 10
 
-        lines = wrap_text_with_ellipsis(text, font, draw, max_text_width, max_text_height, line_height)
+    lines = wrap_text_with_ellipsis(
+        text, font, draw, max_text_width, max_text_height, line_height)
 
-        total_lines = len(lines)
-        line_height = font.size + 10
-        text_block_height = total_lines * line_height
-        text_y = (height - text_block_height) // 2
+    total_lines = len(lines)
+    line_height = font.size + 10
+    text_block_height = total_lines * line_height
+    text_y = (height - text_block_height) // 2
 
-        for i, line in enumerate(lines):
-            bbox = draw.textbbox((0, 0), line, font=font)
-            line_width = bbox[2] - bbox[0]
-            draw.text(
-                ((width + text_x - 50 - line_width) // 2, text_y + i * line_height),
-                line,
-                fill=text_color,
-                font=font
-            )
+    for i, line in enumerate(lines):
+        bbox = draw.textbbox((0, 0), line, font=font)
+        line_width = bbox[2] - bbox[0]
+        draw.text(
+            ((width + text_x - 50 - line_width) // 2, text_y + i * line_height),
+            line,
+            fill=text_color,
+            font=font
+        )
 
-        author_text = f"- {author}"
-        bbox = draw.textbbox((0, 0), author_text, font=name_font)
-        author_width = bbox[2] - bbox[0]
-        author_x = (width + text_x - 50 - author_width) // 2
-        author_y = text_y + len(lines) * line_height + 10
+    author_text = f"- {author}"
+    bbox = draw.textbbox((0, 0), author_text, font=name_font)
+    author_width = bbox[2] - bbox[0]
+    author_x = (width + text_x - 50 - author_width) // 2
+    author_y = text_y + len(lines) * line_height + 10
 
-        draw.text((author_x, author_y), author_text, font=name_font, fill=text_color)
+    draw.text((author_x, author_y), author_text,
+              font=name_font, fill=text_color)
 
-        draw.text((580, 0), "FakeQuote - SharkBot", font=name_font, fill=text_color)
+    draw.text((580, 0), "FakeQuote - SharkBot",
+              font=name_font, fill=text_color)
 
-        if color:
+    if color:
 
-            return img
-        else:
-            return img.convert("L")
+        return img
+    else:
+        return img.convert("L")
+
 
 class TextGroup(app_commands.Group):
     def __init__(self):
@@ -168,7 +179,7 @@ class TextGroup(app_commands.Group):
         await interaction.response.defer()
 
         loop = asyncio.get_event_loop()
-        
+
         desc = f"ja -> {テキスト}"
         msg = await interaction.followup.send(
             embed=discord.Embed(
@@ -212,16 +223,18 @@ class TextGroup(app_commands.Group):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
 
         await interaction.response.defer()
+
         async def text_emoji(text):
             kakasi = pykakasi.kakasi()
             result = kakasi.convert(text)
-                
+
             def text_to_discord_emoji(text):
                 emoji_map = {chr(97 + i): chr(0x1F1E6 + i) for i in range(26)}
                 num_emoji_map = {str(i): f"{i}️⃣" for i in range(10)}
                 return [emoji_map[char.lower()] if char.isalpha() else num_emoji_map[char] if char.isdigit() else None for char in text if char.isalnum()]
-            
-            romaji_text = "".join(item["kunrei"] for item in result if "kunrei" in item)
+
+            romaji_text = "".join(item["kunrei"]
+                                  for item in result if "kunrei" in item)
             emojis = text_to_discord_emoji(romaji_text)
 
             return emojis
@@ -258,8 +271,10 @@ class TextGroup(app_commands.Group):
             try:
                 f = Fernet(暗号化キー.encode())
                 decrypted = f.decrypt(暗号.encode())
-                embed = discord.Embed(title="復号化完了", color=discord.Color.green())
-                embed.add_field(name="復元結果", value=decrypted.decode(), inline=False)
+                embed = discord.Embed(
+                    title="復号化完了", color=discord.Color.green())
+                embed.add_field(
+                    name="復元結果", value=decrypted.decode(), inline=False)
                 await interaction.response.send_message(embed=embed)
             except InvalidToken:
                 await interaction.response.send_message(embed=discord.Embed(
@@ -280,6 +295,7 @@ class TextGroup(app_commands.Group):
                 color=discord.Color.orange()
             ))
 
+
 class NounaiGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="nounai", description="脳内メーカー系の面白いコマンド")
@@ -296,6 +312,7 @@ class NounaiGroup(app_commands.Group):
     async def kakeizu(self, interaction: discord.Interaction, 名前: str):
         await interaction.response.send_message(embed=discord.Embed(title="家系図メーカー", color=discord.Color.green()).set_image(url=f"https://usokomaker.com/kakeizu_fantasy/r/img/{urllib.parse.quote(名前)}.gif"))
 
+
 class ImageGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="image", description="画像系の面白いコマンド")
@@ -306,7 +323,7 @@ class ImageGroup(app_commands.Group):
     async def cat(self, interaction: discord.Interaction):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.get("https://api.thecatapi.com/v1/images/search?size=med&mime_types=jpg&format=json&has_breeds=true&order=RANDOM&page=0&limit=1") as cat:
                 msg = await interaction.response.send_message(embed=discord.Embed(title="猫の画像", color=discord.Color.green()).set_image(url=json.loads(await cat.text())[0]["url"]))
@@ -341,9 +358,9 @@ class ImageGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(色=[
-        app_commands.Choice(name='赤',value="FF0000"),
-        app_commands.Choice(name='青',value="1111FF"),
-        app_commands.Choice(name='黒',value="000000"),
+        app_commands.Choice(name='赤', value="FF0000"),
+        app_commands.Choice(name='青', value="1111FF"),
+        app_commands.Choice(name='黒', value="000000"),
     ])
     async def textmoji(self, interaction: discord.Interaction, 色: app_commands.Choice[str], テキスト: str):
         if not await command_disable.command_enabled_check(interaction):
@@ -363,19 +380,20 @@ class ImageGroup(app_commands.Group):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
 
-        embed=discord.Embed(title="HTTPCat", color=discord.Color.blue()).set_image(url=f"https://http.cat/{ステータスコード}").set_footer(text="Httpcat", icon_url="https://i.imgur.com/6mKRXgR.png")
+        embed = discord.Embed(title="HTTPCat", color=discord.Color.blue()).set_image(
+            url=f"https://http.cat/{ステータスコード}").set_footer(text="Httpcat", icon_url="https://i.imgur.com/6mKRXgR.png")
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="miq", description="Make it a quoteを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(色=[
-        app_commands.Choice(name='カラー',value="color"),
-        app_commands.Choice(name='白黒',value="black")
+        app_commands.Choice(name='カラー', value="color"),
+        app_commands.Choice(name='白黒', value="black")
     ])
     @app_commands.choices(背景色=[
-        app_commands.Choice(name='黒',value="black"),
-        app_commands.Choice(name='白',value="white")
+        app_commands.Choice(name='黒', value="black"),
+        app_commands.Choice(name='白', value="white")
     ])
     async def miq(self, interaction: discord.Interaction, ユーザー: discord.User, 発言: str, 色: app_commands.Choice[str], 背景色: app_commands.Choice[str]):
         if not await command_disable.command_enabled_check(interaction):
@@ -409,6 +427,7 @@ class ImageGroup(app_commands.Group):
         await interaction.followup.send(file=file)
         image_binary.close()
 
+
 class FunCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -428,6 +447,7 @@ class FunCog(commands.Cog):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
 
         bot = random.choice(["ぐー", "ちょき", "ぱー"])
+
         def check(user: str, bot: str):
             if user == bot:
                 return "あいこです\nもう一回やってみる？"
@@ -438,6 +458,7 @@ class FunCog(commands.Cog):
             if user == "ぱー" and bot == "ぐー":
                 return "あなたの勝ち\nもう一回やってみる？"
             return "Botの勝ち\nもう一回チャレンジしてね！"
+
         class AnsView(discord.ui.View):
             def __init__(self):
                 super().__init__(timeout=180)
@@ -476,6 +497,7 @@ class FunCog(commands.Cog):
 ・パーはグーに勝ち、チョキに負けます
 同じ手を両者が出した場合は、あいことなります。
 """, color=discord.Color.blue()), view=AnsView())
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(FunCog(bot))

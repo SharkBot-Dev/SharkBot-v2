@@ -14,6 +14,7 @@ from consts import settings
 import aiohttp
 import json
 
+
 class PokemonGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="pokemon", description="ポケモン関連のコマンドです。")
@@ -28,14 +29,15 @@ class PokemonGroup(app_commands.Group):
                 if resp.status != 200:
                     await interaction.followup.send(f"ポケモンが見つかりませんでした。", ephemeral=True)
                     return
-                
+
                 data = await resp.json()
 
                 poke_id = data["id"]
                 poke_name = data["name"].capitalize()
                 height = data["height"] / 10
                 weight = data["weight"] / 10
-                types = ", ".join([t["type"]["name"].capitalize() for t in data["types"]])
+                types = ", ".join([t["type"]["name"].capitalize()
+                                  for t in data["types"]])
                 sprite = data["sprites"]["front_default"]
 
                 embed = discord.Embed(
@@ -49,6 +51,7 @@ class PokemonGroup(app_commands.Group):
                     embed.set_thumbnail(url=sprite)
 
                 await interaction.followup.send(embed=embed)
+
 
 class FortniteGroup(app_commands.Group):
     def __init__(self):
@@ -79,10 +82,11 @@ class FortniteGroup(app_commands.Group):
                 except:
                     return await interaction.response.send_message(embed=discord.Embed(title="プレイヤーが見つかりませんでした。", color=discord.Color.red()))
                 await interaction.response.send_message(embed=discord.Embed(title=user + " の実績", color=discord.Color.green())
-                                .add_field(name="バトルパスレベル", value=f"{level}")
-                                .add_field(name="勝利数", value=f"{wins}")
-                                .add_field(name="K/D", value=f"{kd}")
-                                .set_image(url=image))
+                                                        .add_field(name="バトルパスレベル", value=f"{level}")
+                                                        .add_field(name="勝利数", value=f"{wins}")
+                                                        .add_field(name="K/D", value=f"{kd}")
+                                                        .set_image(url=image))
+
 
 class MinecraftGroup(app_commands.Group):
     def __init__(self):
@@ -103,7 +107,7 @@ class MinecraftGroup(app_commands.Group):
                             await interaction.followup.send(embed=discord.Embed(title="Minecraftのユーザー情報", description=f"ID: {j["id"]}\nName: {j["name"]}", color=discord.Color.green()).set_thumbnail(url=f"{jj["decoded"]["textures"]["SKIN"]["url"]}").set_image(url=f"https://mc-heads.net/body/{ユーザーネーム}/200"))
         except:
             return await interaction.followup.send(embed=discord.Embed(title="ユーザー情報の取得に失敗しました。", color=discord.Color.red()))
-        
+
     @app_commands.command(name="java-server", description="Minecraftサーバー(Java)の情報を見ます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -114,18 +118,24 @@ class MinecraftGroup(app_commands.Group):
                 async with session.get(f'https://api.mcsrvstat.us/3/{アドレス}') as response:
                     if response.status == 200:
                         j = json.loads(await response.text())
-                        embed = discord.Embed(title=f"「{j['motd']['clean'][0]}」\nの情報", color=discord.Color.green())
+                        embed = discord.Embed(
+                            title=f"「{j['motd']['clean'][0]}」\nの情報", color=discord.Color.green())
                         pl = j.get('players', {}).get('list', [])
-                        embed.add_field(name="参加人数", value=f'{j["players"]["online"]}人')
-                        embed.add_field(name="最大参加人数", value=f'{j["players"]["max"]}人')
+                        embed.add_field(
+                            name="参加人数", value=f'{j["players"]["online"]}人')
+                        embed.add_field(
+                            name="最大参加人数", value=f'{j["players"]["max"]}人')
                         if pl:
-                            embed.add_field(name="参加者", value=f"{'\n'.join([f'{p['name']}' for p in pl])}", inline=False)
+                            embed.add_field(
+                                name="参加者", value=f"{'\n'.join([f'{p['name']}' for p in pl])}", inline=False)
                         else:
-                            embed.add_field(name="参加者", value="現在オンラインのプレイヤーはいません", inline=False)
+                            embed.add_field(
+                                name="参加者", value="現在オンラインのプレイヤーはいません", inline=False)
 
                         if "icon" in j:
                             try:
-                                i = base64.b64decode(j["icon"].split(';base64,')[1])
+                                i = base64.b64decode(
+                                    j["icon"].split(';base64,')[1])
                                 ii = io.BytesIO(i)
                                 embed.set_thumbnail(url="attachment://f.png")
                                 await interaction.followup.send(embed=embed, file=discord.File(ii, "f.png"))
@@ -138,6 +148,7 @@ class MinecraftGroup(app_commands.Group):
                         await interaction.followup.send(f"サーバー情報を取得できませんでした。ステータスコード: {response.status}")
             except Exception as e:
                 await interaction.followup.send(f"予期せぬエラーが発生しました。")
+
 
 class GameCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -228,7 +239,8 @@ class GameCog(commands.Cog):
                                 await self.check_answer(interaction_, 2)
 
                         await interaction.followup.send(
-                            embed=discord.Embed(title="ここはどこ？", color=discord.Color.blue())
+                            embed=discord.Embed(
+                                title="ここはどこ？", color=discord.Color.blue())
                             .set_image(url=j["originalimage"]["source"]),
                             view=AnsView(),
                         )
@@ -237,6 +249,7 @@ class GameCog(commands.Cog):
                 except Exception as e:
                     print(f"GeoQuizエラー: {e}")
                     return await interaction.followup.send(content="画像の取得に失敗しました。")
+
 
 async def setup(bot):
     await bot.add_cog(GameCog(bot))

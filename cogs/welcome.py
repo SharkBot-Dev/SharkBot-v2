@@ -10,6 +10,7 @@ import aiohttp
 from discord import Webhook
 import io
 
+
 class WelcomeCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -43,6 +44,7 @@ class WelcomeCog(commands.Cog):
             return
         if dbfind is None:
             return
+
         async def rep_name(msg: str, member: discord.Member):
             return msg.replace("<name>", member.name).replace("<count>", f"{member.guild.member_count}").replace("<guild>", member.guild.name).replace("<createdat>", f"{member.created_at}")
         try:
@@ -74,6 +76,7 @@ class WelcomeCog(commands.Cog):
             return
         if dbfind is None:
             return
+
         async def rep_name(msg: str, member: discord.Member):
             return msg.replace("<name>", member.name).replace("<count>", f"{member.guild.member_count}").replace("<guild>", member.guild.name).replace("<createdat>", f"{member.created_at}")
         try:
@@ -90,7 +93,7 @@ class WelcomeCog(commands.Cog):
                     return
         except:
             return
-        
+
     @commands.Cog.listener("on_member_remove")
     async def on_member_remove(self, member: discord.Member):
         g = self.bot.get_guild(member.guild.id)
@@ -101,6 +104,7 @@ class WelcomeCog(commands.Cog):
             return
         if dbfind is None:
             return
+
         async def rep_name(msg: str, member: discord.Member):
             return msg.replace("<name>", member.name).replace("<count>", f"{member.guild.member_count}").replace("<guild>", member.guild.name).replace("<createdat>", f"{member.created_at}")
         try:
@@ -128,8 +132,10 @@ class WelcomeCog(commands.Cog):
             return
         if dbfind is None:
             return
+
         async def rep_name(msg: str, member: discord.User):
-            m = msg.replace("<name>", member.name).replace("<createdat>", f"{member.created_at}")
+            m = msg.replace("<name>", member.name).replace(
+                "<createdat>", f"{member.created_at}")
             return m
         try:
             wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
@@ -145,6 +151,7 @@ class WelcomeCog(commands.Cog):
                     return
         except:
             return
+
 
 async def setup(bot):
     await bot.add_cog(WelcomeCog(bot))

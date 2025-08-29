@@ -6,6 +6,7 @@ from discord import app_commands
 
 from models import command_disable
 
+
 class ChannelCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -27,7 +28,8 @@ class ChannelCog(commands.Cog):
         embed.add_field(name="名前", value=channel.name, inline=False)
         embed.add_field(name="ID", value=str(channel.id), inline=False)
         if channel.category:
-            embed.add_field(name="カテゴリ", value=channel.category.name, inline=False)
+            embed.add_field(
+                name="カテゴリ", value=channel.category.name, inline=False)
         else:
             embed.add_field(name="カテゴリ", value="なし", inline=False)
         embed.add_field(name="位置", value=str(channel.position), inline=False)
@@ -49,7 +51,7 @@ class ChannelCog(commands.Cog):
             await interaction.followup.send(embed=discord.Embed(title="スローモードを設定しました。", color=discord.Color.green()))
         except discord.Forbidden as e:
             return await interaction.followup.send(embed=discord.Embed(title="スローモードを設定できませんでした。", color=discord.Color.red(), description="権限エラーです。"))
-        
+
     @channel.command(name="command-disable", description="低速モードを設定するよ")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -61,8 +63,8 @@ class ChannelCog(commands.Cog):
         db = self.bot.async_db["Main"].CommandDisable
         if not コマンドが使えるか:
             await db.replace_one(
-                {"Guild": interaction.guild.id, "Channel": interaction.channel.id}, 
-                {"Guild": interaction.guild.id, "Channel": interaction.channel.id}, 
+                {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+                {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
                 upsert=True
             )
             await interaction.response.send_message(embed=discord.Embed(title="このチャンネルではコマンドを使用できなくしました。", color=discord.Color.green()))
@@ -71,6 +73,7 @@ class ChannelCog(commands.Cog):
                 "Guild": interaction.guild.id, "Channel": interaction.channel.id
             })
             await interaction.response.send_message(embed=discord.Embed(title="このチャンネルではコマンドを使用できるようにしました。", color=discord.Color.green()))
+
 
 async def setup(bot):
     await bot.add_cog(ChannelCog(bot))

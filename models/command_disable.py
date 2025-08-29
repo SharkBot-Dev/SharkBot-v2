@@ -64,6 +64,7 @@ async def remove_disabled_command(guild_id: int, cmdname: str) -> bool:
     )
     return True
 
+
 async def set_disabled_commands(guild_id: int, commands: list[str]) -> bool:
     """ギルドの無効化コマンド一覧を丸ごと置き換える"""
     await mongodb.mongo["DashboardBot"].CommandDisabled.update_one(
@@ -72,6 +73,7 @@ async def set_disabled_commands(guild_id: int, commands: list[str]) -> bool:
         upsert=True
     )
     return True
+
 
 async def get_disabled_commands(guild_id: int) -> list[str]:
     """
