@@ -7,6 +7,8 @@ from discord import app_commands
 from models import command_disable
 import traceback
 from PIL import Image, ImageSequence, ImageEnhance, ImageDraw, ImageFont, ImageOps
+import datetime
+from models.permissions_text import PERMISSION_TRANSLATIONS
 
 async def fetch_avatar(user: discord.User):
     if user.avatar:
@@ -340,8 +342,40 @@ async def setup(bot: commands.Bot):
 
         await interaction.response.send_message(ephemeral=True, view=TranslateMessageCommand(message), embed=discord.Embed(title="翻訳先を選択してください", description="Please select Language.", color=discord.Color.blue()).set_footer(text=f"mid:{message.id}"))
 
+    @app_commands.context_menu(name="ユーザー情報")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    async def user_info(interaction: discord.Interaction, member: discord.Member):
+        JST = datetime.timezone(datetime.timedelta(hours=9))
+        if interaction.guild.get_member(member.id):
+            isguild = "います。"
+        else:
+            isguild = "いません。"
+        if member.bot:
+            isbot = "はい"
+        else:
+            isbot = "いいえ"
+        embed = discord.Embed(title=f"{member.display_name}の情報 (ページ1)", color=discord.Color.green())
+        embed.add_field(name="基本情報", value=f"ID: **{member.id}**\nユーザーネーム: **{member.name}#{member.discriminator}**\n作成日: **{member.created_at.astimezone(JST)}**\nこの鯖に？: **{isguild}**\nBot？: **{isbot}**\n認証Bot？: **{"はい" if member.public_flags.verified_bot else "いいえ"}**")
+
+    @app_commands.context_menu(name="権限を見る")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    async def permissions_check(interaction: discord.Interaction, member: discord.Member):
+        try:
+            user_perms = [PERMISSION_TRANSLATIONS.get(perm, perm) for perm, value in member.guild_permissions if value]
+            user_perms_str = ", ".join(user_perms)
+            avatar = member.avatar.url if member.avatar else member.display_avatar.url
+            await interaction.followup.send(embed=discord.Embed(title=f"{member.name}さんの権限", description=user_perms_str, color=discord.Color.green()).set_thumbnail(url=avatar))
+        except Exception as e:
+            return await interaction.followup.send(embed=discord.Embed(title=f"{member.name}さんの権限", description=f"権限の取得に失敗しました。\n`{e}`", color=discord.Color.red()))
+
     # メッセージに使うコマンド
     bot.tree.add_command(make_it_a_quote)
     bot.tree.add_command(report)
     bot.tree.add_command(message_pin)
     bot.tree.add_command(message_translate)
+
+    # ユーザーに使うコマンド
+    bot.tree.add_command(user_info)
+    bot.tree.add_command(permissions_check)
