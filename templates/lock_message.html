@@ -1,135 +1,156 @@
 <html>
-    <head>
-        <title>SharkBot v2 | LockMessage</title>
-        <style>
-            body {
-                margin: 0;
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-                background-color: #2f3136;
-                color: #ffffff;
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;
-                min-height: 100vh;
-                padding: 2rem;
-            }
+  <head>
+    <title>SharkBot v2 | LockMessage</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #2f3136;
+        color: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding: 2rem;
+      }
 
-            .settings-box {
-                background-color: #36393f;
-                padding: 2rem;
-                border-radius: 15px;
-                width: 100%;
-                max-width: 700px;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-            }
+      .settings-box {
+        background-color: #36393f;
+        padding: 2rem;
+        border-radius: 15px;
+        width: 100%;
+        max-width: 700px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      }
 
-            h1 {
-                margin-bottom: 1rem;
-                font-size: 1.6rem;
-                color: #ffffff;
-                text-align: center;
-            }
+      h1 {
+        margin-bottom: 1rem;
+        font-size: 1.6rem;
+        color: #ffffff;
+        text-align: center;
+      }
 
-            .guild-header {
-                display: flex;
-                align-items: center;
-                margin-bottom: 2rem;
-            }
+      .guild-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
 
-            .guild-header img {
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                margin-right: 1rem;
-                border: 3px solid #5865f2;
-                background-color: #2f3136;
-            }
+      .guild-header img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        margin-right: 1rem;
+        border: 3px solid #5865f2;
+        background-color: #2f3136;
+      }
 
-            .form-group {
-                margin-bottom: 1.5rem;
-            }
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
 
-            label {
-                display: block;
-                font-weight: bold;
-                margin-bottom: 0.5rem;
-                color: #cccccc;
-            }
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #cccccc;
+      }
 
-            input[type="text"],
-            textarea,
-            select {
-                width: 100%;
-                padding: 0.8rem;
-                border: none;
-                border-radius: 8px;
-                background-color: #202225;
-                color: #ffffff;
-                font-size: 1rem;
-            }
+      input[type="text"],
+      textarea,
+      select {
+        width: 100%;
+        padding: 0.8rem;
+        border: none;
+        border-radius: 8px;
+        background-color: #202225;
+        color: #ffffff;
+        font-size: 1rem;
+      }
 
-            textarea {
-                resize: vertical;
-                min-height: 80px;
-            }
+      textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
 
-            button {
-                background-color: #5865f2;
-                border: none;
-                border-radius: 8px;
-                padding: 0.8rem 1.5rem;
-                color: #ffffff;
-                font-size: 1rem;
-                font-weight: bold;
-                cursor: pointer;
-                transition: background 0.2s ease;
-            }
+      button {
+        background-color: #5865f2;
+        border: none;
+        border-radius: 8px;
+        padding: 0.8rem 1.5rem;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
 
-            button:hover {
-                background-color: #4752c4;
-            }
+      button:hover {
+        background-color: #4752c4;
+      }
 
-            .actions {
-                text-align: right;
-                margin-top: 2rem;
-            }
-        </style>
-    </head>
+      .actions {
+        text-align: right;
+        margin-top: 2rem;
+      }
+    </style>
+  </head>
 
-    <body>
-        <div class="settings-box">
-            <div class="guild-header">
-                <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png?size=128" alt="Guild Icon">
-                <h1>{{ guild.name }} の固定メッセージ</h1>
-            </div>
+  <body>
+    <div class="settings-box">
+      <div class="guild-header">
+        <img
+          src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png?size=128"
+          alt="Guild Icon"
+        />
+        <h1>{{ guild.name }} の固定メッセージ</h1>
+      </div>
 
-            <form method="post" action="/settings/{{ guild.id }}/pin_message_create">
-                <div class="form-group">
-                    <label for="title">タイトル</label>
-                    <input type="text" id="title" name="title" value="固定メッセージ">
-                </div>
-
-                <div class="form-group">
-                    <label for="desc">説明</label>
-                    <textarea id="desc" name="desc">これは固定メッセージの説明です。</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="channel">設定先チャンネル</label>
-                    <select id="channel" name="channel">
-                        {% for ch in channels %}
-                            <option value="{{ ch.id }}">{{ ch.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="actions">
-                    <button type="submit">設定する</button>
-                </div>
-
-                <h5>固定メッセージは、設定先チャンネルで一回発言すると出現します。<br>
-                削除は、固定メッセージについている「削除」ボタンで削除できます。</h5>
-            </form>
+      <form
+        method="post"
+        action="/settings/{{ guild.id }}/pin_message_create"
+      >
+        <div class="form-group">
+          <label for="title">タイトル</label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            value="固定メッセージ"
+          />
         </div>
-    </body>
+
+        <div class="form-group">
+          <label for="desc">説明</label>
+          <textarea
+            id="desc"
+            name="desc"
+          >
+これは固定メッセージの説明です。</textarea
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="channel">設定先チャンネル</label>
+          <select
+            id="channel"
+            name="channel"
+          >
+            {% for ch in channels %}
+            <option value="{{ ch.id }}">{{ ch.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="actions">
+          <button type="submit">設定する</button>
+        </div>
+
+        <h5>
+          固定メッセージは、設定先チャンネルで一回発言すると出現します。<br />
+          削除は、固定メッセージについている「削除」ボタンで削除できます。
+        </h5>
+      </form>
+    </div>
+  </body>
 </html>

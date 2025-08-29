@@ -1,170 +1,186 @@
 <html>
-    <head>
-        <title>SharkBot v2 | Commands</title>
-        <style>
-            body {
-                margin: 0;
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-                background-color: #2f3136;
-                color: #ffffff;
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;
-                min-height: 100vh;
-                padding: 2rem;
-            }
-            .settings-box {
-                background-color: #36393f;
-                padding: 2rem;
-                border-radius: 15px;
-                width: 100%;
-                max-width: 1700px;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-            }
-            h1 {
-                margin-bottom: 1rem;
-                font-size: 1.6rem;
-                color: #ffffff;
-                text-align: center;
-            }
-            .guild-header {
-                display: flex;
-                align-items: center;
-                margin-bottom: 2rem;
-            }
-            .guild-header img {
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                margin-right: 1rem;
-                border: 3px solid #5865f2;
-                background-color: #2f3136;
-            }
-            .commands-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 1rem;
-            }
-            .command-box {
-                background-color: #2f3136;
-                padding: 1rem;
-                border-radius: 10px;
-                border: 1px solid #444;
-                display: flex;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-            .command-box label {
-                font-weight: normal;
-                color: #cccccc;
-                cursor: pointer;
-            }
-            .command-box input[type="checkbox"] {
-                margin-top: 0.2rem;
-            }
-            .actions {
-                text-align: right;
-                margin-top: 2rem;
-            }
-            button {
-                background-color: #5865f2;
-                border: none;
-                border-radius: 8px;
-                padding: 0.8rem 1.5rem;
-                color: #ffffff;
-                font-size: 1rem;
-                font-weight: bold;
-                cursor: pointer;
-                transition: background 0.2s ease;
-            }
-            button:hover {
-                background-color: #4752c4;
-            }
+  <head>
+    <title>SharkBot v2 | Commands</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #2f3136;
+        color: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding: 2rem;
+      }
+      .settings-box {
+        background-color: #36393f;
+        padding: 2rem;
+        border-radius: 15px;
+        width: 100%;
+        max-width: 1700px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      }
+      h1 {
+        margin-bottom: 1rem;
+        font-size: 1.6rem;
+        color: #ffffff;
+        text-align: center;
+      }
+      .guild-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      .guild-header img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        margin-right: 1rem;
+        border: 3px solid #5865f2;
+        background-color: #2f3136;
+      }
+      .commands-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+      .command-box {
+        background-color: #2f3136;
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid #444;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      .command-box label {
+        font-weight: normal;
+        color: #cccccc;
+        cursor: pointer;
+      }
+      .command-box input[type="checkbox"] {
+        margin-top: 0.2rem;
+      }
+      .actions {
+        text-align: right;
+        margin-top: 2rem;
+      }
+      button {
+        background-color: #5865f2;
+        border: none;
+        border-radius: 8px;
+        padding: 0.8rem 1.5rem;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      button:hover {
+        background-color: #4752c4;
+      }
 
-            /* スイッチ全体 */
-            .switch {
-                position: relative;
-                display: inline-block;
-                width: 60px;
-                height: 34px;
-            }
+      /* スイッチ全体 */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+      }
 
-            /* デフォルトのチェックボックスを非表示 */
-            .switch input {
-                opacity: 0;
-                width: 0;
-                height: 0;
-            }
+      /* デフォルトのチェックボックスを非表示 */
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
 
-            /* スライダー部分 */
-            .slider {
-                position: absolute;
-                cursor: pointer;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: #ccc;
-                transition: 0.4s;
-                border-radius: 34px;
-            }
+      /* スライダー部分 */
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 34px;
+      }
 
-            /* 丸い部分 */
-            .slider:before {
-                position: absolute;
-                content: "";
-                height: 26px;
-                width: 26px;
-                left: 4px;
-                bottom: 4px;
-                background-color: white;
-                transition: 0.4s;
-                border-radius: 50%;
-            }
+      /* 丸い部分 */
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
 
-            /* チェック時の背景色 */
-            input:checked + .slider {
-                background-color: #4caf50;
-            }
+      /* チェック時の背景色 */
+      input:checked + .slider {
+        background-color: #4caf50;
+      }
 
-            /* チェック時の丸の移動 */
-            input:checked + .slider:before {
-                transform: translateX(26px);
-            }
-        </style>
-    </head>
+      /* チェック時の丸の移動 */
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+    </style>
+  </head>
 
-    <body>
-        <div class="settings-box">
-            <div class="guild-header">
-                <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png?size=128" alt="Guild Icon">
-                <h1>{{ guild.name }} のコマンド設定</h1>
-            </div>
+  <body>
+    <div class="settings-box">
+      <div class="guild-header">
+        <img
+          src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png?size=128"
+          alt="Guild Icon"
+        />
+        <h1>{{ guild.name }} のコマンド設定</h1>
+      </div>
 
-            <form method="post" action="/settings/{{ guild.id }}/command_disable">
-                <div class="commands-grid">
-                    {% for cmd in commands %}
-                        <div class="command-box">
-                            <label class="switch">
-                                <input type="checkbox" 
-                                    name="enabled_commands" 
-                                    value="{{ cmd.name }}" 
-                                    id="cmd_{{ loop.index }}"
-                                    {% if cmd.name not in disabled_commands %}checked{% endif %}>
-                                <span class="slider"></span>
-                            </label>
-                            <label for="cmd_{{ loop.index }}">
-                                <strong>{{ cmd.name }}</strong><br>
-                                <span style="font-size: 0.85rem; color: #aaa;">{{ cmd.description }}</span>
-                            </label>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                <div class="actions">
-                    <button type="submit">保存</button>
-                </div>
-            </form>
+      <form
+        method="post"
+        action="/settings/{{ guild.id }}/command_disable"
+      >
+        <div class="commands-grid">
+          {% for cmd in commands %}
+          <div class="command-box">
+            <label class="switch">
+              <input
+                type="checkbox"
+                name="enabled_commands"
+                value="{{ cmd.name }}"
+                id="cmd_{{ loop.index }}"
+                {%
+                if
+                cmd.name
+                not
+                in
+                disabled_commands
+                %}checked{%
+                endif
+                %}
+              />
+              <span class="slider"></span>
+            </label>
+            <label for="cmd_{{ loop.index }}">
+              <strong>{{ cmd.name }}</strong><br />
+              <span style="font-size: 0.85rem; color: #aaa">{{ cmd.description }}</span>
+            </label>
+          </div>
+          {% endfor %}
         </div>
-    </body>
+
+        <div class="actions">
+          <button type="submit">保存</button>
+        </div>
+      </form>
+    </div>
+  </body>
 </html>

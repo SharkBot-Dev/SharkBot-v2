@@ -1,268 +1,295 @@
 <html>
-    <head>
-        <title>SharkBot v2 | RankCard</title>
-        <style>
-            body {
-                margin: 0;
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-                background-color: #2f3136;
-                color: #ffffff;
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;
-                min-height: 100vh;
-                padding: 2rem;
-            }
+  <head>
+    <title>SharkBot v2 | RankCard</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #2f3136;
+        color: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding: 2rem;
+      }
 
-            .settings-box {
-                background-color: #36393f;
-                padding: 2rem;
-                border-radius: 15px;
-                width: 100%;
-                max-width: 700px;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-            }
+      .settings-box {
+        background-color: #36393f;
+        padding: 2rem;
+        border-radius: 15px;
+        width: 100%;
+        max-width: 700px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      }
 
-            h1 {
-                margin-bottom: 1rem;
-                font-size: 1.6rem;
-                color: #ffffff;
-                text-align: center;
-            }
+      h1 {
+        margin-bottom: 1rem;
+        font-size: 1.6rem;
+        color: #ffffff;
+        text-align: center;
+      }
 
-            .guild-header {
-                display: flex;
-                align-items: center;
-                margin-bottom: 2rem;
-            }
+      .guild-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
 
-            .guild-header img {
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                margin-right: 1rem;
-                border: 3px solid #5865f2;
-                background-color: #2f3136;
-            }
+      .guild-header img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        margin-right: 1rem;
+        border: 3px solid #5865f2;
+        background-color: #2f3136;
+      }
 
-            .form-group {
-                margin-bottom: 1.5rem;
-            }
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
 
-            label {
-                display: block;
-                font-weight: bold;
-                margin-bottom: 0.5rem;
-                color: #cccccc;
-            }
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #cccccc;
+      }
 
-            input[type="text"],
-            textarea,
-            select {
-                width: 100%;
-                padding: 0.8rem;
-                border: none;
-                border-radius: 8px;
-                background-color: #202225;
-                color: #ffffff;
-                font-size: 1rem;
-            }
+      input[type="text"],
+      textarea,
+      select {
+        width: 100%;
+        padding: 0.8rem;
+        border: none;
+        border-radius: 8px;
+        background-color: #202225;
+        color: #ffffff;
+        font-size: 1rem;
+      }
 
-            textarea {
-                resize: vertical;
-                min-height: 80px;
-            }
+      textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
 
-            button {
-                background-color: #5865f2;
-                border: none;
-                border-radius: 8px;
-                padding: 0.8rem 1.5rem;
-                color: #ffffff;
-                font-size: 1rem;
-                font-weight: bold;
-                cursor: pointer;
-                transition: background 0.2s ease;
-            }
+      button {
+        background-color: #5865f2;
+        border: none;
+        border-radius: 8px;
+        padding: 0.8rem 1.5rem;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
 
-            button:hover {
-                background-color: #4752c4;
-            }
+      button:hover {
+        background-color: #4752c4;
+      }
 
-            .actions {
-                text-align: right;
-                margin-top: 2rem;
-            }
+      .actions {
+        text-align: right;
+        margin-top: 2rem;
+      }
 
-            /* デフォルトのラジオボタンを非表示にする */
-            input[type="radio"] {
-                display: none;
-            }
+      /* デフォルトのラジオボタンを非表示にする */
+      input[type="radio"] {
+        display: none;
+      }
 
-            /* ラベルの共通スタイル */
-            label {
-                display: inline-block;
-                cursor: pointer;
-                padding-left: 25px; 
-                position: relative;
-                line-height: 20px;
-            }
+      /* ラベルの共通スタイル */
+      label {
+        display: inline-block;
+        cursor: pointer;
+        padding-left: 25px;
+        position: relative;
+        line-height: 20px;
+      }
 
-            /* ラジオボタンの外枠 */
-            label::before {
-                content: '';
-                display: block;
-                width: 16px;
-                height: 16px;
-                border: 2px solid #ccc;
-                border-radius: 50%;
-                position: absolute;
-                top: 50%;
-                left: 0;
-                transform: translateY(-50%);
-                transition: all 0.3s ease;
-            }
+      /* ラジオボタンの外枠 */
+      label::before {
+        content: "";
+        display: block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #ccc;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        transition: all 0.3s ease;
+      }
 
-            /* ラジオボタンの内側の点 */
-            label::after {
-                content: '';
-                display: block;
-                width: 8px;
-                height: 8px;
-                background-color: transparent;
-                border-radius: 50%;
-                position: absolute;
-                top: 50%;
-                left: 4px;
-                transform: translateY(-50%);
-                transition: all 0.3s ease;
-            }
+      /* ラジオボタンの内側の点 */
+      label::after {
+        content: "";
+        display: block;
+        width: 8px;
+        height: 8px;
+        background-color: transparent;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 4px;
+        transform: translateY(-50%);
+        transition: all 0.3s ease;
+      }
 
-            /* 選択されたラジオボタンのスタイル */
-            input[type="radio"]:checked + label::before {
-                border-color: #007bff; /* 外枠の色 */
-            }
+      /* 選択されたラジオボタンのスタイル */
+      input[type="radio"]:checked + label::before {
+        border-color: #007bff; /* 外枠の色 */
+      }
 
-            input[type="radio"]:checked + label::after {
-                background-color: #007bff; /* 内側の点の色 */
-            }
+      input[type="radio"]:checked + label::after {
+        background-color: #007bff; /* 内側の点の色 */
+      }
 
-            /* 全体に色を付ける */
-            input[id="red"]:checked + label::before,
-            input[id="red"]:checked + label::after {
-                border-color: red; /* 外枠の色 */
-                background-color: red; /* 内側の点の色 */
-            }
+      /* 全体に色を付ける */
+      input[id="red"]:checked + label::before,
+      input[id="red"]:checked + label::after {
+        border-color: red; /* 外枠の色 */
+        background-color: red; /* 内側の点の色 */
+      }
 
-            input[id="yellow"]:checked + label::before,
-            input[id="yellow"]:checked + label::after {
-                border-color: yellow;
-                background-color: yellow;
-            }
+      input[id="yellow"]:checked + label::before,
+      input[id="yellow"]:checked + label::after {
+        border-color: yellow;
+        background-color: yellow;
+      }
 
-            input[id="blue"]:checked + label::before,
-            input[id="blue"]:checked + label::after {
-                border-color: blue;
-                background-color: blue;
-            }
-        </style>
-        <link href="https://fonts.cdnfonts.com/css/gg-sans-2" rel="stylesheet">
-    </head>
+      input[id="blue"]:checked + label::before,
+      input[id="blue"]:checked + label::after {
+        border-color: blue;
+        background-color: blue;
+      }
+    </style>
+    <link
+      href="https://fonts.cdnfonts.com/css/gg-sans-2"
+      rel="stylesheet"
+    />
+  </head>
 
-    <body>
-        <div class="settings-box">
-            <h1>ランクカード編集</h1>
+  <body>
+    <div class="settings-box">
+      <h1>ランクカード編集</h1>
 
-            <center>
-                <canvas id="canv"></canvas>
-            </center>
+      <center>
+        <canvas id="canv"></canvas>
+      </center>
 
-            <form method="post" action="/rankcard/set">
-                <div class="form-group">
-                    <h4>色を選択してください</h4>
-                    <div>
-                        <input type="radio" id="red" name="color" value="red" checked>
-                        <label for="red">赤</label>
-                    </div>
-                    <div>
-                        <input type="radio" id="yellow" name="color" value="yellow">
-                        <label for="yellow">黄</label>
-                    </div>
-                    <div>
-                        <input type="radio" id="blue" name="color" value="blue">
-                        <label for="blue">青</label>
-                    </div>
-                </div>
-
-                <div class="actions">
-                    <button type="submit">設定する</button>
-                </div>
-            </form>
+      <form
+        method="post"
+        action="/rankcard/set"
+      >
+        <div class="form-group">
+          <h4>色を選択してください</h4>
+          <div>
+            <input
+              type="radio"
+              id="red"
+              name="color"
+              value="red"
+              checked
+            />
+            <label for="red">赤</label>
+          </div>
+          <div>
+            <input
+              type="radio"
+              id="yellow"
+              name="color"
+              value="yellow"
+            />
+            <label for="yellow">黄</label>
+          </div>
+          <div>
+            <input
+              type="radio"
+              id="blue"
+              name="color"
+              value="blue"
+            />
+            <label for="blue">青</label>
+          </div>
         </div>
 
-        <script>
-            document.addEventListener('change', function(event) {
-                if (event.target.type === 'radio' && event.target.name === 'color') {
-                    
-                    generateRankCard("{{user.username}}", "https://cdn.discordapp.com/avatars/{{user.id}}/{{user.avatar}}");
-                }
-            });
+        <div class="actions">
+          <button type="submit">設定する</button>
+        </div>
+      </form>
+    </div>
 
-            function generateRankCard(username, avatarUrl) {
-                const allRadios = document.querySelectorAll('input[name="color"]');
+    <script>
+      document.addEventListener("change", function (event) {
+        if (event.target.type === "radio" && event.target.name === "color") {
+          generateRankCard(
+            "{{user.username}}",
+            "https://cdn.discordapp.com/avatars/{{user.id}}/{{user.avatar}}"
+          );
+        }
+      });
 
-                let selectedColor = null;
+      function generateRankCard(username, avatarUrl) {
+        const allRadios = document.querySelectorAll('input[name="color"]');
 
-                allRadios.forEach(radio => {
-                    if (radio.checked) {
-                        selectedColor = radio.value;
-                    }
-                });
+        let selectedColor = null;
 
-                if (!selectedColor) return;
+        allRadios.forEach((radio) => {
+          if (radio.checked) {
+            selectedColor = radio.value;
+          }
+        });
 
-                const canvas = document.getElementById("canv");
-                const ctx = canvas.getContext('2d');
-                
-                canvas.width = 500;
-                canvas.height = 150;
-                
-                // Set background color
-                if (selectedColor == "red") {
-                    ctx.fillStyle = `rgb(125, 52, 75)`;
-                } else if (selectedColor == "yellow") {
-                    ctx.fillStyle = `rgb(136, 158, 27)`;
-                } else if (selectedColor == "blue") {
-                    ctx.fillStyle = "rgb(80, 88, 204)";
-                }
-                
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Load and draw avatar
-                const avatar = new Image();
-                avatar.src = avatarUrl;
-                avatar.decode();
-                
-                // Clip the avatar to a circle
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(60, 75, 50, 0, Math.PI * 2);
-                ctx.clip();
-                ctx.drawImage(avatar, 10, 25, 100, 100);
-                ctx.restore();
-                
-                // Set font for text
-                ctx.font = '20px "gg sans"'; 
-                ctx.fillStyle = '#000000';
-                
-                // Draw text
-                ctx.fillText(username, 120, 45);
-                
-                // Return the canvas as a blob or data URL
-                return;
-            }
+        if (!selectedColor) return;
 
-            generateRankCard("{{user.username}}", "https://cdn.discordapp.com/avatars/{{user.id}}/{{user.avatar}}");
-        </script>
-    </body>
+        const canvas = document.getElementById("canv");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = 500;
+        canvas.height = 150;
+
+        // Set background color
+        if (selectedColor == "red") {
+          ctx.fillStyle = `rgb(125, 52, 75)`;
+        } else if (selectedColor == "yellow") {
+          ctx.fillStyle = `rgb(136, 158, 27)`;
+        } else if (selectedColor == "blue") {
+          ctx.fillStyle = "rgb(80, 88, 204)";
+        }
+
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Load and draw avatar
+        const avatar = new Image();
+        avatar.src = avatarUrl;
+        avatar.decode();
+
+        // Clip the avatar to a circle
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(60, 75, 50, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(avatar, 10, 25, 100, 100);
+        ctx.restore();
+
+        // Set font for text
+        ctx.font = '20px "gg sans"';
+        ctx.fillStyle = "#000000";
+
+        // Draw text
+        ctx.fillText(username, 120, 45);
+
+        // Return the canvas as a blob or data URL
+        return;
+      }
+
+      generateRankCard(
+        "{{user.username}}",
+        "https://cdn.discordapp.com/avatars/{{user.id}}/{{user.avatar}}"
+      );
+    </script>
+  </body>
 </html>
