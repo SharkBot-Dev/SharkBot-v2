@@ -10,6 +10,7 @@ import sqlite3
 import aiofiles
 from pymongo import MongoClient
 import dotenv
+from models import custom_tree
 
 dotenv.load_dotenv()
 
@@ -20,7 +21,8 @@ class NewSharkBot(commands.AutoShardedBot):
         super().__init__(
             command_prefix=self.ChangePrefix,
             help_command=None,
-            intents=intent
+            intents=intent,
+            tree_cls=custom_tree.CustomTree
         )
         print("InitDone")
         self.async_db = AsyncIOMotorClient("mongodb://localhost:27017")
