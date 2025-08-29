@@ -1019,7 +1019,7 @@ class PanelCog(commands.Cog):
     async def panel_free_channel(self, interaction: discord.Interaction, タイトル: str, 説明: str, カテゴリ: discord.CategoryChannel = None):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(ephemeral=True, content="そのコマンドは無効化されています。")
-        msg = await interaction.channel.send(embed=discord.Embed(title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()), view=discord.ui.View().add_item(discord.ui.Button(label="チケットを作成", custom_id=f"freechannel_")))
+        msg = await interaction.channel.send(embed=discord.Embed(title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()), view=discord.ui.View().add_item(discord.ui.Button(label="チャンネルを作成", custom_id=f"freechannel_")))
         if カテゴリ:
             db = self.bot.async_db["Main"].FreeChannelCategory
             await db.replace_one(
