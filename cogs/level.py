@@ -305,7 +305,7 @@ class LevelCog(commands.Cog):
             return await interaction.followup.send(embed=discord.Embed(title="レベルは無効です。", color=discord.Color.red()))
 
     async def get_user_color(self, user: discord.User):
-        db = self.bot.async_db["Main"].UserColor
+        db = self.bot.async_db["Main"].RankColor
         try:
             dbfind = await db.find_one({"User": user.id}, {"_id": False})
         except:
