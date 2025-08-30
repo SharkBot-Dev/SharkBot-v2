@@ -525,12 +525,28 @@ class GlobalCog(commands.Cog):
             return await interaction.response.send_message(
                 ephemeral=True, content="そのコマンドは無効化されています。"
             )
+        
+        db = self.bot.async_db["Main"].Register
+
+        try:
+            dbfind = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
+        except:
+            return
+        if not dbfind is None:
+            await db.delete_one(
+                {
+                    "Guild": interaction.guild.id,
+                }
+            )
+            return await interaction.response.send_message(embed=discord.Embed(title="サーバー掲示板から削除しました。", color=discord.Color.red()))
+
+        await interaction.response.defer()
 
         if interaction.guild.icon == None:
             return await interaction.reply(
                 "サーバー掲示板に乗せるにはアイコンを設定する必要があります。"
             )
-        db = self.bot.async_db["Main"].Register
+        
         inv = await interaction.channel.create_invite()
         await db.replace_one(
             {"Guild": interaction.guild.id},
