@@ -385,6 +385,8 @@ class LevelCog(commands.Cog):
             return (136, 158, 27)
         elif dbfind["Color"] == "blue":
             return (80, 88, 204)
+        elif dbfind["Color"] == "green":
+            return (66, 245, 96)
         elif dbfind["Color"] == "random":
             return (
                 random.randint(0, 255),

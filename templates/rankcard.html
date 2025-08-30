@@ -165,6 +165,12 @@
         border-color: blue;
         background-color: blue;
       }
+
+      input[id="green"]:checked + label::before,
+      input[id="green"]:checked + label::after {
+        border-color: green;
+        background-color: green;
+      }
     </style>
     <link
       href="https://fonts.cdnfonts.com/css/gg-sans-2"
@@ -214,6 +220,15 @@
             />
             <label for="blue">青</label>
           </div>
+          <div>
+            <input
+              type="radio"
+              id="green"
+              name="color"
+              value="green"
+            />
+            <label for="green">緑</label>
+          </div>
         </div>
 
         <div class="actions">
@@ -258,6 +273,8 @@
           ctx.fillStyle = `rgb(136, 158, 27)`;
         } else if (selectedColor == "blue") {
           ctx.fillStyle = "rgb(80, 88, 204)";
+        } else if (selectedColor == "green") {
+          ctx.fillStyle = "rgb(66, 245, 96)";
         }
 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
