@@ -658,7 +658,7 @@ Botを追加したユーザーは？: {add_bot_user}
             await interaction.followup.send(f"🔗 Wikipedia短縮リンク: {short_url}")
 
         except Exception as e:
-            await interaction.followup.send(f"エラーが発生しました: {str(e)}")
+            await interaction.followup.send(f"エラーが発生しました")
 
     @search.command(name="safeweb", description="サイトの安全性を調べます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
