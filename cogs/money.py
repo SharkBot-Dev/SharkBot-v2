@@ -212,6 +212,12 @@ class GachaGroup(app_commands.Group):
         
         await interaction.response.defer()
 
+        m = await Money(interaction.client).get_server_money(
+            interaction.guild, interaction.user
+        )
+        if m < dbfind["Money"]:
+            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="ガチャを引くためのお金がありません。", color=discord.Color.red()))
+
         await Money(interaction.client).add_server_money(interaction.guild, interaction.user, -dbfind.get("Money", 1))
 
         ch = random.choice(dbfind.get("Item", []))
