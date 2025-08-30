@@ -350,12 +350,6 @@ Botを追加したユーザーは？: {add_bot_user}
             view = PaginatorView()
             view.add_item(
                 discord.ui.Button(
-                    label="/shopでSharkポイントを使って装飾アイテムを買えます。",
-                    disabled=True,
-                )
-            )
-            view.add_item(
-                discord.ui.Button(
                     label="サポートサーバー", url="https://discord.gg/mUyByHYMGk"
                 )
             )
