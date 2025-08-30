@@ -202,7 +202,7 @@ class GachaGroup(app_commands.Group):
     ):
         db = interaction.client.async_db["Main"].ServerMoneyItems
         dbfind = await db.find_one(
-            {"Guild": interaction.id, "Name": ガチャ名}, {"_id": False}
+            {"Guild": interaction.guild.id, "Name": ガチャ名}, {"_id": False}
         )
         if dbfind is None:
             return await interaction.response.send_message(ephemeral=True, content="ガチャが見つかりません。")
