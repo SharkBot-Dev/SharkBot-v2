@@ -243,7 +243,7 @@ class GamesGroup(app_commands.Group):
             )
         if 裏表.lower() not in ["表", "裏"]:
             return await interaction.response.send_message(
-                "コインの裏表を入力してください。\n例: /server-economy games coinflip 裏",
+                "コインの裏表を入力してください。\n例: /economy games coinflip 裏",
                 ephemeral=True,
             )
 
