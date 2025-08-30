@@ -468,6 +468,7 @@ async def setup(bot: commands.Bot):
     async def permissions_check(
         interaction: discord.Interaction, member: discord.Member
     ):
+        await interaction.response.defer()
         try:
             user_perms = [
                 PERMISSION_TRANSLATIONS.get(perm, perm)
