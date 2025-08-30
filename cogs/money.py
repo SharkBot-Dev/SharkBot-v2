@@ -200,7 +200,7 @@ class GachaGroup(app_commands.Group):
     async def economy_gacha_buy(
         self, interaction: discord.Interaction, ガチャ名: str
     ):
-        db = self.bot.async_db["Main"].ServerMoneyItems
+        db = interaction.client.async_db["Main"].ServerMoneyItems
         dbfind = await db.find_one(
             {"Guild": interaction.id, "Name": ガチャ名}, {"_id": False}
         )
