@@ -117,6 +117,15 @@ class AdminCog(commands.Cog):
         except:
             return
 
+    @commands.Cog.listener("on_guild_join")
+    async def on_guild_join_log(self, guild: discord.Guild):
+        await self.bot.get_channel(1359793645842206912).send(embed=discord.Embed(title=f"{guild.name}に参加しました。", description=f"{guild.id}", color=discord.Color.green())
+                                                             .set_thumbnail(url=guild.icon.url if guild.icon else None))
+                
+    @commands.Cog.listener("on_guild_remove")
+    async def on_guild_remove_log(self, guild: discord.Guild):
+        await self.bot.get_channel(1359793645842206912).send(embed=discord.Embed(title=f"{guild.name}から退出しました。", color=discord.Color.red())
+                                                             .set_thumbnail(url=guild.icon.url if guild.icon else None))
 
 async def setup(bot):
     await bot.add_cog(AdminCog(bot))
