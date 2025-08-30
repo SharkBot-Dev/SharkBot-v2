@@ -32,10 +32,8 @@ class AdminCog(commands.Cog):
         ]
     )
     async def cogs_setting(self, interaction: discord.Interaction, 操作の種類: app_commands.Choice[str], cog名: str):
-        isadmin = await self.get_admins(interaction.user)
-
-        if not isadmin:
-            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="あなたはSharkBotの管理者ではないため実行できません。", color=discord.Color.red()))
+        if interaction.user.id != 1335428061541437531:
+            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="あなたはSharkBotのオーナーではないため実行できません。", color=discord.Color.red()))
 
         await interaction.response.defer()
 
