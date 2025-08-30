@@ -477,6 +477,25 @@ class ToolsCog(commands.Cog):
             )
         )
 
+    @tools.command(name="timer", description="タイマーをセットします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def timer(
+        self,
+        interaction: discord.Interaction,
+        秒数: int
+    ):
+        if 秒数 > 600:
+            return await interaction.response.send_message(embed=discord.Embed(title="10分以上は計れません。", color=discord.Color.red()), ephemeral=True)
+        db = self.bot.async_db["Main"].AlertQueue
+        try:
+            dbfind = await db.find_one({"ID": f"timer_{interaction.user.id}"}, {"_id": False})
+        except:
+            return await interaction.response.send_message(embed=discord.Embed(title="タイマーはすでにセットされています。", color=discord.Color.red()), ephemeral=True)
+        if not dbfind is None:
+            return await interaction.response.send_message(embed=discord.Embed(title="タイマーはすでにセットされています。", color=discord.Color.red()), ephemeral=True)
+        await self.bot.alert_add(f"timer_{interaction.user.id}", interaction.channel.id, f"{interaction.user.mention}", f"{秒数}秒が経ちました。", "タイマーがストップされました。", 秒数)
+        return await interaction.response.send_message(embed=discord.Embed(title="タイマーをセットしました。", description=f"{秒数}秒です。", color=discord.Color.green()))
 
 async def setup(bot):
     await bot.add_cog(ToolsCog(bot))

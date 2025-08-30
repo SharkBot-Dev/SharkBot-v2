@@ -10,6 +10,9 @@ class CustomTree(discord.app_commands.CommandTree):
     def _from_interaction(self, interaction: discord.Interaction) -> None:
         async def wrapper():
             try:
+                if not interaction.guild:
+                    return await interaction.response.send_message(embed=discord.Embed(title="DMではスラッシュコマンドを実行できません。", color=discord.Color.red()), ephemeral=True)
+
                 if not await command_disable.command_enabled_check(interaction):
                     current_time = time.time()
                     last_message_time = cooldown_check.get(interaction.user.id, 0)
