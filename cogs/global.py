@@ -525,7 +525,7 @@ class GlobalCog(commands.Cog):
             return await interaction.response.send_message(
                 ephemeral=True, content="そのコマンドは無効化されています。"
             )
-        
+
         db = self.bot.async_db["Main"].Register
 
         try:
@@ -538,7 +538,11 @@ class GlobalCog(commands.Cog):
                     "Guild": interaction.guild.id,
                 }
             )
-            return await interaction.response.send_message(embed=discord.Embed(title="サーバー掲示板から削除しました。", color=discord.Color.red()))
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="サーバー掲示板から削除しました。", color=discord.Color.red()
+                )
+            )
 
         await interaction.response.defer()
 
@@ -546,7 +550,7 @@ class GlobalCog(commands.Cog):
             return await interaction.reply(
                 "サーバー掲示板に乗せるにはアイコンを設定する必要があります。"
             )
-        
+
         inv = await interaction.channel.create_invite()
         await db.replace_one(
             {"Guild": interaction.guild.id},

@@ -80,7 +80,15 @@ def wrap_text_with_ellipsis(text, font, draw, max_width, max_height, line_height
     return lines
 
 
-def create_quote_image(author, text, avatar_bytes, background, textcolor, color: bool, negapoji: bool = False):
+def create_quote_image(
+    author,
+    text,
+    avatar_bytes,
+    background,
+    textcolor,
+    color: bool,
+    negapoji: bool = False,
+):
     width, height = 800, 400
     background_color = background
     text_color = textcolor
@@ -536,7 +544,9 @@ class ImageGroup(app_commands.Group):
         elif 背景色.value == "white":
             back = (255, 255, 255)
             text = (0, 0, 0)
-        miq = create_quote_image(ユーザー.display_name, 発言, av, back, text, color, negapoji)
+        miq = create_quote_image(
+            ユーザー.display_name, 発言, av, back, text, color, negapoji
+        )
         image_binary = io.BytesIO()
         miq.save(image_binary, "PNG")
         image_binary.seek(0)
