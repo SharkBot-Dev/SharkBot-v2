@@ -438,6 +438,65 @@ Botを追加したユーザーは？: {add_bot_user}
         else:
             await interaction.followup.send(embed=embed)
 
+    async def get_ban_user_from_audit_log(self, guild: discord.Guild, user: discord.User):
+        try:
+            async for entry in guild.audit_logs(action=discord.AuditLogAction.ban, limit=None):
+                if entry.target.id == user.id:
+                    return f"{entry.user.display_name} ({entry.user.id})"
+            return "取得失敗しました"
+        except discord.Forbidden:
+            return "監査ログを閲覧する権限がありません。"
+        except Exception as e:
+            return f"監査ログの確認中にエラーが発生しました"
+
+    @search.command(name="ban", description="banされたメンバーを検索します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(ban_members=True)
+    async def ban_info(self, interaction: discord.Interaction, ユーザー: discord.User):
+        await interaction.response.defer()
+        try:
+            ban_user = await interaction.guild.fetch_ban(ユーザー)
+            embed = discord.Embed(title="BANされたユーザーの情報", color=discord.Color.green())
+            embed.add_field(name="ユーザー名", value=f"{ban_user.user.display_name} ({ban_user.user.id})", inline=False)
+            embed.add_field(name="ユーザーid", value=f"{ban_user.user.id}", inline=False)
+            embed.add_field(name="BANされた理由", value=ban_user.reason if ban_user.reason else "理由なし")
+            User = await self.get_ban_user_from_audit_log(interaction.guild, ユーザー)
+            embed.add_field(name="BANした人", value=User, inline=False)
+            embed.set_thumbnail(url=ban_user.user.avatar.url if ban_user.user.avatar else ban_user.user.default_avatar.url)
+            embed.set_footer(text=f"{interaction.guild.name} | {interaction.guild.id}")
+            await interaction.followup.send(embed=embed)
+        except discord.NotFound:
+            await interaction.followup.send(embed=discord.Embed(title="その人はBANされていません。", color=discord.Color.red()))
+
+    async def get_bot_inviter(self, guild: discord.Guild, user: discord.User):
+        try:
+            async for entry in guild.audit_logs(action=discord.AuditLogAction.bot_add, limit=100):
+                if entry.target.id == user.id:
+                    JST = datetime.timezone(datetime.timedelta(hours=9))
+                    return f"{entry.user.display_name} ({entry.user.id})", f"{entry.created_at.astimezone(JST)}"
+            return "取得失敗しました", "取得失敗しました"
+        except discord.Forbidden:
+            return "監査ログを閲覧する権限がありません。", "監査ログを閲覧する権限がありません。"
+        except Exception as e:
+            return f"監査ログの確認中にエラーが発生しました", "監査ログの確認中にエラーが発生しました"
+
+    @search.command(name="bot", description="導入されたbotを検索します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def bot_info(self, interaction: discord.Interaction, bot: discord.User):
+        await interaction.response.defer()
+        embed = discord.Embed(title="Botの情報", color=discord.Color.green())
+        embed.add_field(name="Bot名", value=bot.display_name, inline=False)
+        embed.add_field(name="ユーザーid", value=f"{bot.id}", inline=False)
+        bot_inv, time = await self.get_bot_inviter(interaction.guild, bot)
+        embed.add_field(name="Botを入れた人", value=bot_inv, inline=False)
+        embed.add_field(name="Botが入れられた時間", value=time, inline=False)
+        embed.set_thumbnail(url=bot.avatar.url if bot.avatar else bot.default_avatar.url)
+        embed.set_footer(text=f"{interaction.guild.name} | {interaction.guild.id}")
+        await interaction.followup.send(embed=embed)
+
     @search.command(name="invite", description="招待リンク情報を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
