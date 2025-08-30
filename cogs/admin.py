@@ -3,11 +3,153 @@ import discord
 
 from models import save_commands
 
+from discord import app_commands
+
 
 class AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print("init -> AdminCog")
+
+    async def get_admins(self, user: discord.User):
+        db = self.bot.async_db["Main"].BotAdmins
+        user_data = await db.find_one({"User": user.id})
+
+        if not user_data:
+            return False
+        else:
+            return True
+
+    admin = app_commands.Group(
+        name="admin", description="SharkBot管理者向けのコマンドです。"
+    )
+
+    @admin.command(name="cogs", description="cogの操作をします。")
+    @app_commands.choices(
+        操作の種類=[
+            app_commands.Choice(name="リロード", value="reload"),
+            app_commands.Choice(name="ロード", value="load")
+        ]
+    )
+    async def cogs_setting(self, interaction: discord.Interaction, 操作の種類: app_commands.Choice[str], cog名: str):
+        isadmin = await self.get_admins(interaction.user)
+
+        if not isadmin:
+            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="あなたはSharkBotの管理者ではないため実行できません。", color=discord.Color.red()))
+
+        await interaction.response.defer()
+
+        if 操作の種類.value == "reload":
+            await self.bot.reload_extension(f"cogs.{cog名}")
+            return await interaction.followup.send(embed=discord.Embed(title="Cogをリロードしました。", color=discord.Color.green()))
+        elif 操作の種類.value == "load":
+            await self.bot.load_extension(f"cogs.{cog名}")
+            return await interaction.followup.send(embed=discord.Embed(title="Cogをロードしました。", color=discord.Color.green()))
+
+    @admin.command(name="ban", description="Botからbanをします。サーバーからはbanされません。")
+    @app_commands.choices(
+        操作の種類=[
+            app_commands.Choice(name="サーバー", value="server"),
+            app_commands.Choice(name="ユーザー", value="user")
+        ]
+    )
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="追加", value="add"),
+            app_commands.Choice(name="削除", value="remove")
+        ]
+    )
+    async def ban_bot(self, interaction: discord.Interaction, 操作の種類: app_commands.Choice[str], 操作: app_commands.Choice[str], 内容: str):
+        isadmin = await self.get_admins(interaction.user)
+
+        if not isadmin:
+            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="あなたはSharkBotの管理者ではないため実行できません。", color=discord.Color.red()))
+
+        await interaction.response.defer()
+
+        if 操作の種類.value == "user":
+            if 操作.value == "add":
+                if int(内容) == 1335428061541437531:
+                    return
+                user = await self.bot.fetch_user(int(内容))
+                db = self.bot.async_db["Main"].BlockUser
+                await db.replace_one({"User": user.id}, {"User": user.id}, upsert=True)
+                await interaction.followup.send(
+                    embed=discord.Embed(
+                        title=f"{user.name}をBotからBANしました。",
+                        color=discord.Color.green(),
+                    )
+                )
+            elif 操作.value == "remove":
+                user = await self.bot.fetch_user(int(内容))
+                db = self.bot.async_db["Main"].BlockUser
+                await db.delete_one({"User": user.id})
+                await interaction.followup.send(
+                    embed=discord.Embed(
+                        title=f"{user.name}のBotからのBanを解除しました。",
+                        color=discord.Color.red(),
+                    )
+                )
+        elif 操作の種類.value == "server":
+            if 操作.value == "add":
+                db = self.bot.async_db["Main"].BlockGuild
+                await db.replace_one({"Guild": int(内容)}, {"Guild": int(内容)}, upsert=True)
+                await interaction.followup.send(
+                    embed=discord.Embed(
+                        title=f"サーバーをBotからBANしました。",
+                        color=discord.Color.green(),
+                    )
+                )
+            elif 操作.value == "remove":
+                db = self.bot.async_db["Main"].BlockUser
+                await db.delete_one({"Guild": int(内容)})
+                await interaction.followup.send(
+                    embed=discord.Embed(
+                        title=f"サーバーのBotからのBanを解除しました。",
+                        color=discord.Color.red(),
+                    )
+                )
+
+    @admin.command(name="server", description="Botの入っているサーバーを管理します。(退出など)")
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="退出", value="leave"),
+            app_commands.Choice(name="警告", value="warn")
+        ]
+    )
+    async def manage_server(self, interaction: discord.Interaction, 操作: app_commands.Choice[str], 内容: str, 理由: str):
+        isadmin = await self.get_admins(interaction.user)
+
+        if not isadmin:
+            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="あなたはSharkBotの管理者ではないため実行できません。", color=discord.Color.red()))
+
+        await interaction.response.defer()
+
+        if 操作.value == "leave":
+            await self.bot.get_guild(int(操作)).leave()
+            await interaction.followup.send(embed=discord.Embed(title="サーバーから退出しました。", color=discord.Color.green()))
+        elif 操作.value == "warn":
+            await self.bot.get_guild(int(操作)).owner.send(embed=discord.Embed(title=f"{self.bot.get_guild(int(操作))} はSharkBotから警告されました。", description=f"```{理由}```", color=discord.Color.yellow())
+                                                         .set_footer(text="詳しくはSharkBot公式サポートサーバーまで。"))
+            await interaction.followup.send(embed=discord.Embed(title="サーバーを警告しました。", color=discord.Color.green()))
+
+    @admin.command(name="member", description="管理者を追加します。")
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="追加", value="add"),
+            app_commands.Choice(name="削除", value="remove")
+        ]
+    )
+    async def admins_member(self, interaction: discord.Interaction, 操作: app_commands.Choice[str], ユーザー: discord.User):
+        if interaction.user.id != 1335428061541437531:
+            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="あなたはSharkBotのオーナーではないため実行できません。", color=discord.Color.red()))
+        db = self.bot.async_db["Main"].BotAdmins
+        if 操作.value == "add":
+            await db.replace_one({"User": ユーザー.id}, {"User": ユーザー.id}, upsert=True)
+            await interaction.response.send_message(embed=discord.Embed(title="管理者を追加しました。", color=discord.Color.green()))
+        else:
+            await db.delete_one({"User": ユーザー.id})
+            await interaction.response.send_message(embed=discord.Embed(title="管理者を削除しました。", color=discord.Color.green()))
 
     @commands.command(name="reload", aliases=["r"], hidden=True)
     async def reload(self, ctx: commands.Context, cogname: str):
