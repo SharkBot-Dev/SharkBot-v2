@@ -64,7 +64,7 @@ class UpCog(commands.Cog):
     async def on_message_up_dicoall(self, message: discord.Message):
         if message.author.id == 903541413298450462:
             try:
-                if "サーバーは上部に表示されます。" in message.embeds[0].description:
+                if "サーバーは上部に表示" in message.embeds[0].description:
                     db = self.bot.async_db["Main"].Dicoall
                     try:
                         dbfind = await db.find_one(
