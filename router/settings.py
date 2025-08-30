@@ -728,6 +728,7 @@ async def leveling_set(
     )
 
     if channel:
+        channel = html.escape(channel)
         await mongodb.mongo["Main"].LevelingUpAlertChannel.replace_one(
             {"Guild": int(guild_id)},
             {"Guild": int(guild_id), "Channel": int(channel)},
