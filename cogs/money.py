@@ -130,6 +130,102 @@ class Money:
             text += f"{i_n}({b.get('Money', 0)}コイン) .. {count}個\n"
         return text
 
+class GachaGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="gacha", description="ガチャ系のコマンドです。")
+
+    @app_commands.command(name="create", description="ガチャを作成します。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def economy_gacha_create(
+        self, interaction: discord.Interaction, 名前: str, 金額: int, 説明: str = "ガチャが引けます。"
+    ):
+        db = interaction.client.async_db["Main"].ServerMoneyGacha
+
+        await db.replace_one(
+            {"Guild": interaction.guild.id, "Name": 名前},
+            {"Guild": interaction.guild.id, "Name": 名前, "Money": 金額, "Text": 説明, "Item": []},
+            upsert=True,
+        )
+
+        await interaction.response.send_message(embed=discord.Embed(title="ガチャを作成しました。", color=discord.Color.green()))
+
+    @app_commands.command(name="add", description="ガチャにアイテムを追加します。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def economy_gacha_add(
+        self, interaction: discord.Interaction, ガチャ名: str, アイテム名: str
+    ):
+        db = interaction.client.async_db["Main"].ServerMoneyGacha
+
+        sm = await Money(interaction.client).get_server_items(
+            interaction.guild, アイテム名
+        )
+        if not sm:
+            return await interaction.response.send_message(embed=discord.Embed(title="アイテムが見つかりません。", color=discord.Color.red(), description="先に、`/economy item create`で作成してください。"))
+
+        await db.update_one({"Guild": interaction.guild.id, "Name": ガチャ名}, {"$addToSet": {"Item": アイテム名}})
+
+        await interaction.response.send_message(embed=discord.Embed(title="ガチャにアイテムを追加しました。", color=discord.Color.green()))
+
+    @app_commands.command(name="remove", description="ガチャのアイテムを削除します。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def economy_gacha_remove(
+        self, interaction: discord.Interaction, ガチャ名: str, アイテム名: str
+    ):
+        db = interaction.client.async_db["Main"].ServerMoneyGacha
+
+        await db.update_one({"Guild": interaction.guild.id, "Name": ガチャ名}, {"$pull": {"Item": アイテム名}})
+
+        await interaction.response.send_message(embed=discord.Embed(title="ガチャからアイテムを削除しました。", color=discord.Color.green()))
+
+    @app_commands.command(name="list", description="ガチャリストを確認します。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    async def economy_gacha_list(
+        self, interaction: discord.Interaction
+    ):
+        db = interaction.client.async_db["Main"].ServerMoneyGacha
+
+        text = ""
+
+        async for b in db.find({"Guild": interaction.guild.id}):
+            text += f"{b.get("Name")}({b.get("Money", 0)}コイン) .. {b.get("Text", "ガチャが引けます。")}\n"
+
+        await interaction.followup.send(embed=discord.Embed(title="サーバー内のガチャリスト", description=text, color=discord.Color.blue()))
+
+    @app_commands.command(name="buy", description="ガチャを引きます。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    async def economy_gacha_buy(
+        self, interaction: discord.Interaction, ガチャ名: str
+    ):
+        db = self.bot.async_db["Main"].ServerMoneyItems
+        dbfind = await db.find_one(
+            {"Guild": interaction.id, "Name": ガチャ名}, {"_id": False}
+        )
+        if dbfind is None:
+            return await interaction.response.send_message(ephemeral=True, content="ガチャが見つかりません。")
+        
+        if dbfind.get("Item", []) == []:
+            return await interaction.response.send_message(ephemeral=True, content="ガチャにアイテムがありません。")
+        
+        await interaction.response.defer()
+
+        await Money(interaction.client).add_server_money(interaction.guild, interaction.user, -dbfind.get("Money", 1))
+
+        ch = random.choice(dbfind.get("Item", []))
+
+        sm = await Money(interaction.client).get_server_items(
+            interaction.guild, ch
+        )
+        if not sm:
+            return await interaction.followup.send(embed=discord.Embed(title="ガチャを引いたが、アイテムが出てきませんでした。", color=discord.Color.red()))
+
+        await Money(interaction.client).add_server_item(
+            interaction.guild, interaction.user, ch, 1
+        )
+
+        await interaction.followup.send(embed=discord.Embed(title=f"ガチャを引きました。", description=f"「{ch}」が出てきました。", color=discord.Color.green()))
 
 class GamesGroup(app_commands.Group):
     def __init__(self):
@@ -298,6 +394,7 @@ class ServerMoneyCog(commands.Cog):
     server_economy.add_command(ItemGroup())
     server_economy.add_command(ManageGroup())
     server_economy.add_command(GamesGroup())
+    server_economy.add_command(GachaGroup())
 
     # ====== work ======
     @server_economy.command(name="work", description="30分に1回働けます。")
