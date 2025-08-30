@@ -3,7 +3,7 @@ from functools import partial
 import io
 import json
 import random
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 import unicodedata
 import aiohttp
 from discord.ext import commands
@@ -80,7 +80,7 @@ def wrap_text_with_ellipsis(text, font, draw, max_width, max_height, line_height
     return lines
 
 
-def create_quote_image(author, text, avatar_bytes, background, textcolor, color: bool):
+def create_quote_image(author, text, avatar_bytes, background, textcolor, color: bool, negapoji: bool = False):
     width, height = 800, 400
     background_color = background
     text_color = textcolor
@@ -146,6 +146,10 @@ def create_quote_image(author, text, avatar_bytes, background, textcolor, color:
     draw.text((author_x, author_y), author_text, font=name_font, fill=text_color)
 
     draw.text((580, 0), "FakeQuote - SharkBot", font=name_font, fill=text_color)
+
+    if negapoji:
+        inverted_img = ImageOps.invert(img.convert("RGB"))
+        return inverted_img
 
     if color:
         return img
@@ -493,6 +497,7 @@ class ImageGroup(app_commands.Group):
         色=[
             app_commands.Choice(name="カラー", value="color"),
             app_commands.Choice(name="白黒", value="black"),
+            app_commands.Choice(name="ネガポジ反転", value="negapoji"),
         ]
     )
     @app_commands.choices(
@@ -517,8 +522,12 @@ class ImageGroup(app_commands.Group):
         await interaction.response.defer()
         avatar = ユーザー
         av = await fetch_avatar(avatar)
+        negapoji = False
         if 色.value == "color":
             color = True
+        elif 色.value == "negapoji":
+            color = True
+            negapoji = True
         else:
             color = False
         if 背景色.value == "black":
@@ -527,7 +536,7 @@ class ImageGroup(app_commands.Group):
         elif 背景色.value == "white":
             back = (255, 255, 255)
             text = (0, 0, 0)
-        miq = create_quote_image(ユーザー.display_name, 発言, av, back, text, color)
+        miq = create_quote_image(ユーザー.display_name, 発言, av, back, text, color, negapoji)
         image_binary = io.BytesIO()
         miq.save(image_binary, "PNG")
         image_binary.seek(0)
