@@ -126,10 +126,10 @@ class AdminCog(commands.Cog):
         await interaction.response.defer()
 
         if 操作.value == "leave":
-            await self.bot.get_guild(int(操作)).leave()
+            await self.bot.get_guild(int(内容)).leave()
             await interaction.followup.send(embed=discord.Embed(title="サーバーから退出しました。", color=discord.Color.green()))
         elif 操作.value == "warn":
-            await self.bot.get_guild(int(操作)).owner.send(embed=discord.Embed(title=f"{self.bot.get_guild(int(操作))} はSharkBotから警告されました。", description=f"```{理由}```", color=discord.Color.yellow())
+            await self.bot.get_guild(int(内容)).owner.send(embed=discord.Embed(title=f"{self.bot.get_guild(int(内容))} はSharkBotから警告されました。", description=f"```{理由}```", color=discord.Color.yellow())
                                                          .set_footer(text="詳しくはSharkBot公式サポートサーバーまで。"))
             await interaction.followup.send(embed=discord.Embed(title="サーバーを警告しました。", color=discord.Color.green()))
 
