@@ -15,26 +15,6 @@ class AutoModCog(commands.Cog):
         name="automod", description="AutoMod管理のコマンドです。"
     )
 
-    @commands.Cog.listener("on_message")
-    async def on_message_token_block(self, message: discord.Message):
-        if message.author.bot:
-            return
-        if type(message.channel) == discord.DMChannel:
-            return
-        if message.author.guild_permissions.administrator:
-            return
-        TOKEN_REGEX = r"[A-Za-z\d]{24}\.[\w-]{6}\.[\w-]{27}"
-        if re.search(TOKEN_REGEX, message.content):
-            db = self.bot.async_db["Main"].TokenBlock
-            try:
-                dbfind = await db.find_one({"Guild": message.guild.id}, {"_id": False})
-            except:
-                return
-            if dbfind is None:
-                return
-
-            await message.delete()
-
     @automod.command(name="create", description="AutoModを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
