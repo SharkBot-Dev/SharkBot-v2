@@ -613,9 +613,7 @@ Botを追加したユーザーは？: {add_bot_user}
     async def news(self, interaction: discord.Interaction):
         await interaction.response.defer()
         async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://mainichi.jp/", ssl=ssl_context
-            ) as response:
+            async with session.get("https://mainichi.jp/", ssl=ssl_context) as response:
                 soup = BeautifulSoup(await response.text(), "html.parser")
                 title = soup.find_all("div", class_="toppickup")[0]
                 url = title.find_all("a")[0]
@@ -647,16 +645,12 @@ Botを追加したユーザーは？: {add_bot_user}
 
             pages = data.get("query", {}).get("pages", {})
             if not pages:
-                await interaction.followup.send(
-                    "Wikipedia記事が見つかりませんでした。"
-                )
+                await interaction.followup.send("Wikipedia記事が見つかりませんでした。")
                 return
 
             page_id, page_info = next(iter(pages.items()))
             if page_id == "-1":
-                await interaction.followup.send(
-                    "Wikipedia記事が見つかりませんでした。"
-                )
+                await interaction.followup.send("Wikipedia記事が見つかりませんでした。")
                 return
 
             short_url = f"https://ja.wikipedia.org/w/index.php?curid={page_id}"

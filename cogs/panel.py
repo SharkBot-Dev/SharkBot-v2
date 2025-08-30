@@ -499,7 +499,8 @@ class PanelCog(commands.Cog):
                     try:
                         await interaction.response.defer(ephemeral=True)
                         if (
-                            interaction.guild.get_role(int(custom_id.split("+")[1])) not in interaction.user.roles
+                            interaction.guild.get_role(int(custom_id.split("+")[1]))
+                            not in interaction.user.roles
                         ):
                             await interaction.user.add_roles(
                                 interaction.guild.get_role(int(custom_id.split("+")[1]))
