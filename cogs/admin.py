@@ -133,6 +133,36 @@ class AdminCog(commands.Cog):
                                                          .set_footer(text="詳しくはSharkBot公式サポートサーバーまで。"))
             await interaction.followup.send(embed=discord.Embed(title="サーバーを警告しました。", color=discord.Color.green()))
 
+    @admin.command(name="debug", description="デバッグコマンドを実行します。")
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="埋め込み解析", value="embedget"),
+            app_commands.Choice(name="頭文字リセット", value="prefixreset"),
+            app_commands.Choice(name="デバッグメッセージ", value="debugmsg"),
+        ]
+    )
+    async def debug_admin(self, interaction: discord.Interaction, 操作: app_commands.Choice[str], 内容: str):
+        isadmin = await self.get_admins(interaction.user)
+
+        if not isadmin:
+            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="あなたはSharkBotの管理者ではないため実行できません。", color=discord.Color.red()))
+
+        await interaction.response.defer()
+
+        if 操作.value == "embedget":
+            msg = await interaction.channel.fetch_message(int(内容))
+            await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="埋め込みを解析しました。", description=f"```{msg}```", color=discord.Color.green()))
+        elif 操作.value == "prefixreset":
+            db = self.bot.async_db["DashboardBot"].CustomPrefixBot
+            result = await db.delete_one(
+                {
+                    "Guild": int(内容),
+                }
+            )
+            await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="頭文字をリセットしました。", color=discord.Color.green()))
+        else:
+            await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="デバッグしました。", color=discord.Color.green()))
+
     @admin.command(name="member", description="管理者を追加します。")
     @app_commands.choices(
         操作=[
