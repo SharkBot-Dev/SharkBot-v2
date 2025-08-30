@@ -151,7 +151,7 @@ class AdminCog(commands.Cog):
 
         if 操作.value == "embedget":
             msg = await interaction.channel.fetch_message(int(内容))
-            await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="埋め込みを解析しました。", description=f"```{msg.embeds}```", color=discord.Color.green()))
+            await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="埋め込みを解析しました。", description=f"```{msg.embeds[0].to_dict()}```", color=discord.Color.green()))
         elif 操作.value == "prefixreset":
             db = self.bot.async_db["DashboardBot"].CustomPrefixBot
             result = await db.delete_one(
