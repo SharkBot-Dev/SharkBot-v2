@@ -258,17 +258,25 @@ class GameCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def roll(self, interaction: discord.Interaction, 何面か: str):
-        match = re.fullmatch(r'(\d+)d(\d+)', 何面か)
+        match = re.fullmatch(r"(\d+)d(\d+)", 何面か)
         if not match:
-            return await interaction.response.send_message(content="形式が正しくありません。\n例: `5d3`")
+            return await interaction.response.send_message(
+                content="形式が正しくありません。\n例: `5d3`"
+            )
         num_dice, sides = map(int, match.groups())
         if num_dice > 100:
-            return await interaction.response.send_message(content="サイコロの個数は 100 以下にしてください")
+            return await interaction.response.send_message(
+                content="サイコロの個数は 100 以下にしてください"
+            )
         if sides > 100:
-            return await interaction.response.send_message("100 面以上のサイコロは使えません。")
+            return await interaction.response.send_message(
+                "100 面以上のサイコロは使えません。"
+            )
         rolls = [random.randint(1, sides) for _ in range(num_dice)]
         str_rolls = [str(r) for r in rolls]
-        await interaction.response.send_message(f"🎲 {interaction.user.mention}: {', '.join(str_rolls)} → {sum(rolls)}")
+        await interaction.response.send_message(
+            f"🎲 {interaction.user.mention}: {', '.join(str_rolls)} → {sum(rolls)}"
+        )
 
     @game.command(name="geo-quiz", description="地理クイズをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)

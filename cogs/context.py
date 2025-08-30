@@ -458,9 +458,13 @@ async def setup(bot: commands.Bot):
             value=f"ID: **{member.id}**\nユーザーネーム: **{member.name}#{member.discriminator}**\n作成日: **{member.created_at.astimezone(JST)}**\nこの鯖に？: **{isguild}**\nBot？: **{isbot}**\n認証Bot？: **{'はい' if member.public_flags.verified_bot else 'いいえ'}**",
         )
         if member.avatar:
-            await interaction.followup.send(embed=embed.set_thumbnail(url=member.avatar.url))
+            await interaction.followup.send(
+                embed=embed.set_thumbnail(url=member.avatar.url)
+            )
         else:
-            await interaction.followup.send(embed=embed.set_thumbnail(url=member.default_avatar.url))
+            await interaction.followup.send(
+                embed=embed.set_thumbnail(url=member.default_avatar.url)
+            )
 
     @app_commands.context_menu(name="権限を見る")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)

@@ -41,12 +41,20 @@ class ErrorHandleCog(commands.Cog):
             print("App command error:", error)
             if not interaction.response.is_done():
                 await interaction.response.send_message(
-                    embed=discord.Embed(title="予期しないエラーが発生しました。", color=discord.Color.red(), description="開発チームに報告してください。"),
+                    embed=discord.Embed(
+                        title="予期しないエラーが発生しました。",
+                        color=discord.Color.red(),
+                        description="開発チームに報告してください。",
+                    ),
                     ephemeral=True,
                 )
             else:
                 await interaction.followup.send(
-                    embed=discord.Embed(title="予期しないエラーが発生しました。", color=discord.Color.red(), description="開発チームに報告してください。")
+                    embed=discord.Embed(
+                        title="予期しないエラーが発生しました。",
+                        color=discord.Color.red(),
+                        description="開発チームに報告してください。",
+                    )
                 )
 
     @commands.Cog.listener("on_error")
