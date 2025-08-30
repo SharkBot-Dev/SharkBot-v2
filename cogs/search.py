@@ -447,6 +447,7 @@ Botを追加したユーザーは？: {add_bot_user}
     @search.command(name="invite", description="招待リンク情報を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_guild=True)
     async def invite_info(self, interaction: discord.Interaction, 招待リンク: str):
         await interaction.response.defer()
         JST = datetime.timezone(datetime.timedelta(hours=9))
@@ -607,7 +608,7 @@ Botを追加したユーザーは？: {add_bot_user}
             )
             await interaction.followup.send(embed=embed)
 
-    @search.command(name="news", description="翻訳をします。")
+    @search.command(name="news", description="ニュースを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def news(self, interaction: discord.Interaction):
@@ -619,7 +620,7 @@ Botを追加したユーザーは？: {add_bot_user}
                 url = title.find_all("a")[0]
                 await interaction.followup.send(f"https:{url['href']}")
 
-    @search.command(name="wikipedia", description="翻訳をします。")
+    @search.command(name="wikipedia", description="ウィキペディアから取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def wikipedia(self, interaction: discord.Interaction, 検索ワード: str):
@@ -659,7 +660,7 @@ Botを追加したユーザーは？: {add_bot_user}
         except Exception as e:
             await interaction.followup.send(f"エラーが発生しました: {str(e)}")
 
-    @search.command(name="safeweb", description="翻訳をします。")
+    @search.command(name="safeweb", description="サイトの安全性を調べます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def wikipedia(self, interaction: discord.Interaction, url: str):
