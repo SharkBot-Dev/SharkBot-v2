@@ -185,6 +185,7 @@ class GachaGroup(app_commands.Group):
     async def economy_gacha_list(
         self, interaction: discord.Interaction
     ):
+        await interaction.response.defer()
         db = interaction.client.async_db["Main"].ServerMoneyGacha
 
         text = ""
