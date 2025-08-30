@@ -440,6 +440,7 @@ async def setup(bot: commands.Bot):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     async def user_info(interaction: discord.Interaction, member: discord.Member):
+        await interaction.response.defer()
         JST = datetime.timezone(datetime.timedelta(hours=9))
         if interaction.guild.get_member(member.id):
             isguild = "います。"
@@ -456,6 +457,10 @@ async def setup(bot: commands.Bot):
             name="基本情報",
             value=f"ID: **{member.id}**\nユーザーネーム: **{member.name}#{member.discriminator}**\n作成日: **{member.created_at.astimezone(JST)}**\nこの鯖に？: **{isguild}**\nBot？: **{isbot}**\n認証Bot？: **{'はい' if member.public_flags.verified_bot else 'いいえ'}**",
         )
+        if member.avatar:
+            await interaction.followup.send(embed=embed.set_thumbnail(url=member.avatar.url))
+        else:
+            await interaction.followup.send(embed=embed.set_thumbnail(url=member.default_avatar.url))
 
     @app_commands.context_menu(name="権限を見る")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
