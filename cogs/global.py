@@ -1513,6 +1513,10 @@ class GlobalCog(commands.Cog):
                         if r.emoji == "✅":
                             await asyncio.sleep(1)
 
+                            await msg.delete()
+
+                            await asyncio.sleep(1)
+
                             invite = await self.bot.fetch_invite(message.content)
 
                             gem_token = settings.GEMINI_APIKEY
@@ -1531,6 +1535,7 @@ class GlobalCog(commands.Cog):
                             await message.add_reaction("✅")
                             return
                         else:
+                            await msg.delete()
                             pass
                     except:
                         pass
