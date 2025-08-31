@@ -91,14 +91,14 @@ class EmbedMake(discord.ui.Modal, title="埋め込みを作成"):
         
         for b in badword.badwords:
             if b in self.title_.value:
-                return await interaction.response.send_message(ephemeral=True, content="不適切なワードが含まれています。")
+                return await interaction.followup.send(ephemeral=True, content="不適切なワードが含まれています。")
             
             if b in self.desc.value:
-                return await interaction.response.send_message(ephemeral=True, content="不適切なワードが含まれています。")
+                return await interaction.followup.send(ephemeral=True, content="不適切なワードが含まれています。")
 
             if self.button_label.value:
                 if b in self.title_.value:
-                    return await interaction.response.send_message(ephemeral=True, content="不適切なワードが含まれています。")
+                    return await interaction.followup.send(ephemeral=True, content="不適切なワードが含まれています。")
 
         try:
             view = discord.ui.View()
