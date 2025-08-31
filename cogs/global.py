@@ -22,7 +22,7 @@ user_last_message_time_mute = {}
 cooldown_transfer = {}
 cooldown_up = {}
 
-invite_only_check = re.compile(r"^(https?://)?(discord\.gg/|discord\.com/invite/)[a-zA-Z0-9]$")
+invite_only_check = re.compile(r"^(https?://)?(www\.)?(discord\.gg/|discord\.com/invite/)[a-zA-Z0-9]{6,8}$")
 
 class GlobalCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
