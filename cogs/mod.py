@@ -391,18 +391,22 @@ class ModCog(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
+        
+        try:
 
-        await メンバー.send(
-            embed=discord.Embed(
-                title=f"あなたは`{interaction.guild.name}`\nで警告されました。",
-                color=discord.Color.yellow(),
-                description=f"理由: {理由}",
+            await メンバー.send(
+                embed=discord.Embed(
+                    title=f"あなたは`{interaction.guild.name}`\nで警告されました。",
+                    color=discord.Color.yellow(),
+                    description=f"```{理由}```",
+                )
             )
-        )
+        except:
+            return await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="警告に失敗しました。", color=discord.Color.red(), description="Dmを送信できませんでした。"))
 
         await interaction.followup.send(
             ephemeral=True,
-            embed=discord.Embed(title="警告しました。", color=discord.Color.green()),
+            embed=discord.Embed(title="警告しました。", description=f"```{理由}```", color=discord.Color.green()),
         )
 
     @moderation.command(name="remake", description="チャンネルを再生成します。")
