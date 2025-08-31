@@ -290,6 +290,46 @@ class AdminCog(commands.Cog):
                 )
             )
 
+    @admin.command(name="premium", description="プレミアムユーザーを手動で追加します。")
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="追加", value="add"),
+            app_commands.Choice(name="削除", value="remove"),
+        ]
+    )
+    async def admin_premium(
+        self,
+        interaction: discord.Interaction,
+        操作: app_commands.Choice[str],
+        ユーザー: discord.User,
+    ):
+        if interaction.user.id != 1335428061541437531:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=discord.Embed(
+                    title="あなたはSharkBotのオーナーではないため実行できません。",
+                    color=discord.Color.red(),
+                ),
+            )
+        
+        db = self.bot.async_db["Main"].PremiumUser
+        if 操作.value == "add":
+            await db.replace_one(
+                {"User": ユーザー.id}, {"User": ユーザー.id}, upsert=True
+            )
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="プレミアムユーザーを追加しました。", color=discord.Color.green()
+                )
+            )
+        else:
+            await db.delete_one({"User": ユーザー.id})
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="プレミアムユーザーを削除しました。", color=discord.Color.green()
+                )
+            )
+
     @commands.command(name="reload", aliases=["r"], hidden=True)
     async def reload(self, ctx: commands.Context, cogname: str):
         if ctx.author.id == 1335428061541437531:
