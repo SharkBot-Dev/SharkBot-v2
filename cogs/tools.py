@@ -88,18 +88,6 @@ class EmbedMake(discord.ui.Modal, title="埋め込みを作成"):
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
 
-        
-        for b in badword.badwords:
-            if b in self.title_.value:
-                return await interaction.followup.send(ephemeral=True, content="不適切なワードが含まれています。")
-            
-            if b in self.desc.value:
-                return await interaction.followup.send(ephemeral=True, content="不適切なワードが含まれています。")
-
-            if self.button_label.value:
-                if b in self.title_.value:
-                    return await interaction.followup.send(ephemeral=True, content="不適切なワードが含まれています。")
-
         try:
             view = discord.ui.View()
             if self.button.value:
