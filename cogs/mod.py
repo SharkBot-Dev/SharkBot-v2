@@ -145,22 +145,9 @@ class BanGroup(app_commands.Group):
         except asyncio.TimeoutError:
             return await interaction.channel.send("タイムアウトしました。")
 
-        success = 0
-        failed = 0
-        for uid in U_ids:
-            try:
-                user = interaction.client.get_user(uid)
-                await interaction.guild.ban(
-                    user, reason=f"Banned by {interaction.user.name}"
-                )
-                await asyncio.sleep(1)  # rate limit対策
-                success += 1
-            except Exception as e:
-                failed += 1
-                print(f"Failed to ban {uid}: {e}")
-                continue
+        b = await interaction.guild.bulk_ban(U_ids, reason=f"Banned by {interaction.user.name}")
 
-        await interaction.channel.send(f"{success}人をBANしました。失敗: {failed}人。")
+        await interaction.channel.send(f"{b.banned}人をBANしました。失敗: {b.failed}人。")
 
 
 class ModCog(commands.Cog):
