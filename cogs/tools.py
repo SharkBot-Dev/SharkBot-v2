@@ -28,6 +28,7 @@ ipv4_pattern = re.compile(
 
 domain_regex = re.compile(r"^(?!\-)(?:[a-zA-Z0-9\-]{1,63}\.)+[a-zA-Z]{2,}$")
 
+is_url = re.compile(r"https?://[\w!\?/\+\-_~=;\.,\*&@#$%\(\)'\[\]]+")
 
 async def fetch_whois(target_domain):
     if not domain_regex.match(target_domain):
@@ -260,6 +261,9 @@ class ToolsCog(commands.Cog):
         for b in badword.badwords:
             if b in ラベル:
                 return await interaction.response.send_message(ephemeral=True, content="不適切なワードが含まれています。")
+            
+        if not is_url.search(url):
+            return await interaction.response.send_message(ephemeral=True, content="URLを入力してください。")
 
         await interaction.response.send_message(view=discord.ui.View().add_item(discord.ui.Button(label=ラベル, url=url)))
 
