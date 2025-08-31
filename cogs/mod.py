@@ -117,6 +117,9 @@ class BanGroup(app_commands.Group):
             except ValueError:
                 continue  # 無効なIDをスキップ
 
+        if len(U_ids) > 10:
+            return await interaction.followup.send(embed=discord.Embed(title="10以上のメンバーを一気にbanできません。", color=discord.Color.red()))
+
         if not U_ids:
             return await interaction.followup.send(
                 "有効なユーザーIDが見つかりませんでした。"
