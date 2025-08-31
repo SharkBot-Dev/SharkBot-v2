@@ -179,7 +179,7 @@ class ModCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def kick(
-        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
+        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str = None
     ):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(
@@ -226,7 +226,7 @@ class ModCog(commands.Cog):
         interaction: discord.Interaction,
         ユーザー: discord.User,
         時間: str,
-        理由: str,
+        理由: str = None,
     ):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(
@@ -265,6 +265,48 @@ class ModCog(commands.Cog):
         return await interaction.followup.send(
             embed=discord.Embed(
                 title=f"{ユーザー.name}をタイムアウトしました。",
+                color=discord.Color.green(),
+            )
+        )
+
+    @moderation.command(name="untimeout", description="タイムアウトを解除します。")
+    @app_commands.checks.has_permissions(moderate_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def untimeout(
+        self,
+        interaction: discord.Interaction,
+        ユーザー: discord.User,
+        理由: str = None,
+    ):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
+        
+        if interaction.guild.get_member(ユーザー.id) is None:
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="このサーバーにいないメンバーのタイムアウトは解除できません。",
+                    color=discord.Color.red(),
+                )
+            )
+        await interaction.response.defer()
+        try:
+            await interaction.guild.get_member(ユーザー.id).edit(
+                timeout=None, reason=理由
+            )
+        except:
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="タイムアウトの解除に失敗しました。",
+                    description="権限が足りないかも！？",
+                    color=discord.Color.red(),
+                )
+            )
+        return await interaction.followup.send(
+            embed=discord.Embed(
+                title=f"{ユーザー.name}のタイムアウトを解除しました。",
                 color=discord.Color.green(),
             )
         )

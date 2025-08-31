@@ -526,57 +526,50 @@ async def logging_set(request: Request, guild_id: str, channel: str = Form(None)
             },
         )
 
-    async with httpx.AsyncClient() as client:
-        webhook = await client.post(
-            f"{settings.DISCORD_API}/channels/{channel}/webhooks",
-            json={"name": "SharkBot-Log"},
-            headers={"Authorization": f"Bot {settings.TOKEN}"},
-        )
+    try:
 
-        if webhook.status_code != 201:
+        async with httpx.AsyncClient() as client:
+            webhook = await client.post(
+                f"{settings.DISCORD_API}/channels/{channel}/webhooks",
+                json={"name": "SharkBot-Log"},
+                headers={"Authorization": f"Bot {settings.TOKEN}"},
+            )
+
+        resp = webhook.json()
+
+        webhook_id = resp.get("id")
+        webhook_token = resp.get("token")
+
+        if not webhook_id or not webhook_token:
             return templates.templates.TemplateResponse(
                 "message.html",
                 {
                     "request": request,
                     "url": f"/settings/{guild_id}/logging",
-                    "message": "Webhook 作成に失敗しました。",
+                    "message": "エラーが発生しました。",
                 },
             )
 
-    resp = webhook.json()
+        await mongodb.mongo["Main"].EventLoggingChannel.replace_one(
+            {"Guild": int(guild_id)},
+            {
+                "Guild": int(guild_id),
+                "Channel": int(channel),
+                "Webhook": f"https://discord.com/api/webhooks/{webhook_id}/{webhook_token}",
+            },
+            upsert=True,
+        )
 
-    webhook_id = resp.get("id")
-    webhook_token = resp.get("token")
-
-    if not webhook_id or not webhook_token:
         return templates.templates.TemplateResponse(
             "message.html",
             {
                 "request": request,
                 "url": f"/settings/{guild_id}/logging",
-                "message": "エラーが発生しました。",
+                "message": "ログチャンネルが指定されました。",
             },
         )
-
-    await mongodb.mongo["Main"].EventLoggingChannel.replace_one(
-        {"Guild": int(guild_id)},
-        {
-            "Guild": int(guild_id),
-            "Channel": int(channel),
-            "Webhook": f"https://discord.com/api/webhooks/{webhook_id}/{webhook_token}",
-        },
-        upsert=True,
-    )
-
-    return templates.templates.TemplateResponse(
-        "message.html",
-        {
-            "request": request,
-            "url": f"/settings/{guild_id}/logging",
-            "message": "ログチャンネルが指定されました。",
-        },
-    )
-
+    except:
+        return RedirectResponse(f"/{guild_id}/logging", status_code=303)
 
 # コマンドの有効化・無効化
 
