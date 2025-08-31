@@ -890,7 +890,7 @@ class PanelCog(commands.Cog):
                                 limit=100, oldest_first=True
                             ):
                                 h.append(
-                                    f"{his.author.name}: {his.content.replace('\n', '\\n')}"
+                                    "{}: {}".format(his.author.name, his.content.replace('\n', '\\n'))
                                 )
                             kaiwa_io = io.StringIO("\n".join(h))
                             if not user:
@@ -955,7 +955,7 @@ class PanelCog(commands.Cog):
                                 limit=100, oldest_first=True
                             ):
                                 h.append(
-                                    f"{his.author.name}: {his.content.replace('\n', '\\n')}"
+                                    "{}: {}".format(his.author.name, his.content.replace('\n', '\\n'))
                                 )
                             kaiwa_io = io.StringIO("\n".join(h))
                             if not user:
@@ -1686,23 +1686,53 @@ class PanelCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def panel_select_role(self, interaction: discord.Interaction, タイトル: str, ロール1: discord.Role, ロール2: discord.Role = None, ロール3: discord.Role = None, ロール4: discord.Role = None, ロール5: discord.Role = None, 説明: str = "セレクトボックスからロールを入手できます。"):
+    async def panel_select_role(
+        self,
+        interaction: discord.Interaction,
+        タイトル: str,
+        ロール1: discord.Role,
+        ロール2: discord.Role = None,
+        ロール3: discord.Role = None,
+        ロール4: discord.Role = None,
+        ロール5: discord.Role = None,
+        説明: str = "セレクトボックスからロールを入手できます。",
+    ):
         await interaction.response.defer()
         roles = [ロール1, ロール2, ロール3, ロール4, ロール5]
         roles = [r for r in roles if r is not None]
         options = [
-            discord.SelectOption(label=role.name, description=f"{role.name}のロールを付与", value=f"select_role+{role.id}")
-            for role in roles if role is not None
+            discord.SelectOption(
+                label=role.name,
+                description=f"{role.name}のロールを付与",
+                value=f"select_role+{role.id}",
+            )
+            for role in roles
+            if role is not None
         ]
         view = discord.ui.View()
-        view.add_item(discord.ui.Select(placeholder="ロールを選んでください", options=options, max_values=len(options), custom_id="select_role"))
-        await interaction.channel.send(embed=discord.Embed(title=タイトル, description=説明, color=discord.Color.green()).add_field(name="ロール一覧", value="\n".join([role.mention for role in roles if role is not None])), view=view)
+        view.add_item(
+            discord.ui.Select(
+                placeholder="ロールを選んでください",
+                options=options,
+                max_values=len(options),
+                custom_id="select_role",
+            )
+        )
+        await interaction.channel.send(
+            embed=discord.Embed(
+                title=タイトル, description=説明, color=discord.Color.green()
+            ).add_field(
+                name="ロール一覧",
+                value="\n".join([role.mention for role in roles if role is not None]),
+            ),
+            view=view,
+        )
         await interaction.delete_original_response()
 
     @commands.Cog.listener(name="on_interaction")
     async def on_interaction_select(self, interaction: discord.Interaction):
         try:
-            if interaction.data['component_type'] == 3:
+            if interaction.data["component_type"] == 3:
                 try:
                     custom_id = interaction.data["custom_id"]
                 except:
@@ -1722,11 +1752,23 @@ class PanelCog(commands.Cog):
                                 await interaction.user.remove_roles(role)
                                 remove.append(role.mention)
                             await asyncio.sleep(1)
-                        await interaction.followup.send(ephemeral=True, embed=discord.Embed(color=discord.Color.green(), title="ロールの追加・剥奪が完了しました。", description=f"追加されたロール:\n{'\n'.join(add)}\n剥奪されたロール:\n{'\n'.join(remove)}"))
+                        await interaction.followup.send(
+                            ephemeral=True,
+                            embed=discord.Embed(
+                                color=discord.Color.green(),
+                                title="ロールの追加・剥奪が完了しました。",
+                                description="追加されたロール:\n{}\n剥奪されたロール:\n{}".format('\n'.join(add), '\n'.join(remove)),
+                            ),
+                        )
                     except discord.Forbidden as f:
-                        await interaction.followup.send("付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif", ephemeral=True)
+                        await interaction.followup.send(
+                            "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
+                            ephemeral=True,
+                        )
                     except:
-                        await interaction.followup.send("追加に失敗しました。", ephemeral=True)
+                        await interaction.followup.send(
+                            "追加に失敗しました。", ephemeral=True
+                        )
         except Exception as e:
             return
 

@@ -43,17 +43,17 @@ class FreeChannelModal(discord.ui.Modal):
         if dbfind is None:
             if interaction.channel.category:
                 channel = await interaction.channel.category.create_text_channel(
-                    name=self.channelname.component.value, nsfw=nsfw
+                    name=self.channelname.component.value, nsfw=nsfw, overwrites=interaction.channel.overwrites
                 )
             else:
                 channel = await interaction.guild.create_text_channel(
-                    name=self.channelname.component.value, nsfw=nsfw
+                    name=self.channelname.component.value, nsfw=nsfw, overwrites=interaction.channel.overwrites
                 )
         else:
             ch = interaction.guild.get_channel(dbfind.get("Channel", 0))
             if type(ch) == discord.CategoryChannel:
                 channel = await ch.create_text_channel(
-                    name=self.channelname.component.value, nsfw=nsfw
+                    name=self.channelname.component.value, nsfw=nsfw, overwrites=interaction.channel.overwrites
                 )
             else:
                 return

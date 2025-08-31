@@ -138,7 +138,7 @@ class BanGroup(app_commands.Group):
             return m.author == interaction.user and m.channel == interaction.channel
 
         try:
-            msg = await self.bot.wait_for("message", check=check, timeout=30.0)
+            msg = await interaction.client.wait_for("message", check=check, timeout=30.0)
             if msg.content.lower() != "y":
                 return await interaction.channel.send("キャンセルしました。")
             await msg.add_reaction("✅")
@@ -149,7 +149,7 @@ class BanGroup(app_commands.Group):
         failed = 0
         for uid in U_ids:
             try:
-                user = await self.bot.fetch_user(uid)
+                user = interaction.client.get_user(uid)
                 await interaction.guild.ban(
                     user, reason=f"Banned by {interaction.user.name}"
                 )

@@ -163,9 +163,11 @@ class LoggingCog(commands.Cog):
                     webhook_ = Webhook.from_url(wh, session=session)
                     await webhook_.send(
                         avatar_url=self.bot.user.avatar.url,
-                        embed=discord.Embed(
+                        embed = discord.Embed(
                             title="<:Plus:1367039505865113670> ロールが追加されました",
-                            description=f"メンバー: {after.mention}\nロール: {'\n'.join([rr.mention for rr in added_roles])}",
+                            description="メンバー: {}\nロール: {}".format(
+                                after.mention, "\n".join([rr.mention for rr in added_roles])
+                            ),
                             color=discord.Color.green(),
                         )
                         .set_footer(text=f"uid:{after.id}")
@@ -184,7 +186,7 @@ class LoggingCog(commands.Cog):
                         avatar_url=self.bot.user.avatar.url,
                         embed=discord.Embed(
                             title="<:Minus:1367039494322262096> ロールが削除されました",
-                            description=f"メンバー: {after.mention}\nロール: {'\n'.join([rr.mention for rr in removed_roles])}",
+                            description="メンバー: {}\nロール: {}".format(after.mention, '\n'.join([rr.mention for rr in removed_roles])),
                             color=discord.Color.red(),
                         )
                         .set_footer(text=f"uid:{after.id}")

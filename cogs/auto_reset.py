@@ -100,7 +100,7 @@ class AutoResetCog(commands.Cog):
     async def _auto_reset_now(self, interaction: discord.Interaction):
         await interaction.response.defer()
         channels = [
-            f"{b.get('Word')} - {b.get('ReplyWord')}"
+            b
             async for b in self.bot.async_db["Main"].AutoResetChannel.find(
                 {"Guild": interaction.guild.id}
             )

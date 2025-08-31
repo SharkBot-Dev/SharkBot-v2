@@ -92,9 +92,7 @@ class HelpCog(commands.Cog):
                         await interaction.response.edit_message(
                             embed=discord.Embed(
                                 title="カスタムコマンドヘルプ",
-                                description=f"""
-    {"\n".join(cmds)}
-    """,
+                                description="\n".join(cmds),
                                 color=discord.Color.red(),
                             )
                         )

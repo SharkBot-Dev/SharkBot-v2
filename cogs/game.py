@@ -184,7 +184,7 @@ class MinecraftGroup(app_commands.Group):
                         if pl:
                             embed.add_field(
                                 name="参加者",
-                                value=f"{'\n'.join([f'{p["name"]}' for p in pl])}",
+                                value="\n".join([f"{p['name']}" for p in pl]),
                                 inline=False,
                             )
                         else:
