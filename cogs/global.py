@@ -6,8 +6,12 @@ import json
 from discord import Webhook
 from discord import app_commands
 import aiohttp
+from google import genai
 
 from models import command_disable
+import re
+
+from consts import settings
 
 COOLDOWN_TIMEGC = 5
 user_last_message_timegc = {}
@@ -18,6 +22,7 @@ user_last_message_time_mute = {}
 cooldown_transfer = {}
 cooldown_up = {}
 
+invite_only_check = re.compile(r"^(https?://)?(discord\.gg/|discord\.com/invite/)[a-zA-Z0-9]{6,8}$")
 
 class GlobalCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -1490,6 +1495,47 @@ class GlobalCog(commands.Cog):
         user_last_message_timegc[message.guild.id] = current_time
 
         await message.add_reaction("🔄")
+
+        if invite_only_check.fullmatch(message.content):
+            db = self.bot.async_db["Main"].PremiumUser
+            try:
+                dbfind = await db.find_one({"User": message.author.id}, {"_id": False})
+                if not dbfind is None:
+
+                    msg = await message.reply(embed=discord.Embed(title="宣伝文を作成しますか？", description="その招待リンクにあった宣伝文をAIが作成してくれます。", color=discord.Color.yellow()))
+                    await msg.add_reaction("✅")
+                    await msg.add_reaction("❌")
+
+                    try:
+
+                        r, m = await self.bot.wait_for("reaction_add", check=lambda r, u: r.message.id == msg.id and not u.bot and message.author.id == u.id, timeout=30)
+
+                        if r.emoji == "✅":
+                            await asyncio.sleep(1)
+
+                            invite = await self.bot.fetch_invite(message.content)
+
+                            gem_token = settings.GEMINI_APIKEY
+
+                            client = genai.Client(api_key=gem_token)
+
+                            response = await client.aio.models.generate_content(
+                                model="gemini-2.5-flash-lite", contents=f"以下の条件に合わせて回答を出力して。\n・discordサーバーの宣伝文を作る。\n・宣伝文以外を出力しない。\n・サーバー名は、「{invite.guild.name}」\n・招待リンクは「{message.content}」"
+                            )
+
+                            message.content = response
+
+                            await self.send_global_ads(message)
+
+                            await message.remove_reaction("🔄", self.bot.user)
+                            await message.add_reaction("✅")
+                            return
+                        else:
+                            pass
+                    except:
+                        pass
+            except Exception:
+                pass
 
         await self.send_global_ads(message)
 
