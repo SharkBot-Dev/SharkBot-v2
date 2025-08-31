@@ -38,37 +38,72 @@ class ChannelCog(commands.Cog):
         embed.set_footer(text=f"{channel.guild.name} / {channel.guild.id}")
         await interaction.followup.send(embed=embed)
 
-    @channel.command(name="private", description="チャンネルをプライベートチャンネルにします。")
+    @channel.command(
+        name="private", description="チャンネルをプライベートチャンネルにします。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def channel_private(self, interaction: discord.Interaction):
         try:
             await interaction.response.defer()
-            overwrite = interaction.channel.overwrites_for(interaction.guild.default_role)
+            overwrite = interaction.channel.overwrites_for(
+                interaction.guild.default_role
+            )
             overwrite.read_messages = False
             if type(interaction.channel) == discord.VoiceChannel:
                 overwrite.connect = False
-            await interaction.channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
-            await interaction.followup.send(embed=discord.Embed(title="プライベートチャンネルにしました。", color=discord.Color.green()))
+            await interaction.channel.set_permissions(
+                interaction.guild.default_role, overwrite=overwrite
+            )
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="プライベートチャンネルにしました。",
+                    color=discord.Color.green(),
+                )
+            )
         except discord.Forbidden as e:
-            return await interaction.followup.send(embed=discord.Embed(title="プライベートチャンネルにできませんでした。", color=discord.Color.red(), description="権限エラーです。"))
-        
-    @channel.command(name="remove-private", description="チャンネルをプライベートチャンネルではなくします。")
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="プライベートチャンネルにできませんでした。",
+                    color=discord.Color.red(),
+                    description="権限エラーです。",
+                )
+            )
+
+    @channel.command(
+        name="remove-private",
+        description="チャンネルをプライベートチャンネルではなくします。",
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def remove_channel_private(self, interaction: discord.Interaction):
         try:
             await interaction.response.defer()
-            overwrite = interaction.channel.overwrites_for(interaction.guild.default_role)
+            overwrite = interaction.channel.overwrites_for(
+                interaction.guild.default_role
+            )
             overwrite.read_messages = True
             if type(interaction.channel) == discord.VoiceChannel:
                 overwrite.connect = True
-            await interaction.channel.set_permissions(interaction.guild.default_role, overwrite=overwrite)
-            await interaction.followup.send(embed=discord.Embed(title="プライベートチャンネルを解除しました。", color=discord.Color.green()))
+            await interaction.channel.set_permissions(
+                interaction.guild.default_role, overwrite=overwrite
+            )
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="プライベートチャンネルを解除しました。",
+                    color=discord.Color.green(),
+                )
+            )
         except discord.Forbidden as e:
-            return await interaction.followup.send(embed=discord.Embed(title="プライベートチャンネルを解除することに失敗しました。", color=discord.Color.red(), description="権限エラーです。"))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="プライベートチャンネルを解除することに失敗しました。",
+                    color=discord.Color.red(),
+                    description="権限エラーです。",
+                )
+            )
 
     @channel.command(name="slowmode", description="低速モードを設定するよ")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)

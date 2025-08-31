@@ -28,40 +28,73 @@ class AdminCog(commands.Cog):
     @app_commands.choices(
         操作の種類=[
             app_commands.Choice(name="リロード", value="reload"),
-            app_commands.Choice(name="ロード", value="load")
+            app_commands.Choice(name="ロード", value="load"),
         ]
     )
-    async def cogs_setting(self, interaction: discord.Interaction, 操作の種類: app_commands.Choice[str], cog名: str):
+    async def cogs_setting(
+        self,
+        interaction: discord.Interaction,
+        操作の種類: app_commands.Choice[str],
+        cog名: str,
+    ):
         if interaction.user.id != 1335428061541437531:
-            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="あなたはSharkBotのオーナーではないため実行できません。", color=discord.Color.red()))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=discord.Embed(
+                    title="あなたはSharkBotのオーナーではないため実行できません。",
+                    color=discord.Color.red(),
+                ),
+            )
 
         await interaction.response.defer()
 
         if 操作の種類.value == "reload":
             await self.bot.reload_extension(f"cogs.{cog名}")
-            return await interaction.followup.send(embed=discord.Embed(title="Cogをリロードしました。", color=discord.Color.green()))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="Cogをリロードしました。", color=discord.Color.green()
+                )
+            )
         elif 操作の種類.value == "load":
             await self.bot.load_extension(f"cogs.{cog名}")
-            return await interaction.followup.send(embed=discord.Embed(title="Cogをロードしました。", color=discord.Color.green()))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="Cogをロードしました。", color=discord.Color.green()
+                )
+            )
 
-    @admin.command(name="ban", description="Botからbanをします。サーバーからはbanされません。")
+    @admin.command(
+        name="ban", description="Botからbanをします。サーバーからはbanされません。"
+    )
     @app_commands.choices(
         操作の種類=[
             app_commands.Choice(name="サーバー", value="server"),
-            app_commands.Choice(name="ユーザー", value="user")
+            app_commands.Choice(name="ユーザー", value="user"),
         ]
     )
     @app_commands.choices(
         操作=[
             app_commands.Choice(name="追加", value="add"),
-            app_commands.Choice(name="削除", value="remove")
+            app_commands.Choice(name="削除", value="remove"),
         ]
     )
-    async def ban_bot(self, interaction: discord.Interaction, 操作の種類: app_commands.Choice[str], 操作: app_commands.Choice[str], 内容: str):
+    async def ban_bot(
+        self,
+        interaction: discord.Interaction,
+        操作の種類: app_commands.Choice[str],
+        操作: app_commands.Choice[str],
+        内容: str,
+    ):
         isadmin = await self.get_admins(interaction.user)
 
         if not isadmin:
-            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="あなたはSharkBotの管理者ではないため実行できません。", color=discord.Color.red()))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=discord.Embed(
+                    title="あなたはSharkBotの管理者ではないため実行できません。",
+                    color=discord.Color.red(),
+                ),
+            )
 
         await interaction.response.defer()
 
@@ -91,7 +124,9 @@ class AdminCog(commands.Cog):
         elif 操作の種類.value == "server":
             if 操作.value == "add":
                 db = self.bot.async_db["Main"].BlockGuild
-                await db.replace_one({"Guild": int(内容)}, {"Guild": int(内容)}, upsert=True)
+                await db.replace_one(
+                    {"Guild": int(内容)}, {"Guild": int(内容)}, upsert=True
+                )
                 await interaction.followup.send(
                     embed=discord.Embed(
                         title=f"サーバーをBotからBANしました。",
@@ -108,28 +143,55 @@ class AdminCog(commands.Cog):
                     )
                 )
 
-    @admin.command(name="server", description="Botの入っているサーバーを管理します。(退出など)")
+    @admin.command(
+        name="server", description="Botの入っているサーバーを管理します。(退出など)"
+    )
     @app_commands.choices(
         操作=[
             app_commands.Choice(name="退出", value="leave"),
-            app_commands.Choice(name="警告", value="warn")
+            app_commands.Choice(name="警告", value="warn"),
         ]
     )
-    async def manage_server(self, interaction: discord.Interaction, 操作: app_commands.Choice[str], 内容: str, 理由: str):
+    async def manage_server(
+        self,
+        interaction: discord.Interaction,
+        操作: app_commands.Choice[str],
+        内容: str,
+        理由: str,
+    ):
         isadmin = await self.get_admins(interaction.user)
 
         if not isadmin:
-            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="あなたはSharkBotの管理者ではないため実行できません。", color=discord.Color.red()))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=discord.Embed(
+                    title="あなたはSharkBotの管理者ではないため実行できません。",
+                    color=discord.Color.red(),
+                ),
+            )
 
         await interaction.response.defer()
 
         if 操作.value == "leave":
             await self.bot.get_guild(int(内容)).leave()
-            await interaction.followup.send(embed=discord.Embed(title="サーバーから退出しました。", color=discord.Color.green()))
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="サーバーから退出しました。", color=discord.Color.green()
+                )
+            )
         elif 操作.value == "warn":
-            await self.bot.get_guild(int(内容)).owner.send(embed=discord.Embed(title=f"{self.bot.get_guild(int(内容))} はSharkBotから警告されました。", description=f"```{理由}```", color=discord.Color.yellow())
-                                                         .set_footer(text="詳しくはSharkBot公式サポートサーバーまで。"))
-            await interaction.followup.send(embed=discord.Embed(title="サーバーを警告しました。", color=discord.Color.green()))
+            await self.bot.get_guild(int(内容)).owner.send(
+                embed=discord.Embed(
+                    title=f"{self.bot.get_guild(int(内容))} はSharkBotから警告されました。",
+                    description=f"```{理由}```",
+                    color=discord.Color.yellow(),
+                ).set_footer(text="詳しくはSharkBot公式サポートサーバーまで。")
+            )
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="サーバーを警告しました。", color=discord.Color.green()
+                )
+            )
 
     @admin.command(name="debug", description="デバッグコマンドを実行します。")
     @app_commands.choices(
@@ -139,17 +201,35 @@ class AdminCog(commands.Cog):
             app_commands.Choice(name="デバッグメッセージ", value="debugmsg"),
         ]
     )
-    async def debug_admin(self, interaction: discord.Interaction, 操作: app_commands.Choice[str], 内容: str):
+    async def debug_admin(
+        self,
+        interaction: discord.Interaction,
+        操作: app_commands.Choice[str],
+        内容: str,
+    ):
         isadmin = await self.get_admins(interaction.user)
 
         if not isadmin:
-            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="あなたはSharkBotの管理者ではないため実行できません。", color=discord.Color.red()))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=discord.Embed(
+                    title="あなたはSharkBotの管理者ではないため実行できません。",
+                    color=discord.Color.red(),
+                ),
+            )
 
         await interaction.response.defer()
 
         if 操作.value == "embedget":
             msg = await interaction.channel.fetch_message(int(内容))
-            await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="埋め込みを解析しました。", description=f"```{msg.embeds[0].to_dict()}```", color=discord.Color.green()))
+            await interaction.followup.send(
+                ephemeral=True,
+                embed=discord.Embed(
+                    title="埋め込みを解析しました。",
+                    description=f"```{msg.embeds[0].to_dict()}```",
+                    color=discord.Color.green(),
+                ),
+            )
         elif 操作.value == "prefixreset":
             db = self.bot.async_db["DashboardBot"].CustomPrefixBot
             result = await db.delete_one(
@@ -157,27 +237,58 @@ class AdminCog(commands.Cog):
                     "Guild": int(内容),
                 }
             )
-            await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="頭文字をリセットしました。", color=discord.Color.green()))
+            await interaction.followup.send(
+                ephemeral=True,
+                embed=discord.Embed(
+                    title="頭文字をリセットしました。", color=discord.Color.green()
+                ),
+            )
         else:
-            await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="デバッグしました。", color=discord.Color.green()))
+            await interaction.followup.send(
+                ephemeral=True,
+                embed=discord.Embed(
+                    title="デバッグしました。", color=discord.Color.green()
+                ),
+            )
 
     @admin.command(name="member", description="管理者を追加します。")
     @app_commands.choices(
         操作=[
             app_commands.Choice(name="追加", value="add"),
-            app_commands.Choice(name="削除", value="remove")
+            app_commands.Choice(name="削除", value="remove"),
         ]
     )
-    async def admins_member(self, interaction: discord.Interaction, 操作: app_commands.Choice[str], ユーザー: discord.User):
+    async def admins_member(
+        self,
+        interaction: discord.Interaction,
+        操作: app_commands.Choice[str],
+        ユーザー: discord.User,
+    ):
         if interaction.user.id != 1335428061541437531:
-            return await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="あなたはSharkBotのオーナーではないため実行できません。", color=discord.Color.red()))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=discord.Embed(
+                    title="あなたはSharkBotのオーナーではないため実行できません。",
+                    color=discord.Color.red(),
+                ),
+            )
         db = self.bot.async_db["Main"].BotAdmins
         if 操作.value == "add":
-            await db.replace_one({"User": ユーザー.id}, {"User": ユーザー.id}, upsert=True)
-            await interaction.response.send_message(embed=discord.Embed(title="管理者を追加しました。", color=discord.Color.green()))
+            await db.replace_one(
+                {"User": ユーザー.id}, {"User": ユーザー.id}, upsert=True
+            )
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="管理者を追加しました。", color=discord.Color.green()
+                )
+            )
         else:
             await db.delete_one({"User": ユーザー.id})
-            await interaction.response.send_message(embed=discord.Embed(title="管理者を削除しました。", color=discord.Color.green()))
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="管理者を削除しました。", color=discord.Color.green()
+                )
+            )
 
     @commands.command(name="reload", aliases=["r"], hidden=True)
     async def reload(self, ctx: commands.Context, cogname: str):
@@ -206,6 +317,11 @@ class AdminCog(commands.Cog):
             for cmd in self.bot.tree.get_commands():
                 await save_commands.save_command(cmd)
                 count += 1
+
+            for g in self.bot.guilds:
+                await self.bot.async_db["DashboardBot"].bot_joind_guild.replace_one(
+                    {"Guild": g.id}, {"Guild": g.id}, upsert=True
+                )
 
             await ctx.reply(f"コマンドをセーブしました。\n{count}件。")
 
