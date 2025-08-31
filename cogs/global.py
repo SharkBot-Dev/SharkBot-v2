@@ -1523,7 +1523,7 @@ class GlobalCog(commands.Cog):
                                 model="gemini-2.5-flash-lite", contents=f"以下の条件に合わせて回答を出力して。\n・discordサーバーの宣伝文を作る。\n・宣伝文以外を出力しない。\n・サーバー名は、「{invite.guild.name}」\n・招待リンクは「{message.content}」"
                             )
 
-                            message.content = response
+                            message.content = response.text
 
                             await self.send_global_ads(message)
 
