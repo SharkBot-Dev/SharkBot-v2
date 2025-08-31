@@ -11,6 +11,7 @@ import discord
 
 import pyshorteners
 from discord import app_commands
+from consts import badword
 from models import command_disable
 
 ipv4_pattern = re.compile(
@@ -85,6 +86,18 @@ class EmbedMake(discord.ui.Modal, title="埋め込みを作成"):
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
+
+        
+        for b in badword.badwords:
+            if b in self.title_.value:
+                return await interaction.response.send_message(ephemeral=True, content="不適切なワードが含まれています。")
+            
+            if b in self.desc.value:
+                return await interaction.response.send_message(ephemeral=True, content="不適切なワードが含まれています。")
+
+            if self.button_label.value:
+                if b in self.title_.value:
+                    return await interaction.response.send_message(ephemeral=True, content="不適切なワードが含まれています。")
 
         try:
             view = discord.ui.View()
@@ -233,6 +246,22 @@ class ToolsCog(commands.Cog):
                 ephemeral=True, content="そのコマンドは無効化されています。"
             )
         await interaction.response.send_modal(EmbedMake())
+
+    @tools.command(name="button", description="ボタンを作成します。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def tools_button(self, interaction: discord.Interaction, ラベル: str, url: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
+        
+        for b in badword.badwords:
+            if b in ラベル:
+                return await interaction.response.send_message(ephemeral=True, content="不適切なワードが含まれています。")
+
+        await interaction.response.send_message(view=discord.ui.View().add_item(discord.ui.Button(label=ラベル, url=url)))
 
     @tools.command(name="invite", description="招待リンクを作成します。")
     @app_commands.checks.has_permissions(create_instant_invite=True)
