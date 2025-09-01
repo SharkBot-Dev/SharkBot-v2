@@ -580,17 +580,17 @@ class ModCog(commands.Cog):
             async for entry in interaction.guild.audit_logs(
                 action=discord.AuditLogAction.ban, limit=50
             ):
-                text += f"{entry.target.name} - {entry.user.name} .. {entry.reason if entry.reason else "なし"}\n"
+                text += f"{entry.target.name} - {entry.user.name} .. {entry.reason if entry.reason else 'なし'}\n"
         elif 監査ログタイプ.value == "unban":
             async for entry in interaction.guild.audit_logs(
                 action=discord.AuditLogAction.unban, limit=50
             ):
-                text += f"{entry.target.name} - {entry.user.name} .. {entry.reason if entry.reason else "なし"}\n"
+                text += f"{entry.target.name} - {entry.user.name} .. {entry.reason if entry.reason else 'なし'}\n"
         elif 監査ログタイプ.value == "bot_add":
             async for entry in interaction.guild.audit_logs(
                 action=discord.AuditLogAction.bot_add, limit=50
             ):
-                text += f"{entry.target.name} - {entry.user.name} .. {entry.reason if entry.reason else "なし"}\n"
+                text += f"{entry.target.name} - {entry.user.name} .. {entry.reason if entry.reason else 'なし'}\n"
         t = io.StringIO(text)
         await interaction.followup.send(file=discord.File(t, "auditlog.txt"))
         t.close()
