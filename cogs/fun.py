@@ -345,6 +345,38 @@ class TextGroup(app_commands.Group):
                 )
             )
 
+    @app_commands.command(name="number", description="進数を変更します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def number(self, interaction: discord.Interaction, 進数: int, 数字: str):
+        if 進数 > 16:
+            return await interaction.response.send_message(embed=discord.Embed(title="16進数まで対応です。", color=discord.Color.red()))
+        await interaction.response.send_message(embed=discord.Embed(title="進数を変換しました。", description=str(int(数字, 進数), color=discord.Color.green())))
+
+    @app_commands.command(name="arm", description="armのasmを、バイナリに変換します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def arm_byte(self, interaction: discord.Interaction):
+        class send(discord.ui.Modal):
+            def __init__(self) -> None:
+                super().__init__(title="BANメッセージの設定", timeout=None)
+                self.asm = discord.ui.TextInput(label="ASMを入力", style=discord.TextStyle.long, required=True)
+
+            async def on_submit(self, interaction_: discord.Interaction) -> None:
+                await interaction_.response.defer()
+                try:
+                    data = '{"asm":"' + self.asm + '","offset":"","arch":["arm64","arm","thumb"]}'
+                    async with aiohttp.ClientSession() as session:
+                        async with session.post(
+                            "https://armconverter.com/api/convert",
+                            data=data,
+                        ) as response:
+                            js = await response.json()
+                            await interaction_.followup.send(embed=discord.Embed(title="Armのバイナリ", description=f"```{js.get("hex", {}).get("hex", [])[1]}```"))
+                except:
+                    await interaction_.followup.send(ephemeral=True, content="エラーが発生しました。")
+
+        await interaction.response.send_modal(send())
 
 class NounaiGroup(app_commands.Group):
     def __init__(self):
