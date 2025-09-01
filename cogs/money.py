@@ -156,7 +156,7 @@ class GachaGroup(app_commands.Group):
                 "Money": 金額,
                 "Text": 説明,
                 "Item": [],
-                "Role": ロール if ロール else 0
+                "Role": ロール.id if ロール else 0
             },
             upsert=True,
         )
