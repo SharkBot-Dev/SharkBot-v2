@@ -552,6 +552,13 @@ class ToolsCog(commands.Cog):
     async def qrcode_make(self, interaction: discord.Interaction, url: str):
         await interaction.response.send_message(embed=discord.Embed(title="QRコード作成", color=discord.Color.green())
                                                 .set_image(url=f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={url}"))
+        
+    @tools.command(name="webshot", description="スクリーンショットを取ります。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def webshot(self, interaction: discord.Interaction, url: str):
+        await interaction.response.send_message(embed=discord.Embed(title="スクリーンショット", color=discord.Color.green())
+                                                .set_image(url=f"https://image.thum.io/get/{url}"))
 
 async def setup(bot):
     await bot.add_cog(ToolsCog(bot))
