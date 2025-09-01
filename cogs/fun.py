@@ -349,9 +349,33 @@ class TextGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def number(self, interaction: discord.Interaction, 進数: int, 数字: str):
-        if 進数 > 16:
-            return await interaction.response.send_message(embed=discord.Embed(title="16進数まで対応です。", color=discord.Color.red()))
-        await interaction.response.send_message(embed=discord.Embed(title="進数を変換しました。", description=str(int(数字, 進数), color=discord.Color.green())))
+        if 進数 < 2 or 進数 > 16:
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="対応していない進数です。",
+                    description="2～16進数まで対応しています。",
+                    color=discord.Color.red()
+                )
+            )
+        
+        try:
+            result = int(数字, 進数)
+        except ValueError:
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="変換エラー",
+                    description=f"入力 `{数字}` は {進数} 進数として無効です。",
+                    color=discord.Color.red()
+                )
+            )
+        
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="進数を変換しました。",
+                description=f"`{数字}` ({進数}進数) → `{result}` (10進数)",
+                color=discord.Color.green()
+            )
+        )
 
     @app_commands.command(name="arm", description="armのasmを、バイナリに変換します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
