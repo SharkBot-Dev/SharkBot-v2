@@ -383,8 +383,9 @@ class TextGroup(app_commands.Group):
     async def arm_byte(self, interaction: discord.Interaction):
         class send(discord.ui.Modal):
             def __init__(self) -> None:
-                super().__init__(title="BANメッセージの設定", timeout=None)
-                self.asm = discord.ui.TextInput(label="ASMを入力", style=discord.TextStyle.long, required=True)
+                super().__init__(title="Armをバイナリに変換", timeout=None)
+            
+            asm = discord.ui.TextInput(label="ASMを入力", style=discord.TextStyle.long, required=True)
 
             async def on_submit(self, interaction_: discord.Interaction) -> None:
                 await interaction_.response.defer()
