@@ -365,16 +365,30 @@ class TextGroup(app_commands.Group):
             async def on_submit(self, interaction_: discord.Interaction) -> None:
                 await interaction_.response.defer()
                 try:
-                    data = '{"asm":"' + self.asm + '","offset":"","arch":["arm64","arm","thumb"]}'
+                    payload = {
+                        "asm": self.asm.value,
+                        "offset": "",
+                        "arch": ["arm64", "arm", "thumb"]
+                    }
                     async with aiohttp.ClientSession() as session:
                         async with session.post(
                             "https://armconverter.com/api/convert",
-                            data=data,
+                            json=payload
                         ) as response:
                             js = await response.json()
-                            await interaction_.followup.send(embed=discord.Embed(title="Armのバイナリ", description=f"```{js.get("hex", {}).get("hex", [])[1]}```"))
-                except:
-                    await interaction_.followup.send(ephemeral=True, content="エラーが発生しました。")
+                            hex_list = js.get("hex", {}).get("hex", [])
+                            hex_result = hex_list[1] if len(hex_list) > 1 else "取得できませんでした"
+                            await interaction_.followup.send(
+                                embed=discord.Embed(
+                                    title="ARMのバイナリ",
+                                    description=f"```{hex_result}```"
+                                )
+                            )
+                except Exception as e:
+                    await interaction_.followup.send(
+                        ephemeral=True,
+                        content=f"エラーが発生しました: {e}"
+                    )
 
         await interaction.response.send_modal(send())
 
