@@ -338,6 +338,24 @@ async def welcome_send(
     safe_title = html.escape(title)
     safe_desc = html.escape(desc)
 
+    channel_doc = await mongodb.mongo["DashboardBot"].guild_channels.find_one(
+        {"Guild": int(guild_id)}
+    )
+
+    channels = []
+    if channel_doc and "Channels" in channel_doc:
+        channels = [str(int(ch["id"])) for ch in channel_doc["Channels"]]
+
+    if channel not in channels:
+        return templates.templates.TemplateResponse(
+            "message.html",
+            {
+                "request": request,
+                "url": f"/settings/{guild_id}/welcome",
+                "message": "不正なチャンネルが指定されました。",
+            },
+        )
+
     try:
         db = mongodb.mongo["Main"].WelcomeMessage
         if title == "delete_welcome":
