@@ -144,6 +144,7 @@ class GachaGroup(app_commands.Group):
         名前: str,
         金額: int,
         説明: str = "ガチャが引けます。",
+        ロール: discord.Role = None
     ):
         db = interaction.client.async_db["Main"].ServerMoneyGacha
 
@@ -155,6 +156,7 @@ class GachaGroup(app_commands.Group):
                 "Money": 金額,
                 "Text": 説明,
                 "Item": [],
+                "Role": ロール if ロール else 0
             },
             upsert=True,
         )
@@ -162,6 +164,42 @@ class GachaGroup(app_commands.Group):
         await interaction.response.send_message(
             embed=discord.Embed(
                 title="ガチャを作成しました。", color=discord.Color.green()
+            )
+        )
+
+    @app_commands.command(name="multi-add", description="確率操作をするために、一つのアイテムを複数追加します。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def economy_gacha_multi_add(
+        self, interaction: discord.Interaction, ガチャ名: str, アイテム名: str, 個数: int
+    ):
+        if 個数 > 10:
+            return await interaction.response.send_message(ephemeral=True, content="11個以上一回で追加できません。")
+        await interaction.response.defer()
+        db = interaction.client.async_db["Main"].ServerMoneyGacha
+
+        sm = await Money(interaction.client).get_server_items(
+            interaction.guild, アイテム名
+        )
+        if not sm:
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="アイテムが見つかりません。",
+                    color=discord.Color.red(),
+                    description="先に、`/economy item create`で作成してください。",
+                )
+            )
+
+        for c in range(個数):
+
+            await db.update_one(
+                {"Guild": interaction.guild.id, "Name": ガチャ名},
+                {"$push": {"Item": アイテム名}},
+            )
+
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="ガチャに複数同じアイテムを追加しました。", color=discord.Color.green()
             )
         )
 
@@ -322,6 +360,15 @@ class GachaGroup(app_commands.Group):
             return await interaction.response.send_message(
                 ephemeral=True, content="ガチャにアイテムがありません。"
             )
+        
+        if dbfind.get("Role", 0) != 0:
+            if (
+                interaction.guild.get_role(dbfind.get("Role", 0))
+                not in interaction.user.roles
+            ):
+                return await interaction.response.send_message(
+                    ephemeral=True, content="指定したロールを持っていないためガチャを引けません。"
+                )
 
         await interaction.response.defer()
 
