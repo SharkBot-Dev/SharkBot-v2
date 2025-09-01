@@ -553,12 +553,41 @@ class ToolsCog(commands.Cog):
         await interaction.response.send_message(embed=discord.Embed(title="QRコード作成", color=discord.Color.green())
                                                 .set_image(url=f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={url}"))
         
-    @tools.command(name="webshot", description="スクリーンショットを取ります。")
+    @tools.command(name="weather", description="天気を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def webshot(self, interaction: discord.Interaction, url: str):
-        await interaction.response.send_message(embed=discord.Embed(title="スクリーンショット", color=discord.Color.green())
-                                                .set_image(url=f"https://image.thum.io/get/{url}"))
+    @app_commands.choices(
+        場所=[
+            app_commands.Choice(name="東京", value="130000"),
+            app_commands.Choice(name="大阪", value="270000")
+        ]
+    )
+    async def weather(self, interaction: discord.Interaction, 場所: app_commands.Choice[str]):
+        await interaction.response.defer()
+        url = f"https://www.jma.go.jp/bosai/forecast/data/forecast/{場所.value}.json"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                resp.raise_for_status()
+                data = await resp.json()
+                ts = data[0]["timeSeries"][0]
+                time_defs = ts["timeDefines"]
+                area = ts["areas"][0]
+                weathers = area["weathers"]
+
+                weather_info = []
+                for dt, w in zip(time_defs, weathers):
+                    weather_info.append((dt, w))
+
+                embed = discord.Embed(
+                    title=f"天気予報 ({場所.name})",
+                    description="気象庁データを元にしています",
+                    color=discord.Color.blue()
+                )
+
+                for dt, w in weather_info:
+                    embed.add_field(name=dt, value=w, inline=False)
+
+                await interaction.followup.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(ToolsCog(bot))
