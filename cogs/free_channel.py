@@ -40,20 +40,27 @@ class FreeChannelModal(discord.ui.Modal):
         except:
             return
         nsfw = False if self.channeltype.component.values[0] == "text" else True
+        overwrites = {
+            interaction.guild.default_role: discord.PermissionOverwrite(send_messages=True)
+        }
+
+        if interaction.channel and interaction.channel.overwrites:
+            for target, perm in interaction.channel.overwrites.items():
+                overwrites[target] = perm
         if dbfind is None:
             if interaction.channel.category:
                 channel = await interaction.channel.category.create_text_channel(
-                    name=self.channelname.component.value, nsfw=nsfw, overwrites=interaction.channel.overwrites
+                    name=self.channelname.component.value, nsfw=nsfw, overwrites=overwrites
                 )
             else:
                 channel = await interaction.guild.create_text_channel(
-                    name=self.channelname.component.value, nsfw=nsfw, overwrites=interaction.channel.overwrites
+                    name=self.channelname.component.value, nsfw=nsfw, overwrites=overwrites
                 )
         else:
             ch = interaction.guild.get_channel(dbfind.get("Channel", 0))
             if type(ch) == discord.CategoryChannel:
                 channel = await ch.create_text_channel(
-                    name=self.channelname.component.value, nsfw=nsfw, overwrites=interaction.channel.overwrites
+                    name=self.channelname.component.value, nsfw=nsfw, overwrites=overwrites
                 )
             else:
                 return
