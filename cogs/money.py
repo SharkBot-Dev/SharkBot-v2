@@ -375,7 +375,7 @@ class GachaGroup(app_commands.Group):
         m = await Money(interaction.client).get_server_money(
             interaction.guild, interaction.user
         )
-        if m < dbfind["Money"]:
+        if m <= dbfind["Money"]:
             return await interaction.followup.send(
                 ephemeral=True,
                 embed=discord.Embed(
