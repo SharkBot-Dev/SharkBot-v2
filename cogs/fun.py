@@ -398,7 +398,7 @@ class TextGroup(app_commands.Group):
                     async with aiohttp.ClientSession() as session:
                         async with session.post(
                             "https://armconverter.com/api/convert",
-                            json=payload
+                            data=str(payload)
                         ) as response:
                             js = await response.json()
                             hex_list = js.get("hex", {}).get("hex", [])
@@ -406,7 +406,8 @@ class TextGroup(app_commands.Group):
                             await interaction_.followup.send(
                                 embed=discord.Embed(
                                     title="ARMのバイナリ",
-                                    description=f"```{hex_result}```"
+                                    description=f"```{hex_result}```",
+                                    color=discord.Color.green()
                                 )
                             )
                 except Exception as e:
