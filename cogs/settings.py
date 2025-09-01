@@ -206,9 +206,9 @@ class WelcomeCommands(app_commands.Group):
                         )
                     )
 
-            await interaction.response.send_modal(send(self.bot.async_db))
+            await interaction.response.send_modal(send(interaction.client.async_db))
         else:
-            db = self.bot.async_db["Main"].WelcomeMessage
+            db = interaction.client.async_db["Main"].WelcomeMessage
             result = await db.delete_one(
                 {
                     "Channel": interaction.channel.id,
@@ -273,9 +273,9 @@ class WelcomeCommands(app_commands.Group):
                         )
                     )
 
-            await interaction.response.send_modal(send(self.bot.async_db))
+            await interaction.response.send_modal(send(interaction.client.async_db))
         else:
-            db = self.bot.async_db["Main"].GoodByeMessage
+            db = interaction.client.async_db["Main"].GoodByeMessage
             result = await db.delete_one(
                 {
                     "Channel": interaction.channel.id,
@@ -338,9 +338,9 @@ class WelcomeCommands(app_commands.Group):
                         )
                     )
 
-            await interaction.response.send_modal(send(self.bot.async_db))
+            await interaction.response.send_modal(send(interaction.client.async_db))
         else:
-            db = self.bot.async_db["Main"].BanMessage
+            db = interaction.client.async_db["Main"].BanMessage
             result = await db.delete_one(
                 {
                     "Channel": interaction.channel.id,
