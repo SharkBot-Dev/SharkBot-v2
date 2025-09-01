@@ -45,8 +45,10 @@ class FreeChannelModal(discord.ui.Modal):
         }
 
         if interaction.channel and interaction.channel.overwrites:
-            for target, perm in interaction.channel.overwrites.items():
+            for target, perm in dict(interaction.channel.overwrites).items():
                 overwrites[target] = perm
+
+        overwrites[interaction.guild.default_role] = discord.PermissionOverwrite(send_messages=True)
         if dbfind is None:
             if interaction.channel.category:
                 channel = await interaction.channel.category.create_text_channel(
