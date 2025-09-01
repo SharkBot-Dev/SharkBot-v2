@@ -398,7 +398,7 @@ class TextGroup(app_commands.Group):
                     async with aiohttp.ClientSession() as session:
                         async with session.post(
                             "https://armconverter.com/api/convert",
-                            data=str(payload)
+                            data=json.dumps(payload)
                         ) as response:
                             js = await response.json()
                             hex_list = js.get("hex", {}).get("hex", [])
