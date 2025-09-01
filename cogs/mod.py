@@ -1,3 +1,4 @@
+import io
 from discord.ext import commands
 import discord
 import datetime
@@ -558,6 +559,41 @@ class ModCog(commands.Cog):
             )
         )
 
+    @moderation.command(
+        name="auditlog",
+        description="監査ログを検索します。",
+    )
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        監査ログタイプ=[
+            app_commands.Choice(name="メンバーBan", value="ban"),
+            app_commands.Choice(name="メンバーBan解除", value="unban"),
+            app_commands.Choice(name="Bot追加", value="bot_add")
+        ]
+    )
+    async def auditlog_search(self, interaction: discord.Interaction, 監査ログタイプ: app_commands.Choice[str]):
+        await interaction.response.defer()
+        text = ""
+        if 監査ログタイプ.value == "ban":
+            async for entry in interaction.guild.audit_logs(
+                action=discord.AuditLogAction.ban, limit=50
+            ):
+                text += f"{entry.target.name} - {entry.user.name} .. {entry.reason}"
+        elif 監査ログタイプ.value == "unban":
+            async for entry in interaction.guild.audit_logs(
+                action=discord.AuditLogAction.unban, limit=50
+            ):
+                text += f"{entry.target.name} - {entry.user.name} .. {entry.reason}"
+        elif 監査ログタイプ.value == "bot_add":
+            async for entry in interaction.guild.audit_logs(
+                action=discord.AuditLogAction.bot_add, limit=50
+            ):
+                text += f"{entry.target.name} - {entry.user.name} .. {entry.reason}"
+        t = io.StringIO(text)
+        await interaction.followup.send(file=discord.File(t, "auditlog.txt"))
+        t.close()
 
 async def setup(bot):
     await bot.add_cog(ModCog(bot))
