@@ -47,6 +47,8 @@ class FreeChannelModal(discord.ui.Modal):
 
         everyone_overwrite = overwrites.get(interaction.guild.default_role, discord.PermissionOverwrite())
         everyone_overwrite.send_messages = True
+        everyone_overwrite.attach_files = True
+        everyone_overwrite.add_reactions = True
         overwrites[interaction.guild.default_role] = everyone_overwrite
         if dbfind is None:
             if interaction.channel.category:
