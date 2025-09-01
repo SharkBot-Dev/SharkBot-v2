@@ -401,7 +401,7 @@ class TextGroup(app_commands.Group):
                             data=json.dumps(payload)
                         ) as response:
                             js = await response.json()
-                            hex_list = js.get("hex", {}).get("hex", [])
+                            hex_list = js.get("hex", {}).get("arm", [])
                             hex_result = hex_list[1] if len(hex_list) > 1 else "取得できませんでした"
                             await interaction_.followup.send(
                                 embed=discord.Embed(
