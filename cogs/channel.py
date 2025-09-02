@@ -137,11 +137,11 @@ class ChannelCog(commands.Cog):
                 embed=discord.Embed(
                     title="スローモードを設定できませんでした。",
                     color=discord.Color.red(),
-                    description="6時間以上を設定しようとしているなら、\n`/channel slowmode-bot`を使用してください。",
+                    description="6時間以上を設定しようとしているなら、\n`/channel long-slowmode`を使用してください。",
                 )
             )
 
-    @channel.command(name="slowmode-bot", description="Botを使った低速モードを設定します。6時間以上も可能です。")
+    @channel.command(name="long-slowmode", description="Botを使った長時間の低速モードを設定します。6時間以上も可能です。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
