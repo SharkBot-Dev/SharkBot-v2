@@ -3,11 +3,12 @@ import discord
 from discord import app_commands
 
 from models import command_disable
-
+import re
 
 class ChannelCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.timeout_pattern = re.compile(r"(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?")
         print("init -> ChannelCog")
 
     channel = app_commands.Group(
@@ -131,6 +132,37 @@ class ChannelCog(commands.Cog):
                     description="権限エラーです。",
                 )
             )
+
+    @channel.command(name="slowmode-bot", description="Botを使った低速モードを設定します。6時間以上も可能です。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def slowmode_bot(self, interaction: discord.Interaction, 時間: str):
+        def parse_time_to_seconds(time_str: str) -> int:
+            match = self.timeout_pattern.fullmatch(time_str)
+            if not match:
+                return None
+            days, hours, minutes, seconds = match.groups()
+            total_seconds = 0
+            if days: total_seconds += int(days) * 86400
+            if hours: total_seconds += int(hours) * 3600
+            if minutes: total_seconds += int(minutes) * 60
+            if seconds: total_seconds += int(seconds)
+            return total_seconds
+
+        delay_seconds = parse_time_to_seconds(時間)
+        if delay_seconds is None or delay_seconds < 0:
+            await interaction.response.send_message("無効な時間指定です。例: `1d2h30m`", ephemeral=True)
+            return
+        
+        db = self.bot.async_db["Main"].SlowModeBot
+        await db.update_one(
+            {"channel_id": interaction.channel.id},
+            {"$set": {"delay_seconds": delay_seconds}},
+            upsert=True
+        )
+
+        await interaction.response.send_message("Botを使った低速モードを設定しました。", ephemeral=True)
 
     @channel.command(name="command-disable", description="低速モードを設定するよ")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
