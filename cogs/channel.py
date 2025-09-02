@@ -151,6 +151,7 @@ class ChannelCog(commands.Cog):
             return total_seconds
 
         delay_seconds = parse_time_to_seconds(時間)
+        db = self.bot.async_db["Main"].SlowModeBot
         if delay_seconds == 0:
             await db.delete_one(
                 {"channel_id": interaction.channel.id}
@@ -161,7 +162,6 @@ class ChannelCog(commands.Cog):
             await interaction.response.send_message("無効な時間指定です。例: `1d2h30m`", ephemeral=True)
             return
         
-        db = self.bot.async_db["Main"].SlowModeBot
         await db.update_one(
             {"channel_id": interaction.channel.id},
             {"$set": {"delay_seconds": delay_seconds}},
