@@ -132,6 +132,14 @@ class ChannelCog(commands.Cog):
                     description="権限エラーです。",
                 )
             )
+        except:
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="スローモードを設定できませんでした。",
+                    color=discord.Color.red(),
+                    description="6時間以上を設定しようとしているなら、\n`/channel slowmode-bot`を使用してください。",
+                )
+            )
 
     @channel.command(name="slowmode-bot", description="Botを使った低速モードを設定します。6時間以上も可能です。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
