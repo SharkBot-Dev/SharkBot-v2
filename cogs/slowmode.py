@@ -44,6 +44,8 @@ class SlowModeCog(commands.Cog):
                     overwrite.create_polls = False
                     overwrite.use_application_commands = False
                     overwrite.attach_files = False
+                    overwrite.create_public_threads = False
+                    overwrite.create_private_threads = False
 
                     await message.channel.set_permissions(
                         message.author, overwrite=overwrite
@@ -64,6 +66,8 @@ class SlowModeCog(commands.Cog):
                     overwrite.create_polls = True
                     overwrite.use_application_commands = True
                     overwrite.attach_files = True
+                    overwrite.create_public_threads = True
+                    overwrite.create_private_threads = True
 
                     await message.channel.set_permissions(
                         message.author, overwrite=overwrite
