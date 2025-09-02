@@ -15,6 +15,11 @@ class SlowModeCog(commands.Cog):
         if message.author.bot:
             return
 
+        if type(message.channel) == discord.DMChannel:
+            return
+        
+        if message.author.guild_permissions.manage_channels:
+            return
 
         db = self.bot.async_db["Main"].SlowModeBot
         record = await db.find_one({"channel_id": message.channel.id})
@@ -45,7 +50,7 @@ class SlowModeCog(commands.Cog):
                     )
 
                     await asyncio.sleep(1)
-                    
+
                     await message.channel.send(
                         f"{message.author.mention}、スローモード中です。あと {remain} 秒待ってください。",
                         delete_after=5
