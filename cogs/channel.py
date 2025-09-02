@@ -155,6 +155,7 @@ class ChannelCog(commands.Cog):
             await db.delete_one(
                 {"channel_id": interaction.channel.id}
             )
+            return await interaction.response.send_message("Botを使ったスローモードを無効化しました。", ephemeral=True)
 
         if delay_seconds is None or delay_seconds < 0:
             await interaction.response.send_message("無効な時間指定です。例: `1d2h30m`", ephemeral=True)
