@@ -643,6 +643,22 @@ Botを追加したユーザーは？: {add_bot_user}
 
         return
 
+    @search.command(name="emoji", description="絵文字を検索します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def emoji(self, interaction: discord.Interaction, 絵文字: str):
+        await interaction.response.defer()
+        for e in interaction.guild.emojis:
+            if 絵文字 == e.__str__():
+                await interaction.followup.send(embed=discord.Embed(title=f"{e.name} の情報", color=discord.Color.green())
+                                                .set_image(url=e.url)
+                                                .add_field(name="名前", value=e.name, inline=False)
+                                                .add_field(name="id", value=str(e.id), inline=False)
+                                                .add_field(name="作成日時", value=str(e.created_at), inline=False)
+                                                .add_field(name="絵文字が動くか", value="はい" if e.animated else "いいえ", inline=False))
+                return
+        await interaction.followup.send(embed=discord.Embed(title=f"絵文字が見つかりません。", color=discord.Color.red()))
+
     @search.command(name="translate", description="翻訳をします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
