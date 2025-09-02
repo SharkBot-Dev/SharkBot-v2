@@ -540,7 +540,7 @@ class ShellCog(commands.Cog):
                 data = await response.json()
                 ans = data.get('stdout', '出力なし')
                 await interaction.followup.send(embed=discord.Embed(title="計算結果", color=discord.Color.green())
-                                                .add_field(name="計算式", value=計算式, inline=False).add_field(name="計算結果", value=f"```{ans}```", inline=False))
+                                                .add_field(name="計算式", value=f"```{計算式}```", inline=False).add_field(name="計算結果", value=f"```{ans}```", inline=False))
 
     @shell.command(name="compile", description="プログラムをコンパイルします。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
