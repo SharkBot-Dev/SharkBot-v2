@@ -480,7 +480,6 @@ class ShellCog(commands.Cog):
 
     @shell.command(name="math", description="計算式を計算します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.checks.has_permissions(manage_channels=True)
     async def compile_math(self, interaction: discord.Interaction, 計算式: str):
         await interaction.response.defer()
         headers = {
