@@ -18,6 +18,7 @@ from deep_translator import GoogleTranslator
 
 import urllib.parse
 
+
 def text_len_sudden(text):
     count = 0
     for c in text:
@@ -380,12 +381,11 @@ class TextGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def arm_byte(self, interaction: discord.Interaction):
-        class SendModal(discord.ui.Modal, title="Armをバイナリに変換"):
-            asm = discord.ui.TextInput(
-                label="ASMを入力",
-                style=discord.TextStyle.long,
-                required=True
-            )
+        class send(discord.ui.Modal):
+            def __init__(self) -> None:
+                super().__init__(title="Armをバイナリに変換", timeout=None)
+            
+            asm = discord.ui.TextInput(label="ASMを入力", style=discord.TextStyle.long, required=True)
 
             async def on_submit(self, interaction_: discord.Interaction) -> None:
                 await interaction_.response.defer()
@@ -401,59 +401,22 @@ class TextGroup(app_commands.Group):
                             data=json.dumps(payload)
                         ) as response:
                             js = await response.json()
-
                             hex_list = js.get("hex", {}).get("arm", [])
-
-                            if not hex_list:
-                                await interaction_.followup.send(
-                                    ephemeral=True,
-                                    content="変換結果が取得できませんでした。"
+                            hex_result = hex_list[1] if len(hex_list) > 1 else "取得できませんでした"
+                            await interaction_.followup.send(
+                                embed=discord.Embed(
+                                    title="ARMのバイナリ",
+                                    description=f"```{hex_result}```",
+                                    color=discord.Color.green()
                                 )
-                                return
-
-                            def little_to_big_endian(hex_str: str) -> list[str]:
-                                results = []
-
-                                for i in range(0, len(hex_str), 8):
-                                    chunk = hex_str[i:i+8]
-                                    if len(chunk) < 8:
-                                        continue
-                                    try:
-                                        word = int(chunk, 16) & 0xFFFFFFFF
-                                        b = word.to_bytes(4, byteorder="little", signed=False)
-                                        be = int.from_bytes(b, byteorder="big", signed=False)
-                                        results.append(f"{be:08X}")
-                                    except Exception:
-                                        results.append("変換失敗")
-                                return results
-
-                            result_lines = []
-                            try:
-                                for i, hex_result in enumerate(hex_list[1:], start=1):
-                                    be_list = little_to_big_endian(hex_result)
-                                    be_result = " ".join(be_list) if be_list else "変換失敗"
-
-                                    result_lines.append(
-                                        f"{i}. Little: {hex_result}\n   Big: {be_result}"
-                                    )
-                            except:
-                                result_lines += "変換失敗"
-
-                            embed = discord.Embed(
-                                title="ARMのバイナリ変換結果",
-                                description='```' + "\n".join(result_lines) + '```',
-                                color=discord.Color.green()
                             )
-
-                            await interaction_.followup.send(embed=embed)
-
                 except Exception as e:
                     await interaction_.followup.send(
                         ephemeral=True,
                         content=f"エラーが発生しました: {e}"
                     )
 
-        await interaction.response.send_modal(SendModal())
+        await interaction.response.send_modal(send())
 
 class NounaiGroup(app_commands.Group):
     def __init__(self):
