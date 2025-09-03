@@ -730,24 +730,26 @@ Botを追加したユーザーは？: {add_bot_user}
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def wikipedia(self, interaction: discord.Interaction, 検索ワード: str):
         await interaction.response.defer()
-        loop = asyncio.get_event_loop()
+
+        wikipedia_api_url = "https://ja.wikipedia.org/w/api.php"
+
+        params = {
+            "action": "query",
+            "format": "json",
+            "titles": 検索ワード,
+            "prop": "info",
+            "inprop": "url",
+        }
+
+        headers = {
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36'
+        }
+
         try:
-            wikipedia_api_url = "https://ja.wikipedia.org/w/api.php"
-
-            # APIパラメータ
-            params = {
-                "action": "query",
-                "format": "json",
-                "titles": 検索ワード,
-                "prop": "info",
-                "inprop": "url",
-            }
-
-            response = await loop.run_in_executor(
-                None, partial(requests.get, wikipedia_api_url, params=params)
-            )
-            await loop.run_in_executor(None, partial(response.raise_for_status))
-            data = await loop.run_in_executor(None, partial(response.json))
+            async with aiohttp.ClientSession(headers=headers) as session:
+                async with session.get(wikipedia_api_url, params=params) as resp:
+                    resp.raise_for_status()
+                    data = await resp.json()
 
             pages = data.get("query", {}).get("pages", {})
             if not pages:
@@ -763,7 +765,7 @@ Botを追加したユーザーは？: {add_bot_user}
             await interaction.followup.send(f"🔗 Wikipedia短縮リンク: {short_url}")
 
         except Exception as e:
-            await interaction.followup.send(f"エラーが発生しました")
+            await interaction.followup.send(f"エラーが発生しました: {e}")
 
     @search.command(name="safeweb", description="サイトの安全性を調べます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
