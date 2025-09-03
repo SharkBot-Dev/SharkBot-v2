@@ -75,3 +75,4 @@ autopep8
 flake8
 ruff
 google-genai
+aiohttp_socks

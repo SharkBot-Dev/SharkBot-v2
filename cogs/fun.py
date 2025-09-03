@@ -18,6 +18,34 @@ from deep_translator import GoogleTranslator
 
 import urllib.parse
 
+ASCII_CHARS = "@%#*+=-:. "
+
+def resize_image(image, new_width=40, new_height=40):
+    return image.resize((new_width, new_height))
+
+def grayify(image):
+    return image.convert("L")
+
+def pixels_to_ascii(image):
+    pixels = image.getdata()
+    ascii_str = ""
+    for pixel in pixels:
+        ascii_str += ASCII_CHARS[pixel * len(ASCII_CHARS) // 256]
+    return ascii_str
+
+def image_to_ascii(image_path):
+    try:
+        image = Image.open(image_path)
+    except Exception as e:
+        return "変換エラー"
+
+    image = resize_image(image)
+    image = grayify(image)
+
+    ascii_str = pixels_to_ascii(image)
+
+    ascii_art = "\n".join(ascii_str[i:i+40] for i in range(0, len(ascii_str), 40))
+    return ascii_art
 
 def text_len_sudden(text):
     count = 0
@@ -616,16 +644,27 @@ class ImageGroup(app_commands.Group):
         elif 背景色.value == "white":
             back = (255, 255, 255)
             text = (0, 0, 0)
-        miq = create_quote_image(
-            ユーザー.display_name, 発言, av, back, text, color, negapoji
-        )
+        miq = await asyncio.to_thread(create_quote_image, ユーザー.display_name, 発言, av, back, text, color, negapoji)
         image_binary = io.BytesIO()
-        miq.save(image_binary, "PNG")
+        await asyncio.to_thread(miq.save, image_binary, "PNG")
         image_binary.seek(0)
         file = discord.File(fp=image_binary, filename="fake_quote.png")
         await interaction.followup.send(file=file)
         image_binary.close()
 
+    @app_commands.command(name="ascii", description="アスキーアートを作成します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def ascii(self, interaction: discord.Interaction, 画像: discord.Attachment):
+        await interaction.response.defer()
+        rd = await 画像.read()
+        io_ = io.BytesIO(rd)
+        io_.seek(0)
+        text = await asyncio.to_thread(image_to_ascii, io_)
+        st = io.StringIO(text)
+        await interaction.followup.send(file=discord.File(st, "ascii.txt"))
+        st.close()
+        io_.close()
 
 class FunCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
