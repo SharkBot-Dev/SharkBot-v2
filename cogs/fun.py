@@ -434,7 +434,7 @@ class TextGroup(app_commands.Group):
                                     be_result = " ".join(be_list) if be_list else "変換失敗"
 
                                     result_lines.append(
-                                        f"{i}. Little: ```{hex_result}```\n   Big: ```{be_result}```"
+                                        f"{i}. Little: {hex_result}\n   Big: {be_result}"
                                     )
                             except:
                                 result_lines += "変換失敗"
