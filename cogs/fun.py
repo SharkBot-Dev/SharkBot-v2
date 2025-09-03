@@ -427,7 +427,7 @@ class TextGroup(app_commands.Group):
 
                             embed = discord.Embed(
                                 title="ARMのバイナリ変換結果",
-                                description="\n".join(result_lines),
+                                description='```' + "\n".join(result_lines) + '```',
                                 color=discord.Color.green()
                             )
 
