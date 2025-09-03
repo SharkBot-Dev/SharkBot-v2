@@ -411,19 +411,30 @@ class TextGroup(app_commands.Group):
                                 )
                                 return
 
+                            def little_to_big_endian(hex_str: str) -> list[str]:
+                                results = []
+
+                                for i in range(0, len(hex_str), 8):
+                                    chunk = hex_str[i:i+8]
+                                    if len(chunk) < 8:
+                                        continue
+                                    try:
+                                        word = int(chunk, 16) & 0xFFFFFFFF
+                                        b = word.to_bytes(4, byteorder="little", signed=False)
+                                        be = int.from_bytes(b, byteorder="big", signed=False)
+                                        results.append(f"{be:08X}")
+                                    except Exception:
+                                        results.append("変換失敗")
+                                return results
+
                             result_lines = []
                             try:
                                 for i, hex_result in enumerate(hex_list[1:], start=1):
-                                    try:
-                                        word = int(hex_result, 16) & 0xFFFFFFFF
-                                        b = word.to_bytes(4, byteorder="little", signed=False)
-                                        be = int.from_bytes(b, byteorder="big", signed=False)
-                                        be_result = f"{be:08X}"
-                                    except Exception:
-                                        be_result = "変換失敗"
+                                    be_list = little_to_big_endian(hex_result)
+                                    be_result = " ".join(be_list) if be_list else "変換失敗"
 
                                     result_lines.append(
-                                        f"{i}. Little: {hex_result} | Big: {be_result}"
+                                        f"{i}. Little: ```{hex_result}```\n   Big: ```{be_result}```"
                                     )
                             except:
                                 result_lines += "変換失敗"
