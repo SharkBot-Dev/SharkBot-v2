@@ -401,6 +401,7 @@ class TextGroup(app_commands.Group):
                             data=json.dumps(payload)
                         ) as response:
                             js = await response.json()
+
                             hex_list = js.get("hex", {}).get("arm", [])
 
                             if not hex_list:
@@ -410,22 +411,25 @@ class TextGroup(app_commands.Group):
                                 )
                                 return
 
-                            hex_result = hex_list[1] if len(hex_list) > 1 else hex_list[0]
+                            result_lines = []
+                            for i, hex_result in enumerate(hex_list, start=1):
+                                try:
+                                    word = int(hex_result, 16) & 0xFFFFFFFF
+                                    b = word.to_bytes(4, byteorder="little", signed=False)
+                                    be = int.from_bytes(b, byteorder="big", signed=False)
+                                    be_result = f"{be:08X}"
+                                except Exception:
+                                    be_result = "変換失敗"
 
-                            try:
-                                word = int(hex_result, 16) & 0xFFFFFFFF
-                                b = word.to_bytes(4, byteorder="little", signed=False)
-                                be = int.from_bytes(b, byteorder="big", signed=False)
-                                be_result = f"{be:08X}"
-                            except Exception:
-                                be_result = "変換失敗"
+                                result_lines.append(
+                                    f"{i}. Little: `{hex_result}` | Big: `{be_result}`"
+                                )
 
                             embed = discord.Embed(
                                 title="ARMのバイナリ変換結果",
+                                description="\n".join(result_lines),
                                 color=discord.Color.green()
                             )
-                            embed.add_field(name="リトルエンディアン", value=f"```{hex_result}```", inline=False)
-                            embed.add_field(name="ビッグエンディアン", value=f"```{be_result}```", inline=False)
 
                             await interaction_.followup.send(embed=embed)
 
