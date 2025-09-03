@@ -18,7 +18,6 @@ from deep_translator import GoogleTranslator
 
 import urllib.parse
 
-
 def text_len_sudden(text):
     count = 0
     for c in text:
@@ -381,11 +380,12 @@ class TextGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def arm_byte(self, interaction: discord.Interaction):
-        class send(discord.ui.Modal):
-            def __init__(self) -> None:
-                super().__init__(title="Armをバイナリに変換", timeout=None)
-            
-            asm = discord.ui.TextInput(label="ASMを入力", style=discord.TextStyle.long, required=True)
+        class SendModal(discord.ui.Modal, title="Armをバイナリに変換"):
+            asm = discord.ui.TextInput(
+                label="ASMを入力",
+                style=discord.TextStyle.long,
+                required=True
+            )
 
             async def on_submit(self, interaction_: discord.Interaction) -> None:
                 await interaction_.response.defer()
@@ -402,21 +402,40 @@ class TextGroup(app_commands.Group):
                         ) as response:
                             js = await response.json()
                             hex_list = js.get("hex", {}).get("arm", [])
-                            hex_result = hex_list[1] if len(hex_list) > 1 else "取得できませんでした"
-                            await interaction_.followup.send(
-                                embed=discord.Embed(
-                                    title="ARMのバイナリ",
-                                    description=f"```{hex_result}```",
-                                    color=discord.Color.green()
+
+                            if not hex_list:
+                                await interaction_.followup.send(
+                                    ephemeral=True,
+                                    content="変換結果が取得できませんでした。"
                                 )
+                                return
+
+                            hex_result = hex_list[1] if len(hex_list) > 1 else hex_list[0]
+
+                            try:
+                                word = int(hex_result, 16) & 0xFFFFFFFF
+                                b = word.to_bytes(4, byteorder="little", signed=False)
+                                be = int.from_bytes(b, byteorder="big", signed=False)
+                                be_result = f"{be:08X}"
+                            except Exception:
+                                be_result = "変換失敗"
+
+                            embed = discord.Embed(
+                                title="ARMのバイナリ変換結果",
+                                color=discord.Color.green()
                             )
+                            embed.add_field(name="リトルエンディアン", value=f"```{hex_result}```", inline=False)
+                            embed.add_field(name="ビッグエンディアン", value=f"```{be_result}```", inline=False)
+
+                            await interaction_.followup.send(embed=embed)
+
                 except Exception as e:
                     await interaction_.followup.send(
                         ephemeral=True,
                         content=f"エラーが発生しました: {e}"
                     )
 
-        await interaction.response.send_modal(send())
+        await interaction.response.send_modal(SendModal())
 
 class NounaiGroup(app_commands.Group):
     def __init__(self):
