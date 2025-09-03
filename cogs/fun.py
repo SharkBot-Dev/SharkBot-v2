@@ -412,18 +412,21 @@ class TextGroup(app_commands.Group):
                                 return
 
                             result_lines = []
-                            for i, hex_result in enumerate(hex_list, start=1):
-                                try:
-                                    word = int(hex_result, 16) & 0xFFFFFFFF
-                                    b = word.to_bytes(4, byteorder="little", signed=False)
-                                    be = int.from_bytes(b, byteorder="big", signed=False)
-                                    be_result = f"{be:08X}"
-                                except Exception:
-                                    be_result = "変換失敗"
+                            try:
+                                for i, hex_result in enumerate(hex_list[1:], start=1):
+                                    try:
+                                        word = int(hex_result, 16) & 0xFFFFFFFF
+                                        b = word.to_bytes(4, byteorder="little", signed=False)
+                                        be = int.from_bytes(b, byteorder="big", signed=False)
+                                        be_result = f"{be:08X}"
+                                    except Exception:
+                                        be_result = "変換失敗"
 
-                                result_lines.append(
-                                    f"{i}. Little: `{hex_result}` | Big: `{be_result}`"
-                                )
+                                    result_lines.append(
+                                        f"{i}. Little: {hex_result} | Big: {be_result}"
+                                    )
+                            except:
+                                result_lines += "変換失敗"
 
                             embed = discord.Embed(
                                 title="ARMのバイナリ変換結果",
