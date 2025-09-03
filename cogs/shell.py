@@ -548,6 +548,7 @@ class ShellCog(commands.Cog):
     async def linux_search(self, interaction: discord.Interaction, コマンド名: str = None, 説明: str = None):
         if コマンド名 is None and 説明 is None:
             await interaction.response.send_message(ephemeral=True, content="`/shell linux [コマンド名|説明]` で使用できます。")
+            return
         await interaction.response.defer()
         cmds = self.shell_commands
         for k, v in cmds.items():
