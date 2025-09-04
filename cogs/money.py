@@ -523,7 +523,7 @@ class GamesGroup(app_commands.Group):
             return await interaction.response.send_message(
                 embed=discord.Embed(
                     title="残高が足りません。",
-                    description=f"コインの裏表を予想をするには100コイン以上が必要です。。",
+                    description=f"コインの裏表を予想をするには100コイン以上が必要です。",
                     color=discord.Color.red(),
                 )
             )
@@ -576,7 +576,7 @@ class GamesGroup(app_commands.Group):
             return await interaction.response.send_message(
                 embed=discord.Embed(
                     title="残高が足りません。",
-                    description=f"ブラックジャックをするには100コイン以上が必要です。。",
+                    description=f"ブラックジャックをするには100コイン以上が必要です。",
                     color=discord.Color.red(),
                 )
             )
