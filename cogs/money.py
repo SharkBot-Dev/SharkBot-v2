@@ -577,7 +577,7 @@ class GamesGroup(app_commands.Group):
                 inline=False,
             ).add_field(
                 name="/economy games blackjack",
-                value="ブラックジャックをします。\n21を超えたらゲームオーバーです。",
+                value="ブラックジャックをします。\n21を超えたらゲームオーバーです。\n勝ったら賭け金が二倍に、\n負けたら賭け金を失います。",
                 inline=False,
             )
         )
