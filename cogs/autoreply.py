@@ -209,6 +209,45 @@ class AutoReplyCog(commands.Cog):
             ).add_field(name="特定のワードに対して", value="\n".join(word_list))
         )
 
+    @autoreply.command(name="templates", description="自動返信をテンプレートから作成します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.choices(
+        テンプレート=[
+            app_commands.Choice(name="挨拶", value="hello"),
+            app_commands.Choice(name="ネタ", value="fun"),
+            app_commands.Choice(name="絵文字", value="emoji")
+        ]
+    )
+    async def autoreply_templates(self, interaction: discord.Interaction, テンプレート: app_commands.Choice[str]):
+        db = self.bot.async_db["Main"].AutoReply
+        if テンプレート.value == "hello":
+            for t in [('こんにちは', 'こんにちは'), ('こんばんは', 'こんばんは'), ('おはよう', 'おはようございます')]:
+                await db.replace_one(
+                    {"Guild": interaction.guild.id, "Word": t[0]},
+                    {"Guild": interaction.guild.id, "Word": t[0], "ReplyWord": t[1]},
+                    upsert=True,
+                )
+        elif テンプレート.value == "fun":
+            for t in [('草', '草刈り～(o⌒▽⌒)o>━━"((卍))"ﾌﾞﾝﾌﾞﾝ♪'), ('334', 'なんでや！阪神関係ないやろ！'), ('過疎', 'バッチェ冷えてますよ〜'), ('そうだよ', 'そうだよ(便乗)'), ('いいね', 'あぁ〜^いいっすねぇ〜^'), ('ぬるぽ', 'ガッ！')]:
+                await db.replace_one(
+                    {"Guild": interaction.guild.id, "Word": t[0]},
+                    {"Guild": interaction.guild.id, "Word": t[0], "ReplyWord": t[1]},
+                    upsert=True,
+                )
+        elif テンプレート.value == "emoji":
+            for t in [('🌾', '草刈り～(o⌒▽⌒)o>━━"((卍))"ﾌﾞﾝﾌﾞﾝ♪'), ('👈', '👈')]:
+                await db.replace_one(
+                    {"Guild": interaction.guild.id, "Word": t[0]},
+                    {"Guild": interaction.guild.id, "Word": t[0], "ReplyWord": t[1]},
+                    upsert=True,
+                )
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title=f"自動返信を「{テンプレート.name}」から追加しました。", color=discord.Color.green()
+            )
+        )
 
 async def setup(bot):
     await bot.add_cog(AutoReplyCog(bot))
