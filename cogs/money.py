@@ -46,7 +46,7 @@ class BlackjackView(discord.ui.View):
     async def update_message(self, interaction, msg=""):
         player_score = calculate_score(self.player_hand)
         dealer_score = calculate_score(self.dealer_hand[:1])
-        embed = discord.Embed(title="🃏 ブラックジャック", description=msg)
+        embed = discord.Embed(title="🃏 ブラックジャック", description=msg, color=discord.Color.green())
         embed.add_field(name="あなたの手札", value=f"{' '.join(self.player_hand)} (得点: {player_score})", inline=False)
         embed.add_field(name="ディーラーの手札", value=f"{self.dealer_hand[0]} ?? (得点: {dealer_score}+)", inline=False)
         await interaction.response.edit_message(embed=embed, view=self)
@@ -63,18 +63,18 @@ class BlackjackView(discord.ui.View):
 
         if player_score > 21:
             await Money(interaction.client).add_server_money(interaction.guild, interaction.user, -self.coin)
-            result = "💥 バースト！あなたの負けです…"
+            result = "バースト！あなたの負けです…"
         elif dealer_score > 21 or player_score > dealer_score:
             await Money(interaction.client).add_server_money(interaction.guild, interaction.user, -self.coin)
             await Money(interaction.client).add_server_money(interaction.guild, interaction.user, self.coin*2)
-            result = "🎉 あなたの勝ち！"
+            result = "あなたの勝ち！"
         elif player_score < dealer_score:
             await Money(interaction.client).add_server_money(interaction.guild, interaction.user, -self.coin)
-            result = "😢 あなたの負け…"
+            result = "あなたの負け…"
         else:
-            result = "🤝 引き分け！"
+            result = "引き分け！"
 
-        embed = discord.Embed(title="🃏 ブラックジャック", description=result)
+        embed = discord.Embed(title="🃏 ブラックジャック", description=result, color=discord.Color.green())
         embed.add_field(name="あなたの手札", value=f"{' '.join(self.player_hand)} (得点: {player_score})", inline=False)
         embed.add_field(name="ディーラーの手札", value=f"{' '.join(self.dealer_hand)} (得点: {dealer_score})", inline=False)
         await interaction.response.edit_message(embed=embed, view=None)
@@ -558,7 +558,7 @@ class GamesGroup(app_commands.Group):
         dealer_hand = [draw_card(deck), draw_card(deck)]
 
         view = BlackjackView(interaction.user, player_hand, dealer_hand, deck, 金額)
-        embed = discord.Embed(title="🃏 ブラックジャック", description="ゲーム開始！")
+        embed = discord.Embed(title="🃏 ブラックジャック", description="ゲーム開始！", color=discord.Color.green())
         embed.add_field(name="あなたの手札", value=f"{' '.join(player_hand)} (得点: {calculate_score(player_hand)})", inline=False)
         embed.add_field(name="ディーラーの手札", value=f"{dealer_hand[0]} ??", inline=False)
 
