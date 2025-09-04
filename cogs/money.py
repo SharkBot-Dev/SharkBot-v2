@@ -6,6 +6,94 @@ from discord import app_commands
 
 user_last_message_time_work = {}
 
+# トランプカード
+suits = ["♠", "♥", "♦", "♣"]
+ranks = {
+    "A": 11, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6,
+    "7": 7, "8": 8, "9": 9, "10": 10,
+    "J": 10, "Q": 10, "K": 10,
+}
+
+def draw_card(deck):
+    return deck.pop()
+
+def calculate_score(hand):
+    score = sum(ranks[card[:-1]] for card in hand)
+
+    aces = sum(1 for card in hand if card.startswith("A"))
+    while score > 21 and aces:
+        score -= 10
+        aces -= 1
+    return score
+
+class BlackjackView(discord.ui.View):
+    def __init__(self, player: discord.User, player_hand, dealer_hand, deck, coin: int):
+        super().__init__(timeout=60)
+        self.player = player
+        self.player_hand = player_hand
+        self.dealer_hand = dealer_hand
+        self.deck = deck
+        self.game_over = False
+        self.coin = coin
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        """このViewが誰に操作を許可するかを制御"""
+        if interaction.user.id != self.player.id:
+            await interaction.response.send_message("❌ このゲームはあなたのものではありません！", ephemeral=True)
+            return False
+        return True
+
+    async def update_message(self, interaction, msg=""):
+        player_score = calculate_score(self.player_hand)
+        dealer_score = calculate_score(self.dealer_hand[:1])
+        embed = discord.Embed(title="🃏 ブラックジャック", description=msg)
+        embed.add_field(name="あなたの手札", value=f"{' '.join(self.player_hand)} (得点: {player_score})", inline=False)
+        embed.add_field(name="ディーラーの手札", value=f"{self.dealer_hand[0]} ?? (得点: {dealer_score}+)", inline=False)
+        await interaction.response.edit_message(embed=embed, view=self)
+
+    async def end_game(self, interaction: discord.Interaction):
+        self.game_over = True
+        self.clear_items()
+
+        while calculate_score(self.dealer_hand) < 17:
+            self.dealer_hand.append(draw_card(self.deck))
+
+        player_score = calculate_score(self.player_hand)
+        dealer_score = calculate_score(self.dealer_hand)
+
+        if player_score > 21:
+            await Money(interaction.client).add_server_money(interaction.guild, interaction.user, -self.coin)
+            result = "💥 バースト！あなたの負けです…"
+        elif dealer_score > 21 or player_score > dealer_score:
+            await Money(interaction.client).add_server_money(interaction.guild, interaction.user, -self.coin)
+            await Money(interaction.client).add_server_money(interaction.guild, interaction.user, self.coin*2)
+            result = "🎉 あなたの勝ち！"
+        elif player_score < dealer_score:
+            await Money(interaction.client).add_server_money(interaction.guild, interaction.user, -self.coin)
+            result = "😢 あなたの負け…"
+        else:
+            result = "🤝 引き分け！"
+
+        embed = discord.Embed(title="🃏 ブラックジャック", description=result)
+        embed.add_field(name="あなたの手札", value=f"{' '.join(self.player_hand)} (得点: {player_score})", inline=False)
+        embed.add_field(name="ディーラーの手札", value=f"{' '.join(self.dealer_hand)} (得点: {dealer_score})", inline=False)
+        await interaction.response.edit_message(embed=embed, view=None)
+
+    @discord.ui.button(label="ヒット", style=discord.ButtonStyle.green)
+    async def hit(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.game_over:
+            return
+        self.player_hand.append(draw_card(self.deck))
+        if calculate_score(self.player_hand) > 21:
+            await self.end_game(interaction)
+        else:
+            await self.update_message(interaction, "カードを引きました！")
+
+    @discord.ui.button(label="スタンド", style=discord.ButtonStyle.red)
+    async def stand(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.game_over:
+            return
+        await self.end_game(interaction)
 
 class Money:
     def __init__(self, bot: commands.Bot):
@@ -458,6 +546,24 @@ class GamesGroup(app_commands.Group):
                 )
             )
 
+    @app_commands.command(name="blackjack", description="ブラックジャックをします。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    async def economy_games_coinflip_server(
+        self, interaction: discord.Interaction, 金額: int
+    ):
+        deck = [rank + suit for rank in ranks for suit in suits]
+        random.shuffle(deck)
+
+        player_hand = [draw_card(deck), draw_card(deck)]
+        dealer_hand = [draw_card(deck), draw_card(deck)]
+
+        view = BlackjackView(interaction.user, player_hand, dealer_hand, deck, 金額)
+        embed = discord.Embed(title="🃏 ブラックジャック", description="ゲーム開始！")
+        embed.add_field(name="あなたの手札", value=f"{' '.join(player_hand)} (得点: {calculate_score(player_hand)})", inline=False)
+        embed.add_field(name="ディーラーの手札", value=f"{dealer_hand[0]} ??", inline=False)
+
+        await interaction.response.send_message(embed=embed, view=view)
+
     @app_commands.command(name="info", description="ゲームの情報を取得します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_games_info_server(self, interaction: discord.Interaction):
@@ -468,6 +574,10 @@ class GamesGroup(app_commands.Group):
             ).add_field(
                 name="/server-economy games coinflip",
                 value="コインの裏表を予想します。\n勝ったら賭け金 + 5 コインが返ってきます。\n負けたら賭け金を失います。",
+                inline=False,
+            ).add_field(
+                name="/server-economy games blackjack",
+                value="ブラックジャックをします。\n21を超えたらゲームオーバーです。",
                 inline=False,
             )
         )
