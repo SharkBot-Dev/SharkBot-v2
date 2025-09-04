@@ -515,6 +515,19 @@ class GamesGroup(app_commands.Group):
             return await interaction.response.send_message(
                 "金額は100以上で入力してください。", ephemeral=True
             )
+        
+        m = await Money(interaction.client).get_server_money(
+            interaction.guild, interaction.user
+        )
+        if m < 金額:
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="残高が足りません。",
+                    description=f"コインの裏表を予想をするには100コイン以上が必要です。。",
+                    color=discord.Color.red(),
+                )
+            )
+
         if 裏表.lower() not in ["表", "裏"]:
             return await interaction.response.send_message(
                 "コインの裏表を入力してください。\n例: /economy games coinflip 裏",
@@ -551,6 +564,23 @@ class GamesGroup(app_commands.Group):
     async def economy_games_blackjack_server(
         self, interaction: discord.Interaction, 金額: int
     ):
+        if 金額 < 100:
+            return await interaction.response.send_message(
+                "金額は100以上で入力してください。", ephemeral=True
+            )
+
+        m = await Money(interaction.client).get_server_money(
+            interaction.guild, interaction.user
+        )
+        if m < 金額:
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="残高が足りません。",
+                    description=f"ブラックジャックをするには100コイン以上が必要です。。",
+                    color=discord.Color.red(),
+                )
+            )
+
         deck = [rank + suit for rank in ranks for suit in suits]
         random.shuffle(deck)
 
