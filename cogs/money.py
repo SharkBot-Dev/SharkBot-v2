@@ -520,7 +520,7 @@ class GamesGroup(app_commands.Group):
             interaction.guild, interaction.user
         )
         if m < 金額:
-            return await interaction.followup.send(
+            return await interaction.response.send_message(
                 embed=discord.Embed(
                     title="残高が足りません。",
                     description=f"コインの裏表を予想をするには100コイン以上が必要です。。",
@@ -573,7 +573,7 @@ class GamesGroup(app_commands.Group):
             interaction.guild, interaction.user
         )
         if m < 金額:
-            return await interaction.followup.send(
+            return await interaction.response.send_message(
                 embed=discord.Embed(
                     title="残高が足りません。",
                     description=f"ブラックジャックをするには100コイン以上が必要です。。",
