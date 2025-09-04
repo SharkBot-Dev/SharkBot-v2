@@ -572,11 +572,11 @@ class GamesGroup(app_commands.Group):
             embed=discord.Embed(
                 title="ゲームの情報", color=discord.Color.blue()
             ).add_field(
-                name="/server-economy games coinflip",
+                name="/economy games coinflip",
                 value="コインの裏表を予想します。\n勝ったら賭け金 + 5 コインが返ってきます。\n負けたら賭け金を失います。",
                 inline=False,
             ).add_field(
-                name="/server-economy games blackjack",
+                name="/economy games blackjack",
                 value="ブラックジャックをします。\n21を超えたらゲームオーバーです。",
                 inline=False,
             )
