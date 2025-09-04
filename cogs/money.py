@@ -548,7 +548,7 @@ class GamesGroup(app_commands.Group):
 
     @app_commands.command(name="blackjack", description="ブラックジャックをします。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
-    async def economy_games_coinflip_server(
+    async def economy_games_blackjack_server(
         self, interaction: discord.Interaction, 金額: int
     ):
         deck = [rank + suit for rank in ranks for suit in suits]
