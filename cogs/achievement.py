@@ -215,7 +215,7 @@ class AchievementCog(commands.Cog):
         a_cs = ""
         db = self.bot.async_db["Main"].Achievements
         async for b in db.find({"Guild": interaction.guild.id}):
-            achi = await self.get_is_achi(メンバー)
+            achi = await self.get_is_achi(メンバー, b.get("Name", None))
             if achi:
                 a_cs += f"{b.get('Name')} - 達成しました。\n"
                 continue
