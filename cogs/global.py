@@ -2095,7 +2095,7 @@ class GlobalCog(commands.Cog):
                                     break
                         except:
                             pass
-                    embed_2 = discord.Embed(color=discord.Color.red()).set_footer(text=f"{dic.get('guildName', "取得失敗")} | {dic.get('guildId', "取得失敗")}", icon_url="https://media.discordapp.net/icons/{}/{}.png?size=1024".format(dic["guildId"], dic["guildIcon"]))
+                    embed_2 = discord.Embed(color=discord.Color.red()).set_footer(text=f"{dic.get['guildName']} | {dic['guildId']}", icon_url="https://media.discordapp.net/icons/{}/{}.png?size=1024".format(dic["guildId"], dic["guildIcon"]))
                     webhook_ = Webhook.from_url(
                         ch.get("Webhook", None), session=session
                     )
