@@ -45,7 +45,9 @@ class FreeChannelModal(discord.ui.Modal):
             for target, perm in dict(interaction.channel.overwrites).items():
                 overwrites[target] = perm
 
-        everyone_overwrite = overwrites.get(interaction.guild.default_role, discord.PermissionOverwrite())
+        everyone_overwrite = overwrites.get(
+            interaction.guild.default_role, discord.PermissionOverwrite()
+        )
         everyone_overwrite.send_messages = True
         everyone_overwrite.attach_files = True
         everyone_overwrite.add_reactions = True
@@ -53,17 +55,23 @@ class FreeChannelModal(discord.ui.Modal):
         if dbfind is None:
             if interaction.channel.category:
                 channel = await interaction.channel.category.create_text_channel(
-                    name=self.channelname.component.value, nsfw=nsfw, overwrites=overwrites
+                    name=self.channelname.component.value,
+                    nsfw=nsfw,
+                    overwrites=overwrites,
                 )
             else:
                 channel = await interaction.guild.create_text_channel(
-                    name=self.channelname.component.value, nsfw=nsfw, overwrites=overwrites
+                    name=self.channelname.component.value,
+                    nsfw=nsfw,
+                    overwrites=overwrites,
                 )
         else:
             ch = interaction.guild.get_channel(dbfind.get("Channel", 0))
             if type(ch) == discord.CategoryChannel:
                 channel = await ch.create_text_channel(
-                    name=self.channelname.component.value, nsfw=nsfw, overwrites=overwrites
+                    name=self.channelname.component.value,
+                    nsfw=nsfw,
+                    overwrites=overwrites,
                 )
             else:
                 return

@@ -545,7 +545,6 @@ async def logging_set(request: Request, guild_id: str, channel: str = Form(None)
         )
 
     try:
-
         async with httpx.AsyncClient() as client:
             webhook = await client.post(
                 f"{settings.DISCORD_API}/channels/{channel}/webhooks",
@@ -588,6 +587,7 @@ async def logging_set(request: Request, guild_id: str, channel: str = Form(None)
         )
     except:
         return RedirectResponse(f"/{guild_id}/logging", status_code=303)
+
 
 # コマンドの有効化・無効化
 

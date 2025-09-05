@@ -5,6 +5,7 @@ import aiohttp
 from discord import Webhook
 import asyncio
 
+
 class SlowModeCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -18,7 +19,7 @@ class SlowModeCog(commands.Cog):
 
         if type(message.channel) == discord.DMChannel:
             return
-        
+
         if message.author.guild_permissions.manage_channels:
             return
 
@@ -26,10 +27,9 @@ class SlowModeCog(commands.Cog):
         record = await db.find_one({"channel_id": message.channel.id})
         if record:
             delay = record["delay_seconds"]
-            last_msg = await db.find_one({
-                "channel_id": message.channel.id,
-                "user_id": message.author.id
-            })
+            last_msg = await db.find_one(
+                {"channel_id": message.channel.id, "user_id": message.author.id}
+            )
 
             now = datetime.datetime.utcnow()
             if last_msg:
@@ -42,7 +42,6 @@ class SlowModeCog(commands.Cog):
                     self.working.add(message.channel.id)
 
                     try:
-
                         remain = int(delay - elapsed)
                         await message.delete()
 
@@ -63,7 +62,7 @@ class SlowModeCog(commands.Cog):
 
                         await message.channel.send(
                             f"{message.author.mention}、スローモード中です。あと {remain} 秒待ってください。",
-                            delete_after=5
+                            delete_after=5,
                         )
 
                         await asyncio.sleep(10)
@@ -90,8 +89,9 @@ class SlowModeCog(commands.Cog):
             await db.update_one(
                 {"channel_id": message.channel.id, "user_id": message.author.id},
                 {"$set": {"last_sent": now}},
-                upsert=True
+                upsert=True,
             )
+
 
 async def setup(bot):
     await bot.add_cog(SlowModeCog(bot))

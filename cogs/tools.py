@@ -38,6 +38,7 @@ domain_regex = re.compile(r"^(?!\-)(?:[a-zA-Z0-9\-]{1,63}\.)+[a-zA-Z]{2,}$")
 
 is_url = re.compile(r"https?://[\w!\?/\+\-_~=;\.,\*&@#$%\(\)'\[\]]+")
 
+
 def is_blocked_url(url: str) -> bool:
     try:
         parsed = urlparse(url)
@@ -56,7 +57,12 @@ def is_blocked_url(url: str) -> bool:
             try:
                 resolved_ip = socket.gethostbyname(host)
                 ip = ipaddress.ip_address(resolved_ip)
-                if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_link_local:
+                if (
+                    ip.is_private
+                    or ip.is_loopback
+                    or ip.is_reserved
+                    or ip.is_link_local
+                ):
                     return True
             except Exception:
                 return True
@@ -64,6 +70,7 @@ def is_blocked_url(url: str) -> bool:
         return False
     except Exception:
         return True
+
 
 async def fetch_whois(target_domain):
     if not domain_regex.match(target_domain):
@@ -275,20 +282,28 @@ class ToolsCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def tools_button(self, interaction: discord.Interaction, ラベル: str, url: str):
+    async def tools_button(
+        self, interaction: discord.Interaction, ラベル: str, url: str
+    ):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(
                 ephemeral=True, content="そのコマンドは無効化されています。"
             )
-        
+
         for b in badword.badwords:
             if b in ラベル:
-                return await interaction.response.send_message(ephemeral=True, content="不適切なワードが含まれています。")
-            
-        if not is_url.search(url):
-            return await interaction.response.send_message(ephemeral=True, content="URLを入力してください。")
+                return await interaction.response.send_message(
+                    ephemeral=True, content="不適切なワードが含まれています。"
+                )
 
-        await interaction.response.send_message(view=discord.ui.View().add_item(discord.ui.Button(label=ラベル, url=url)))
+        if not is_url.search(url):
+            return await interaction.response.send_message(
+                ephemeral=True, content="URLを入力してください。"
+            )
+
+        await interaction.response.send_message(
+            view=discord.ui.View().add_item(discord.ui.Button(label=ラベル, url=url))
+        )
 
     @tools.command(name="invite", description="招待リンクを作成します。")
     @app_commands.checks.has_permissions(create_instant_invite=True)
@@ -585,19 +600,26 @@ class ToolsCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def qrcode_make(self, interaction: discord.Interaction, url: str):
-        await interaction.response.send_message(embed=discord.Embed(title="QRコード作成", color=discord.Color.green())
-                                                .set_image(url=f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={url}"))
-        
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="QRコード作成", color=discord.Color.green()
+            ).set_image(
+                url=f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={url}"
+            )
+        )
+
     @tools.command(name="weather", description="天気を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
         場所=[
             app_commands.Choice(name="東京", value="130000"),
-            app_commands.Choice(name="大阪", value="270000")
+            app_commands.Choice(name="大阪", value="270000"),
         ]
     )
-    async def weather(self, interaction: discord.Interaction, 場所: app_commands.Choice[str]):
+    async def weather(
+        self, interaction: discord.Interaction, 場所: app_commands.Choice[str]
+    ):
         await interaction.response.defer()
         url = f"https://www.jma.go.jp/bosai/forecast/data/forecast/{場所.value}.json"
         async with aiohttp.ClientSession() as session:
@@ -616,7 +638,7 @@ class ToolsCog(commands.Cog):
                 embed = discord.Embed(
                     title=f"天気予報 ({場所.name})",
                     description="気象庁データを元にしています",
-                    color=discord.Color.blue()
+                    color=discord.Color.blue(),
                 )
 
                 for dt, w in weather_info:
@@ -629,8 +651,10 @@ class ToolsCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def webshot(self, interaction: discord.Interaction, url: str):
         if not is_url.search(url):
-            return await interaction.response.send_message(ephemeral=True, content="URLを入力してください。")
-        
+            return await interaction.response.send_message(
+                ephemeral=True, content="URLを入力してください。"
+            )
+
         if await asyncio.to_thread(is_blocked_url, url):
             return await interaction.response.send_message(
                 ephemeral=True, content="有効なURLを入力してください。"
@@ -648,12 +672,10 @@ class ToolsCog(commands.Cog):
                 "--disable-software-rasterizer",
                 "--headless=new",
                 "--mute-audio",
-
                 "--disable-geolocation",
                 "--use-fake-device-for-media-stream",
                 "--use-fake-ui-for-media-stream",
                 "--deny-permission-prompts",
-
                 "--log-level=3",
                 "--disable-logging",
                 "--disable-breakpad",
@@ -661,21 +683,26 @@ class ToolsCog(commands.Cog):
                 "--disable-client-side-phishing-detection",
                 "--disable-component-update",
                 "--no-zygote",
-            ]
+            ],
         )
 
         filename = f"{uuid.uuid4()}.png"
 
         await asyncio.to_thread(
-            hti.screenshot,
-            url=url,
-            size=(1280, 720),
-            save_as=filename
+            hti.screenshot, url=url, size=(1280, 720), save_as=filename
         )
 
         filepath = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{filename}"
-        await interaction.followup.send(embed=discord.Embed(title="スクリーンショットを撮影しました。", description="一日の終わりにファイルが削除されます。", color=discord.Color.green())
-                                        , view=discord.ui.View().add_item(discord.ui.Button(label="結果を確認する", url=filepath)))
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="スクリーンショットを撮影しました。",
+                description="一日の終わりにファイルが削除されます。",
+                color=discord.Color.green(),
+            ),
+            view=discord.ui.View().add_item(
+                discord.ui.Button(label="結果を確認する", url=filepath)
+            ),
+        )
 
 
 async def setup(bot):

@@ -119,7 +119,12 @@ class BanGroup(app_commands.Group):
                 continue  # 無効なIDをスキップ
 
         if len(U_ids) > 10:
-            return await interaction.followup.send(embed=discord.Embed(title="10以上のメンバーを一気にbanできません。", color=discord.Color.red()))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="10以上のメンバーを一気にbanできません。",
+                    color=discord.Color.red(),
+                )
+            )
 
         if not U_ids:
             return await interaction.followup.send(
@@ -142,16 +147,22 @@ class BanGroup(app_commands.Group):
             return m.author == interaction.user and m.channel == interaction.channel
 
         try:
-            msg = await interaction.client.wait_for("message", check=check, timeout=30.0)
+            msg = await interaction.client.wait_for(
+                "message", check=check, timeout=30.0
+            )
             if msg.content.lower() != "y":
                 return await interaction.channel.send("キャンセルしました。")
             await msg.add_reaction("✅")
         except asyncio.TimeoutError:
             return await interaction.channel.send("タイムアウトしました。")
 
-        b = await interaction.guild.bulk_ban(U_ids, reason=f"Banned by {interaction.user.name}")
+        b = await interaction.guild.bulk_ban(
+            U_ids, reason=f"Banned by {interaction.user.name}"
+        )
 
-        await interaction.channel.send(f"{b.banned}人をBANしました。失敗: {b.failed}人。")
+        await interaction.channel.send(
+            f"{b.banned}人をBANしました。失敗: {b.failed}人。"
+        )
 
 
 class ModCog(commands.Cog):
@@ -274,7 +285,7 @@ class ModCog(commands.Cog):
             return await interaction.response.send_message(
                 ephemeral=True, content="そのコマンドは無効化されています。"
             )
-        
+
         if interaction.guild.get_member(ユーザー.id) is None:
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -392,9 +403,8 @@ class ModCog(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        
-        try:
 
+        try:
             await メンバー.send(
                 embed=discord.Embed(
                     title=f"あなたは`{interaction.guild.name}`\nで警告されました。",
@@ -403,11 +413,22 @@ class ModCog(commands.Cog):
                 )
             )
         except:
-            return await interaction.followup.send(ephemeral=True, embed=discord.Embed(title="警告に失敗しました。", color=discord.Color.red(), description="Dmを送信できませんでした。"))
+            return await interaction.followup.send(
+                ephemeral=True,
+                embed=discord.Embed(
+                    title="警告に失敗しました。",
+                    color=discord.Color.red(),
+                    description="Dmを送信できませんでした。",
+                ),
+            )
 
         await interaction.followup.send(
             ephemeral=True,
-            embed=discord.Embed(title="警告しました。", description=f"```{理由}```", color=discord.Color.green()),
+            embed=discord.Embed(
+                title="警告しました。",
+                description=f"```{理由}```",
+                color=discord.Color.green(),
+            ),
         )
 
     @moderation.command(name="remake", description="チャンネルを再生成します。")
@@ -570,10 +591,12 @@ class ModCog(commands.Cog):
         監査ログタイプ=[
             app_commands.Choice(name="メンバーBan", value="ban"),
             app_commands.Choice(name="メンバーBan解除", value="unban"),
-            app_commands.Choice(name="Bot追加", value="bot_add")
+            app_commands.Choice(name="Bot追加", value="bot_add"),
         ]
     )
-    async def auditlog_search(self, interaction: discord.Interaction, 監査ログタイプ: app_commands.Choice[str]):
+    async def auditlog_search(
+        self, interaction: discord.Interaction, 監査ログタイプ: app_commands.Choice[str]
+    ):
         await interaction.response.defer()
         text = ""
         if 監査ログタイプ.value == "ban":
@@ -594,6 +617,7 @@ class ModCog(commands.Cog):
         t = io.StringIO(text)
         await interaction.followup.send(file=discord.File(t, "auditlog.txt"))
         t.close()
+
 
 async def setup(bot):
     await bot.add_cog(ModCog(bot))

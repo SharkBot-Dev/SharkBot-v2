@@ -782,5 +782,6 @@ class LevelCog(commands.Cog):
             content=f"サーバー内の全レベルをリセットしました。"
         )
 
+
 async def setup(bot):
     await bot.add_cog(LevelCog(bot))

@@ -890,7 +890,10 @@ class PanelCog(commands.Cog):
                                 limit=100, oldest_first=True
                             ):
                                 h.append(
-                                    "{}: {}".format(his.author.name, his.content.replace('\n', '\\n'))
+                                    "{}: {}".format(
+                                        his.author.name,
+                                        his.content.replace("\n", "\\n"),
+                                    )
                                 )
                             kaiwa_io = io.StringIO("\n".join(h))
                             if not user:
@@ -955,7 +958,10 @@ class PanelCog(commands.Cog):
                                 limit=100, oldest_first=True
                             ):
                                 h.append(
-                                    "{}: {}".format(his.author.name, his.content.replace('\n', '\\n'))
+                                    "{}: {}".format(
+                                        his.author.name,
+                                        his.content.replace("\n", "\\n"),
+                                    )
                                 )
                             kaiwa_io = io.StringIO("\n".join(h))
                             if not user:
@@ -1757,7 +1763,9 @@ class PanelCog(commands.Cog):
                             embed=discord.Embed(
                                 color=discord.Color.green(),
                                 title="ロールの追加・剥奪が完了しました。",
-                                description="追加されたロール:\n{}\n剥奪されたロール:\n{}".format('\n'.join(add), '\n'.join(remove)),
+                                description="追加されたロール:\n{}\n剥奪されたロール:\n{}".format(
+                                    "\n".join(add), "\n".join(remove)
+                                ),
                             ),
                         )
                     except discord.Forbidden as f:

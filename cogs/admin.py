@@ -311,7 +311,7 @@ class AdminCog(commands.Cog):
                     color=discord.Color.red(),
                 ),
             )
-        
+
         db = self.bot.async_db["Main"].PremiumUser
         if 操作.value == "add":
             await db.replace_one(
@@ -319,14 +319,16 @@ class AdminCog(commands.Cog):
             )
             await interaction.response.send_message(
                 embed=discord.Embed(
-                    title="プレミアムユーザーを追加しました。", color=discord.Color.green()
+                    title="プレミアムユーザーを追加しました。",
+                    color=discord.Color.green(),
                 )
             )
         else:
             await db.delete_one({"User": ユーザー.id})
             await interaction.response.send_message(
                 embed=discord.Embed(
-                    title="プレミアムユーザーを削除しました。", color=discord.Color.green()
+                    title="プレミアムユーザーを削除しました。",
+                    color=discord.Color.green(),
                 )
             )
 

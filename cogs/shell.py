@@ -335,7 +335,76 @@ class RunCSharp(discord.ui.Modal, title="C#を実行"):
 class ShellCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.shell_commands = {'ls': 'ディレクトリの内容を一覧表示', 'cd': 'ディレクトリの移動', 'pwd': 'カレントディレクトリのパスを表示', 'cp': 'ファイルをコピー', 'mv': 'ファイルを移動または名前を変更', 'rm': 'ファイルを削除', 'mkdir': '新しいディレクトリを作成', 'rmdir': '空のディレクトリを削除', 'touch': '空のファイルを作成またはタイムスタンプを変更', 'cat': 'ファイルの内容を表示', 'more/less': 'ファイルの内容をページ単位で表示', 'head/tail': 'ファイルの先頭/末尾部分を表示', 'find': 'ファイルを検索', 'locate': 'インデックスを使用してファイルを高速検索', 'du': 'ディスク使用量を表示', 'df': 'ファイルシステムのディスク使用量を表示', 'chmod': 'ファイルのアクセス許可を変更', 'chown': 'ファイルの所有者を変更', 'ln': 'ハードリンクまたはシンボリックリンクを作成', 'grep': 'テキストを検索', 'awk': 'テキストを処理', 'sed': 'ストリームエディタ（テキストの置換など）', 'sort': 'テキストを並べ替え', 'uniq': '重複行を削除', 'wc': '行数、単語数、バイト数をカウント', 'cut': 'テキストを分割', 'paste': 'テキストを結合', 'tr': '文字の置換・削除', 'ps': '現在のプロセスを表示', 'top/htop': 'リアルタイムでプロセス情報を表示', 'kill': 'プロセスを終了', 'killall': 'プロセス名でプロセスを終了', 'uptime': 'システムの稼働時間を表示', 'uname': 'システム情報を表示', 'free': 'メモリ使用量を表示', 'iostat': 'I/O統計情報を表示', 'vmstat': '仮想メモリの統計情報を表示', 'lsof': '開いているファイルの一覧を表示', 'dmesg': 'カーネルのメッセージを表示', 'service': 'サービスを管理', 'systemctl': 'systemdサービスを管理', 'ping': 'ネットワーク接続を確認', 'traceroute': 'パケットの経路を追跡', 'ifconfig/ip': 'ネットワークインターフェースの設定を表示・管理', 'netstat/ss': 'ネットワーク接続、ルーティングテーブルなどを表示', 'scp': 'セキュアコピー', 'rsync': 'リモートおよびローカル間でファイルを同期', 'wget': 'ファイルをダウンロード', 'curl': 'データを転送', 'tar': 'アーカイブを作成・展開', 'gzip/gunzip': 'ファイルを圧縮/展開', 'zip/unzip': 'ファイルを圧縮/展開', 'chgrp': 'ファイルのグループを変更', 'passwd': 'パスワードを変更', 'useradd/userdel': 'ユーザーを追加/削除', 'usermod': 'ユーザー情報を変更', 'groupadd/groupdel': 'グループを追加/削除', 'groups': 'ユーザーが所属するグループを表示', 'echo': 'メッセージを表示', 'date': '日付と時刻を表示・設定', 'cal': 'カレンダーを表示', 'who/w': 'ログインしているユーザーを表示', 'man': 'マニュアルページを表示', 'alias/unalias': 'コマンドのエイリアスを設定/削除', 'history': 'コマンド履歴を表示', 'crontab': '定期的にコマンドを実行するスケジュールを設定', 'at': '指定した時刻にコマンドを実行', 'nohup': 'コマンドを終了してもバックグラウンドで実行し続ける'}
+        self.shell_commands = {
+            "ls": "ディレクトリの内容を一覧表示",
+            "cd": "ディレクトリの移動",
+            "pwd": "カレントディレクトリのパスを表示",
+            "cp": "ファイルをコピー",
+            "mv": "ファイルを移動または名前を変更",
+            "rm": "ファイルを削除",
+            "mkdir": "新しいディレクトリを作成",
+            "rmdir": "空のディレクトリを削除",
+            "touch": "空のファイルを作成またはタイムスタンプを変更",
+            "cat": "ファイルの内容を表示",
+            "more/less": "ファイルの内容をページ単位で表示",
+            "head/tail": "ファイルの先頭/末尾部分を表示",
+            "find": "ファイルを検索",
+            "locate": "インデックスを使用してファイルを高速検索",
+            "du": "ディスク使用量を表示",
+            "df": "ファイルシステムのディスク使用量を表示",
+            "chmod": "ファイルのアクセス許可を変更",
+            "chown": "ファイルの所有者を変更",
+            "ln": "ハードリンクまたはシンボリックリンクを作成",
+            "grep": "テキストを検索",
+            "awk": "テキストを処理",
+            "sed": "ストリームエディタ（テキストの置換など）",
+            "sort": "テキストを並べ替え",
+            "uniq": "重複行を削除",
+            "wc": "行数、単語数、バイト数をカウント",
+            "cut": "テキストを分割",
+            "paste": "テキストを結合",
+            "tr": "文字の置換・削除",
+            "ps": "現在のプロセスを表示",
+            "top/htop": "リアルタイムでプロセス情報を表示",
+            "kill": "プロセスを終了",
+            "killall": "プロセス名でプロセスを終了",
+            "uptime": "システムの稼働時間を表示",
+            "uname": "システム情報を表示",
+            "free": "メモリ使用量を表示",
+            "iostat": "I/O統計情報を表示",
+            "vmstat": "仮想メモリの統計情報を表示",
+            "lsof": "開いているファイルの一覧を表示",
+            "dmesg": "カーネルのメッセージを表示",
+            "service": "サービスを管理",
+            "systemctl": "systemdサービスを管理",
+            "ping": "ネットワーク接続を確認",
+            "traceroute": "パケットの経路を追跡",
+            "ifconfig/ip": "ネットワークインターフェースの設定を表示・管理",
+            "netstat/ss": "ネットワーク接続、ルーティングテーブルなどを表示",
+            "scp": "セキュアコピー",
+            "rsync": "リモートおよびローカル間でファイルを同期",
+            "wget": "ファイルをダウンロード",
+            "curl": "データを転送",
+            "tar": "アーカイブを作成・展開",
+            "gzip/gunzip": "ファイルを圧縮/展開",
+            "zip/unzip": "ファイルを圧縮/展開",
+            "chgrp": "ファイルのグループを変更",
+            "passwd": "パスワードを変更",
+            "useradd/userdel": "ユーザーを追加/削除",
+            "usermod": "ユーザー情報を変更",
+            "groupadd/groupdel": "グループを追加/削除",
+            "groups": "ユーザーが所属するグループを表示",
+            "echo": "メッセージを表示",
+            "date": "日付と時刻を表示・設定",
+            "cal": "カレンダーを表示",
+            "who/w": "ログインしているユーザーを表示",
+            "man": "マニュアルページを表示",
+            "alias/unalias": "コマンドのエイリアスを設定/削除",
+            "history": "コマンド履歴を表示",
+            "crontab": "定期的にコマンドを実行するスケジュールを設定",
+            "at": "指定した時刻にコマンドを実行",
+            "nohup": "コマンドを終了してもバックグラウンドで実行し続ける",
+        }
         print("init -> ShellCog")
 
     @commands.Cog.listener("on_message")
@@ -539,31 +608,51 @@ class ShellCog(commands.Cog):
                 "https://onecompiler.com/api/code/exec", headers=headers, json=json_data
             ) as response:
                 data = await response.json()
-                ans = data.get('stdout', '出力なし')
-                await interaction.followup.send(embed=discord.Embed(title="計算結果", color=discord.Color.green())
-                                                .add_field(name="計算式", value=f"```{計算式}```", inline=False).add_field(name="計算結果", value=f"```{ans}```", inline=False))
+                ans = data.get("stdout", "出力なし")
+                await interaction.followup.send(
+                    embed=discord.Embed(title="計算結果", color=discord.Color.green())
+                    .add_field(name="計算式", value=f"```{計算式}```", inline=False)
+                    .add_field(name="計算結果", value=f"```{ans}```", inline=False)
+                )
 
     @shell.command(name="linux", description="Linuxコマンドを検索します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def linux_search(self, interaction: discord.Interaction, コマンド名: str = None, 説明: str = None):
+    async def linux_search(
+        self, interaction: discord.Interaction, コマンド名: str = None, 説明: str = None
+    ):
         if コマンド名 is None and 説明 is None:
-            await interaction.response.send_message(ephemeral=True, content="`/shell linux [コマンド名|説明]` で使用できます。")
+            await interaction.response.send_message(
+                ephemeral=True,
+                content="`/shell linux [コマンド名|説明]` で使用できます。",
+            )
             return
         await interaction.response.defer()
         cmds = self.shell_commands
         for k, v in cmds.items():
             if not コマンド名 is None:
                 if コマンド名 in k:
-                    return await interaction.followup.send(embed=discord.Embed(title="Linuxコマンド検索結果", color=discord.Color.green())
-                                                                .add_field(name="コマンド名", value=k, inline=False)
-                                                                .add_field(name="説明", value=v, inline=False))
+                    return await interaction.followup.send(
+                        embed=discord.Embed(
+                            title="Linuxコマンド検索結果", color=discord.Color.green()
+                        )
+                        .add_field(name="コマンド名", value=k, inline=False)
+                        .add_field(name="説明", value=v, inline=False)
+                    )
             if not 説明 is None:
                 if 説明 in v:
-                    return await interaction.followup.send(embed=discord.Embed(title="Linuxコマンド検索結果", color=discord.Color.green())
-                                                                .add_field(name="コマンド名", value=k, inline=False)
-                                                                .add_field(name="説明", value=v, inline=False))
-                
-        return await interaction.followup.send(embed=discord.Embed(title="検索結果が見つかりません。", color=discord.Color.red()))
+                    return await interaction.followup.send(
+                        embed=discord.Embed(
+                            title="Linuxコマンド検索結果", color=discord.Color.green()
+                        )
+                        .add_field(name="コマンド名", value=k, inline=False)
+                        .add_field(name="説明", value=v, inline=False)
+                    )
+
+        return await interaction.followup.send(
+            embed=discord.Embed(
+                title="検索結果が見つかりません。", color=discord.Color.red()
+            )
+        )
 
     @shell.command(name="compile", description="プログラムをコンパイルします。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)

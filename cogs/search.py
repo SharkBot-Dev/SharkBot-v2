@@ -650,14 +650,26 @@ Botを追加したユーザーは？: {add_bot_user}
         await interaction.response.defer()
         for e in interaction.guild.emojis:
             if 絵文字 == e.__str__():
-                await interaction.followup.send(embed=discord.Embed(title=f"{e.name} の情報", color=discord.Color.green())
-                                                .set_image(url=e.url)
-                                                .add_field(name="名前", value=e.name, inline=False)
-                                                .add_field(name="id", value=str(e.id), inline=False)
-                                                .add_field(name="作成日時", value=str(e.created_at), inline=False)
-                                                .add_field(name="絵文字が動くか", value="はい" if e.animated else "いいえ", inline=False))
+                await interaction.followup.send(
+                    embed=discord.Embed(
+                        title=f"{e.name} の情報", color=discord.Color.green()
+                    )
+                    .set_image(url=e.url)
+                    .add_field(name="名前", value=e.name, inline=False)
+                    .add_field(name="id", value=str(e.id), inline=False)
+                    .add_field(name="作成日時", value=str(e.created_at), inline=False)
+                    .add_field(
+                        name="絵文字が動くか",
+                        value="はい" if e.animated else "いいえ",
+                        inline=False,
+                    )
+                )
                 return
-        await interaction.followup.send(embed=discord.Embed(title=f"絵文字が見つかりません。", color=discord.Color.red()))
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title=f"絵文字が見つかりません。", color=discord.Color.red()
+            )
+        )
 
     @search.command(name="translate", description="翻訳をします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -742,7 +754,7 @@ Botを追加したユーザーは？: {add_bot_user}
         }
 
         headers = {
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36'
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
         }
 
         try:

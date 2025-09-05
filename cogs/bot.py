@@ -7,6 +7,7 @@ from models import command_disable
 import asyncio
 import psutil
 
+
 class BotCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -66,11 +67,11 @@ class BotCog(commands.Cog):
 
     async def get_system_status(self):
         loop = asyncio.get_running_loop()
-        
+
         cpu_usage = await loop.run_in_executor(None, psutil.cpu_percent, 1)
         memory = await loop.run_in_executor(None, psutil.virtual_memory)
         disk = await loop.run_in_executor(None, psutil.disk_usage, "/")
-        
+
         return cpu_usage, memory, disk
 
     async def globalchat_joined_guilds(self):
@@ -80,7 +81,7 @@ class BotCog(commands.Cog):
     async def globalads_joined_guilds(self):
         db = self.bot.async_db["Main"].NewGlobalAds
         return await db.count_documents({})
-    
+
     async def sharkaccount_user(self):
         db = self.bot.async_db["Main"].LoginData
         return await db.count_documents({})
@@ -92,24 +93,46 @@ class BotCog(commands.Cog):
         await interaction.response.defer()
         cpu_usage, memory, disk = await self.get_system_status()
 
-        embed = discord.Embed(title="サーバーのシステムステータス", color=discord.Color.blue())
-        embed.add_field(name="CPU 使用率", value=f"{cpu_usage}%\n{self.create_bar(cpu_usage)}", inline=False)
+        embed = discord.Embed(
+            title="サーバーのシステムステータス", color=discord.Color.blue()
+        )
+        embed.add_field(
+            name="CPU 使用率",
+            value=f"{cpu_usage}%\n{self.create_bar(cpu_usage)}",
+            inline=False,
+        )
         memory_usage = memory.percent
-        embed.add_field(name="メモリ 使用率", value=f"{memory.percent}% ({memory.used // (1024**2)}MB / {memory.total // (1024**2)}MB)\n{self.create_bar(memory_usage)}", inline=False)
+        embed.add_field(
+            name="メモリ 使用率",
+            value=f"{memory.percent}% ({memory.used // (1024**2)}MB / {memory.total // (1024**2)}MB)\n{self.create_bar(memory_usage)}",
+            inline=False,
+        )
         disk_usage = disk.percent
-        embed.add_field(name="ディスク 使用率", value=f"{disk.percent}% ({disk.used // (1024**3)}GB / {disk.total // (1024**3)}GB)\n{self.create_bar(disk_usage)}", inline=False)
+        embed.add_field(
+            name="ディスク 使用率",
+            value=f"{disk.percent}% ({disk.used // (1024**3)}GB / {disk.total // (1024**3)}GB)\n{self.create_bar(disk_usage)}",
+            inline=False,
+        )
 
         globalchat_joined = await self.globalchat_joined_guilds()
         globalads_joined = await self.globalads_joined_guilds()
-        embed.add_field(name="機能を使用しているサーバー数", value=f"""
+        embed.add_field(
+            name="機能を使用しているサーバー数",
+            value=f"""
 グローバルチャット: {globalchat_joined}サーバー
 グローバル宣伝: {globalads_joined}サーバー
-""", inline=False)
-        
+""",
+            inline=False,
+        )
+
         sharkaccount_count = await self.sharkaccount_user()
-        embed.add_field(name="機能を使用しているユーザー数", value=f"""
+        embed.add_field(
+            name="機能を使用しているユーザー数",
+            value=f"""
 Sharkアカウント: {sharkaccount_count}人
-""", inline=False)
+""",
+            inline=False,
+        )
 
         await interaction.followup.send(embed=embed)
 

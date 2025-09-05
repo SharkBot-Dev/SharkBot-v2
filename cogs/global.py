@@ -22,7 +22,10 @@ user_last_message_time_mute = {}
 cooldown_transfer = {}
 cooldown_up = {}
 
-invite_only_check = re.compile(r"^(https?://)?(www\.)?(discord\.gg/|discord\.com/invite/)[a-zA-Z0-9]+$")
+invite_only_check = re.compile(
+    r"^(https?://)?(www\.)?(discord\.gg/|discord\.com/invite/)[a-zA-Z0-9]+$"
+)
+
 
 class GlobalCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -1501,14 +1504,24 @@ class GlobalCog(commands.Cog):
             try:
                 dbfind = await db.find_one({"User": message.author.id}, {"_id": False})
                 if not dbfind is None:
-
-                    msg = await message.reply(embed=discord.Embed(title="宣伝文を作成しますか？", description="その招待リンクにあった宣伝文をAIが作成してくれます。", color=discord.Color.yellow()))
+                    msg = await message.reply(
+                        embed=discord.Embed(
+                            title="宣伝文を作成しますか？",
+                            description="その招待リンクにあった宣伝文をAIが作成してくれます。",
+                            color=discord.Color.yellow(),
+                        )
+                    )
                     await msg.add_reaction("✅")
                     await msg.add_reaction("❌")
 
                     try:
-
-                        r, m = await self.bot.wait_for("reaction_add", check=lambda r, u: r.message.id == msg.id and not u.bot and message.author.id == u.id, timeout=30)
+                        r, m = await self.bot.wait_for(
+                            "reaction_add",
+                            check=lambda r, u: r.message.id == msg.id
+                            and not u.bot
+                            and message.author.id == u.id,
+                            timeout=30,
+                        )
 
                         if r.emoji == "✅":
                             await asyncio.sleep(1)
@@ -1524,7 +1537,8 @@ class GlobalCog(commands.Cog):
                             client = genai.Client(api_key=gem_token)
 
                             response = await client.aio.models.generate_content(
-                                model="gemini-2.5-flash-lite", contents=f"以下の条件に合わせて回答を出力して。\n・discordサーバーの宣伝文を作る。\n・宣伝文以外を出力しない。\n・サーバー名は、「{invite.guild.name}」\n・招待リンクは「{message.content}」"
+                                model="gemini-2.5-flash-lite",
+                                contents=f"以下の条件に合わせて回答を出力して。\n・discordサーバーの宣伝文を作る。\n・宣伝文以外を出力しない。\n・サーバー名は、「{invite.guild.name}」\n・招待リンクは「{message.content}」",
                             )
 
                             message.content = response.text

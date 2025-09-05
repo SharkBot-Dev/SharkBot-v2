@@ -20,11 +20,14 @@ import urllib.parse
 
 ASCII_CHARS = "@%#*+=-:. "
 
+
 def resize_image(image, new_width=40, new_height=40):
     return image.resize((new_width, new_height))
 
+
 def grayify(image):
     return image.convert("L")
+
 
 def pixels_to_ascii(image):
     pixels = image.getdata()
@@ -32,6 +35,7 @@ def pixels_to_ascii(image):
     for pixel in pixels:
         ascii_str += ASCII_CHARS[pixel * len(ASCII_CHARS) // 256]
     return ascii_str
+
 
 def image_to_ascii(image_path):
     try:
@@ -44,8 +48,9 @@ def image_to_ascii(image_path):
 
     ascii_str = pixels_to_ascii(image)
 
-    ascii_art = "\n".join(ascii_str[i:i+40] for i in range(0, len(ascii_str), 40))
+    ascii_art = "\n".join(ascii_str[i : i + 40] for i in range(0, len(ascii_str), 40))
     return ascii_art
+
 
 def text_len_sudden(text):
     count = 0
@@ -382,10 +387,10 @@ class TextGroup(app_commands.Group):
                 embed=discord.Embed(
                     title="対応していない進数です。",
                     description="2～16進数まで対応しています。",
-                    color=discord.Color.red()
+                    color=discord.Color.red(),
                 )
             )
-        
+
         try:
             result = int(数字, 進数)
         except ValueError:
@@ -393,15 +398,15 @@ class TextGroup(app_commands.Group):
                 embed=discord.Embed(
                     title="変換エラー",
                     description=f"入力 `{数字}` は {進数} 進数として無効です。",
-                    color=discord.Color.red()
+                    color=discord.Color.red(),
                 )
             )
-        
+
         await interaction.response.send_message(
             embed=discord.Embed(
                 title="進数を変換しました。",
                 description=f"`{数字}` ({進数}進数) → `{result}` (10進数)",
-                color=discord.Color.green()
+                color=discord.Color.green(),
             )
         )
 
@@ -412,8 +417,10 @@ class TextGroup(app_commands.Group):
         class send(discord.ui.Modal):
             def __init__(self) -> None:
                 super().__init__(title="Armをバイナリに変換", timeout=None)
-            
-            asm = discord.ui.TextInput(label="ASMを入力", style=discord.TextStyle.long, required=True)
+
+            asm = discord.ui.TextInput(
+                label="ASMを入力", style=discord.TextStyle.long, required=True
+            )
 
             async def on_submit(self, interaction_: discord.Interaction) -> None:
                 await interaction_.response.defer()
@@ -421,30 +428,34 @@ class TextGroup(app_commands.Group):
                     payload = {
                         "asm": self.asm.value,
                         "offset": "",
-                        "arch": ["arm64", "arm", "thumb"]
+                        "arch": ["arm64", "arm", "thumb"],
                     }
                     async with aiohttp.ClientSession() as session:
                         async with session.post(
                             "https://armconverter.com/api/convert",
-                            data=json.dumps(payload)
+                            data=json.dumps(payload),
                         ) as response:
                             js = await response.json()
                             hex_list = js.get("hex", {}).get("arm", [])
-                            hex_result = hex_list[1] if len(hex_list) > 1 else "取得できませんでした"
+                            hex_result = (
+                                hex_list[1]
+                                if len(hex_list) > 1
+                                else "取得できませんでした"
+                            )
                             await interaction_.followup.send(
                                 embed=discord.Embed(
                                     title="ARMのバイナリ",
                                     description=f"```{hex_result}```",
-                                    color=discord.Color.green()
+                                    color=discord.Color.green(),
                                 )
                             )
                 except Exception as e:
                     await interaction_.followup.send(
-                        ephemeral=True,
-                        content=f"エラーが発生しました: {e}"
+                        ephemeral=True, content=f"エラーが発生しました: {e}"
                     )
 
         await interaction.response.send_modal(send())
+
 
 class NounaiGroup(app_commands.Group):
     def __init__(self):
@@ -644,7 +655,16 @@ class ImageGroup(app_commands.Group):
         elif 背景色.value == "white":
             back = (255, 255, 255)
             text = (0, 0, 0)
-        miq = await asyncio.to_thread(create_quote_image, ユーザー.display_name, 発言, av, back, text, color, negapoji)
+        miq = await asyncio.to_thread(
+            create_quote_image,
+            ユーザー.display_name,
+            発言,
+            av,
+            back,
+            text,
+            color,
+            negapoji,
+        )
         image_binary = io.BytesIO()
         await asyncio.to_thread(miq.save, image_binary, "PNG")
         image_binary.seek(0)
@@ -665,6 +685,7 @@ class ImageGroup(app_commands.Group):
         await interaction.followup.send(file=discord.File(st, "ascii.txt"))
         st.close()
         io_.close()
+
 
 class FunCog(commands.Cog):
     def __init__(self, bot: commands.Bot):

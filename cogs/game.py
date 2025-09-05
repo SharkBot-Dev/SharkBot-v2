@@ -16,6 +16,7 @@ from consts import settings
 
 from ossapi import OssapiAsync
 
+
 class OsuGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="osu", description="Osu関連のコマンドです。")
@@ -31,11 +32,19 @@ class OsuGroup(app_commands.Group):
             name = user.username
             avatar = user.avatar_url
         except:
-            return await interaction.followup.send(embed=discord.Embed(title="ユーザーが見つかりません。", color=discord.Color.red()))
-        await interaction.followup.send(embed=discord.Embed(title="Osuのユーザー検索", color=discord.Color.blue())
-                                        .add_field(name="ユーザー名", value=name, inline=False)
-                                        .add_field(name="遊ぶモード", value=user.playmode, inline=False)
-                                        .set_thumbnail(url=avatar).set_image(url=user.cover_url))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="ユーザーが見つかりません。", color=discord.Color.red()
+                )
+            )
+        await interaction.followup.send(
+            embed=discord.Embed(title="Osuのユーザー検索", color=discord.Color.blue())
+            .add_field(name="ユーザー名", value=name, inline=False)
+            .add_field(name="遊ぶモード", value=user.playmode, inline=False)
+            .set_thumbnail(url=avatar)
+            .set_image(url=user.cover_url)
+        )
+
 
 class PokemonGroup(app_commands.Group):
     def __init__(self):
