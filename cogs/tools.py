@@ -10,6 +10,8 @@ from bs4 import BeautifulSoup
 from discord.ext import commands
 import discord
 
+import uuid
+
 from html2image import Html2Image
 import pyshorteners
 from discord import app_commands
@@ -601,14 +603,12 @@ class ToolsCog(commands.Cog):
             "--no-sandbox",
             "--disable-dev-shm-usage",
         ])
-        pil_images = await asyncio.to_thread(hti.screenshot, url=url, size=(1280, 720), save_as=None)
 
-        buf = io.BytesIO()
-        pil_images[0].save(buf, format="PNG")
-        buf.seek(0)
+        filename = f"temps/{uuid.uuid4()}.png"
 
-        await interaction.followup.send(file=discord.File(buf, filename="webshot.png"))
-        buf.close()
+        pil_images = await asyncio.to_thread(hti.screenshot, url=url, size=(1280, 720), save_as=filename)
+
+        await interaction.followup.send(file=discord.File(filename, filename="screenshot.png"))
 
 async def setup(bot):
     await bot.add_cog(ToolsCog(bot))
