@@ -3,12 +3,14 @@ from functools import partial
 import io
 import re
 import socket
+import textwrap
 import time
 import aiohttp
 from bs4 import BeautifulSoup
 from discord.ext import commands
 import discord
 
+from html2image import Html2Image
 import pyshorteners
 from discord import app_commands
 from consts import badword
@@ -588,6 +590,25 @@ class ToolsCog(commands.Cog):
                     embed.add_field(name=dt, value=w, inline=False)
 
                 await interaction.followup.send(embed=embed)
+
+    @tools.command(name="webshot", description="スクリーンショットを撮影します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def webshot(self, interaction: discord.Interaction, url: str):
+        await interaction.response.defer()
+        hti = await asyncio.to_thread(Html2Image, custom_flags=[
+            "--proxy-server=socks5://127.0.0.1:9050",
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+        ])
+        pil_images = await asyncio.to_thread(hti.screenshot, url=url, size=(1280, 720), save_as=None)
+
+        buf = io.BytesIO()
+        pil_images[0].save(buf, format="PNG")
+        buf.seek(0)
+
+        await interaction.followup.send(file=discord.File(buf, filename="webshot.png"))
+        buf.close()
 
 async def setup(bot):
     await bot.add_cog(ToolsCog(bot))
