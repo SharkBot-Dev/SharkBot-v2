@@ -594,57 +594,5 @@ class ToolsCog(commands.Cog):
 
                 await interaction.followup.send(embed=embed)
 
-    @tools.command(name="webshot", description="スクリーンショットを撮影します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def webshot(self, interaction: discord.Interaction, url: str):
-        return await interaction.response.send_message(ephemeral=True, content="現在メンテナンス中です。")
-        await interaction.response.defer()
-
-        hti = Html2Image(
-            output_path="temps",
-            custom_flags=[
-                "--proxy-server=socks5://127.0.0.1:9050",
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-gpu",
-                "--disable-software-rasterizer",
-                "--headless=new",
-                "--mute-audio",
-
-                "--disable-geolocation",
-                "--use-fake-device-for-media-stream",
-                "--use-fake-ui-for-media-stream",
-                "--deny-permission-prompts",
-
-                "--log-level=3",
-                "--disable-logging",
-                "--disable-breakpad",
-                "--disable-hang-monitor",
-                "--disable-client-side-phishing-detection",
-                "--disable-component-update",
-                "--no-zygote",
-            ]
-        )
-
-        filename = f"{uuid.uuid4()}.png"
-
-        try:
-            await asyncio.to_thread(
-                hti.screenshot,
-                url=url,
-                size=(1280, 720),
-                save_as=filename
-            )
-
-            filepath = f"temps/{filename}"
-            await interaction.followup.send(file=discord.File(filepath, filename="screenshot.png"), embed=discord.Embed(title="Webサイトのスクリーンショットを撮影しました。", color=discord.Color.green()))
-
-        finally:
-            try:
-                await aiofiles.os.remove(filepath)
-            except FileNotFoundError:
-                pass
-
 async def setup(bot):
     await bot.add_cog(ToolsCog(bot))
