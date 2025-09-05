@@ -155,6 +155,9 @@ class AchievementCog(commands.Cog):
         ]
     )
     async def achievement_create(self, interaction: discord.Interaction, 実績名: str, 値: int, をする: app_commands.Choice[str]):
+        if not await self.check_achi_enabled(interaction.guild):
+            return await interaction.response.send_message(embed=discord.Embed(title="実績は無効です。", color=discord.Color.red()))
+
         db = self.bot.async_db["Main"].Achievements
         await db.replace_one(
             {"Guild": interaction.guild.id, "Name": 実績名},
@@ -168,6 +171,9 @@ class AchievementCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def achievement_delete(self, interaction: discord.Interaction, 実績名: str):
+        if not await self.check_achi_enabled(interaction.guild):
+            return await interaction.response.send_message(embed=discord.Embed(title="実績は無効です。", color=discord.Color.red()))
+
         db = self.bot.async_db["Main"].Achievements
         result = await db.delete_one({"Guild": interaction.guild.id, "Name": 実績名})
         if result.deleted_count == 0:
@@ -178,6 +184,9 @@ class AchievementCog(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     async def achievement_channel(self, interaction: discord.Interaction, チャンネル: discord.TextChannel = None):
+        if not await self.check_achi_enabled(interaction.guild):
+            return await interaction.response.send_message(embed=discord.Embed(title="実績は無効です。", color=discord.Color.red()))
+
         db = self.bot.async_db["Main"].AchievementsChannel
         if チャンネル:
             await db.replace_one(
@@ -199,6 +208,9 @@ class AchievementCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def achievement_show(self, interaction: discord.Interaction, メンバー: discord.User = None):
         await interaction.response.defer()
+        if not await self.check_achi_enabled(interaction.guild):
+            return await interaction.followup.send(embed=discord.Embed(title="実績は無効です。", color=discord.Color.red()))
+
         メンバー = interaction.guild.get_member(メンバー.id) if メンバー else interaction.user
         a_cs = ""
         db = self.bot.async_db["Main"].Achievements
