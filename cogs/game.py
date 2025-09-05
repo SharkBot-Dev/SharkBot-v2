@@ -12,6 +12,30 @@ from consts import settings
 import aiohttp
 import json
 
+from consts import settings
+
+from ossapi import OssapiAsync
+
+class OsuGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="osu", description="Osu関連のコマンドです。")
+
+    @app_commands.command(name="user", description="ユーザーを検索します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def osu_user(self, interaction: discord.Interaction, ユーザーid: str):
+        await interaction.response.defer()
+        api = OssapiAsync(settings.OSU_CLIENT_ID, settings.OSU_CLIENT_SECRET)
+        try:
+            user = await api.user(ユーザーid)
+            name = user.username
+            avatar = user.avatar_url
+        except:
+            return await interaction.followup.send(embed=discord.Embed(title="ユーザーが見つかりません。", color=discord.Color.red()))
+        await interaction.followup.send(embed=discord.Embed(title="Osuのユーザー検索", color=discord.Color.blue())
+                                        .add_field(name="ユーザー名", value=name, inline=False)
+                                        .add_field(name="遊ぶモード", value=user.playmode, inline=False)
+                                        .set_thumbnail(url=avatar).set_image(url=user.cover_url))
 
 class PokemonGroup(app_commands.Group):
     def __init__(self):
@@ -229,6 +253,7 @@ class GameCog(commands.Cog):
     game.add_command(MinecraftGroup())
     game.add_command(FortniteGroup())
     game.add_command(PokemonGroup())
+    game.add_command(OsuGroup())
 
     @game.command(name="8ball", description="占ってもらいます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)

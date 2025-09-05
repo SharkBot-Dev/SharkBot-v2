@@ -77,3 +77,4 @@ ruff
 google-genai
 aiohttp_socks
 html2image
+ossapi[async]
