@@ -18,6 +18,9 @@ import pyshorteners
 from discord import app_commands
 from consts import badword
 from models import command_disable
+import ipaddress
+import socket
+from urllib.parse import urlparse
 
 ipv4_pattern = re.compile(
     r"^("
@@ -34,6 +37,33 @@ ipv4_pattern = re.compile(
 domain_regex = re.compile(r"^(?!\-)(?:[a-zA-Z0-9\-]{1,63}\.)+[a-zA-Z]{2,}$")
 
 is_url = re.compile(r"https?://[\w!\?/\+\-_~=;\.,\*&@#$%\(\)'\[\]]+")
+
+def is_blocked_url(url: str) -> bool:
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname
+        if not host:
+            return True
+
+        if host in ("localhost",):
+            return True
+
+        try:
+            ip = ipaddress.ip_address(host)
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_link_local:
+                return True
+        except ValueError:
+            try:
+                resolved_ip = socket.gethostbyname(host)
+                ip = ipaddress.ip_address(resolved_ip)
+                if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_link_local:
+                    return True
+            except Exception:
+                return True
+
+        return False
+    except Exception:
+        return True
 
 async def fetch_whois(target_domain):
     if not domain_regex.match(target_domain):
@@ -601,14 +631,10 @@ class ToolsCog(commands.Cog):
         if not is_url.search(url):
             return await interaction.response.send_message(ephemeral=True, content="URLを入力してください。")
         
-        if "localhost" in url:
-            return await interaction.response.send_message(ephemeral=True, content="URLを入力してください。")
-        
-        if "0.0.0.0" in url:
-            return await interaction.response.send_message(ephemeral=True, content="URLを入力してください。")
-        
-        if "192.168." in url:
-            return await interaction.response.send_message(ephemeral=True, content="URLを入力してください。")
+        if await asyncio.to_thread(is_blocked_url, url):
+            return await interaction.response.send_message(
+                ephemeral=True, content="有効なURLを入力してください。"
+            )
 
         await interaction.response.defer()
 
