@@ -11,6 +11,7 @@ from discord.ext import commands
 import discord
 
 import uuid
+import aiofiles.os
 
 from html2image import Html2Image
 import pyshorteners
@@ -598,17 +599,34 @@ class ToolsCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def webshot(self, interaction: discord.Interaction, url: str):
         await interaction.response.defer()
-        hti = await asyncio.to_thread(Html2Image, custom_flags=[
-            "--proxy-server=socks5://127.0.0.1:9050",
-            "--no-sandbox",
-            "--disable-dev-shm-usage",
-        ])
 
-        filename = f"temps/{uuid.uuid4()}.png"
+        hti = Html2Image(
+            output_path="temps",
+            custom_flags=[
+                "--proxy-server=socks5://127.0.0.1:9050",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+            ]
+        )
 
-        pil_images = await asyncio.to_thread(hti.screenshot, url=url, size=(1280, 720), save_as=filename)
+        filename = f"{uuid.uuid4()}.png"
 
-        await interaction.followup.send(file=discord.File(filename, filename="screenshot.png"))
+        try:
+            await asyncio.to_thread(
+                hti.screenshot,
+                url=url,
+                size=(1280, 720),
+                save_as=filename
+            )
+
+            filepath = f"temps/{filename}"
+            await interaction.followup.send(file=discord.File(filepath, filename="screenshot.png"))
+
+        finally:
+            try:
+                await aiofiles.os.remove(filepath)
+            except FileNotFoundError:
+                pass
 
 async def setup(bot):
     await bot.add_cog(ToolsCog(bot))
