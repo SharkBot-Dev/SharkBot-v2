@@ -81,3 +81,8 @@ dependencies = [
     "wrapt==1.17.3",
     "yarl==1.20.1",
 ]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+]
