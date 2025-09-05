@@ -637,7 +637,7 @@ class ToolsCog(commands.Cog):
             )
 
             filepath = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{filename}"
-            await interaction.followup.send(embed=discord.Embed(title="スクリーンショットを撮影しました。", color=discord.Color.green())
+            await interaction.followup.send(embed=discord.Embed(title="スクリーンショットを撮影しました。", description="一日の終わりにファイルが削除されます。", color=discord.Color.green())
                                             , view=discord.ui.View().add_item(discord.ui.Button(label="結果を確認する", url=filepath)))
 
         finally:
