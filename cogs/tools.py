@@ -603,6 +603,12 @@ class ToolsCog(commands.Cog):
         
         if "localhost" in url:
             return await interaction.response.send_message(ephemeral=True, content="URLを入力してください。")
+        
+        if "0.0.0.0" in url:
+            return await interaction.response.send_message(ephemeral=True, content="URLを入力してください。")
+        
+        if "192.168." in url:
+            return await interaction.response.send_message(ephemeral=True, content="URLを入力してください。")
 
         await interaction.response.defer()
 
