@@ -606,6 +606,10 @@ class ToolsCog(commands.Cog):
                 "--proxy-server=socks5://127.0.0.1:9050",
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
+                "--disable-gpu",                # GPUを無効化
+                "--disable-software-rasterizer",# GPU代替レンダラも無効化
+                "--headless=new",               # 新しいヘッドレスモード
+                "--mute-audio",                 # 音声機能を完全無効化
             ]
         )
 
