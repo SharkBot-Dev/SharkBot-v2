@@ -598,6 +598,9 @@ class ToolsCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def webshot(self, interaction: discord.Interaction, url: str):
+        if not is_url.search(url):
+                return await interaction.response.send_message(ephemeral=True, content="URLを入力してください。")
+
         await interaction.response.defer()
 
         hti = Html2Image(
