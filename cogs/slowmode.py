@@ -8,6 +8,7 @@ import asyncio
 class SlowModeCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.working = set()
         print("init -> SlowModeCog")
 
     @commands.Cog.listener("on_message")
@@ -35,43 +36,54 @@ class SlowModeCog(commands.Cog):
                 last_time = last_msg["last_sent"]
                 elapsed = (now - last_time).total_seconds()
                 if elapsed < delay:
-                    remain = int(delay - elapsed)
-                    await message.delete()
+                    if message.channel.id in self.working:
+                        return
 
-                    overwrite = message.channel.overwrites_for(message.author)
+                    self.working.add(message.channel.id)
 
-                    overwrite.send_messages = False
-                    overwrite.create_polls = False
-                    overwrite.use_application_commands = False
-                    overwrite.attach_files = False
-                    overwrite.create_public_threads = False
-                    overwrite.create_private_threads = False
+                    try:
 
-                    await message.channel.set_permissions(
-                        message.author, overwrite=overwrite
-                    )
+                        remain = int(delay - elapsed)
+                        await message.delete()
 
-                    await asyncio.sleep(1)
+                        overwrite = message.channel.overwrites_for(message.author)
 
-                    await message.channel.send(
-                        f"{message.author.mention}、スローモード中です。あと {remain} 秒待ってください。",
-                        delete_after=5
-                    )
+                        overwrite.send_messages = False
+                        overwrite.create_polls = False
+                        overwrite.use_application_commands = False
+                        overwrite.attach_files = False
+                        overwrite.create_public_threads = False
+                        overwrite.create_private_threads = False
 
-                    await asyncio.sleep(10)
+                        await message.channel.set_permissions(
+                            message.author, overwrite=overwrite
+                        )
 
-                    overwrite = message.channel.overwrites_for(message.author)
+                        await asyncio.sleep(1)
 
-                    overwrite.send_messages = True
-                    overwrite.create_polls = True
-                    overwrite.use_application_commands = True
-                    overwrite.attach_files = True
-                    overwrite.create_public_threads = True
-                    overwrite.create_private_threads = True
+                        await message.channel.send(
+                            f"{message.author.mention}、スローモード中です。あと {remain} 秒待ってください。",
+                            delete_after=5
+                        )
 
-                    await message.channel.set_permissions(
-                        message.author, overwrite=overwrite
-                    )
+                        await asyncio.sleep(10)
+
+                        overwrite = message.channel.overwrites_for(message.author)
+
+                        overwrite.send_messages = True
+                        overwrite.create_polls = True
+                        overwrite.use_application_commands = True
+                        overwrite.attach_files = True
+                        overwrite.create_public_threads = True
+                        overwrite.create_private_threads = True
+
+                        await message.channel.set_permissions(
+                            message.author, overwrite=overwrite
+                        )
+                    except:
+                        pass
+                    finally:
+                        self.working.remove(message.channel.id)
 
                     return
 
