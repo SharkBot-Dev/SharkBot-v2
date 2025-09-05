@@ -637,7 +637,7 @@ class ToolsCog(commands.Cog):
             )
 
             filepath = f"temps/{filename}"
-            await interaction.followup.send(file=discord.File(filepath, filename="screenshot.png"))
+            await interaction.followup.send(file=discord.File(filepath, filename="screenshot.png"), embed=discord.Embed(title="Webサイトのスクリーンショットを撮影しました。", color=discord.Color.green()))
 
         finally:
             try:
