@@ -603,13 +603,17 @@ class ToolsCog(commands.Cog):
         hti = Html2Image(
             output_path="temps",
             custom_flags=[
-                "--proxy-server=socks5://127.0.0.1:9050",
+                "--proxy-server=socks5://127.0.0.1:9050",  # Tor経由
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
-                "--disable-gpu",                # GPUを無効化
-                "--disable-software-rasterizer",# GPU代替レンダラも無効化
-                "--headless=new",               # 新しいヘッドレスモード
-                "--mute-audio",                 # 音声機能を完全無効化
+                "--disable-gpu",
+                "--disable-software-rasterizer",
+                "--headless=new",
+                "--mute-audio",
+                "--disable-geolocation",        # 位置情報を無効化
+                "--use-fake-device-for-media-stream",  # カメラ/マイクを偽装デバイスに置き換え
+                "--use-fake-ui-for-media-stream",      # ユーザー許可ダイアログをスキップ
+                "--deny-permission-prompts",    # すべての権限要求を拒否
             ]
         )
 
