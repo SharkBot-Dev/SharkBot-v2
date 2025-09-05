@@ -67,4 +67,7 @@ async def setup_hook() -> None:
         print("スラッシュコマンドの同期に失敗しました。")
 
 
-bot.run(os.environ.get("Token"))
+if os.environ.get("Token") is not None:
+    bot.run(os.environ.get("Token"))
+else:
+    raise ValueError("No Token")
