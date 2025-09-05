@@ -39,6 +39,18 @@ class AchievementCog(commands.Cog):
         except Exception:
             pass
 
+    async def send_reaction_channel(self, message: discord.Message, user: discord.User, achi):
+        settings_db = self.bot.async_db["Main"].AchievementsChannel
+        settings = await settings_db.find_one({"Guild": message.guild.id})
+        notify_channel = message.guild.get_channel(settings.get("Channel")) if settings else None
+        if notify_channel is None:
+            notify_channel = message.channel
+
+        try:
+            await notify_channel.send(f"{user.mention} が実績「{achi.get('Name')}」を達成しました。")
+        except Exception:
+            pass
+
     @commands.Cog.listener("on_message")
     async def on_message_say(self, message: discord.Message):
         if message.author.bot or not message.guild:
@@ -116,7 +128,7 @@ class AchievementCog(commands.Cog):
                         "Name": achi.get("Name")
                     })
                     try:
-                        await self.send_channel(reaction.message, achi)
+                        await self.send_reaction_channel(reaction.message, user, achi)
                     except:
                         pass
 
@@ -202,6 +214,26 @@ class AchievementCog(commands.Cog):
             await interaction.response.send_message(
                 f"実績達成通知チャンネルを無効化しました。", ephemeral=True
             )
+
+    @achievement.command(name="reset", description="実績をリセットします。")
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    async def achievement_reset(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+        db = self.bot.async_db["Main"].AchievementsSay
+        result = await db.delete_many({"Guild": interaction.guild.id})
+
+        db = self.bot.async_db["Main"].AchievementsReact
+        result = await db.delete_many({"Guild": interaction.guild.id})
+
+        db = self.bot.async_db["Main"].AchievementsAchi
+        result = await db.delete_many({"Guild": interaction.guild.id})
+        
+        await interaction.followup.send(
+            content=f"サーバー内の全実績をリセットしました。",
+            ephemeral=True
+        )
 
     @achievement.command(name="show", description="達成した・達成可能な実績一覧を表示します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)

@@ -768,6 +768,19 @@ class LevelCog(commands.Cog):
             )
         )
 
+    @level.command(name="reset", description="レベルをリセットします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(administrator=True)
+    async def level_reset(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+        db = self.bot.async_db["Main"].Leveling
+        result = await db.delete_many({"Guild": interaction.guild.id})
+
+        await interaction.followup.send(
+            content=f"サーバー内の全レベルをリセットしました。"
+        )
 
 async def setup(bot):
     await bot.add_cog(LevelCog(bot))
