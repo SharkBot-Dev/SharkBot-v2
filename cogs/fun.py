@@ -232,6 +232,14 @@ class MovieGroup(app_commands.Group):
                 async with aiofiles.open(input_image, "wb") as f:
                     await f.write(await resp.read())
 
+        def resize_image():
+            img = Image.open(input_image)
+            res_img = img.resize((200, 200))
+            res_img.save(input_image, format="png")
+            return
+        
+        await asyncio.to_thread(resize_image)
+
         cmd = [
             "ffmpeg",
             "-y",
