@@ -243,6 +243,14 @@ class ToolsCog(commands.Cog):
             }
         )
 
+    async def afk_mention_write(self, user: int, message: discord.Message):
+        database = self.bot.async_db["Main"].AFKMention
+        await database.replace_one(
+            {"User": user, "Channel": message.channel.id, "MentionUser": message.author.id}, 
+            {"User": user, "MentionUser": message.author.id, "Channel": message.channel.id}, 
+            upsert=True
+        )
+
     @commands.Cog.listener("on_message")
     async def on_message_afk_mention(self, message):
         if message.author.bot:
