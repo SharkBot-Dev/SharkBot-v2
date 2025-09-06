@@ -136,36 +136,41 @@ class AutoModCog(commands.Cog):
             )
 
         await interaction.response.defer(ephemeral=True)
+
+        guild = interaction.guild
+        db = self.bot.async_db["Main"]
+
         if タイプ.value == "invite":
-            dbs = self.bot.async_db["Main"].InviteBlock
-            await dbs.delete_one({"Guild": interaction.guild.id})
-            rule = await interaction.guild.fetch_automod_rules()
-            for r in rule:
-                if r == "招待リンク対策":
+            await db.InviteBlock.delete_one({"Guild": guild.id})
+            rules = await guild.fetch_automod_rules()
+            for r in rules:
+                if r.name == "招待リンク対策":
                     await r.delete()
+
         elif タイプ.value == "token":
-            dbs = self.bot.async_db["Main"].TokenBlock
-            await dbs.delete_one({"Guild": interaction.guild.id})
+            await db.TokenBlock.delete_one({"Guild": guild.id})
+
         elif タイプ.value == "everyone":
-            rule = await interaction.guild.fetch_automod_rules()
-            for r in rule:
-                if r == "Everyone対策":
+            rules = await guild.fetch_automod_rules()
+            for r in rules:
+                if r.name == "Everyone対策":
                     await r.delete()
+
         elif タイプ.value == "mail":
-            rule = await interaction.guild.fetch_automod_rules()
-            for r in rule:
-                if r == "メールアドレス対策":
+            rules = await guild.fetch_automod_rules()
+            for r in rules:
+                if r.name == "メールアドレス対策":
                     await r.delete()
+
         elif タイプ.value == "spam":
-            dbs = self.bot.async_db["Main"].SpamBlock
-            await dbs.delete_one({"Guild": interaction.guild.id})
+            await db.SpamBlock.delete_one({"Guild": guild.id})
+
         elif タイプ.value == "slashspam":
-            dbs = self.bot.async_db["Main"].UserApplicationSpamBlock
-            await dbs.delete_one({"Guild": interaction.guild.id})
+            await db.UserApplicationSpamBlock.delete_one({"Guild": guild.id})
+
         await interaction.followup.send(
             ephemeral=True, content=f"AutoModの「{タイプ.name}」を削除しました。"
         )
-
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoModCog(bot))
