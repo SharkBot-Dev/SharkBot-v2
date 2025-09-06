@@ -305,7 +305,7 @@ class TextGroup(app_commands.Group):
             return emojis
 
         ems = await text_emoji(テキスト[:20])
-        await interaction.followup.send(content=ems)
+        await interaction.followup.send(content=' '.join(ems))
 
     @app_commands.command(name="reencode", description="文字化けを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
