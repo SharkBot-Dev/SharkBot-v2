@@ -314,6 +314,17 @@ class GachaGroup(app_commands.Group):
         except:
             return await interaction.followup.send(embed=discord.Embed(title="Json読み込みに失敗しました。", color=discord.Color.red()))
 
+        for i_n in res.get('Item', []):
+
+            sm = await Money(interaction.client).get_server_items(
+                interaction.guild, i_n.get('Name')
+            )
+            if not sm:
+
+                await Money(interaction.client).create_server_items(
+                    interaction.guild, i_n.get('Money'), i_n.get('Name')
+                )
+
         db = interaction.client.async_db["Main"].ServerMoneyGacha
 
         await db.replace_one(
@@ -323,7 +334,7 @@ class GachaGroup(app_commands.Group):
                 "Name": res.get('Name', "ガチャ名"),
                 "Money": res.get('Money', "ガチャ金額"),
                 "Text": res.get('Text', "ガチャ説明"),
-                "Item": res.get('Item', []),
+                "Item": [i.get('Name') for i in res.get('Item', [])],
                 "Role": res.get('Role', 0),
             },
             upsert=True,
