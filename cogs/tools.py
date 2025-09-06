@@ -28,6 +28,8 @@ SOUNDCLOUD_REGEX = re.compile(
     r'^(https?://)?(www\.)?(soundcloud\.com|on\.soundcloud\.com)/.+'
 )
 
+IRASUTOTA_REGEX = re.compile(r'https://www.irasutoya.com/.+/.+/.+.html')
+
 ipv4_pattern = re.compile(
     r"^("
     r"(25[0-5]|"  # 250-255
@@ -717,7 +719,7 @@ class ToolsCog(commands.Cog):
     ):
         choices = [
             app_commands.Choice(name=f, value=f)
-            for f in ["SoundCloud"] if current.lower() in f.lower()
+            for f in ["いらすとや"] if current.lower() in f.lower()
         ]
         return choices[:25]
 
@@ -728,57 +730,40 @@ class ToolsCog(commands.Cog):
     async def download(self, interaction: discord.Interaction, タイプ: str, url: str):
         await interaction.response.defer()
 
-        if タイプ == "SoundCloud":
-            if not SOUNDCLOUD_REGEX.match(url):
+        if タイプ == "いらすとや":
+            if not IRASUTOTA_REGEX.match(url):
                 await interaction.followup.send(embed=discord.Embed(title="正しいURLを入力してください。", color=discord.Color.red()), ephemeral=True)
                 return
 
-            user_dir = os.path.join("files/static", str(interaction.user.id))
-            await aiofiles.os.makedirs(user_dir, exist_ok=True)
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    url
+                ) as response:
+                    bs4 = BeautifulSoup(await response.text(), "html.parser")
+                    try:
+                        img = bs4.find({'class': 'separator'}).find('a')
 
-            filename = f"{uuid.uuid4()}"
-            filepath = os.path.join(user_dir, filename)
+                        class IrasutoyaView(discord.ui.LayoutView):
+                            container = discord.ui.Container(
+                                discord.ui.TextDisplay(
+                                    f"### いらすとや",
+                                ),
+                                discord.ui.Separator(),
+                                discord.ui.MediaGallery(
+                                    discord.MediaGalleryItem(img.get('href'))
+                                ),
+                                discord.ui.ActionRow(
+                                    discord.ui.Button(
+                                        label="ダウンロード",
+                                        url=img.get('href'),
+                                    )
+                                ),
+                                accent_colour=discord.Colour.green(),
+                            )
 
-            ydl_opts = {
-                "format": "bestaudio/best",
-                "outtmpl": filepath,
-                "postprocessors": [
-                    {  
-                        "key": "FFmpegExtractAudio",
-                        "preferredcodec": "mp3",
-                        "preferredquality": "192",
-                    }
-                ],
-                "noplaylist": True,
-                "quiet": True, 
-                "no_warnings": True,
-                "playlist_items": "1"
-            }
-
-            loop = asyncio.get_event_loop()
-            def run_ydl():
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    return ydl.extract_info(url, download=True)
-
-            try:
-                await loop.run_in_executor(None, run_ydl)
-            except Exception as e:
-                await interaction.followup.send(embed=discord.Embed(title="ダウンロードに失敗しました。", color=discord.Color.red()))
-                return
-
-            download_url = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{filename}.mp3"
-
-            view = discord.ui.View()
-            view.add_item(discord.ui.Button(label="結果を確認する", url=download_url))
-
-            embed = discord.Embed(
-                title="ファイルをダウンロードしました。",
-                description="一日の終わりにファイルが削除されます。",
-                color=discord.Color.green()
-            )
-
-            await interaction.followup.send(embed=embed, view=view)
-
+                        await interaction.followup.send(view=IrasutoyaView())
+                    except:
+                        return await interaction.followup.send(embed=discord.Embed(title="解析に失敗しました。", color=discord.Color.green()))
         else:
             embed = discord.Embed(
                 title="タイプが見つかりません。",
