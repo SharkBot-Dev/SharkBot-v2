@@ -3,6 +3,7 @@ import discord
 import random
 import time
 from discord import app_commands
+import json
 
 user_last_message_time_work = {}
 
@@ -296,6 +297,39 @@ class GachaGroup(app_commands.Group):
         await interaction.response.send_message(
             embed=discord.Embed(
                 title="ガチャを作成しました。", color=discord.Color.green()
+            )
+        )
+
+    @app_commands.command(
+        name="import", description="ガチャをjsonからインポートします。"
+    )
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def economy_gacha_json_import(
+        self, interaction: discord.Interaction, ファイル: discord.Attachment
+    ):
+        await interaction.response.defer()
+        
+        res = json.loads(await ファイル.read())
+
+        db = interaction.client.async_db["Main"].ServerMoneyGacha
+
+        await db.replace_one(
+            {"Guild": interaction.guild.id, "Name": res.get('Name', "ガチャ名")},
+            {
+                "Guild": interaction.guild.id,
+                "Name": res.get('Name', "ガチャ名"),
+                "Money": res.get('Money', "ガチャ金額"),
+                "Text": res.get('Text', "ガチャ説明"),
+                "Item": res.get('Item', []),
+                "Role": res.get('Role', 0),
+            },
+            upsert=True,
+        )
+
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="ガチャをインポートしました。", color=discord.Color.green()
             )
         )
 
