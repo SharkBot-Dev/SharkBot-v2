@@ -741,7 +741,7 @@ class ToolsCog(commands.Cog):
                 ) as response:
                     bs4 = BeautifulSoup(await response.text(), "html.parser")
                     try:
-                        img = bs4.select(".separator > a")
+                        img = bs4.select(".separator > a")[0]
 
                         class IrasutoyaView(discord.ui.LayoutView):
                             container = discord.ui.Container(
