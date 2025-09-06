@@ -200,6 +200,40 @@ def create_quote_image(
     else:
         return img.convert("L")
 
+class AudioGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="audio", description="音声系のコマンドです。")
+
+    @app_commands.command(name="tts", description="テキストを音声にします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        声の種類=[
+            app_commands.Choice(name="ゆっくり霊夢", value="reimu"),
+            app_commands.Choice(name="ゆっくり魔理沙", value="marisa"),
+        ]
+    )
+    async def tts_(
+        self, interaction: discord.Interaction, テキスト: str, 声の種類: app_commands.Choice[str]
+    ):
+        await interaction.response.defer()
+        if 声の種類.value == "reimu":
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"https://www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f1&kanji={urllib.parse.quote(テキスト)}"
+                ) as response:
+                    io_ = io.BytesIO(await response.read())
+                    await interaction.followup.send(file=discord.File(io_, filename="tts.mp3"))
+                    io_.close()
+        elif 声の種類.value == "marisa":
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"https://www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f2&kanji={urllib.parse.quote(テキスト)}"
+                ) as response:
+                    io_ = io.BytesIO(await response.read())
+                    await interaction.followup.send(file=discord.File(io_, filename="tts.mp3"))
+                    io_.close()
+
 class MovieGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="movie", description="動画生成系のコマンドです。")
@@ -786,6 +820,7 @@ class FunCog(commands.Cog):
     fun.add_command(ImageGroup())
     fun.add_command(NounaiGroup())
     fun.add_command(MovieGroup())
+    fun.add_command(AudioGroup())
 
     @fun.command(name="janken", description="じゃんけんをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
