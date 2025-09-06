@@ -137,6 +137,8 @@ class AutoModCog(commands.Cog):
 
         await interaction.response.defer(ephemeral=True)
         if タイプ.value == "invite":
+            dbs = self.bot.async_db["Main"].InviteBlock
+            await dbs.delete_one({"Guild": interaction.guild.id})
             rule = await interaction.guild.fetch_automod_rules()
             for r in rule:
                 if r == "招待リンク対策":
