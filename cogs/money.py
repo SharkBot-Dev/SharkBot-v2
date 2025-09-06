@@ -379,7 +379,7 @@ class GachaGroup(app_commands.Group):
         for i_n in dbfind.get('Item', []):
 
             sm = await Money(interaction.client).get_server_items(
-                interaction.guild, i_n.get('Name')
+                interaction.guild, i_n
             )
             if sm:
                 i_.append({'Name': i_n, 'Money': sm.get('Money')})
