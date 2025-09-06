@@ -762,8 +762,8 @@ class ToolsCog(commands.Cog):
                             )
 
                         await interaction.followup.send(view=IrasutoyaView())
-                    except:
-                        return await interaction.followup.send(embed=discord.Embed(title="解析に失敗しました。", color=discord.Color.green()))
+                    except Exception as e:
+                        return await interaction.followup.send(embed=discord.Embed(title="解析に失敗しました。", description=f"{e}", color=discord.Color.red()))
         else:
             embed = discord.Embed(
                 title="タイプが見つかりません。",
