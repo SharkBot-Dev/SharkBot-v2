@@ -730,7 +730,7 @@ class ToolsCog(commands.Cog):
 
         if タイプ == "SoundCloud":
             if not SOUNDCLOUD_REGEX.match(url):
-                await interaction.followup.send("これはSoundCloudのURLではありません。", ephemeral=True)
+                await interaction.followup.send(embed=discord.Embed(title="正しいURLを入力してください。", color=discord.Color.red()), ephemeral=True)
                 return
 
             user_dir = os.path.join("files/static", str(interaction.user.id))
@@ -760,7 +760,7 @@ class ToolsCog(commands.Cog):
             try:
                 await loop.run_in_executor(None, run_ydl)
             except Exception as e:
-                await interaction.followup.send(f"❌ ダウンロードに失敗しました: `{e}`")
+                await interaction.followup.send(embed=discord.Embed(title="ダウンロードに失敗しました。", color=discord.Color.red()))
                 return
 
             download_url = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{filename}"
