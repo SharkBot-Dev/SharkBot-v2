@@ -12,6 +12,7 @@ import discord
 from cryptography.fernet import Fernet, InvalidToken
 import pykakasi
 from discord import app_commands
+from consts import settings
 from models import command_disable
 import asyncio
 from deep_translator import GoogleTranslator
@@ -686,6 +687,30 @@ class ImageGroup(app_commands.Group):
         st.close()
         io_.close()
 
+    @app_commands.command(name="imgur", description="Imgurで画像を取得します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def imgur(self, interaction: discord.Interaction, 検索ワード: str):
+        await interaction.response.defer()
+        try:
+            
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"https://api.imgur.com/3/gallery/search",
+                    params={"q": 検索ワード},
+                    headers={"Authorization": f"Client-ID {settings.IMGUR_CLIENTID}"}
+                ) as resp:
+                    data = await resp.json()
+
+                    if not data["data"]["posts"]:
+                        return await interaction.followup.send("検索結果が見つかりませんでした。")
+
+                    if data and 'data' in data:
+                        for item in data['data']:
+                            return await interaction.followup.send(f"{item['link']}")
+        except:
+            return await interaction.followup.send(f"検索に失敗しました。")
 
 class FunCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
