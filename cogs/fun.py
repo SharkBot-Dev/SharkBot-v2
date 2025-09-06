@@ -223,7 +223,8 @@ class MovieGroup(app_commands.Group):
 
         input_video = "data/sea.mp4"
         input_image = f"files/static/{interaction.user.id}/{uuid.uuid4()}.png"
-        output_video = f"files/static/{interaction.user.id}/{uuid.uuid4()}.mp4"
+        mp4_file = f"{uuid.uuid4()}.mp4"
+        output_video = f"files/static/{interaction.user.id}/{mp4_file}"
 
         async with aiohttp.ClientSession() as session:
             async with session.get(画像.url) as resp:
@@ -249,7 +250,7 @@ class MovieGroup(app_commands.Group):
 
         stdout, stderr = await process.communicate()
 
-        filepath = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{output_video}"
+        filepath = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{mp4_file}"
 
         await interaction.followup.send(embed=discord.Embed(title="海の背景の動画に画像を組み合わせた動画", color=discord.Color.green())
                                         , view=discord.ui.View().add_item(discord.ui.Button(label="結果を確認する",url=filepath)))
