@@ -750,6 +750,8 @@ class ToolsCog(commands.Cog):
                     }
                 ],
                 "noplaylist": True,
+                "quiet": True, 
+                "no_warnings": True,
             }
 
             loop = asyncio.get_event_loop()
