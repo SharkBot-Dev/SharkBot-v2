@@ -736,7 +736,7 @@ class ToolsCog(commands.Cog):
             user_dir = os.path.join("files/static", str(interaction.user.id))
             await aiofiles.os.makedirs(user_dir, exist_ok=True)
 
-            filename = f"{uuid.uuid4()}.mp3"
+            filename = f"{uuid.uuid4()}"
             filepath = os.path.join(user_dir, filename)
 
             ydl_opts = {
@@ -765,7 +765,7 @@ class ToolsCog(commands.Cog):
                 await interaction.followup.send(embed=discord.Embed(title="ダウンロードに失敗しました。", color=discord.Color.red()))
                 return
 
-            download_url = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{filename}"
+            download_url = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{filename}.mp3"
 
             view = discord.ui.View()
             view.add_item(discord.ui.Button(label="結果を確認する", url=download_url))
