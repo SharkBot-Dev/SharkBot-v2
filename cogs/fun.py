@@ -233,12 +233,12 @@ class MovieGroup(app_commands.Group):
                     await f.write(await resp.read())
 
         cmd = [
-            "ffmpeg",
-            "-y",
+            "ffmpeg", "-y",
             "-i", input_video,
             "-i", input_image,
             "-filter_complex",
-            "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2",
+            "[1][0]scale2ref=iw*min(1\\,min(W/iw\\,H/ih)):ih*min(1\\,min(W/iw\\,H/ih))[img][vid];"
+            "[vid][img]overlay=(W-w)/2:(H-h)/2",
             output_video,
         ]
 
@@ -252,7 +252,7 @@ class MovieGroup(app_commands.Group):
 
         filepath = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{mp4_file}"
 
-        await interaction.followup.send(embed=discord.Embed(title="海の背景の動画に画像を組み合わせた動画", color=discord.Color.green())
+        await interaction.followup.send(embed=discord.Embed(title="海の背景の動画に画像を組み合わせた動画", description="一日の終わりにファイルが削除されます。", color=discord.Color.green())
                                         , view=discord.ui.View().add_item(discord.ui.Button(label="結果を確認する",url=filepath)))
 
 class TextGroup(app_commands.Group):
