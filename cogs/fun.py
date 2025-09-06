@@ -703,12 +703,11 @@ class ImageGroup(app_commands.Group):
                 ) as resp:
                     data = await resp.json()
 
-                    if not data["data"]["posts"]:
-                        return await interaction.followup.send("検索結果が見つかりませんでした。")
-
                     if data and 'data' in data:
                         for item in data['data']:
                             return await interaction.followup.send(f"{item['link']}")
+                        
+                    return await interaction.followup.send(f"結果が見つかりませんでした。")
         except:
             return await interaction.followup.send(f"検索に失敗しました。")
 
