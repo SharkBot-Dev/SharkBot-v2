@@ -234,7 +234,7 @@ class MovieGroup(app_commands.Group):
 
         def resize_image():
             img = Image.open(input_image)
-            res_img = img.resize((200, 200))
+            res_img = img.resize((300, 300))
             res_img.save(input_image, format="png")
             return
         
