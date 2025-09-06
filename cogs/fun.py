@@ -15,7 +15,9 @@ from discord import app_commands
 from consts import settings
 from models import command_disable
 import asyncio
+import uuid
 from deep_translator import GoogleTranslator
+import aiofiles.os
 
 import urllib.parse
 
@@ -198,6 +200,59 @@ def create_quote_image(
     else:
         return img.convert("L")
 
+class MovieGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="movie", description="動画生成系のコマンドです。")
+
+    @app_commands.command(name="sea", description="海の背景の動画に画像を組み合わせます。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def sea(
+        self, interaction: discord.Interaction, 画像: discord.Attachment
+    ):
+        MAX_IMAGE_SIZE = 5 * 1024 * 1024
+        if 画像.size > MAX_IMAGE_SIZE:
+            await interaction.response.send_message(
+                f"画像は最大 5MB まで対応しています。",
+                ephemeral=True
+            )
+            return
+
+        await interaction.response.defer()
+        await aiofiles.os.makedirs(f"files/static/{interaction.user.id}/", exist_ok=True)
+
+        input_video = "data/sea.mp4"
+        input_image = f"files/static/{interaction.user.id}/{uuid.uuid4()}.png"
+        output_video = f"files/static/{interaction.user.id}/{uuid.uuid4()}.mp4"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(画像.url) as resp:
+                resp.raise_for_status()
+                async with aiofiles.open(input_image, "wb") as f:
+                    await f.write(await resp.read())
+
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-i", input_video,
+            "-i", input_image,
+            "-filter_complex",
+            "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2",
+            output_video,
+        ]
+
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        stdout, stderr = await process.communicate()
+
+        filepath = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{output_video}"
+
+        await interaction.followup.send(embed=discord.Embed(title="海の背景の動画に画像を組み合わせた動画", color=discord.Color.green())
+                                        , view=discord.ui.View().add_item(discord.ui.Button(label="結果を確認する",url=filepath)))
 
 class TextGroup(app_commands.Group):
     def __init__(self):
@@ -721,6 +776,7 @@ class FunCog(commands.Cog):
     fun.add_command(TextGroup())
     fun.add_command(ImageGroup())
     fun.add_command(NounaiGroup())
+    fun.add_command(MovieGroup())
 
     @fun.command(name="janken", description="じゃんけんをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
