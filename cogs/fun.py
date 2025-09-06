@@ -555,21 +555,6 @@ class TextGroup(app_commands.Group):
 
         await interaction.response.send_modal(send())
 
-    @app_commands.command(name="hiroyuki", description="ひろゆきにメッセージを送信します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def hiroyuki(self, interaction: discord.Interaction, メッセージ: str):
-        await interaction.response.defer()
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"http://localhost:6100/",
-                    params={"text": メッセージ}
-                ) as resp:
-                    await interaction.followup.send(embed=discord.Embed(title="ひろゆき", description=await resp.text(), color=discord.Color.green()))
-        except:
-            return await interaction.followup.send(embed=discord.Embed(title="ひろゆきとの通信中にエラーが発生しました。", color=discord.Color.red()))
-
 class NounaiGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="nounai", description="脳内メーカー系の面白いコマンド")
