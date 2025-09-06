@@ -752,6 +752,7 @@ class ToolsCog(commands.Cog):
                 "noplaylist": True,
                 "quiet": True, 
                 "no_warnings": True,
+                "playlist_items": "1"
             }
 
             loop = asyncio.get_event_loop()
