@@ -21,6 +21,12 @@ from models import command_disable
 import ipaddress
 import socket
 from urllib.parse import urlparse
+import os
+import yt_dlp
+
+SOUNDCLOUD_REGEX = re.compile(
+    r'^(https?://)?(www\.)?(soundcloud\.com|on\.soundcloud\.com)/.+'
+)
 
 ipv4_pattern = re.compile(
     r"^("
@@ -704,6 +710,78 @@ class ToolsCog(commands.Cog):
             ),
         )
 
+    async def choice_download_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        current: str,
+    ):
+        choices = [
+            app_commands.Choice(name=f, value=f)
+            for f in ["SoundCloud"] if current.lower() in f.lower()
+        ]
+        return choices[:25]
+
+    @tools.command(name="download", description="ファイルをダウンロードします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.autocomplete(タイプ=choice_download_autocomplete)
+    async def download(self, interaction: discord.Interaction, タイプ: str, url: str):
+        await interaction.response.defer()
+
+        if タイプ == "SoundCloud":
+            if not SOUNDCLOUD_REGEX.match(url):
+                await interaction.followup.send("これはSoundCloudのURLではありません。", ephemeral=True)
+                return
+
+            user_dir = os.path.join("files/static", str(interaction.user.id))
+            await aiofiles.os.makedirs(user_dir, exist_ok=True)
+
+            filename = f"{uuid.uuid4()}.mp3"
+            filepath = os.path.join(user_dir, filename)
+
+            ydl_opts = {
+                "format": "bestaudio/best",
+                "outtmpl": filepath,
+                "postprocessors": [
+                    {  
+                        "key": "FFmpegExtractAudio",
+                        "preferredcodec": "mp3",
+                        "preferredquality": "192",
+                    }
+                ],
+                "noplaylist": True,
+            }
+
+            loop = asyncio.get_event_loop()
+            def run_ydl():
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    return ydl.extract_info(url, download=True)
+
+            try:
+                await loop.run_in_executor(None, run_ydl)
+            except Exception as e:
+                await interaction.followup.send(f"❌ ダウンロードに失敗しました: `{e}`")
+                return
+
+            download_url = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{filename}"
+
+            view = discord.ui.View()
+            view.add_item(discord.ui.Button(label="結果を確認する", url=download_url))
+
+            embed = discord.Embed(
+                title="ファイルをダウンロードしました。",
+                description="一日の終わりにファイルが削除されます。",
+                color=discord.Color.green()
+            )
+
+            await interaction.followup.send(embed=embed, view=view)
+
+        else:
+            embed = discord.Embed(
+                title="タイプが見つかりません。",
+                color=discord.Color.red()
+            )
+            await interaction.followup.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(ToolsCog(bot))
