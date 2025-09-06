@@ -746,7 +746,7 @@ class ToolsCog(commands.Cog):
                         class IrasutoyaView(discord.ui.LayoutView):
                             container = discord.ui.Container(
                                 discord.ui.TextDisplay(
-                                    f"### いらすとや",
+                                    f"### ダウンロード",
                                 ),
                                 discord.ui.Separator(),
                                 discord.ui.MediaGallery(
