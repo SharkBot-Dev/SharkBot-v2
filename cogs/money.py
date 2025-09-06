@@ -309,8 +309,10 @@ class GachaGroup(app_commands.Group):
         self, interaction: discord.Interaction, ファイル: discord.Attachment
     ):
         await interaction.response.defer()
-        
-        res = json.loads(await ファイル.read())
+        try:
+            res = json.loads(await ファイル.read())
+        except:
+            return await interaction.followup.send(embed=discord.Embed(title="Json読み込みに失敗しました。", color=discord.Color.red()))
 
         db = interaction.client.async_db["Main"].ServerMoneyGacha
 
