@@ -3,6 +3,7 @@ import discord
 import random
 import time
 from discord import app_commands
+import io
 import json
 
 user_last_message_time_work = {}
@@ -345,6 +346,50 @@ class GachaGroup(app_commands.Group):
                 title="ガチャをインポートしました。", color=discord.Color.green()
             )
         )
+
+    @app_commands.command(
+        name="export", description="ガチャをjsonにエクスポートします。"
+    )
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def economy_gacha_json_export(
+        self, interaction: discord.Interaction, ガチャ名: str
+    ):
+        await interaction.response.defer()
+        db = interaction.client.async_db["Main"].ServerMoneyGacha
+        dbfind = await db.find_one(
+            {"Guild": interaction.guild.id, "Name": ガチャ名}, {"_id": False}
+        )
+        if dbfind is None:
+            return await interaction.followup.send(
+                ephemeral=True, content="ガチャが見つかりません。"
+            )
+        
+        if dbfind.get("Item", []) == []:
+            return await interaction.followup.send(
+                embed=discord.Embed(title="アイテムの無いガチャはエクスポートできません。", color=discord.Color.red())
+            )
+        
+        js = {}
+        js['Name'] = ガチャ名
+        js['Text'] = dbfind.get('Text', 'ガチャ説明')
+        js['Money'] = dbfind.get('Money', 0)
+
+        i_ = []
+        for i_n in dbfind.get('Item', []):
+
+            sm = await Money(interaction.client).get_server_items(
+                interaction.guild, i_n.get('Name')
+            )
+            if sm:
+                i_.append({'Name': i_n, 'Money': sm.get('Money')})
+
+        js['Item'] = i_
+
+        s = io.StringIO(json.dumps(js))
+
+        await interaction.followup.send(file=discord.File(s, "gacha.json"))
+        s.close()
 
     @app_commands.command(
         name="multi-add",
