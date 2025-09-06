@@ -233,12 +233,12 @@ class MovieGroup(app_commands.Group):
                     await f.write(await resp.read())
 
         cmd = [
-            "ffmpeg", "-y",
+            "ffmpeg",
+            "-y",
             "-i", input_video,
             "-i", input_image,
             "-filter_complex",
-            "[1][0]scale2ref=iw*min(1\\,min(W/iw\\,H/ih)):ih*min(1\\,min(W/iw\\,H/ih))[img][vid];"
-            "[vid][img]overlay=(W-w)/2:(H-h)/2",
+            "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2",
             output_video,
         ]
 
