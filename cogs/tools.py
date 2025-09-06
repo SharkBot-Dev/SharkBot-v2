@@ -28,7 +28,7 @@ SOUNDCLOUD_REGEX = re.compile(
     r'^(https?://)?(www\.)?(soundcloud\.com|on\.soundcloud\.com)/.+'
 )
 
-IRASUTOTA_REGEX = re.compile(r'https://www.irasutoya.com/.+/.+/.+.html')
+IRASUTOTA_REGEX = re.compile(r'https://www\.irasutoya\.com/.+/.+/.+\.html')
 
 ipv4_pattern = re.compile(
     r"^("
