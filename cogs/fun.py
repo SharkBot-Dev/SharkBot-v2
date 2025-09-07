@@ -21,6 +21,27 @@ import aiofiles.os
 
 import urllib.parse
 
+class EditImageView(discord.ui.View):
+    def __init__(self, user: discord.User):
+        super().__init__(timeout=180)
+        self.user = user
+    
+    @discord.ui.button(label="ネガポジ反転", style=discord.ButtonStyle.blurple)
+    async def negapoji(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.user.id:
+            return
+        
+        await interaction.response.defer(ephemeral=True)
+        file = io.BytesIO(await interaction.message.attachments[0].read())
+        image = await asyncio.to_thread(Image.open, file)
+        image = await asyncio.to_thread(image.convert, 'RGB')
+        imv = await asyncio.to_thread(ImageOps.invert, image)
+        i = io.BytesIO()
+        await asyncio.to_thread(imv.save, i, format="png")
+        await interaction.message.edit(file=discord.File(i, "emoji.png"))
+        file.close()
+        i.close()
+
 ASCII_CHARS = "@%#*+=-:. "
 
 
@@ -688,7 +709,7 @@ class ImageGroup(app_commands.Group):
                 f"https://emoji-gen.ninja/emoji?align=center&back_color=00000000&color={色.value.upper()}FF&font=notosans-mono-bold&locale=ja&public_fg=true&size_fixed=true&stretch=true&text={テキスト}"
             ) as resp:
                 i = io.BytesIO(await resp.read())
-                await interaction.followup.send(file=discord.File(i, "emoji.png"))
+                await interaction.followup.send(file=discord.File(i, "emoji.png"), view=EditImageView(interaction.user))
                 i.close()
 
     @app_commands.command(name="httpcat", description="httpキャットを取得します。")
