@@ -806,6 +806,27 @@ class ManageGroup(app_commands.Group):
             )
         )
 
+    @app_commands.command(name="chatmoney", description="会話するたびにお金がもらえるようにします。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def economy_manage_chatmoney(
+        self, interaction: discord.Interaction, 金額: int = None
+    ):
+        db = interaction.client.async_db["Main"].ServerChatMoney
+        if not 金額:
+            await db.delete_one({"Guild": interaction.guild.id})
+            return await interaction.response.send_message(embed=discord.Embed(title="会話をしてもお金をもらえなくしました。", color=discord.Color.red()))
+
+        await db.replace_one(
+            {"Guild": interaction.guild.id, "Money": 金額},
+            {
+                "Guild": interaction.guild.id, "Money": 金額
+            },
+            upsert=True,
+        )
+
+        await interaction.response.send_message(embed=discord.Embed(title="会話するたびに、お金がもらえるようにしました。", description=f"{金額}コインです。", color=discord.Color.green()))
 
 class ItemGroup(app_commands.Group):
     def __init__(self):
@@ -868,6 +889,24 @@ class ServerMoneyCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         print("init -> ServerMoneyCog")
+
+    @commands.Cog.listener("on_message")
+    async def on_message_chatmoney(self, message: discord.Message):
+        if message.author.bot or not message.guild:
+            return
+        
+        db = self.bot.async_db["Main"].ServerChatMoney
+        try:
+            dbfind = await db.find_one({"Guild": message.guild.id}, {"_id": False})
+        except Exception:
+            return
+        
+        if dbfind is None:
+            return
+        
+        await Money(self.bot).add_server_money(
+            message.guild, message.author, dbfind.get('Money', 0)
+        )
 
     server_economy = app_commands.Group(
         name="economy", description="サーバー内の経済機能"
