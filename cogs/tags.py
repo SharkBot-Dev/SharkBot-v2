@@ -127,7 +127,15 @@ class TagsCog(commands.Cog):
         doc = await db_tags.find_one({"guild_id": message.guild.id, "command": cmd_name})
         if doc:
             ts_script = doc["tagscript"]
-            response = self.engine.process(ts_script, {"args": tse.StringAdapter(args)})
+            response = self.engine.process(ts_script,     {
+                "args": tse.StringAdapter(args),        # ユーザーが入力した引数
+                "author": tse.StringAdapter(str(message.author)),  # 実行者の名前
+                "author_id": tse.StringAdapter(str(message.author.id)),  # 実行者の名前
+                "guild": tse.StringAdapter(str(message.guild.name)), # サーバーの名前
+                "channel": tse.StringAdapter(str(message.channel.name)),  # チャンネルの名前
+                "guild_id": tse.StringAdapter(str(message.guild.id)),  # サーバーの名前
+                "channel_id": tse.StringAdapter(str(message.channel.id)),  # サーバーの名前
+            })
             await message.channel.send(response.body)
 
     @commands.Cog.listener()
