@@ -16,13 +16,13 @@ import aiofiles.os
 from html2image import Html2Image
 import pyshorteners
 from discord import app_commands
+from PIL import Image
 from consts import badword
 from models import command_disable
 import ipaddress
 import socket
 from urllib.parse import urlparse
-import os
-import yt_dlp
+import pyzbar.pyzbar
 
 SOUNDCLOUD_REGEX = re.compile(
     r'^(https?://)?(www\.)?(soundcloud\.com|on\.soundcloud\.com)/.+'
@@ -612,17 +612,45 @@ class ToolsCog(commands.Cog):
             )
         )
 
-    @tools.command(name="qr", description="qrコードを作成します。")
+    @tools.command(name="qr", description="qrコードを作成・読み取りをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def qrcode_make(self, interaction: discord.Interaction, url: str):
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title="QRコード作成", color=discord.Color.green()
-            ).set_image(
-                url=f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={url}"
-            )
-        )
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="作成", value="create"),
+            app_commands.Choice(name="読み取り", value="read"),
+        ]
+    )
+    async def qrcode_make(self, interaction: discord.Interaction, 操作: app_commands.Choice[str], Qrコード: discord.Attachment = None):
+        if 操作.value == "create":
+            class CreateModal(discord.ui.Modal, title="QRコード作成"):
+                url = discord.ui.TextInput(
+                    label="URLを入力",
+                    required=True,
+                    style=discord.TextStyle.short,
+                )
+
+                async def on_submit(self, interaction_: discord.Interaction):
+                    await interaction_.response.send_message(
+                        embed=discord.Embed(
+                            title="QRコード作成", color=discord.Color.green()
+                        ).set_image(
+                            url=f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={self.url.value}"
+                        )
+                    )
+            await interaction.response.send_modal(CreateModal())
+        elif 操作.value == "read":
+            await interaction.response.defer()
+            i_ = io.BytesIO(await Qrコード.read())
+            img = await asyncio.to_thread(Image.open, i_)
+            decoded_objects = await asyncio.to_thread(pyzbar.pyzbar.decode, img)
+            if not decoded_objects:
+                await interaction.followup.send("QRコードが見つかりませんでした。")
+                return
+            results = [obj.data.decode("utf-8") for obj in decoded_objects]
+            await interaction.followup.send(embed=discord.Embed(title="QRコード読み取り結果", description=f"```{results}```", color=discord.Color.green()))
+            i_.close()
+            await asyncio.to_thread(img.close)
 
     @tools.command(name="weather", description="天気を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
