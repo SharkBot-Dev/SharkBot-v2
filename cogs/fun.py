@@ -52,9 +52,9 @@ class EditImageView(discord.ui.View):
         await interaction.message.edit(view=None)
 
     @discord.ui.select(options=[
-        discord.SelectOption(label="45°", value='45'),
         discord.SelectOption(label="90°", value='90'),
-        discord.SelectOption(label="135°", value='135'),
+        discord.SelectOption(label="180°", value='180'),
+        discord.SelectOption(label="270°", value='270'),
     ], max_values=1, min_values=1, placeholder="回転する")
     async def kaiten(self, interaction: discord.Interaction, select: discord.ui.Select):
         await interaction.response.defer(ephemeral=True)
