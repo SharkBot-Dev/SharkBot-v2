@@ -30,6 +30,8 @@ class TagsCog(commands.Cog):
         ])
         print("init -> TagsCog")
 
+    """
+
     tag = app_commands.Group(
         name="tag", description="タグスクリプトを設定します。"
     )
@@ -156,6 +158,8 @@ class TagsCog(commands.Cog):
         if isinstance(error, commands.CommandNotFound):
             a = None
             return a
+
+    """
 
 async def setup(bot):
     await bot.add_cog(TagsCog(bot))
