@@ -266,7 +266,7 @@ class AchievementCog(commands.Cog):
         db = self.bot.async_db["Main"].AchievementsChannel
         if チャンネル:
             await db.replace_one(
-                {"Guild": interaction.guild.id, "Channel": チャンネル.id},
+                {"Guild": interaction.guild.id},
                 {"Guild": interaction.guild.id, "Channel": チャンネル.id},
                 upsert=True,
             )
