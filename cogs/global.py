@@ -530,11 +530,6 @@ class GlobalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_register(self, interaction: discord.Interaction, 説明: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].Register
 
         try:
@@ -572,7 +567,7 @@ class GlobalCog(commands.Cog):
             },
             upsert=True,
         )
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=discord.Embed(
                 title="サーバーを掲載しました。", color=discord.Color.green()
             )
