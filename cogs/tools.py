@@ -649,7 +649,7 @@ class ToolsCog(commands.Cog):
             if not decoded_objects:
                 await interaction.followup.send("QRコードが見つかりませんでした。")
                 return
-            results = [obj.data.decode("utf-8") for obj in decoded_objects]
+            results = '\n'.join([obj.data.decode("utf-8") for obj in decoded_objects])
             await interaction.followup.send(embed=discord.Embed(title="QRコード読み取り結果", description=f"```{results}```", color=discord.Color.green()))
             i_.close()
             await asyncio.to_thread(img.close)
