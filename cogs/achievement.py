@@ -106,6 +106,12 @@ class AchievementCog(commands.Cog):
                             "Name": achi.get("Name"),
                         }
                     )
+
+                    if achi.get('Role', 0) != 0:
+                        role = message.guild.get_role(achi.get('Role', 0))
+                        if role != None:
+                            await message.author.add_roles(role)
+
                     try:
                         await self.send_channel(message, achi)
                     except:
@@ -145,10 +151,18 @@ class AchievementCog(commands.Cog):
                     await self.bot.async_db["Main"].AchievementsAchi.insert_one(
                         {"User": user.id, "Guild": guild.id, "Name": achi.get("Name")}
                     )
+
+                    if achi.get('Role', 0) != 0:
+                        role = reaction.message.guild.get_role(achi.get('Role', 0))
+                        if role != None:
+                            await reaction.message.guild.get_member(user.id).add_roles(role)
+
                     try:
                         await self.send_reaction_channel(reaction.message, user, achi)
                     except:
                         pass
+
+                    await asyncio.sleep(1)
 
     achievement = app_commands.Group(
         name="achievement", description="実績関連のコマンドです。"
@@ -192,6 +206,7 @@ class AchievementCog(commands.Cog):
         実績名: str,
         値: int,
         をする: app_commands.Choice[str],
+        ロール: discord.Role = None
     ):
         if not await self.check_achi_enabled(interaction.guild):
             return await interaction.response.send_message(
@@ -206,6 +221,7 @@ class AchievementCog(commands.Cog):
                 "Name": 実績名,
                 "Value": 値,
                 "If": をする.value,
+                "Role": ロール.id if ロール else 0
             },
             upsert=True,
         )
