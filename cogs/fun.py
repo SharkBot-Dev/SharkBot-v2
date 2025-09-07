@@ -38,7 +38,7 @@ class EditImageView(discord.ui.View):
         imv = await asyncio.to_thread(ImageOps.invert, image)
         i = io.BytesIO()
         await asyncio.to_thread(imv.save, i, format="png")
-        await interaction.message.edit(file=discord.File(i, "emoji.png"))
+        await interaction.message.edit(attachments=[discord.File(i, "emoji.png")])
         file.close()
         i.close()
 
