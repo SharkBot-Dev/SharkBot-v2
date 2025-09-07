@@ -231,8 +231,7 @@ class RoleCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def role_can_bot(self, interaction: discord.Interaction, ロール: discord.Role):
-        role = await interaction.guild.fetch_roles()
-        await interaction.response.send_message(embed=discord.Embed(title="そのロールを扱える？", description=f"{'✅はい' if ロール.is_assignable() else '❌いいえ'}\n\nいいえと表示された場合は、\nこのBotのロールの下にそのロールを持っていこう。"))
+        await interaction.response.send_message(embed=discord.Embed(title="そのロールを扱える？", color=discord.Color.green(), description=f"{'✅はい' if ロール.is_assignable() else '❌いいえ'}\n\nいいえと表示された場合は、\nこのBotのロールの下にそのロールを持っていこう。"))
 
 async def setup(bot):
     await bot.add_cog(RoleCog(bot))
