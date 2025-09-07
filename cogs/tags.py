@@ -131,6 +131,11 @@ class TagsCog(commands.Cog):
             response = self.engine.process(ts_script, {"args": tse.StringAdapter(args)})
             await message.channel.send(response.body)
 
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx: commands.Context, error):
+        if isinstance(error, commands.CommandNotFound):
+            a = None
+            return a
 
 async def setup(bot):
     await bot.add_cog(TagsCog(bot))
