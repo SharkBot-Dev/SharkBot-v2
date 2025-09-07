@@ -640,6 +640,8 @@ class ToolsCog(commands.Cog):
                     )
             await interaction.response.send_modal(CreateModal())
         elif 操作.value == "read":
+            if not qrコード:
+                return await interaction.response.send_message(ephemeral=True, content="Qrコードを添付してください。")
             await interaction.response.defer()
             i_ = io.BytesIO(await qrコード.read())
             img = await asyncio.to_thread(Image.open, i_)
