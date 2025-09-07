@@ -38,9 +38,18 @@ class EditImageView(discord.ui.View):
         imv = await asyncio.to_thread(ImageOps.invert, image)
         i = io.BytesIO()
         await asyncio.to_thread(imv.save, i, format="png")
+        i.seek(0)
         await interaction.message.edit(attachments=[discord.File(i, "emoji.png")])
         file.close()
         i.close()
+
+    @discord.ui.button(emoji="💾", style=discord.ButtonStyle.blurple)
+    async def save(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.user.id:
+            return
+        
+        await interaction.response.defer(ephemeral=True)
+        await interaction.message.edit(view=None)
 
 ASCII_CHARS = "@%#*+=-:. "
 
