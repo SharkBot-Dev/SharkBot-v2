@@ -88,8 +88,7 @@ class TagsCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tags_list(
         self,
-        interaction: discord.Interaction,
-        名前: str
+        interaction: discord.Interaction
     ):
         db_tags = self.bot.async_db["Main"].Tags
         cursor = db_tags.find({"guild_id": interaction.guild.id})
