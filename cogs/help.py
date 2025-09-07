@@ -69,13 +69,6 @@ class HelpCog(commands.Cog):
                         custom_id="help_next",
                     )
                 )
-                self.add_item(
-                    discord.ui.Button(
-                        label="カスタムコマンド",
-                        style=discord.ButtonStyle.red,
-                        custom_id="help_custom",
-                    )
-                )
 
             async def interaction_check(self, interaction: discord.Interaction) -> bool:
                 try:
