@@ -25,7 +25,6 @@ class TagsCog(commands.Cog):
             tse.ShortCutRedirectBlock("args"),
             tse.LooseVariableGetterBlock(),
             tse.SubstringBlock(),
-            tse.EmbedBlock(),
             tse.ReplaceBlock(),
             tse.URLEncodeBlock(),
         ])
