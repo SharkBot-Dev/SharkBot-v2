@@ -1,8 +1,11 @@
+import time
 import discord
 from discord.ext import commands
 from discord import app_commands
 import TagScriptEngine as tse
 from consts import badword
+
+cooldown_tags = {}
 
 class TagsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -131,6 +134,12 @@ class TagsCog(commands.Cog):
         db_tags = self.bot.async_db["Main"].Tags
         doc = await db_tags.find_one({"guild_id": message.guild.id, "command": cmd_name})
         if doc:
+            current_time = time.time()
+            last_message_time = cooldown_tags.get(message.guild.id, 0)
+            if current_time - last_message_time < 3:
+                return
+            cooldown_tags[message.guild.id] = current_time
+
             ts_script = doc["tagscript"]
             response = self.engine.process(ts_script,     {
                 "args": tse.StringAdapter(args),        # ユーザーが入力した引数
