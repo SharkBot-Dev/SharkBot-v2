@@ -90,9 +90,14 @@ class TagsCog(commands.Cog):
         self,
         interaction: discord.Interaction
     ):
+
+        db_prefix = self.bot.async_db["DashboardBot"].CustomPrefixBot
+        doc = await db_prefix.find_one({"Guild": interaction.guild.id})
+        PREFIX = doc.get('Prefix', '!.') if doc else '!.'
+
         db_tags = self.bot.async_db["Main"].Tags
         cursor = db_tags.find({"guild_id": interaction.guild.id})
-        tags = [doc["command"] async for doc in cursor]
+        tags = [PREFIX + doc["command"] async for doc in cursor]
 
         if not tags:
             return await interaction.response.send_message("このサーバーにはタグが登録されていません。")
