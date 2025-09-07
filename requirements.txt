@@ -79,3 +79,4 @@ aiohttp_socks
 html2image
 ossapi[async]
 sentence_transformers
+pyzbar

@@ -621,7 +621,7 @@ class ToolsCog(commands.Cog):
             app_commands.Choice(name="読み取り", value="read"),
         ]
     )
-    async def qrcode_make(self, interaction: discord.Interaction, 操作: app_commands.Choice[str], Qrコード: discord.Attachment = None):
+    async def qrcode_make(self, interaction: discord.Interaction, 操作: app_commands.Choice[str], qrコード: discord.Attachment = None):
         if 操作.value == "create":
             class CreateModal(discord.ui.Modal, title="QRコード作成"):
                 url = discord.ui.TextInput(
@@ -641,7 +641,7 @@ class ToolsCog(commands.Cog):
             await interaction.response.send_modal(CreateModal())
         elif 操作.value == "read":
             await interaction.response.defer()
-            i_ = io.BytesIO(await Qrコード.read())
+            i_ = io.BytesIO(await qrコード.read())
             img = await asyncio.to_thread(Image.open, i_)
             decoded_objects = await asyncio.to_thread(pyzbar.pyzbar.decode, img)
             if not decoded_objects:
