@@ -13,11 +13,11 @@ class StarBoardCog(commands.Cog):
         self.bot = bot
         print("init -> StarBoardCog")
 
-    async def get_reaction_channel(self, guild: discord.Guild, emoji: str):
+    async def get_reaction_channel(self, guild: discord.Guild, emoji: discord.PartialEmoji):
         db = self.bot.async_db["Main"].ReactionBoard
         try:
             dbfind = await db.find_one(
-                {"Guild": guild.id, "Emoji": str(emoji)}, {"_id": False}
+                {"Guild": guild.id, "Emoji": emoji.__str__()}, {"_id": False}
             )
         except Exception:
             return None
@@ -153,10 +153,6 @@ class StarBoardCog(commands.Cog):
         if not guild:
             return
         
-        member = guild.get_member(payload.user_id)
-        if not member or member.bot:
-            return
-        
         check = await self.get_reaction_channel(guild, payload.emoji)
         if not check:
             return
@@ -172,7 +168,7 @@ class StarBoardCog(commands.Cog):
             return
 
         message = await channel.fetch_message(payload.message_id)
-        await self.reaction_add(message, payload.emoji)
+        await self.reaction_add(message, payload.emoji.__str__())
 
     @commands.Cog.listener("on_raw_reaction_remove")
     async def on_reaction_remove_reaction_board(
@@ -182,10 +178,6 @@ class StarBoardCog(commands.Cog):
         if not guild:
             return
 
-        member = guild.get_member(payload.user_id)
-        if not member or member.bot:
-            return
-
         check = await self.get_reaction_channel(guild, payload.emoji)
         if not check:
             return
@@ -201,7 +193,7 @@ class StarBoardCog(commands.Cog):
             return
 
         message = await channel.fetch_message(payload.message_id)
-        await self.reaction_add_2(message, payload.emoji)
+        await self.reaction_add_2(message, payload.emoji.__str__())
 
     async def set_reaction_board(
         self,
@@ -211,14 +203,14 @@ class StarBoardCog(commands.Cog):
     ):
         db = self.bot.async_db["Main"].ReactionBoard
         await db.replace_one(
-            {"Guild": interaction.guild.id, "Emoji": 絵文字, "Channel": チャンネル.id},
+            {"Guild": interaction.guild.id, "Channel": チャンネル.id},
             {"Guild": interaction.guild.id, "Channel": チャンネル.id, "Emoji": 絵文字},
             upsert=True,
         )
 
     async def delete_reaction_board(self, interaction: discord.Interaction):
         db = self.bot.async_db["Main"].ReactionBoard
-        await db.delete_one({"Guild": interaction.channel.id})
+        await db.delete_one({"Channel": interaction.channel.id})
 
     starboard = app_commands.Group(
         name="starboard", description="スターボードのコマンドです。"
