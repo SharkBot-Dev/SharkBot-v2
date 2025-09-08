@@ -11,7 +11,15 @@ class FreeChannelModal(discord.ui.Modal):
         text="チャンネル名を入力",
         description="チャンネル名を入力してください。",
         component=discord.ui.TextInput(
-            style=discord.TextStyle.short, max_length=15, required=True
+            style=discord.TextStyle.short, max_length=20, required=True
+        ),
+    )
+
+    channeldesc = discord.ui.Label(
+        text="チャンネル説明を入力",
+        description="チャンネル説明を入力してください。",
+        component=discord.ui.TextInput(
+            style=discord.TextStyle.long, required=True, default="フリーチャンネル機能で作成されたチャンネルです。"
         ),
     )
 
@@ -33,6 +41,7 @@ class FreeChannelModal(discord.ui.Modal):
 
         assert isinstance(self.channeltype.component, discord.ui.Select)
         assert isinstance(self.channelname.component, discord.ui.TextInput)
+        assert isinstance(self.channeldesc.component, discord.ui.TextInput)
 
         db = interaction.client.async_db["Main"].FreeChannelCategory
         try:
@@ -58,12 +67,14 @@ class FreeChannelModal(discord.ui.Modal):
                     name=self.channelname.component.value,
                     nsfw=nsfw,
                     overwrites=overwrites,
+                    topic=self.channeldesc.component.value
                 )
             else:
                 channel = await interaction.guild.create_text_channel(
                     name=self.channelname.component.value,
                     nsfw=nsfw,
                     overwrites=overwrites,
+                    topic=self.channeldesc.component.value
                 )
         else:
             ch = interaction.guild.get_channel(dbfind.get("Channel", 0))
@@ -72,6 +83,7 @@ class FreeChannelModal(discord.ui.Modal):
                     name=self.channelname.component.value,
                     nsfw=nsfw,
                     overwrites=overwrites,
+                    topic=self.channeldesc.component.value
                 )
             else:
                 return
