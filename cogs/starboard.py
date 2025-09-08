@@ -224,7 +224,7 @@ class StarBoardCog(commands.Cog):
         self,
         interaction: discord.Interaction,
         チャンネル: discord.TextChannel,
-        絵文字: str,
+        絵文字: str = "⭐",
     ):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(
