@@ -19,7 +19,7 @@ class FreeChannelModal(discord.ui.Modal):
         text="チャンネル説明を入力",
         description="チャンネル説明を入力してください。",
         component=discord.ui.TextInput(
-            style=discord.TextStyle.long, required=True, default="フリーチャンネル機能で作成されたチャンネルです。"
+            style=discord.TextStyle.long, required=True, default="フリーチャンネル機能で作成されたチャンネルです。", max_length=100
         ),
     )
 
