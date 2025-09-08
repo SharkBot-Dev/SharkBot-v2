@@ -17,11 +17,11 @@ class StarBoardCog(commands.Cog):
         db = self.bot.async_db["Main"].ReactionBoard
         try:
             dbfind = await db.find_one(
-                {"Guild": guild.id, "Emoji": emoji}, {"_id": False}
+                {"Guild": guild.id, "Emoji": str(emoji)}, {"_id": False}
             )
-        except:
+        except Exception:
             return None
-        if dbfind is None:
+        if not dbfind:
             return None
         return self.bot.get_channel(dbfind["Channel"])
 
@@ -29,111 +29,121 @@ class StarBoardCog(commands.Cog):
         db = self.bot.async_db["Main"].ReactionBoard
         try:
             dbfind = await db.find_one({"Guild": guild.id}, {"_id": False})
-        except:
+        except Exception:
             return None
-        if dbfind is None:
+        if not dbfind:
             return None
         return self.bot.get_channel(dbfind["Channel"])
 
-    async def save_message(self, message: discord.Message, msg: discord.Message):
+    async def save_message(self, original: discord.Message, board_msg: discord.Message):
         db = self.bot.async_db["Main"].ReactionBoardMessage
         await db.replace_one(
-            {"Guild": message.guild.id},
-            {"Guild": message.guild.id, "ID": message.id, "ReactMessageID": msg.id},
+            {"Guild": original.guild.id},
+            {"Guild": original.guild.id, "ID": original.id, "ReactMessageID": board_msg.id},
             upsert=True,
         )
 
-    async def read_message(self, message: discord.Message):
+    async def read_message(self, original: discord.Message):
         db = self.bot.async_db["Main"].ReactionBoardMessage
         try:
             dbfind = await db.find_one(
-                {"Guild": message.guild.id, "ReactMessageID": message.id},
+                {"Guild": original.guild.id, "ID": original.id},
                 {"_id": False},
             )
-        except:
+        except Exception:
             return None
-        if dbfind is None:
+        if not dbfind:
             return None
-        return dbfind["ID"]
+        return dbfind["ReactMessageID"]
 
     async def reaction_add(self, message: discord.Message, emoji_: str):
-        reaction_counts = {}
-        for reaction in message.reactions:
-            emoji = reaction.emoji
-            count = reaction.count
-            reaction_counts[emoji] = count
-        if reaction_counts:
-            for emoji, count in reaction_counts.items():
-                if emoji == emoji_:
-                    if count == 1:
-                        cha = await self.get_reaction_channel(message.guild, emoji_)
-                        msg = await cha.send(
-                            embed=discord.Embed(
-                                title=f"{emoji}x1",
-                                description=f"{message.content}",
-                                color=discord.Color.blue(),
-                            ).set_author(
-                                name=message.author.name,
-                                icon_url=message.author.avatar.url
-                                if message.author.avatar
-                                else message.author.default_avatar.url,
-                            ),
-                            view=discord.ui.View().add_item(
-                                discord.ui.Button(
-                                    label="メッセージに飛ぶ", url=message.jump_url
-                                )
-                            ),
-                        )
-                        await self.save_message(msg, message)
-                    else:
-                        cha = await self.get_channel(message.guild)
-                        msg = await self.read_message(message)
-                        try:
-                            m = await cha.fetch_message(msg)
-                        except:
-                            return
-                        msg = await m.edit(
-                            embed=discord.Embed(
-                                title=f"{emoji}x{count}",
-                                description=f"{message.content}",
-                                color=discord.Color.blue(),
-                            ).set_author(
-                                name=message.author.name,
-                                icon_url=message.author.avatar.url
-                                if message.author.avatar
-                                else message.author.default_avatar.url,
-                            )
-                        )
-                    return
+        """リアクション追加時の処理"""
+        reaction_counts = {r.emoji: r.count for r in message.reactions}
+
+        if emoji_ not in reaction_counts:
+            return
+
+        count = reaction_counts[emoji_]
+        cha = await self.get_reaction_channel(message.guild, emoji_)
+        if not cha:
+            return
+
+        if count == 1:
+            board_msg = await cha.send(
+                embed=discord.Embed(
+                    title=f"{emoji_}x1",
+                    description=message.content,
+                    color=discord.Color.blue(),
+                ).set_author(
+                    name=message.author.name,
+                    icon_url=message.author.avatar.url
+                    if message.author.avatar
+                    else message.author.default_avatar.url,
+                ),
+                view=discord.ui.View().add_item(
+                    discord.ui.Button(label="メッセージに飛ぶ", url=message.jump_url)
+                ),
+            )
+            await self.save_message(message, board_msg)
+        else:
+            cha = await self.get_channel(message.guild)
+            msg_id = await self.read_message(message)
+            if not msg_id:
+                return
+            try:
+                m = await cha.fetch_message(msg_id)
+            except discord.NotFound:
+                return
+            await m.edit(
+                embed=discord.Embed(
+                    title=f"{emoji_}x{count}",
+                    description=message.content,
+                    color=discord.Color.blue(),
+                ).set_author(
+                    name=message.author.name,
+                    icon_url=message.author.avatar.url
+                    if message.author.avatar
+                    else message.author.default_avatar.url,
+                )
+            )
 
     async def reaction_add_2(self, message: discord.Message, emoji_: str):
-        reaction_counts = {}
-        for reaction in message.reactions:
-            emoji = reaction.emoji
-            count = reaction.count
-            reaction_counts[emoji] = count
-        if reaction_counts:
-            for emoji, count in reaction_counts.items():
-                if emoji == emoji_:
-                    cha = await self.get_channel(message.guild)
-                    msg = await self.read_message(message)
-                    try:
-                        m = await cha.fetch_message(msg)
-                    except:
-                        return
-                    msg = await m.edit(
-                        embed=discord.Embed(
-                            title=f"{emoji}x{count}",
-                            description=f"{message.content}",
-                            color=discord.Color.blue(),
-                        ).set_author(
-                            name=message.author.name,
-                            icon_url=message.author.avatar.url
-                            if message.author.avatar
-                            else message.author.default_avatar.url,
-                        )
-                    )
-                    return
+        """リアクション削除時の処理"""
+        reaction_counts = {r.emoji: r.count for r in message.reactions}
+
+        if emoji_ not in reaction_counts:
+            cha = await self.get_channel(message.guild)
+            msg_id = await self.read_message(message)
+            if not msg_id:
+                return
+            try:
+                m = await cha.fetch_message(msg_id)
+            except discord.NotFound:
+                return
+            await m.delete()
+            return
+
+        count = reaction_counts[emoji_]
+        cha = await self.get_channel(message.guild)
+        msg_id = await self.read_message(message)
+        if not msg_id:
+            return
+        try:
+            m = await cha.fetch_message(msg_id)
+        except discord.NotFound:
+            return
+        await m.edit(
+            embed=discord.Embed(
+                title=f"{emoji_}x{count}",
+                description=message.content,
+                color=discord.Color.blue(),
+            ).set_author(
+                name=message.author.name,
+                icon_url=message.author.avatar.url
+                if message.author.avatar
+                else message.author.default_avatar.url,
+            )
+        )
 
     @commands.Cog.listener("on_raw_reaction_add")
     async def on_reaction_add_reaction_board(
@@ -142,23 +152,27 @@ class StarBoardCog(commands.Cog):
         guild = self.bot.get_guild(payload.guild_id)
         if not guild:
             return
-        if not payload.member or payload.member.bot:
+        
+        member = guild.get_member(payload.user_id)
+        if not member or member.bot:
+            return
+        
+        check = await self.get_reaction_channel(guild, payload.emoji)
+        if not check:
             return
 
-        check = await self.get_reaction_channel(guild, payload.emoji)
-        if check:
-            current_time = time.time()
-            last_message_time = cooldown_reaction.get(payload.guild_id, 0)
-            if current_time - last_message_time < 1:
-                return
+        current_time = time.time()
+        last_message_time = cooldown_reaction.get(payload.guild_id, 0)
+        if current_time - last_message_time < 1:
+            return
+        cooldown_reaction[payload.guild_id] = current_time
 
-            cooldown_reaction[payload.guild_id] = current_time
-            channel = guild.get_channel(payload.channel_id)
-            if not channel:
-                return
+        channel = guild.get_channel(payload.channel_id)
+        if not channel:
+            return
 
-            message = await channel.fetch_message(payload.message_id)
-            await self.reaction_add(message, payload.emoji)
+        message = await channel.fetch_message(payload.message_id)
+        await self.reaction_add(message, payload.emoji)
 
     @commands.Cog.listener("on_raw_reaction_remove")
     async def on_reaction_remove_reaction_board(
@@ -173,19 +187,21 @@ class StarBoardCog(commands.Cog):
             return
 
         check = await self.get_reaction_channel(guild, payload.emoji)
-        if check:
-            current_time = time.time()
-            last_message_time = cooldown_reaction.get(payload.guild_id, 0)
-            if current_time - last_message_time < 1:
-                return
+        if not check:
+            return
 
-            cooldown_reaction[payload.guild_id] = current_time
-            channel = guild.get_channel(payload.channel_id)
-            if not channel:
-                return
+        current_time = time.time()
+        last_message_time = cooldown_reaction.get(payload.guild_id, 0)
+        if current_time - last_message_time < 1:
+            return
+        cooldown_reaction[payload.guild_id] = current_time
 
-            message = await channel.fetch_message(payload.message_id)
-            await self.reaction_add_2(message, payload.emoji)
+        channel = guild.get_channel(payload.channel_id)
+        if not channel:
+            return
+
+        message = await channel.fetch_message(payload.message_id)
+        await self.reaction_add_2(message, payload.emoji)
 
     async def set_reaction_board(
         self,
