@@ -161,6 +161,34 @@ Sharkアカウント: {sharkaccount_count}人
 
         await interaction.followup.send(embed=embed)
 
+    @bot.command(name="faq", description="よくある質問を閲覧します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def bot_faq(self, interaction: discord.Interaction):
+        class FaqLayout(discord.ui.LayoutView):
+            container = discord.ui.Container(
+                discord.ui.TextDisplay(
+                    f"### よくある質問",
+                ),
+                discord.ui.Separator(),
+                discord.ui.TextDisplay(
+                    f"例えば、このBotはどんなことができるの？\n・グローバルチャット、グローバル宣伝でサーバー外との交流を深める\n・なんでも検索をする\n・レベル、実績システムの構築\n・様々な画像、動画、音声の作成、加工\n・ルール違反者のモデレーション\nなどなど",
+                ),
+                discord.ui.Separator(),
+                discord.ui.TextDisplay(
+                    f"Botはどうやって使うの？\nすべてスラッシュコマンド (/) で使用できます。",
+                ),
+                discord.ui.Separator(),
+                discord.ui.TextDisplay(
+                    f"その他の質問をしたいんだけど、どうすればいいの？\n以下のURLのサーバーで質問をすることができます。",
+                ),
+                discord.ui.ActionRow([
+                    discord.ui.Button(label="公式サイト", url="https://www.sharkbot.xyz/"),
+                    discord.ui.Button(label="サポートサーバー", url="https://discord.com/invite/mUyByHYMGk")
+                ]),
+                accent_colour=discord.Colour.green()
+            )
+        await interaction.response.send_message(view=FaqLayout())
 
 async def setup(bot):
     await bot.add_cog(BotCog(bot))
