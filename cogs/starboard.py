@@ -139,41 +139,53 @@ class StarBoardCog(commands.Cog):
     async def on_reaction_add_reaction_board(
         self, payload: discord.RawReactionActionEvent
     ):
-        if not payload.member:
+        guild = self.bot.get_guild(payload.guild_id)
+        if not guild:
             return
-        if payload.member.bot:
+        if not payload.member or payload.member.bot:
             return
-        if not self.bot.get_guild(payload.guild_id):
-            return
-        check = await self.get_reaction_channel(self.bot.get_guild(payload.guild_id), payload.emoji.__str__())
+
+        check = await self.get_reaction_channel(guild, payload.emoji)
         if check:
             current_time = time.time()
             last_message_time = cooldown_reaction.get(payload.guild_id, 0)
             if current_time - last_message_time < 1:
                 return
+
             cooldown_reaction[payload.guild_id] = current_time
-            message = await self.bot.get_guild(payload.guild_id).get_channel(payload.channel_id).fetch_message(payload.message_id)
-            await self.reaction_add(message, payload.emoji.__str__())
+            channel = guild.get_channel(payload.channel_id)
+            if not channel:
+                return
+
+            message = await channel.fetch_message(payload.message_id)
+            await self.reaction_add(message, payload.emoji)
 
     @commands.Cog.listener("on_raw_reaction_remove")
     async def on_reaction_remove_reaction_board(
         self, payload: discord.RawReactionActionEvent
     ):
-        if not payload.member:
+        guild = self.bot.get_guild(payload.guild_id)
+        if not guild:
             return
-        if payload.member.bot:
+
+        member = guild.get_member(payload.user_id)
+        if not member or member.bot:
             return
-        if not self.bot.get_guild(payload.guild_id):
-            return
-        check = await self.get_reaction_channel(self.bot.get_guild(payload.guild_id), payload.emoji.__str__())
+
+        check = await self.get_reaction_channel(guild, payload.emoji)
         if check:
             current_time = time.time()
             last_message_time = cooldown_reaction.get(payload.guild_id, 0)
             if current_time - last_message_time < 1:
                 return
+
             cooldown_reaction[payload.guild_id] = current_time
-            message = await self.bot.get_guild(payload.guild_id).get_channel(payload.channel_id).fetch_message(payload.message_id)
-            await self.reaction_add_2(self.bot.get_guild(payload.guild_id), payload.emoji.__str__())
+            channel = guild.get_channel(payload.channel_id)
+            if not channel:
+                return
+
+            message = await channel.fetch_message(payload.message_id)
+            await self.reaction_add_2(message, payload.emoji)
 
     async def set_reaction_board(
         self,
