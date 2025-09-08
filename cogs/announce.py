@@ -1,15 +1,6 @@
 from discord.ext import commands
 import discord
-import traceback
-import sys
-import logging
-import random
 import time
-import asyncio
-import re
-import aiohttp
-from discord import Webhook
-from functools import partial
 import time
 
 cooldown_announce_pub = {}
