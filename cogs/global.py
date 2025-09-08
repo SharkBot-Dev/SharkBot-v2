@@ -911,6 +911,8 @@ class GlobalCog(commands.Cog):
         if message.reference:
             rmsg = await message.channel.fetch_message(message.reference.message_id)
 
+        count = 0
+
         async with aiohttp.ClientSession() as session:
             async for channel in channels:
                 if channel["Channel"] == message.channel.id:
@@ -959,7 +961,10 @@ class GlobalCog(commands.Cog):
                         username="SharkBot-SGC",
                         avatar_url=self.bot.user.avatar.url,
                     )
-                    await asyncio.sleep(1)
+                    count += 1
+                    if count > 3:
+                        await asyncio.sleep(1)
+                        count = 0
 
     async def super_join_global_chat(self, interaction: discord.Interaction):
         wh = await interaction.channel.create_webhook(name="SharkBot-Global")
@@ -1889,6 +1894,8 @@ class GlobalCog(commands.Cog):
         if message.reference:
             rmsg = await message.channel.fetch_message(message.reference.message_id)
 
+        count = 0
+
         async with aiohttp.ClientSession() as session:
             async for channel in channels:
                 if channel["Channel"] == message.channel.id:
@@ -1937,7 +1944,10 @@ class GlobalCog(commands.Cog):
                         username="SharkBot-SGC",
                         avatar_url=self.bot.user.avatar.url,
                     )
-                    await asyncio.sleep(1)
+                    count += 1
+                    if count > 3:
+                        await asyncio.sleep(1)
+                        count = 0
 
     @commands.Cog.listener("on_message")
     async def on_message_super_global_debug(self, message: discord.Message):
