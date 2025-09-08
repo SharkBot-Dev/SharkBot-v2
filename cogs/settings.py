@@ -1861,7 +1861,7 @@ class SettingCog(commands.Cog):
     ):
         db = self.bot.async_db["Main"].AnnouncePun
         if not tf:
-            return await db.delete_one({"Guild": guild.id})
+            return await db.delete_one({"Guild": guild.id, "Channel": channel.id})
         else:
             await db.replace_one(
                 {"Guild": guild.id, "Channel": channel.id},
