@@ -180,12 +180,8 @@ Sharkアカウント: {sharkaccount_count}人
                 ),
                 discord.ui.Separator(),
                 discord.ui.TextDisplay(
-                    f"その他の質問をしたいんだけど、どうすればいいの？\n以下のURLのサーバーで質問をすることができます。",
+                    f"その他の質問をしたいんだけど、どうすればいいの？\n以下のURLのサーバーで質問をすることができます。\nhttps://discord.com/invite/mUyByHYMGk",
                 ),
-                discord.ui.ActionRow([
-                    discord.ui.Button(label="公式サイト", url="https://www.sharkbot.xyz/"),
-                    discord.ui.Button(label="サポートサーバー", url="https://discord.com/invite/mUyByHYMGk")
-                ]),
                 accent_colour=discord.Colour.green()
             )
         await interaction.response.send_message(view=FaqLayout())
