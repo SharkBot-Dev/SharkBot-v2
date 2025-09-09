@@ -185,6 +185,163 @@ class EmbedMake(discord.ui.Modal, title="埋め込みを作成"):
 
 cooldown_afk = {}
 
+class CalcGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="calc", description="計算系のコマンドです。")
+
+    @app_commands.command(name="calculator", description="電卓を使用します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def calculator_(
+        self, interaction: discord.Interaction
+    ):
+
+        def safe_calculator(expression: str):
+            expression = expression.replace(" ", "")
+
+            def check_number(n):
+                if abs(n) > 10000:
+                    return 0
+                return n
+
+            def parse_mul_div(tokens):
+                result = float(tokens[0])
+                i = 1
+                while i < len(tokens):
+                    op = tokens[i]
+                    num = float(tokens[i + 1])
+                    if op == '*':
+                        result *= num
+                    elif op == '/':
+                        if num == 0:
+                            return "0で割ることはできません。"
+                        result /= num
+                    i += 2
+                return result
+
+            def parse_add_sub(expression):
+                tokens = re.findall(r'[+-]?\d+(?:\.\d+)?|[*/]', expression)
+                new_tokens = []
+                i = 0
+                while i < len(tokens):
+                    if tokens[i] in '*/':
+                        a = new_tokens.pop()
+                        op = tokens[i]
+                        b = tokens[i + 1]
+                        result = parse_mul_div([a, op, b])
+                        new_tokens.append(str(result))
+                        i += 2
+                    else:
+                        new_tokens.append(tokens[i])
+                        i += 1
+
+                result = check_number(float(new_tokens[0]))
+                i = 1
+                while i < len(new_tokens):
+                    op = new_tokens[i][0]
+                    num_str = new_tokens[i][1:] if len(new_tokens[i]) > 1 else new_tokens[i + 1]
+                    num = check_number(float(num_str))
+                    if op == '+':
+                        result = check_number(result + num)
+                    elif op == '-':
+                        result = check_number(result - num)
+                    i += 1 if len(new_tokens[i]) > 1 else 2
+                return result
+
+            try:
+                return parse_add_sub(expression)
+            except Exception:
+                return f"エラー！"
+
+        class CalculatorView(discord.ui.View):
+            def __init__(self):
+                super().__init__(timeout=180)
+                self.calculator = "0"
+
+            async def update_display(self, interaction: discord.Interaction):
+                await interaction.response.edit_message(content=self.calculator, view=self)
+
+            # 数字ボタン
+            @discord.ui.button(label="1", style=discord.ButtonStyle.secondary, row=1)
+            async def one(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.calculator = self.calculator.lstrip("0") + "1"
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="2", style=discord.ButtonStyle.secondary, row=1)
+            async def two(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.calculator = self.calculator.lstrip("0") + "2"
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="3", style=discord.ButtonStyle.secondary, row=1)
+            async def three(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.calculator = self.calculator.lstrip("0") + "3"
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="4", style=discord.ButtonStyle.secondary, row=1)
+            async def four(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.calculator = self.calculator.lstrip("0") + "4"
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="5", style=discord.ButtonStyle.secondary, row=2)
+            async def five(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.calculator = self.calculator.lstrip("0") + "5"
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="6", style=discord.ButtonStyle.secondary, row=2)
+            async def six(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.calculator = self.calculator.lstrip("0") + "6"
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="7", style=discord.ButtonStyle.secondary, row=2)
+            async def seven(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.calculator = self.calculator.lstrip("0") + "7"
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="8", style=discord.ButtonStyle.secondary, row=2)
+            async def eight(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.calculator = self.calculator.lstrip("0") + "8"
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="9", style=discord.ButtonStyle.secondary, row=3)
+            async def nine(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.calculator = self.calculator.lstrip("0") + "9"
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="0", style=discord.ButtonStyle.secondary, row=3)
+            async def zero(self, interaction: discord.Interaction, button: discord.ui.Button):
+                if self.calculator != "0":
+                    self.calculator += "0"
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="00", style=discord.ButtonStyle.secondary, row=3)
+            async def zerotwo(self, interaction: discord.Interaction, button: discord.ui.Button):
+                if self.calculator != "0":
+                    self.calculator += "00"
+                await self.update_display(interaction)
+
+            # 演算子
+            @discord.ui.button(label="+", style=discord.ButtonStyle.primary, row=4)
+            async def plus(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.calculator += "+"
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="-", style=discord.ButtonStyle.primary, row=4)
+            async def minus(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.calculator += "-"
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="=", style=discord.ButtonStyle.success, row=4)
+            async def equal(self, interaction: discord.Interaction, button: discord.ui.Button):
+                result = safe_calculator(self.calculator)
+                self.calculator = str(result)
+                await self.update_display(interaction)
+
+            @discord.ui.button(label="C", style=discord.ButtonStyle.red, row=4)
+            async def clear(self, interaction: discord.Interaction, button: discord.ui.Button):
+                self.calculator = "0"
+                await self.update_display(interaction)
+
+        await interaction.response.send_message(content="0", view=CalculatorView())
 
 class ToolsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -282,6 +439,8 @@ class ToolsCog(commands.Cog):
                 return
 
     tools = app_commands.Group(name="tools", description="ツール系のコマンドです。")
+    
+    tools.add_command(CalcGroup())
 
     @tools.command(name="embed", description="埋め込みを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)
