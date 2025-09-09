@@ -800,22 +800,32 @@ class ImageGroup(app_commands.Group):
         elif 背景色.value == "white":
             back = (255, 255, 255)
             text = (0, 0, 0)
-        miq = await asyncio.to_thread(
-            create_quote_image,
-            ユーザー.display_name,
-            発言,
-            av,
-            back,
-            text,
-            color,
-            negapoji,
-        )
-        image_binary = io.BytesIO()
-        await asyncio.to_thread(miq.save, image_binary, "PNG")
-        image_binary.seek(0)
-        file = discord.File(fp=image_binary, filename="fake_quote.png")
-        await interaction.followup.send(file=file)
-        image_binary.close()
+        c = 0
+        while True:
+            if c > 8:
+                return await interaction.followup.send(embed=discord.Embed(title="予期しないエラーが発生しました。", color=discord.Color.red()))
+            miq = await asyncio.to_thread(
+                create_quote_image,
+                ユーザー.display_name,
+                発言,
+                av,
+                back,
+                text,
+                color,
+                negapoji,
+            )
+            image_binary = io.BytesIO()
+            await asyncio.to_thread(miq.save, image_binary, "PNG")
+            image_binary.seek(0)
+            try:
+                file = discord.File(fp=image_binary, filename="fake_quote.png")
+                await interaction.followup.send(file=file, content=f"-# {c}回再試行しました。")
+            except aiohttp.ClientOSError:
+                c += 1
+                await asyncio.sleep(0.5)
+                continue
+            image_binary.close()
+            return
 
     @app_commands.command(name="ascii", description="アスキーアートを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)

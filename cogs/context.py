@@ -7,7 +7,7 @@ from discord import app_commands
 from PIL import Image, ImageDraw, ImageFont
 import datetime
 from models.permissions_text import PERMISSION_TRANSLATIONS
-
+import asyncio
 
 async def fetch_avatar(user: discord.User):
     if user.avatar:
@@ -145,15 +145,24 @@ async def setup(bot: commands.Bot):
         color = True
         back = (0, 0, 0)
         text = (255, 255, 255)
-        miq = create_quote_image(
-            message.author.display_name, message.content, av, back, text, color
-        )
-        image_binary = io.BytesIO()
-        miq.save(image_binary, "PNG")
-        image_binary.seek(0)
-        file = discord.File(fp=image_binary, filename="quote.png")
-        await interaction.followup.send(file=file)
-        image_binary.close()
+        c = 0
+        while True:
+            if c > 8:
+                return await interaction.followup.send(embed=discord.Embed(title="予期しないエラーが発生しました。", color=discord.Color.red()))
+            miq = await asyncio.to_thread(create_quote_image, 
+                message.author.display_name, message.content, av, back, text, color)
+            image_binary = io.BytesIO()
+            await asyncio.to_thread(miq.save, image_binary, "PNG")
+            image_binary.seek(0)
+            try:
+                file = discord.File(fp=image_binary, filename="quote.png")
+                await interaction.followup.send(file=file, content=f"-# {c}回再試行しました。")
+            except:
+                c += 1
+                await asyncio.sleep(0.5)
+                continue
+            image_binary.close()
+            return
 
     @app_commands.context_menu(name="通報")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -346,7 +355,7 @@ async def setup(bot: commands.Bot):
                                 description=f"{translated_text}",
                                 color=discord.Color.green(),
                             )
-                            await interaction.followup.send(embed=embed)
+                            await message.reply(embed=embed)
 
                         except Exception:
                             embed = discord.Embed(
@@ -364,7 +373,7 @@ async def setup(bot: commands.Bot):
                             description=f"{translated_text}",
                             color=discord.Color.green(),
                         )
-                        await interaction.followup.send(embed=embed)
+                        await message.reply(embed=embed)
 
                     except Exception:
                         embed = discord.Embed(
@@ -400,7 +409,7 @@ async def setup(bot: commands.Bot):
                                 description=f"{translated_text}",
                                 color=discord.Color.green(),
                             )
-                            await interaction.followup.send(embed=embed)
+                            await message.reply(embed=embed)
 
                         except Exception:
                             embed = discord.Embed(
@@ -418,7 +427,7 @@ async def setup(bot: commands.Bot):
                             description=f"{translated_text}",
                             color=discord.Color.green(),
                         )
-                        await interaction.followup.send(embed=embed)
+                        await message.reply(embed=embed)
 
                     except Exception:
                         embed = discord.Embed(
