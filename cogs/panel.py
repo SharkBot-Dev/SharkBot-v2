@@ -1023,7 +1023,7 @@ class PanelCog(commands.Cog):
                         await interaction.message.edit(view=view)
                     except:
                         await interaction.followup.send(
-                            f"チケット削除に失敗しました。\n{sys.exc_info()}",
+                            f"チケットクローズに失敗しました。\n{sys.exc_info()}",
                             ephemeral=True,
                         )
                 elif "boostauth+" in custom_id:
@@ -1060,7 +1060,7 @@ class PanelCog(commands.Cog):
                         )
                     except:
                         await interaction.followup.send(
-                            f"チケット削除に失敗しました。\n{sys.exc_info()}",
+                            f"認証に失敗しました。\n{sys.exc_info()}",
                             ephemeral=True,
                         )
                 elif "postauth+" in custom_id:
