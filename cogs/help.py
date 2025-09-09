@@ -10,6 +10,28 @@ class HelpCog(commands.Cog):
         self.bot = bot
         print("init -> HelpCog")
 
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx: commands.Context, error):
+        if isinstance(error, commands.CommandNotFound):
+            a = None
+            return a
+        elif isinstance(error, commands.CommandOnCooldown):
+            a = None
+            return a
+
+    @commands.command(name="help")
+    @commands.cooldown(2, 8, commands.BucketType.guild)
+    async def help(self, ctx: commands.Context):
+
+        cmds = await self.bot.async_db.mongo["DashboardBot"].CommandDisabled.find_one(
+            {"Guild": ctx.guild.id}
+        )
+
+        if not cmds or "help" not in cmds.get("commands", []):
+            return
+
+        await ctx.reply('`/help` コマンドでヘルプを表示できます。')
+
     @app_commands.command(name="help", description="ヘルプを表示します")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
