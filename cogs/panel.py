@@ -1974,15 +1974,9 @@ class PanelCog(commands.Cog):
         )
 
     @panel.command(name="top", description="一コメを取得します。")
-    @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def top(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         async for top in interaction.channel.history(limit=1, oldest_first=True):
             await interaction.followup.send(
