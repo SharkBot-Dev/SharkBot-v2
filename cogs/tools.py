@@ -539,9 +539,9 @@ class ToolsCog(commands.Cog):
         ドメイン: app_commands.Choice[str],
         url: str,
     ):
-        if not await command_disable.command_enabled_check(interaction):
+        if not is_url.search(url):
             return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
+                ephemeral=True, content="URLを入力してください。"
             )
 
         await interaction.response.defer(ephemeral=True)
