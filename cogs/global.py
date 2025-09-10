@@ -91,12 +91,11 @@ class GlobalCog(commands.Cog):
 
             target_channel = self.bot.get_channel(channel["Channel"])
             if target_channel:
-                tasks.append(self.send_one_join_globalchat(channel["Webhook"], ctx))
+                await self.send_one_join_globalchat(channel["Webhook"], ctx)
             else:
                 continue
 
-        if tasks:
-            await asyncio.gather(*tasks)
+            await asyncio.sleep(1)
 
     async def send_one_leave_globalchat(self, webhook: str, ctx: discord.Interaction):
         async with aiohttp.ClientSession() as session:
@@ -125,12 +124,11 @@ class GlobalCog(commands.Cog):
 
             target_channel = self.bot.get_channel(channel["Channel"])
             if target_channel:
-                tasks.append(self.send_one_leave_globalchat(channel["Webhook"], ctx))
+                await self.send_one_leave_globalchat(channel["Webhook"], ctx)
             else:
                 continue
 
-        if tasks:
-            await asyncio.gather(*tasks)
+            await asyncio.sleep(1)
 
     async def globalchat_join(self, ctx: discord.Interaction):
         web = await ctx.channel.create_webhook(name="SharkBot-Global")
@@ -416,7 +414,7 @@ class GlobalCog(commands.Cog):
             check = await self.globalchat_check(interaction)
             if check:
                 await self.globalchat_leave(interaction)
-                await self.send_global_chat_leave(interaction)
+                # await self.send_global_chat_leave(interaction)
                 return await interaction.followup.send(
                     embed=discord.Embed(
                         title="グローバルチャットから脱退しました。",
@@ -425,7 +423,7 @@ class GlobalCog(commands.Cog):
                 )
             else:
                 await self.globalchat_join(interaction)
-                await self.send_global_chat_join(interaction)
+                # await self.send_global_chat_join(interaction)
                 await interaction.followup.send(
                     embed=discord.Embed(
                         title="グローバルチャットに参加しました。",
