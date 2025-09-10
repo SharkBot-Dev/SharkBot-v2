@@ -281,6 +281,56 @@ class AudioGroup(app_commands.Group):
                     await interaction.followup.send(file=discord.File(io_, filename="tts.mp3"))
                     io_.close()
 
+    @app_commands.command(name="distortion", description="音声を音割れさせます。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def distortion(
+        self, interaction: discord.Interaction, 音声: discord.Attachment
+    ):
+        MAX_IMAGE_SIZE = 5 * 1024 * 1024
+        if 音声.size > MAX_IMAGE_SIZE:
+            await interaction.response.send_message(
+                f"音声は最大 5MB まで対応しています。",
+                ephemeral=True
+            )
+            return
+
+        await interaction.response.defer()
+        await aiofiles.os.makedirs(f"files/static/{interaction.user.id}/", exist_ok=True)
+
+        input_audio = f"files/static/{interaction.user.id}/{uuid.uuid4()}.mp3"
+        mp3_file = f"{uuid.uuid4()}.mp3"
+        output_audio = f"files/static/{interaction.user.id}/{mp3_file}"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(音声.url) as resp:
+                resp.raise_for_status()
+                async with aiofiles.open(input_audio, "wb") as f:
+                    await f.write(await resp.read())
+
+        cmd = [
+            "ffmpeg",
+            "-i", input_audio,
+            "-af", "volume=31dB",
+            output_audio
+        ]
+
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        stdout, stderr = await process.communicate()
+
+        if process.returncode != 0:
+            await interaction.followup.send(
+                f"音声処理中にエラーが発生しました。"
+            )
+            return
+
+        await interaction.followup.send(file=discord.File(output_audio, filename="distortion.mp3"))
+
 class MovieGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="movie", description="動画生成系のコマンドです。")
