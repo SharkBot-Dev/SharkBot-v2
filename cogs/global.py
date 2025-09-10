@@ -414,16 +414,16 @@ class GlobalCog(commands.Cog):
             check = await self.globalchat_check(interaction)
             if check:
                 await self.globalchat_leave(interaction)
-                # await self.send_global_chat_leave(interaction)
                 return await interaction.followup.send(
                     embed=discord.Embed(
                         title="グローバルチャットから脱退しました。",
                         color=discord.Color.green(),
                     )
                 )
+            
+                await self.send_global_chat_leave(interaction)
             else:
                 await self.globalchat_join(interaction)
-                # await self.send_global_chat_join(interaction)
                 await interaction.followup.send(
                     embed=discord.Embed(
                         title="グローバルチャットに参加しました。",
@@ -431,6 +431,8 @@ class GlobalCog(commands.Cog):
                         color=discord.Color.green(),
                     )
                 )
+
+                await self.send_global_chat_join(interaction)
 
         else:
             check = await self.globalchat_room_check(interaction)
