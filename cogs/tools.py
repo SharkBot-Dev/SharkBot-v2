@@ -23,6 +23,7 @@ import ipaddress
 import socket
 from urllib.parse import urlparse
 import pyzbar.pyzbar
+import math
 
 SOUNDCLOUD_REGEX = re.compile(
     r'^(https?://)?(www\.)?(soundcloud\.com|on\.soundcloud\.com)/.+'
@@ -342,6 +343,47 @@ class CalcGroup(app_commands.Group):
                 await self.update_display(interaction)
 
         await interaction.response.send_message(content="0", view=CalculatorView())
+
+    @app_commands.command(name="size-converter", description="ファイルの容量の単位を変換します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        単位=[
+            app_commands.Choice(name="gb->mb", value="gm"),
+            app_commands.Choice(name="mb->gb", value="mg"),
+            app_commands.Choice(name="mb->kb", value="mk"),
+            app_commands.Choice(name="kb->mb", value="km"),
+        ]
+    )
+    async def size_converter(
+        self, interaction: discord.Interaction, 単位: app_commands.Choice[str], 変換元: int
+    ):
+        def gb_to_mb(gb):
+            mb = gb * 1024
+            return mb
+        def mb_to_gb(mb):
+            gb = mb / 1024
+            return gb
+        if 単位.value == "gm":
+            mb = gb_to_mb(変換元)
+            await interaction.response.send_message(embed=discord.Embed(title="変換結果", color=discord.Color.green())
+                                                    .add_field(name="GB", value=f"{変換元}", inline=False)
+                                                    .add_field(name="MB", value=f"{mb}", inline=False))
+        elif 単位.value == "mg":
+            gb = mb_to_gb(変換元)
+            await interaction.response.send_message(embed=discord.Embed(title="変換結果", color=discord.Color.green())
+                                                    .add_field(name="MB", value=f"{変換元}", inline=False)
+                                                    .add_field(name="GB", value=f"{gb}", inline=False))
+        elif 単位.value == "mk":
+            kb = gb_to_mb(変換元)
+            await interaction.response.send_message(embed=discord.Embed(title="変換結果", color=discord.Color.green())
+                                                    .add_field(name="MB", value=f"{変換元}", inline=False)
+                                                    .add_field(name="KB", value=f"{kb}", inline=False))
+        elif 単位.value == "km":
+            mb = mb_to_gb(変換元)
+            await interaction.response.send_message(embed=discord.Embed(title="変換結果", color=discord.Color.green())
+                                                    .add_field(name="KB", value=f"{変換元}", inline=False)
+                                                    .add_field(name="MB", value=f"{mb}", inline=False))
 
 class ToolsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
