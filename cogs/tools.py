@@ -24,12 +24,14 @@ import socket
 from urllib.parse import urlparse
 import pyzbar.pyzbar
 import math
+import yt_dlp
 
 SOUNDCLOUD_REGEX = re.compile(
     r'^(https?://)?(www\.)?(soundcloud\.com|on\.soundcloud\.com)/.+'
 )
 
 IRASUTOTA_REGEX = re.compile(r'https://www\.irasutoya\.com/.+/.+/.+\.html')
+X_REGEX = re.compile(r'https://x.com/.+/status/.+')
 
 ipv4_pattern = re.compile(
     r"^("
@@ -958,7 +960,7 @@ class ToolsCog(commands.Cog):
     ):
         choices = [
             app_commands.Choice(name=f, value=f)
-            for f in ["いらすとや"] if current.lower() in f.lower()
+            for f in ["いらすとや", "X(Twitter)"] if current.lower() in f.lower()
         ]
         return choices[:25]
 
@@ -1003,6 +1005,50 @@ class ToolsCog(commands.Cog):
                         await interaction.followup.send(view=IrasutoyaView())
                     except Exception as e:
                         return await interaction.followup.send(embed=discord.Embed(title="解析に失敗しました。", description=f"{e}", color=discord.Color.red()))
+        elif タイプ == "X(Twitter)":
+            if not X_REGEX.match(url):
+                await interaction.followup.send(embed=discord.Embed(title="正しいURLを入力してください。", color=discord.Color.red()), ephemeral=True)
+                return
+
+            if not interaction.channel.nsfw:
+                return await interaction.followup.send(embed=discord.Embed(title="NSFWチャンネルでのみ使用できます。", color=discord.Color.red()))
+            def twitter(url):
+                ydl_opts = {
+                    'quiet': True,
+                    'skip_download': True,
+                    "no_warnings": True
+                }
+
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(url, download=False)
+
+                    if "formats" in info:
+                        for fmt in info["formats"]:
+                            if ".mp4" in fmt.get('url'):
+                                return fmt.get('url')
+                            
+                        return None
+            url = await asyncio.to_thread(twitter, url)
+
+            class TwitterView(discord.ui.LayoutView):
+                container = discord.ui.Container(
+                    discord.ui.TextDisplay(
+                        f"### ダウンロード",
+                    ),
+                    discord.ui.Separator(),
+                    discord.ui.MediaGallery(
+                        discord.MediaGalleryItem(url)
+                    ),
+                    discord.ui.ActionRow(
+                        discord.ui.Button(
+                            label="ダウンロード",
+                            url=url,
+                        )
+                    ),
+                    accent_colour=discord.Colour.green(),
+                )
+
+            await interaction.followup.send(view=TwitterView())
         else:
             embed = discord.Embed(
                 title="タイプが見つかりません。",
