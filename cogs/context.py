@@ -475,6 +475,60 @@ async def setup(bot: commands.Bot):
                 embed=embed.set_thumbnail(url=member.default_avatar.url)
             )
 
+    @app_commands.context_menu(name="アバター表示")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    async def avatar_show(
+        interaction: discord.Interaction, member: discord.Member
+    ):
+        await interaction.response.defer()
+        if member.avatar == None:
+
+            class AvatarLayout(discord.ui.LayoutView):
+                container = discord.ui.Container(
+                    discord.ui.TextDisplay(
+                        f"### {member.name}さんのアバター",
+                    ),
+                    discord.ui.TextDisplay(
+                        f"ダウンロード\n[.png]({member.default_avatar.with_format('png').url})",
+                    ),
+                    discord.ui.Separator(),
+                    discord.ui.MediaGallery(
+                        discord.MediaGalleryItem(member.default_avatar.url)
+                    ),
+                    accent_colour=discord.Colour.green(),
+                )
+
+            await interaction.followup.send(view=AvatarLayout())
+
+        else:
+
+            class AvatarLayout(discord.ui.LayoutView):
+                container = discord.ui.Container(
+                    discord.ui.TextDisplay(
+                        f"### {member.name}さんのアバター",
+                    ),
+                    discord.ui.TextDisplay(
+                        f"ダウンロード\n[.png]({member.avatar.with_format('png').url}) [.jpg]({member.avatar.with_format('jpg').url}) [.webp]({member.avatar.with_format('webp').url})",
+                    ),
+                    discord.ui.Separator(),
+                    discord.ui.MediaGallery(
+                        discord.MediaGalleryItem(member.avatar.url)
+                    ),
+                    discord.ui.Separator(),
+                    discord.ui.ActionRow(
+                        discord.ui.Button(
+                            label="デフォルトアバターURL",
+                            url=member.default_avatar.url,
+                        )
+                    ),
+                    accent_colour=discord.Colour.green(),
+                )
+
+            await interaction.followup.send(view=AvatarLayout())
+
+        return
+
     @app_commands.context_menu(name="権限を見る")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -514,4 +568,5 @@ async def setup(bot: commands.Bot):
 
     # ユーザーに使うコマンド
     bot.tree.add_command(user_info)
+    bot.tree.add_command(avatar_show)
     bot.tree.add_command(permissions_check)
