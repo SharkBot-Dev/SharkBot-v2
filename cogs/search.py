@@ -741,6 +741,8 @@ Botを追加したユーザーは？: {add_bot_user}
         else:
             if not 画像:
                 return await interaction.followup.send(content="テキストか画像、どちらかを指定してください。")
+            if not 画像.filename.endswith(('.png', '.jpg', '.jpeg')):
+                return await interaction.followup.send(content="`.png`と`.jpg`のみ対応しています。")
             i = io.BytesIO(await 画像.read())
             text_ocrd = await ocr_async(i)
             i.close()
