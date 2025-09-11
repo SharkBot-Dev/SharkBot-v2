@@ -286,6 +286,14 @@ async def welcome(request: Request, guild_id: str):
 
     msg = await mongodb.mongo["Main"].WelcomeMessage.find_one({"Guild": int(guild_id)})
 
+    def rep_name(msg: str):
+        return (
+            msg.replace("<name>", "[name]")
+            .replace("<count>", "[count]")
+            .replace("<guild>", "[guild]")
+            .replace("<createdat>", "[createdat]")
+        )
+
     if not msg:
         return templates.templates.TemplateResponse(
             "welcome_settings.html",
@@ -304,11 +312,11 @@ async def welcome(request: Request, guild_id: str):
             "request": request,
             "guild": guild,
             "channels": channels,
-            "title": msg.get("Title", "[name] さん、よろしく！"),
-            "description": msg.get(
+            "title": rep_name(msg.get("Title", "[name] さん、よろしく！")),
+            "description": rep_name(msg.get(
                 "Description",
                 "あなたは [count] 人目のメンバーです！\n\nアカウント作成日: [createdat]",
-            ),
+            )),
         },
     )
 
