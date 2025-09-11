@@ -20,9 +20,9 @@ import io
 
 async def ocr_async(image_: io.BytesIO):
 
-    image = asyncio.to_thread(Image.open, image_)
+    image = await asyncio.to_thread(Image.open, image_)
 
-    text = asyncio.to_thread(pytesseract.image_to_string, image)
+    text = await asyncio.to_thread(pytesseract.image_to_string, image)
 
     return text
 
@@ -745,6 +745,9 @@ Botを追加したユーザーは？: {add_bot_user}
             text_ocrd = await ocr_async(i)
             i.close()
 
+            if text_ocrd == "":
+                return await interaction.followup.send(content="画像にはテキストがありません。")
+
             if 翻訳先.value == "nom":
                 loop = asyncio.get_running_loop()
                 nom = await loop.run_in_executor(None, partial(NomTranslater))
@@ -769,10 +772,10 @@ Botを追加したユーザーは？: {add_bot_user}
                 )
                 await interaction.followup.send(embed=embed)
 
-            except Exception:
+            except Exception as e:
                 embed = discord.Embed(
                     title="翻訳に失敗しました",
-                    description="指定された言語コードが正しいか確認してください。",
+                    description=f"エラーコード: {e}",
                     color=discord.Color.red(),
                 )
                 await interaction.followup.send(embed=embed)
