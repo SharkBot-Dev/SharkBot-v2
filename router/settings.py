@@ -293,8 +293,8 @@ async def welcome(request: Request, guild_id: str):
                 "request": request,
                 "guild": guild,
                 "channels": channels,
-                "title": "<name> さん、よろしく！",
-                "description": "あなたは <count> 人目のメンバーです！\n\nアカウント作成日: <createdat>",
+                "title": "[name] さん、よろしく！",
+                "description": "あなたは [count] 人目のメンバーです！\n\nアカウント作成日: [createdat]",
             },
         )
 
@@ -304,10 +304,10 @@ async def welcome(request: Request, guild_id: str):
             "request": request,
             "guild": guild,
             "channels": channels,
-            "title": msg.get("Title", "<name> さん、よろしく！"),
+            "title": msg.get("Title", "[name] さん、よろしく！"),
             "description": msg.get(
                 "Description",
-                "あなたは <count> 人目のメンバーです！\n\nアカウント作成日: <createdat>",
+                "あなたは [count] 人目のメンバーです！\n\nアカウント作成日: [createdat]",
             ),
         },
     )
@@ -357,6 +357,14 @@ async def welcome_send(
         )
 
     try:
+        def rep_name(msg: str):
+            return (
+                msg.replace("[name]", "<name>")
+                .replace("[count]", "<count>")
+                .replace("[guild]", "<guild>")
+                .replace("[createdat]", "<createdat>")
+            )
+
         db = mongodb.mongo["Main"].WelcomeMessage
         if title == "delete_welcome":
             await db.delete_one({"Guild": int(guild_id)})
@@ -366,8 +374,8 @@ async def welcome_send(
                 {
                     "Channel": int(channel),
                     "Guild": int(guild_id),
-                    "Title": safe_title,
-                    "Description": safe_desc,
+                    "Title": rep_name(safe_title),
+                    "Description": rep_name(safe_desc),
                 },
                 upsert=True,
             )
