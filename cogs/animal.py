@@ -61,15 +61,6 @@ class AnimalCog(commands.Cog):
                     )
 
                     await self.add_level(message.author, animal.get('Kinds', "None"), 1)
-                    await message.reply(
-                        embed=discord.Embed(
-                            title=f"{status.get('Name', '名無し')}のレベルが上がったよ！",
-                            description="やったね！",
-                            color=discord.Color.green()
-                        ).set_footer(text="このメッセージは5秒後に削除されます。"),
-                        delete_after=5
-                    )
-                    await asyncio.sleep(1)
             except Exception:
                 continue
 
