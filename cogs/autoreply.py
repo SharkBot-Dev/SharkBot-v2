@@ -8,6 +8,7 @@ import time
 import json
 import io
 from models import command_disable
+import random
 
 COOLDOWN_TIME = 10
 user_last_message_time = {}
@@ -124,6 +125,14 @@ class AutoReplyCog(commands.Cog):
         for b in blacklist_word:
             if b in word:
                 return await message.reply("不適切な言葉が含まれています。")
+            
+        word = word.split("|")
+
+        if len(word) != 1:
+
+            word = random.choice(word)
+        else:
+            word = dbfind.get("ReplyWord", None)
         try:
             await message.reply(
                 word.replace("\\n", "\n")
