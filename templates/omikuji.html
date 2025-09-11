@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>サメくじ (おみくじ)</title>
+  <style>
+    body {
+      font-family: "Arial", "Hiragino Sans", sans-serif;
+      text-align: center;
+      margin-top: 100px;
+      background: linear-gradient(135deg, #fceabb, #f8b500);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 40px;
+    }
+
+    #result {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 30px 0;
+      padding: 20px;
+      border-radius: 10px;
+      background: white;
+      display: inline-block;
+      min-width: 200px;
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      background-color: #ff7675;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #d63031;
+    }
+  </style>
+</head>
+<body>
+  <h1>{{u.username}}さんの運勢</h1>
+  <button onclick="drawFortune()">おみくじを引く</button>
+  <div id="result">結果がここに表示されます</div>
+
+  <script>
+    function drawFortune() {
+      const fortunes = ["大吉", "中吉", "小吉", "吉", "末吉", "凶", "大凶"];
+      const colors = {
+        "大吉": "gold",
+        "中吉": "orange",
+        "小吉": "green",
+        "吉": "blue",
+        "末吉": "purple",
+        "凶": "gray",
+        "大凶": "red"
+      };
+      const result = fortunes[Math.floor(Math.random() * fortunes.length)];
+      const resultDiv = document.getElementById("result");
+      resultDiv.textContent = result;
+      resultDiv.style.color = colors[result];
+    }
+  </script>
+</body>
+</html>
