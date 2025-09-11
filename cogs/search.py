@@ -14,6 +14,18 @@ import requests
 from discord import app_commands
 from models import command_disable
 
+import pytesseract
+from PIL import Image
+import io
+
+async def ocr_async(image_: io.BytesIO):
+
+    image = asyncio.to_thread(Image.open, image_)
+
+    text = asyncio.to_thread(pytesseract.image_to_string, image)
+
+    return text
+
 STATUS_EMOJIS = {
     discord.Status.online: "<:online:1407922300535181423>",
     discord.Status.idle: "<:idle:1407922295711727729>",
@@ -688,42 +700,82 @@ Botを追加したユーザーは？: {add_bot_user}
         self,
         interaction: discord.Interaction,
         翻訳先: app_commands.Choice[str],
-        *,
-        テキスト: str,
+        テキスト: str = None,
+        画像: discord.Attachment = None
     ):
         await interaction.response.defer()
 
-        if 翻訳先.value == "nom":
-            loop = asyncio.get_running_loop()
-            nom = await loop.run_in_executor(None, partial(NomTranslater))
-            text = await loop.run_in_executor(None, partial(nom.translare, テキスト))
+        if テキスト:
 
-            embed = discord.Embed(
-                title="翻訳 (ノムリッシュ語へ)",
-                description=f"```{text}```",
-                color=discord.Color.green(),
-            )
-            await interaction.followup.send(embed=embed)
-            return
+            if 翻訳先.value == "nom":
+                loop = asyncio.get_running_loop()
+                nom = await loop.run_in_executor(None, partial(NomTranslater))
+                text = await loop.run_in_executor(None, partial(nom.translare, テキスト))
 
-        try:
-            translator = GoogleTranslator(source="auto", target=翻訳先.value)
-            translated_text = translator.translate(テキスト)
+                embed = discord.Embed(
+                    title="翻訳 (ノムリッシュ語へ)",
+                    description=f"```{text}```",
+                    color=discord.Color.green(),
+                )
+                await interaction.followup.send(embed=embed)
+                return
 
-            embed = discord.Embed(
-                title=f"翻訳 ({翻訳先.value} へ)",
-                description=f"```{translated_text}```",
-                color=discord.Color.green(),
-            )
-            await interaction.followup.send(embed=embed)
+            try:
+                translator = GoogleTranslator(source="auto", target=翻訳先.value)
+                translated_text = translator.translate(テキスト)
 
-        except Exception:
-            embed = discord.Embed(
-                title="翻訳に失敗しました",
-                description="指定された言語コードが正しいか確認してください。",
-                color=discord.Color.red(),
-            )
-            await interaction.followup.send(embed=embed)
+                embed = discord.Embed(
+                    title=f"翻訳 ({翻訳先.value} へ)",
+                    description=f"```{translated_text}```",
+                    color=discord.Color.green(),
+                )
+                await interaction.followup.send(embed=embed)
+
+            except Exception:
+                embed = discord.Embed(
+                    title="翻訳に失敗しました",
+                    description="指定された言語コードが正しいか確認してください。",
+                    color=discord.Color.red(),
+                )
+                await interaction.followup.send(embed=embed)
+        else:
+            if not 画像:
+                return await interaction.followup.send(content="テキストか画像、どちらかを指定してください。")
+            i = io.BytesIO(await 画像.read())
+            text_ocrd = await ocr_async(i)
+            i.close()
+
+            if 翻訳先.value == "nom":
+                loop = asyncio.get_running_loop()
+                nom = await loop.run_in_executor(None, partial(NomTranslater))
+                text = await loop.run_in_executor(None, partial(nom.translare, text_ocrd))
+
+                embed = discord.Embed(
+                    title="翻訳 (ノムリッシュ語へ)",
+                    description=f"```{text}```",
+                    color=discord.Color.green(),
+                )
+                await interaction.followup.send(embed=embed)
+                return
+
+            try:
+                translator = GoogleTranslator(source="auto", target=翻訳先.value)
+                translated_text = translator.translate(text_ocrd)
+
+                embed = discord.Embed(
+                    title=f"翻訳 ({翻訳先.value} へ)",
+                    description=f"```{translated_text}```",
+                    color=discord.Color.green(),
+                )
+                await interaction.followup.send(embed=embed)
+
+            except Exception:
+                embed = discord.Embed(
+                    title="翻訳に失敗しました",
+                    description="指定された言語コードが正しいか確認してください。",
+                    color=discord.Color.red(),
+                )
+                await interaction.followup.send(embed=embed)
 
     @search.command(name="news", description="ニュースを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
