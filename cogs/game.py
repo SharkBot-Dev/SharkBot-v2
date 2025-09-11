@@ -312,6 +312,23 @@ class GameCog(commands.Cog):
             f"🎲 {interaction.user.mention}: {', '.join(str_rolls)} → {sum(rolls)}"
         )
 
+    @game.command(name="omikuji", description="おみくじを引きます。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def omikuji(self, interaction: discord.Interaction):
+        omikuzi = [
+            "大吉"   if i < 2 else
+            "中吉"   if 2 <= i < 10 else
+            "小吉"   if 10 <= i < 20 else
+            "吉"     if 20 <= i < 40 else
+            "末吉"   if 40 <= i < 50 else
+            "凶"     if 50 <= i < 55 else
+            "中凶"   if 55 <= i < 59 else
+            "大凶"   for i in range(61)]
+        
+        await interaction.response.send_message(embed=discord.Embed(title="おみくじ結果", description=f"```{omikuzi[random.randrange(len(omikuzi))]}```", color=discord.Color.green())
+                                                .set_footer(text="結果は完全にランダムです。"))
+
     @game.command(name="geo-quiz", description="地理クイズをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
