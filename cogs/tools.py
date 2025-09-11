@@ -17,6 +17,7 @@ from html2image import Html2Image
 import pyshorteners
 from discord import app_commands
 from PIL import Image
+import pytesseract
 from consts import badword
 from models import command_disable
 import ipaddress
@@ -387,6 +388,34 @@ class CalcGroup(app_commands.Group):
                                                     .add_field(name="KB", value=f"{変換元}", inline=False)
                                                     .add_field(name="MB", value=f"{mb}", inline=False))
 
+class OcrGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="ocr", description="OCR系のコマンドです。")
+
+    async def ocr_async(self, image_: io.BytesIO):
+
+        image = await asyncio.to_thread(Image.open, image_)
+
+        text = await asyncio.to_thread(pytesseract.image_to_string, image, lang="jpn")
+
+        return text
+    
+    @app_commands.command(name="ocr", description="OCRをします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def ocr(
+        self, interaction: discord.Interaction, 画像: discord.Attachment
+    ):
+        await interaction.response.defer()
+
+        if not 画像.filename.endswith(('.png', '.jpg', '.jpeg')):
+            return await interaction.followup.send(content="`.png`と`.jpg`のみ対応しています。")
+        i = io.BytesIO(await 画像.read())
+        text_ocrd = await self.ocr_async(i)
+        i.close()
+
+        await interaction.followup.send(embed=discord.Embed(title="OCR結果", description=f"```{text_ocrd}```", color=discord.Color.green()))
+
 class ToolsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -485,6 +514,7 @@ class ToolsCog(commands.Cog):
     tools = app_commands.Group(name="tools", description="ツール系のコマンドです。")
     
     tools.add_command(CalcGroup())
+    tools.add_command(OcrGroup())
 
     @tools.command(name="embed", description="埋め込みを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)
