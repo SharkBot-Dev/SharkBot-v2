@@ -327,7 +327,7 @@ class GameCog(commands.Cog):
             "大凶"   for i in range(61)]
         
         await interaction.response.send_message(embed=discord.Embed(title="おみくじ結果", description=f"```{omikuzi[random.randrange(len(omikuzi))]}```", color=discord.Color.green())
-                                                .set_footer(text="結果は完全にランダムです。"))
+                                                .set_footer(text="結果は完全にランダムです。"), view=discord.ui.View().add_item(discord.ui.Button(label="おみくじWebで引く", url="https://dashboard.sharkbot.xyz/omikuji")))
 
     @game.command(name="geo-quiz", description="地理クイズをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)

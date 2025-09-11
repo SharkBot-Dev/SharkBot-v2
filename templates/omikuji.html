@@ -8,7 +8,7 @@
       font-family: "Arial", "Hiragino Sans", sans-serif;
       text-align: center;
       margin-top: 100px;
-      background: linear-gradient(135deg, #fceabb, #f8b500);
+      background: linear-gradient(135deg, #fceabb, #1b9eef);
     }
 
     h1 {
@@ -46,27 +46,28 @@
   </style>
 </head>
 <body>
-  <h1>{{u.username}}さんの運勢</h1>
-  <button onclick="drawFortune()">おみくじを引く</button>
-  <div id="result">結果がここに表示されます</div>
+    <img src="https://cdn.discordapp.com/avatars/{{user.id}}/{{user.avatar}}" width="200" height="200">
+    <h1>{{user.username}}さんの運勢</h1>
+    <div id="result">結果がここに表示されます</div><br>
+    <button onclick="drawFortune()">おみくじを引く</button>
 
-  <script>
-    function drawFortune() {
-      const fortunes = ["大吉", "中吉", "小吉", "吉", "末吉", "凶", "大凶"];
-      const colors = {
-        "大吉": "gold",
-        "中吉": "orange",
-        "小吉": "green",
-        "吉": "blue",
-        "末吉": "purple",
-        "凶": "gray",
-        "大凶": "red"
-      };
-      const result = fortunes[Math.floor(Math.random() * fortunes.length)];
-      const resultDiv = document.getElementById("result");
-      resultDiv.textContent = result;
-      resultDiv.style.color = colors[result];
-    }
-  </script>
+    <script>
+        function drawFortune() {
+        const fortunes = ["大吉", "中吉", "小吉", "吉", "末吉", "凶", "大凶"];
+        const colors = {
+            "大吉": "gold",
+            "中吉": "orange",
+            "小吉": "green",
+            "吉": "blue",
+            "末吉": "purple",
+            "凶": "gray",
+            "大凶": "red"
+        };
+        const result = fortunes[Math.floor(Math.random() * fortunes.length)];
+        const resultDiv = document.getElementById("result");
+        resultDiv.textContent = result;
+        resultDiv.style.color = colors[result];
+        }
+    </script>
 </body>
 </html>
