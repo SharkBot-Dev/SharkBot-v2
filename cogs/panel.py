@@ -1450,18 +1450,20 @@ class PanelCog(commands.Cog):
         self, interaction: discord.Interaction, current: str
     ):
         try:
-            messages = []
-            async for m in interaction.channel.history(limit=50):
-                messages.append(m)
             choices = []
 
-            for message in messages:
+            async for message in interaction.channel.history(limit=50):
                 if not message.embeds:
                     continue
-                if current.lower() in message.embeds[0].title.lower():
+
+                embed = message.embeds[0]
+                if not embed.title:
+                    continue
+
+                if current.lower() in embed.title.lower():
                     choices.append(
-                        discord.app_commands.Choice(
-                            name=message.embeds[0].title[:100], value=str(message.id)
+                        app_commands.Choice(
+                            name=embed.title[:100], value=str(message.id)
                         )
                     )
 
