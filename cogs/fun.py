@@ -915,6 +915,71 @@ class ImageGroup(app_commands.Group):
         except:
             return await interaction.followup.send(f"検索に失敗しました。")
 
+    @app_commands.command(name="profile", description="自己紹介カードを作成します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def profile_card(self, interaction: discord.Interaction):
+        class CardModal(discord.ui.Modal):
+            def __init__(self):
+                super().__init__(title="自己紹介カードを作成", timeout=180)
+
+            introduction = discord.ui.Label(
+                text="自己紹介を入力",
+                description="自己紹介を入力してください。",
+                component=discord.ui.TextInput(
+                    style=discord.TextStyle.long, required=True
+                ),
+            )
+
+            async def on_submit(self, interaction_: discord.Interaction):
+                await interaction_.response.defer()
+
+                assert isinstance(self.introduction.component, discord.ui.TextInput)
+
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(str(interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url)) as resp:
+                        avatar_bytes = await resp.read()
+
+                def make_card(user: discord.User, avatar_bytes: io.BytesIO, introduction: str):
+
+                    img = Image.new("RGB", (600, 300), color=(54, 57, 63))
+                    draw = ImageDraw.Draw(img)
+
+                    try:
+                        font_title = ImageFont.truetype("data/DiscordFont.ttf", 30)
+                        font_text = ImageFont.truetype("data/DiscordFont.ttf", 20)
+                    except:
+                        font_title = ImageFont.load_default()
+                        font_text = ImageFont.load_default()
+
+                    avatar = Image.open(avatar_bytes).convert("RGB")
+                    avatar = avatar.resize((128, 128))
+
+                    mask = Image.new("L", avatar.size, 0)
+                    mask_draw = ImageDraw.Draw(mask)
+                    mask_draw.ellipse((0, 0, 128, 128), fill=255)
+                    img.paste(avatar, (30, 30), mask)
+
+                    draw.text((180, 40), f"{user.name}#{user.discriminator}", font=font_title, fill=(255, 255, 255))
+                    draw.text((180, 100), f"ID: {user.id}", font=font_text, fill=(200, 200, 200))
+                    draw.text((30, 200), f"自己紹介: {introduction}", font=font_text, fill=(255, 255, 255))
+
+                    image_binary = io.BytesIO()
+
+                    img.save(image_binary, "PNG")
+                    image_binary.seek(0)
+                    return image_binary
+                    
+                a_io = io.BytesIO(avatar_bytes)
+
+                i = await asyncio.to_thread(make_card,interaction.user, a_io, self.introduction.component.value)
+                a_io.close()
+
+                await interaction_.followup.send(file=discord.File(i, filename="profile.png"))
+                i.close()
+
+        await interaction.response.send_modal(CardModal())
+
 class FunCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
