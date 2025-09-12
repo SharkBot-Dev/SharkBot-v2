@@ -83,9 +83,10 @@ class AnimalCog(commands.Cog):
 
                 now = datetime.utcnow()
                 last_feed = status.get("LastFeed")
+
                 if last_feed and isinstance(last_feed, datetime):
-                    if now - last_feed < timedelta(hours=1):
-                        await self.change_status(message.author, kinds, "餌をほしがっている・・")
+                    if now - last_feed >= timedelta(hours=1):
+                        await self.change_status(message.author, animal.get("Kinds", "None"), "餌をほしがっている・・")
 
             except Exception:
                 traceback.print_exc()
@@ -166,6 +167,14 @@ class AnimalCog(commands.Cog):
             )
 
         status = await self.get_animal_status(target, 種類.value)
+
+        now = datetime.utcnow()
+        last_feed = status.get("LastFeed")
+
+        if last_feed and isinstance(last_feed, datetime):
+            if now - last_feed >= timedelta(hours=1):
+                await self.change_status(target, 種類.value, "餌をほしがっている・・")
+
         await interaction.followup.send(
             embed=discord.Embed(
                 title=f"{status.get('Name', '名前')}のステータス",
