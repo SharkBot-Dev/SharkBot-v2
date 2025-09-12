@@ -107,7 +107,13 @@ class ExpandCog(commands.Cog):
                     icon_url=msg.guild.icon if msg.guild.icon else None,
                 )
 
-                await message.channel.send(embed=embed)
+                embeds = []
+                embeds.append(embed)
+
+                if msg.embeds:
+                    embeds.append(msg.embeds[0])
+
+                await message.channel.send(embeds=embeds)
 
                 return
             except Exception:
