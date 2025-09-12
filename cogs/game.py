@@ -376,6 +376,7 @@ class GameCog(commands.Cog):
             await asyncio.to_thread(img.paste, avatar1, (100, 80), mask1)
             await asyncio.to_thread(img.paste, avatar2, (370, 80), mask2)
 
+            await asyncio.to_thread(draw.text, (0, 0), "SharkBot", font=font_text, fill=(0, 0, 0))
             await asyncio.to_thread(draw.text, (200, 30), "恋愛度診断", font=font_title, fill=(255, 0, 0))
             await asyncio.to_thread(draw.text, (260, 230), f"{love_percent}%", font=font_text, fill=(0, 0, 0))
 
