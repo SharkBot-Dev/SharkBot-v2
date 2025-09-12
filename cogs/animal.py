@@ -121,7 +121,7 @@ class AnimalCog(commands.Cog):
                     "Level": 0,
                     "XP": 0,
                     "Status": "いつも通り",
-                    "IV": random.randint(50, 70),
+                    "IV": random.randint(100, 130),
                     "LastFeed": None,
                 },
                 upsert=True,
@@ -248,6 +248,74 @@ class AnimalCog(commands.Cog):
             )
         )
 
+    @animal.command(name="train", description="ペットをしつけ（訓練）します。")
+    @app_commands.choices(
+        種類=[
+            app_commands.Choice(name="犬", value="dog"),
+            app_commands.Choice(name="猫", value="cat"),
+            app_commands.Choice(name="馬", value="horse"),
+        ]
+    )
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def animal_train(
+        self, interaction: discord.Interaction, 種類: app_commands.Choice[str]
+    ):
+        await interaction.response.defer()
+        db = self.bot.async_db["Main"].Animals
+
+        status = await self.get_animal_status(interaction.user, 種類.value)
+        if not status:
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="そのペットは飼っていません！",
+                    description="/animal keeping で飼えます。",
+                    color=discord.Color.red(),
+                )
+            )
+        
+        now = datetime.utcnow()
+        last_feed = status.get("LastTrain")
+
+        if last_feed and isinstance(last_feed, datetime):
+            elapsed = now - last_feed
+            if elapsed < timedelta(hours=1):
+                remaining = timedelta(hours=1) - elapsed
+                minutes, seconds = divmod(int(remaining.total_seconds()), 60)
+                return await interaction.followup.send(
+                    embed=discord.Embed(
+                        title="まだ訓練できません！",
+                        description=f"次に訓練ができるまで **{minutes}分{seconds}秒**",
+                        color=discord.Color.orange(),
+                    )
+                )
+
+        success = random.random() < 0.7
+        if success:
+            xp_gain = random.randint(10, 20)
+            await self.add_xp(interaction.user, 種類.value, xp_gain)
+            result_text = f"訓練に成功しました！ \nXPが **+{xp_gain}** 増えたよ！"
+            color = discord.Color.green()
+        else:
+            xp_gain = random.randint(0, 5)
+            await self.add_xp(interaction.user, 種類.value, xp_gain)
+            result_text = f"訓練に失敗しました… \nXPが **+{xp_gain}** しか増えなかった。"
+            color = discord.Color.red()
+
+        await self.change_status(interaction.user, 種類.value, "訓練中…")
+
+        await db.update_one(
+            {"User": interaction.user.id, "Kinds": 種類.value},
+            {"$set": {"LastTrain": now}},
+        )
+
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title=f"{status.get('Name', '名無し')}の訓練結果",
+                description=result_text,
+                color=color,
+            )
+        )
 
 async def setup(bot):
     await bot.add_cog(AnimalCog(bot))
