@@ -21,7 +21,10 @@ class AnimalCog(commands.Cog):
     async def is_keeping_animal(self, user: discord.User, kinds: str):
         db = self.bot.async_db["Main"].Animals
         try:
-            return await db.find_one({"User": user.id, "Kinds": kinds}, {"_id": False}) is not None
+            return (
+                await db.find_one({"User": user.id, "Kinds": kinds}, {"_id": False})
+                is not None
+            )
         except Exception:
             return False
 
@@ -51,18 +54,14 @@ class AnimalCog(commands.Cog):
     async def change_status(self, user: discord.User, kinds: str, message: str):
         db = self.bot.async_db["Main"].Animals
         await db.update_one(
-            {"User": user.id, "Kinds": kinds},
-            {"$set": {"Status": message}}
+            {"User": user.id, "Kinds": kinds}, {"$set": {"Status": message}}
         )
 
     async def check_level_up(self, user: discord.User, kinds: str):
         db = self.bot.async_db["Main"].Animals
         status = await self.get_animal_status(user, kinds)
         if status and status.get("XP", 0) >= status.get("IV", 60):
-            await db.update_one(
-                {"User": user.id, "Kinds": kinds},
-                {"$set": {"XP": 0}}
-            )
+            await db.update_one({"User": user.id, "Kinds": kinds}, {"$set": {"XP": 0}})
             await self.add_level(user, kinds, 1)
 
     @commands.Cog.listener("on_message")
@@ -86,7 +85,11 @@ class AnimalCog(commands.Cog):
 
                 if last_feed and isinstance(last_feed, datetime):
                     if now - last_feed >= timedelta(hours=1):
-                        await self.change_status(message.author, animal.get("Kinds", "None"), "餌をほしがっている・・")
+                        await self.change_status(
+                            message.author,
+                            animal.get("Kinds", "None"),
+                            "餌をほしがっている・・",
+                        )
 
             except Exception:
                 traceback.print_exc()
@@ -107,7 +110,10 @@ class AnimalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def animal_keeping(
-        self, interaction: discord.Interaction, 種類: app_commands.Choice[str], 名前: str
+        self,
+        interaction: discord.Interaction,
+        種類: app_commands.Choice[str],
+        名前: str,
     ):
         await interaction.response.defer()
         db = self.bot.async_db["Main"].Animals
@@ -152,7 +158,10 @@ class AnimalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def animal_status(
-        self, interaction: discord.Interaction, 種類: app_commands.Choice[str], ユーザー: discord.User = None
+        self,
+        interaction: discord.Interaction,
+        種類: app_commands.Choice[str],
+        ユーザー: discord.User = None,
     ):
         await interaction.response.defer()
         target = ユーザー or interaction.user
@@ -273,7 +282,7 @@ class AnimalCog(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        
+
         now = datetime.utcnow()
         last_feed = status.get("LastTrain")
 
@@ -299,7 +308,9 @@ class AnimalCog(commands.Cog):
         else:
             xp_gain = random.randint(0, 5)
             await self.add_xp(interaction.user, 種類.value, xp_gain)
-            result_text = f"訓練に失敗しました… \nXPが **+{xp_gain}** しか増えなかった。"
+            result_text = (
+                f"訓練に失敗しました… \nXPが **+{xp_gain}** しか増えなかった。"
+            )
             color = discord.Color.red()
 
         await self.change_status(interaction.user, 種類.value, "訓練中…")
@@ -316,6 +327,7 @@ class AnimalCog(commands.Cog):
                 color=color,
             )
         )
+
 
 async def setup(bot):
     await bot.add_cog(AnimalCog(bot))

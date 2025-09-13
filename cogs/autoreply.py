@@ -125,11 +125,10 @@ class AutoReplyCog(commands.Cog):
         for b in blacklist_word:
             if b in word:
                 return await message.reply("不適切な言葉が含まれています。")
-            
+
         word = word.split("|")
 
         if len(word) != 1:
-
             word = random.choice(word)
         else:
             word = dbfind.get("ReplyWord", None)
@@ -276,38 +275,45 @@ class AutoReplyCog(commands.Cog):
             )
         )
 
-    @autoreply.command(name="export", description="自動返信をjsonにエクスポートします。")
+    @autoreply.command(
+        name="export", description="自動返信をjsonにエクスポートします。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreply_export(self, interaction: discord.Interaction):
         await interaction.response.defer()
         db = self.bot.async_db["Main"].AutoReply
-        word_list = [
-            b
-            async for b in db.find({"Guild": interaction.guild.id})
-        ]
+        word_list = [b async for b in db.find({"Guild": interaction.guild.id})]
 
         j = {}
-        j['AutoReplys'] = [{w.get('Word'): w.get('ReplyWord')} for w in word_list]
+        j["AutoReplys"] = [{w.get("Word"): w.get("ReplyWord")} for w in word_list]
         i_ = io.StringIO(json.dumps(j))
         await interaction.followup.send(file=discord.File(i_, "autoreply.json"))
         i_.close()
 
-    @autoreply.command(name="import", description="自動返信をjsonからインポートします。")
+    @autoreply.command(
+        name="import", description="自動返信をjsonからインポートします。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
-    async def autoreply_import(self, interaction: discord.Interaction, ファイル: discord.Attachment):
+    async def autoreply_import(
+        self, interaction: discord.Interaction, ファイル: discord.Attachment
+    ):
         await interaction.response.defer()
         try:
             res = json.loads(await ファイル.read())
         except:
-            return await interaction.followup.send(embed=discord.Embed(title="Json読み込みに失敗しました。", color=discord.Color.red()))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="Json読み込みに失敗しました。", color=discord.Color.red()
+                )
+            )
 
         c = 0
         db = self.bot.async_db["Main"].AutoReply
-        for re in res.get('AutoReplys', []):
+        for re in res.get("AutoReplys", []):
             if type(re) == dict:
                 for k, v in re.items():
                     await db.replace_one(
@@ -317,7 +323,14 @@ class AutoReplyCog(commands.Cog):
                     )
                     c += 1
 
-        await interaction.followup.send(embed=discord.Embed(title="自動返信をインポートしました。", description=f"{c}件インポートしました。", color=discord.Color.green()))
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="自動返信をインポートしました。",
+                description=f"{c}件インポートしました。",
+                color=discord.Color.green(),
+            )
+        )
+
 
 async def setup(bot):
     await bot.add_cog(AutoReplyCog(bot))

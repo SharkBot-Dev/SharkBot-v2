@@ -21,20 +21,23 @@ import aiofiles.os
 
 import urllib.parse
 
+
 class EditImageView(discord.ui.View):
     def __init__(self, user: discord.User):
         super().__init__(timeout=180)
         self.user = user
-    
+
     @discord.ui.button(label="ネガポジ反転", style=discord.ButtonStyle.blurple)
-    async def negapoji(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def negapoji(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         if interaction.user.id != self.user.id:
             return
-        
+
         await interaction.response.defer(ephemeral=True)
         file = io.BytesIO(await interaction.message.attachments[0].read())
         image = await asyncio.to_thread(Image.open, file)
-        image = await asyncio.to_thread(image.convert, 'RGB')
+        image = await asyncio.to_thread(image.convert, "RGB")
         imv = await asyncio.to_thread(ImageOps.invert, image)
         i = io.BytesIO()
         await asyncio.to_thread(imv.save, i, format="png")
@@ -47,15 +50,20 @@ class EditImageView(discord.ui.View):
     async def save(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.user.id:
             return
-        
+
         await interaction.response.defer(ephemeral=True)
         await interaction.message.edit(view=None)
 
-    @discord.ui.select(options=[
-        discord.SelectOption(label="90°", value='90'),
-        discord.SelectOption(label="180°", value='180'),
-        discord.SelectOption(label="270°", value='270'),
-    ], max_values=1, min_values=1, placeholder="回転する")
+    @discord.ui.select(
+        options=[
+            discord.SelectOption(label="90°", value="90"),
+            discord.SelectOption(label="180°", value="180"),
+            discord.SelectOption(label="270°", value="270"),
+        ],
+        max_values=1,
+        min_values=1,
+        placeholder="回転する",
+    )
     async def kaiten(self, interaction: discord.Interaction, select: discord.ui.Select):
         await interaction.response.defer(ephemeral=True)
         file = io.BytesIO(await interaction.message.attachments[0].read())
@@ -67,6 +75,7 @@ class EditImageView(discord.ui.View):
         await interaction.message.edit(attachments=[discord.File(i, "emoji.png")])
         file.close()
         i.close()
+
 
 ASCII_CHARS = "@%#*+=-:. "
 
@@ -247,6 +256,7 @@ def create_quote_image(
     else:
         return img.convert("L")
 
+
 class AudioGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="audio", description="音声系のコマンドです。")
@@ -261,7 +271,10 @@ class AudioGroup(app_commands.Group):
         ]
     )
     async def tts_(
-        self, interaction: discord.Interaction, テキスト: str, 声の種類: app_commands.Choice[str]
+        self,
+        interaction: discord.Interaction,
+        テキスト: str,
+        声の種類: app_commands.Choice[str],
     ):
         await interaction.response.defer()
         if 声の種類.value == "reimu":
@@ -270,7 +283,9 @@ class AudioGroup(app_commands.Group):
                     f"https://www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f1&kanji={urllib.parse.quote(テキスト)}"
                 ) as response:
                     io_ = io.BytesIO(await response.read())
-                    await interaction.followup.send(file=discord.File(io_, filename="tts.mp3"))
+                    await interaction.followup.send(
+                        file=discord.File(io_, filename="tts.mp3")
+                    )
                     io_.close()
         elif 声の種類.value == "marisa":
             async with aiohttp.ClientSession() as session:
@@ -278,7 +293,9 @@ class AudioGroup(app_commands.Group):
                     f"https://www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f2&kanji={urllib.parse.quote(テキスト)}"
                 ) as response:
                     io_ = io.BytesIO(await response.read())
-                    await interaction.followup.send(file=discord.File(io_, filename="tts.mp3"))
+                    await interaction.followup.send(
+                        file=discord.File(io_, filename="tts.mp3")
+                    )
                     io_.close()
 
     @app_commands.command(name="distortion", description="音声を音割れさせます。")
@@ -290,13 +307,14 @@ class AudioGroup(app_commands.Group):
         MAX_IMAGE_SIZE = 5 * 1024 * 1024
         if 音声.size > MAX_IMAGE_SIZE:
             await interaction.response.send_message(
-                f"音声は最大 5MB まで対応しています。",
-                ephemeral=True
+                f"音声は最大 5MB まで対応しています。", ephemeral=True
             )
             return
 
         await interaction.response.defer()
-        await aiofiles.os.makedirs(f"files/static/{interaction.user.id}/", exist_ok=True)
+        await aiofiles.os.makedirs(
+            f"files/static/{interaction.user.id}/", exist_ok=True
+        )
 
         input_audio = f"files/static/{interaction.user.id}/{uuid.uuid4()}.mp3"
         mp3_file = f"{uuid.uuid4()}.mp3"
@@ -308,49 +326,44 @@ class AudioGroup(app_commands.Group):
                 async with aiofiles.open(input_audio, "wb") as f:
                     await f.write(await resp.read())
 
-        cmd = [
-            "ffmpeg",
-            "-i", input_audio,
-            "-af", "volume=31dB",
-            output_audio
-        ]
+        cmd = ["ffmpeg", "-i", input_audio, "-af", "volume=31dB", output_audio]
 
         process = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
 
         stdout, stderr = await process.communicate()
 
         if process.returncode != 0:
-            await interaction.followup.send(
-                f"音声処理中にエラーが発生しました。"
-            )
+            await interaction.followup.send(f"音声処理中にエラーが発生しました。")
             return
 
-        await interaction.followup.send(file=discord.File(output_audio, filename="distortion.mp3"))
+        await interaction.followup.send(
+            file=discord.File(output_audio, filename="distortion.mp3")
+        )
+
 
 class MovieGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="movie", description="動画生成系のコマンドです。")
 
-    @app_commands.command(name="sea", description="海の背景の動画に画像を組み合わせます。")
+    @app_commands.command(
+        name="sea", description="海の背景の動画に画像を組み合わせます。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def sea(
-        self, interaction: discord.Interaction, 画像: discord.Attachment
-    ):
+    async def sea(self, interaction: discord.Interaction, 画像: discord.Attachment):
         MAX_IMAGE_SIZE = 5 * 1024 * 1024
         if 画像.size > MAX_IMAGE_SIZE:
             await interaction.response.send_message(
-                f"画像は最大 5MB まで対応しています。",
-                ephemeral=True
+                f"画像は最大 5MB まで対応しています。", ephemeral=True
             )
             return
 
         await interaction.response.defer()
-        await aiofiles.os.makedirs(f"files/static/{interaction.user.id}/", exist_ok=True)
+        await aiofiles.os.makedirs(
+            f"files/static/{interaction.user.id}/", exist_ok=True
+        )
 
         input_video = "data/sea.mp4"
         input_image = f"files/static/{interaction.user.id}/{uuid.uuid4()}.png"
@@ -368,31 +381,40 @@ class MovieGroup(app_commands.Group):
             res_img = img.resize((300, 300))
             res_img.save(input_image, format="png")
             return
-        
+
         await asyncio.to_thread(resize_image)
 
         cmd = [
             "ffmpeg",
             "-y",
-            "-i", input_video,
-            "-i", input_image,
+            "-i",
+            input_video,
+            "-i",
+            input_image,
             "-filter_complex",
             "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2",
             output_video,
         ]
 
         process = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
 
         stdout, stderr = await process.communicate()
 
         filepath = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{mp4_file}"
 
-        await interaction.followup.send(embed=discord.Embed(title="海の背景の動画に画像を組み合わせた動画", description="一日の終わりにファイルが削除されます。", color=discord.Color.green())
-                                        , view=discord.ui.View().add_item(discord.ui.Button(label="結果を確認する",url=filepath)))
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="海の背景の動画に画像を組み合わせた動画",
+                description="一日の終わりにファイルが削除されます。",
+                color=discord.Color.green(),
+            ),
+            view=discord.ui.View().add_item(
+                discord.ui.Button(label="結果を確認する", url=filepath)
+            ),
+        )
+
 
 class TextGroup(app_commands.Group):
     def __init__(self):
@@ -501,7 +523,7 @@ class TextGroup(app_commands.Group):
             return emojis
 
         ems = await text_emoji(テキスト[:20])
-        await interaction.followup.send(content=' '.join(ems))
+        await interaction.followup.send(content=" ".join(ems))
 
     @app_commands.command(name="reencode", description="文字化けを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -652,6 +674,7 @@ class TextGroup(app_commands.Group):
 
         await interaction.response.send_modal(send())
 
+
 class NounaiGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="nounai", description="脳内メーカー系の面白いコマンド")
@@ -785,7 +808,10 @@ class ImageGroup(app_commands.Group):
                 f"https://emoji-gen.ninja/emoji?align=center&back_color=00000000&color={色.value.upper()}FF&font=notosans-mono-bold&locale=ja&public_fg=true&size_fixed=true&stretch=true&text={テキスト}"
             ) as resp:
                 i = io.BytesIO(await resp.read())
-                await interaction.followup.send(file=discord.File(i, "emoji.png"), view=EditImageView(interaction.user))
+                await interaction.followup.send(
+                    file=discord.File(i, "emoji.png"),
+                    view=EditImageView(interaction.user),
+                )
                 i.close()
 
     @app_commands.command(name="httpcat", description="httpキャットを取得します。")
@@ -853,7 +879,12 @@ class ImageGroup(app_commands.Group):
         c = 0
         while True:
             if c > 8:
-                return await interaction.followup.send(embed=discord.Embed(title="予期しないエラーが発生しました。", color=discord.Color.red()))
+                return await interaction.followup.send(
+                    embed=discord.Embed(
+                        title="予期しないエラーが発生しました。",
+                        color=discord.Color.red(),
+                    )
+                )
             miq = await asyncio.to_thread(
                 create_quote_image,
                 ユーザー.display_name,
@@ -869,7 +900,9 @@ class ImageGroup(app_commands.Group):
             image_binary.seek(0)
             try:
                 file = discord.File(fp=image_binary, filename="fake_quote.png")
-                await interaction.followup.send(file=file, content=f"-# {c}回再試行しました。")
+                await interaction.followup.send(
+                    file=file, content=f"-# {c}回再試行しました。"
+                )
             except aiohttp.ClientOSError:
                 c += 1
                 await asyncio.sleep(0.5)
@@ -897,21 +930,21 @@ class ImageGroup(app_commands.Group):
     async def imgur(self, interaction: discord.Interaction, 検索ワード: str):
         await interaction.response.defer()
         try:
-            
-
             async with aiohttp.ClientSession() as session:
                 async with session.get(
                     f"https://api.imgur.com/3/gallery/search",
                     params={"q": 検索ワード},
-                    headers={"Authorization": f"Client-ID {settings.IMGUR_CLIENTID}"}
+                    headers={"Authorization": f"Client-ID {settings.IMGUR_CLIENTID}"},
                 ) as resp:
                     data = await resp.json()
 
-                    if data and 'data' in data:
-                        for item in data['data']:
+                    if data and "data" in data:
+                        for item in data["data"]:
                             return await interaction.followup.send(f"{item['link']}")
-                        
-                    return await interaction.followup.send(f"結果が見つかりませんでした。")
+
+                    return await interaction.followup.send(
+                        f"結果が見つかりませんでした。"
+                    )
         except:
             return await interaction.followup.send(f"検索に失敗しました。")
 
@@ -937,11 +970,18 @@ class ImageGroup(app_commands.Group):
                 assert isinstance(self.introduction.component, discord.ui.TextInput)
 
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(str(interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url)) as resp:
+                    async with session.get(
+                        str(
+                            interaction.user.avatar.url
+                            if interaction.user.avatar
+                            else interaction.user.default_avatar.url
+                        )
+                    ) as resp:
                         avatar_bytes = await resp.read()
 
-                def make_card(user: discord.User, avatar_bytes: io.BytesIO, introduction: str):
-
+                def make_card(
+                    user: discord.User, avatar_bytes: io.BytesIO, introduction: str
+                ):
                     img = Image.new("RGB", (600, 300), color=(54, 57, 63))
                     draw = ImageDraw.Draw(img)
 
@@ -960,25 +1000,45 @@ class ImageGroup(app_commands.Group):
                     mask_draw.ellipse((0, 0, 128, 128), fill=255)
                     img.paste(avatar, (30, 30), mask)
 
-                    draw.text((180, 40), f"{user.name}#{user.discriminator}", font=font_title, fill=(255, 255, 255))
-                    draw.text((180, 100), f"ID: {user.id}", font=font_text, fill=(200, 200, 200))
-                    draw.text((30, 200), f"自己紹介: {introduction}", font=font_text, fill=(255, 255, 255))
+                    draw.text(
+                        (180, 40),
+                        f"{user.name}#{user.discriminator}",
+                        font=font_title,
+                        fill=(255, 255, 255),
+                    )
+                    draw.text(
+                        (180, 100),
+                        f"ID: {user.id}",
+                        font=font_text,
+                        fill=(200, 200, 200),
+                    )
+                    draw.text(
+                        (30, 200),
+                        f"自己紹介: {introduction}",
+                        font=font_text,
+                        fill=(255, 255, 255),
+                    )
 
                     image_binary = io.BytesIO()
 
                     img.save(image_binary, "PNG")
                     image_binary.seek(0)
                     return image_binary
-                    
+
                 a_io = io.BytesIO(avatar_bytes)
 
-                i = await asyncio.to_thread(make_card,interaction.user, a_io, self.introduction.component.value)
+                i = await asyncio.to_thread(
+                    make_card, interaction.user, a_io, self.introduction.component.value
+                )
                 a_io.close()
 
-                await interaction_.followup.send(file=discord.File(i, filename="profile.png"))
+                await interaction_.followup.send(
+                    file=discord.File(i, filename="profile.png")
+                )
                 i.close()
 
         await interaction.response.send_modal(CardModal())
+
 
 class FunCog(commands.Cog):
     def __init__(self, bot: commands.Bot):

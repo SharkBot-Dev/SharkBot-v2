@@ -107,22 +107,43 @@ class RoleCog(commands.Cog):
             app_commands.Choice(name="青", value="blue"),
             app_commands.Choice(name="黄", value="yellow"),
             app_commands.Choice(name="緑", value="green"),
-            app_commands.Choice(name="金", value="gold")
+            app_commands.Choice(name="金", value="gold"),
         ]
     )
-    async def color_role(self, interaction: discord.Interaction, ロール名: str, 色: app_commands.Choice[str]):
+    async def color_role(
+        self,
+        interaction: discord.Interaction,
+        ロール名: str,
+        色: app_commands.Choice[str],
+    ):
         await interaction.response.defer()
         if 色.value == "red":
-            role = await interaction.guild.create_role(name=ロール名, color=discord.Colour.red())
+            role = await interaction.guild.create_role(
+                name=ロール名, color=discord.Colour.red()
+            )
         elif 色.value == "blue":
-            role = await interaction.guild.create_role(name=ロール名, color=discord.Colour.blue())
+            role = await interaction.guild.create_role(
+                name=ロール名, color=discord.Colour.blue()
+            )
         elif 色.value == "yellow":
-            role = await interaction.guild.create_role(name=ロール名, color=discord.Colour.yellow())
+            role = await interaction.guild.create_role(
+                name=ロール名, color=discord.Colour.yellow()
+            )
         elif 色.value == "green":
-            role = await interaction.guild.create_role(name=ロール名, color=discord.Colour.green())
+            role = await interaction.guild.create_role(
+                name=ロール名, color=discord.Colour.green()
+            )
         elif 色.value == "gold":
-            role = await interaction.guild.create_role(name=ロール名, color=discord.Colour.gold())
-        await interaction.followup.send(embed=discord.Embed(title="色付きロールを作成しました。", description=f"作成したロール: {role.mention}", color=discord.Color.green()))
+            role = await interaction.guild.create_role(
+                name=ロール名, color=discord.Colour.gold()
+            )
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="色付きロールを作成しました。",
+                description=f"作成したロール: {role.mention}",
+                color=discord.Color.green(),
+            )
+        )
 
     @role.command(name="info", description="ロール情報を確認します。")
     @app_commands.checks.has_permissions(manage_roles=True)
@@ -226,12 +247,23 @@ class RoleCog(commands.Cog):
                 )
             )
 
-    @role.command(name="can-bot", description="Botが特定ロールを扱えるかをチェックします。")
+    @role.command(
+        name="can-bot", description="Botが特定ロールを扱えるかをチェックします。"
+    )
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def role_can_bot(self, interaction: discord.Interaction, ロール: discord.Role):
-        await interaction.response.send_message(embed=discord.Embed(title="そのロールを扱える？", color=discord.Color.green(), description=f"{'✅はい' if ロール.is_assignable() else '❌いいえ'}\n\nいいえと表示された場合は、\nこのBotのロールの下にそのロールを持っていこう。"))
+    async def role_can_bot(
+        self, interaction: discord.Interaction, ロール: discord.Role
+    ):
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="そのロールを扱える？",
+                color=discord.Color.green(),
+                description=f"{'✅はい' if ロール.is_assignable() else '❌いいえ'}\n\nいいえと表示された場合は、\nこのBotのロールの下にそのロールを持っていこう。",
+            )
+        )
+
 
 async def setup(bot):
     await bot.add_cog(RoleCog(bot))

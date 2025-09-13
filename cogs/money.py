@@ -313,30 +313,32 @@ class GachaGroup(app_commands.Group):
         try:
             res = json.loads(await ファイル.read())
         except:
-            return await interaction.followup.send(embed=discord.Embed(title="Json読み込みに失敗しました。", color=discord.Color.red()))
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="Json読み込みに失敗しました。", color=discord.Color.red()
+                )
+            )
 
-        for i_n in res.get('Item', []):
-
+        for i_n in res.get("Item", []):
             sm = await Money(interaction.client).get_server_items(
-                interaction.guild, i_n.get('Name')
+                interaction.guild, i_n.get("Name")
             )
             if not sm:
-
                 await Money(interaction.client).create_server_items(
-                    interaction.guild, i_n.get('Money'), i_n.get('Name')
+                    interaction.guild, i_n.get("Money"), i_n.get("Name")
                 )
 
         db = interaction.client.async_db["Main"].ServerMoneyGacha
 
         await db.replace_one(
-            {"Guild": interaction.guild.id, "Name": res.get('Name', "ガチャ名")},
+            {"Guild": interaction.guild.id, "Name": res.get("Name", "ガチャ名")},
             {
                 "Guild": interaction.guild.id,
-                "Name": res.get('Name', "ガチャ名"),
-                "Money": res.get('Money', "ガチャ金額"),
-                "Text": res.get('Text', "ガチャ説明"),
-                "Item": [i.get('Name') for i in res.get('Item', [])],
-                "Role": res.get('Role', 0),
+                "Name": res.get("Name", "ガチャ名"),
+                "Money": res.get("Money", "ガチャ金額"),
+                "Text": res.get("Text", "ガチャ説明"),
+                "Item": [i.get("Name") for i in res.get("Item", [])],
+                "Role": res.get("Role", 0),
             },
             upsert=True,
         )
@@ -364,27 +366,29 @@ class GachaGroup(app_commands.Group):
             return await interaction.followup.send(
                 ephemeral=True, content="ガチャが見つかりません。"
             )
-        
+
         if dbfind.get("Item", []) == []:
             return await interaction.followup.send(
-                embed=discord.Embed(title="アイテムの無いガチャはエクスポートできません。", color=discord.Color.red())
+                embed=discord.Embed(
+                    title="アイテムの無いガチャはエクスポートできません。",
+                    color=discord.Color.red(),
+                )
             )
-        
+
         js = {}
-        js['Name'] = ガチャ名
-        js['Text'] = dbfind.get('Text', 'ガチャ説明')
-        js['Money'] = dbfind.get('Money', 0)
+        js["Name"] = ガチャ名
+        js["Text"] = dbfind.get("Text", "ガチャ説明")
+        js["Money"] = dbfind.get("Money", 0)
 
         i_ = []
-        for i_n in dbfind.get('Item', []):
-
+        for i_n in dbfind.get("Item", []):
             sm = await Money(interaction.client).get_server_items(
                 interaction.guild, i_n
             )
             if sm:
-                i_.append({'Name': i_n, 'Money': sm.get('Money')})
+                i_.append({"Name": i_n, "Money": sm.get("Money")})
 
-        js['Item'] = i_
+        js["Item"] = i_
 
         s = io.StringIO(json.dumps(js))
 
@@ -806,7 +810,9 @@ class ManageGroup(app_commands.Group):
             )
         )
 
-    @app_commands.command(name="chatmoney", description="会話するたびにお金がもらえるようにします。")
+    @app_commands.command(
+        name="chatmoney", description="会話するたびにお金がもらえるようにします。"
+    )
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -816,17 +822,27 @@ class ManageGroup(app_commands.Group):
         db = interaction.client.async_db["Main"].ServerChatMoney
         if not 金額:
             await db.delete_one({"Guild": interaction.guild.id})
-            return await interaction.response.send_message(embed=discord.Embed(title="会話をしてもお金をもらえなくしました。", color=discord.Color.red()))
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="会話をしてもお金をもらえなくしました。",
+                    color=discord.Color.red(),
+                )
+            )
 
         await db.replace_one(
             {"Guild": interaction.guild.id, "Money": 金額},
-            {
-                "Guild": interaction.guild.id, "Money": 金額
-            },
+            {"Guild": interaction.guild.id, "Money": 金額},
             upsert=True,
         )
 
-        await interaction.response.send_message(embed=discord.Embed(title="会話するたびに、お金がもらえるようにしました。", description=f"{金額}コインです。", color=discord.Color.green()))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="会話するたびに、お金がもらえるようにしました。",
+                description=f"{金額}コインです。",
+                color=discord.Color.green(),
+            )
+        )
+
 
 class ItemGroup(app_commands.Group):
     def __init__(self):
@@ -894,18 +910,18 @@ class ServerMoneyCog(commands.Cog):
     async def on_message_chatmoney(self, message: discord.Message):
         if message.author.bot or not message.guild:
             return
-        
+
         db = self.bot.async_db["Main"].ServerChatMoney
         try:
             dbfind = await db.find_one({"Guild": message.guild.id}, {"_id": False})
         except Exception:
             return
-        
+
         if dbfind is None:
             return
-        
+
         await Money(self.bot).add_server_money(
-            message.guild, message.author, dbfind.get('Money', 0)
+            message.guild, message.author, dbfind.get("Money", 0)
         )
 
     server_economy = app_commands.Group(

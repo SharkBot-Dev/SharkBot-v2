@@ -172,5 +172,6 @@ class AutoModCog(commands.Cog):
             ephemeral=True, content=f"AutoModの「{タイプ.name}」を削除しました。"
         )
 
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoModCog(bot))

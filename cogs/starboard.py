@@ -13,7 +13,9 @@ class StarBoardCog(commands.Cog):
         self.bot = bot
         print("init -> StarBoardCog")
 
-    async def get_reaction_channel(self, guild: discord.Guild, emoji: discord.PartialEmoji):
+    async def get_reaction_channel(
+        self, guild: discord.Guild, emoji: discord.PartialEmoji
+    ):
         db = self.bot.async_db["Main"].ReactionBoard
         try:
             dbfind = await db.find_one(
@@ -39,7 +41,11 @@ class StarBoardCog(commands.Cog):
         db = self.bot.async_db["Main"].ReactionBoardMessage
         await db.replace_one(
             {"Guild": original.guild.id},
-            {"Guild": original.guild.id, "ID": original.id, "ReactMessageID": board_msg.id},
+            {
+                "Guild": original.guild.id,
+                "ID": original.id,
+                "ReactMessageID": board_msg.id,
+            },
             upsert=True,
         )
 
@@ -152,7 +158,7 @@ class StarBoardCog(commands.Cog):
         guild = self.bot.get_guild(payload.guild_id)
         if not guild:
             return
-        
+
         check = await self.get_reaction_channel(guild, payload.emoji)
         if not check:
             return

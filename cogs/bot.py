@@ -182,9 +182,11 @@ Sharkアカウント: {sharkaccount_count}人
                 discord.ui.TextDisplay(
                     f"その他の質問をしたいんだけど、どうすればいいの？\n以下のURLのサーバーで質問をすることができます。\nhttps://discord.com/invite/mUyByHYMGk",
                 ),
-                accent_colour=discord.Colour.green()
+                accent_colour=discord.Colour.green(),
             )
+
         await interaction.response.send_message(view=FaqLayout())
+
 
 async def setup(bot):
     await bot.add_cog(BotCog(bot))

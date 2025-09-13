@@ -7,27 +7,30 @@ from consts import badword
 
 cooldown_tags = {}
 
+
 class TagsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.engine = tse.Interpreter([
-            tse.MathBlock(),
-            tse.RandomBlock(),
-            tse.RangeBlock(),
-            tse.AnyBlock(),
-            tse.IfBlock(),
-            tse.AllBlock(),
-            tse.BreakBlock(),
-            tse.StrfBlock(),
-            tse.StopBlock(),
-            tse.AssignmentBlock(),
-            tse.FiftyFiftyBlock(),
-            tse.ShortCutRedirectBlock("args"),
-            tse.LooseVariableGetterBlock(),
-            tse.SubstringBlock(),
-            tse.ReplaceBlock(),
-            tse.URLEncodeBlock(),
-        ])
+        self.engine = tse.Interpreter(
+            [
+                tse.MathBlock(),
+                tse.RandomBlock(),
+                tse.RangeBlock(),
+                tse.AnyBlock(),
+                tse.IfBlock(),
+                tse.AllBlock(),
+                tse.BreakBlock(),
+                tse.StrfBlock(),
+                tse.StopBlock(),
+                tse.AssignmentBlock(),
+                tse.FiftyFiftyBlock(),
+                tse.ShortCutRedirectBlock("args"),
+                tse.LooseVariableGetterBlock(),
+                tse.SubstringBlock(),
+                tse.ReplaceBlock(),
+                tse.URLEncodeBlock(),
+            ]
+        )
         print("init -> TagsCog")
 
     """
@@ -160,6 +163,7 @@ class TagsCog(commands.Cog):
             return a
 
     """
+
 
 async def setup(bot):
     await bot.add_cog(TagsCog(bot))

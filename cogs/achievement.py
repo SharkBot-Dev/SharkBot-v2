@@ -107,8 +107,8 @@ class AchievementCog(commands.Cog):
                         }
                     )
 
-                    if achi.get('Role', 0) != 0:
-                        role = message.guild.get_role(achi.get('Role', 0))
+                    if achi.get("Role", 0) != 0:
+                        role = message.guild.get_role(achi.get("Role", 0))
                         if role != None:
                             await message.author.add_roles(role)
 
@@ -152,10 +152,12 @@ class AchievementCog(commands.Cog):
                         {"User": user.id, "Guild": guild.id, "Name": achi.get("Name")}
                     )
 
-                    if achi.get('Role', 0) != 0:
-                        role = reaction.message.guild.get_role(achi.get('Role', 0))
+                    if achi.get("Role", 0) != 0:
+                        role = reaction.message.guild.get_role(achi.get("Role", 0))
                         if role != None:
-                            await reaction.message.guild.get_member(user.id).add_roles(role)
+                            await reaction.message.guild.get_member(user.id).add_roles(
+                                role
+                            )
 
                     try:
                         await self.send_reaction_channel(reaction.message, user, achi)
@@ -206,7 +208,7 @@ class AchievementCog(commands.Cog):
         実績名: str,
         値: int,
         をする: app_commands.Choice[str],
-        ロール: discord.Role = None
+        ロール: discord.Role = None,
     ):
         if not await self.check_achi_enabled(interaction.guild):
             return await interaction.response.send_message(
@@ -221,7 +223,7 @@ class AchievementCog(commands.Cog):
                 "Name": 実績名,
                 "Value": 値,
                 "If": をする.value,
-                "Role": ロール.id if ロール else 0
+                "Role": ロール.id if ロール else 0,
             },
             upsert=True,
         )

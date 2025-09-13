@@ -18,6 +18,7 @@ router = APIRouter()
 async def index(request: Request):
     return RedirectResponse("https://www.sharkbot.xyz/")
 
+
 @router.get("/omikuji", dependencies=[Depends(rate_limiter)])
 async def omikuji(request: Request):
     u = request.session.get("user")
@@ -27,6 +28,7 @@ async def omikuji(request: Request):
     return templates.templates.TemplateResponse(
         "omikuji.html", {"request": request, "user": u}
     )
+
 
 @router.get("/rankcard", dependencies=[Depends(rate_limiter)])
 async def rankcard(request: Request):

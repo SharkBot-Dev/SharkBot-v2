@@ -7,6 +7,7 @@ from discord import app_commands
 import yt_dlp
 import asyncio
 
+
 class RadioCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -89,6 +90,7 @@ class RadioCog(commands.Cog):
         await interaction.followup.send(embed=discord.Embed(title="まだラジオを再生していないようです。", color=discord.Color.green()))
 
     """
-    
+
+
 async def setup(bot):
     await bot.add_cog(RadioCog(bot))

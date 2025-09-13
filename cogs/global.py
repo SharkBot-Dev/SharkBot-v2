@@ -420,7 +420,7 @@ class GlobalCog(commands.Cog):
                         color=discord.Color.green(),
                     )
                 )
-            
+
                 await self.send_global_chat_leave(interaction)
             else:
                 await self.globalchat_join(interaction)
@@ -936,7 +936,10 @@ class GlobalCog(commands.Cog):
                             name=f"[{bag}] {message.author.name}/{message.author.id} [{message.author.primary_guild.tag if message.author.primary_guild.tag else 'なし'}]",
                             icon_url=message.author.default_avatar.url,
                         )
-                    embed_2 = discord.Embed(color=discord.Color.red()).set_footer(text=f"{message.guild.name} | {message.guild.id}", icon_url=message.guild.icon.url if message.guild.icon else None)
+                    embed_2 = discord.Embed(color=discord.Color.red()).set_footer(
+                        text=f"{message.guild.name} | {message.guild.id}",
+                        icon_url=message.guild.icon.url if message.guild.icon else None,
+                    )
                     if not message.attachments == []:
                         for kaku in [".png", ".jpg", ".jpeg", ".gif", ".webm"]:
                             if kaku in message.attachments[0].filename:
@@ -1055,7 +1058,11 @@ class GlobalCog(commands.Cog):
                             )
                             for kaku in [".png", ".jpg", ".jpeg", ".gif", ".webm"]:
                                 if kaku in dic["attachmentsUrl"][0]:
-                                    embed.set_image(url=urllib.parse.unquote(dic["attachmentsUrl"][0]))
+                                    embed.set_image(
+                                        url=urllib.parse.unquote(
+                                            dic["attachmentsUrl"][0]
+                                        )
+                                    )
                                     break
                         except:
                             pass
@@ -1120,7 +1127,9 @@ class GlobalCog(commands.Cog):
                             pass
                     embed_2 = discord.Embed(color=discord.Color.red()).set_footer(
                         text=f"{dic.get('guildName', '不明なサーバー')} | {dic.get('guildId', '不明')}",
-                        icon_url="https://media.discordapp.net/icons/{}/{}.png?size=1024".format(dic.get("guildId", "0"), dic.get("guildIcon", ""))
+                        icon_url="https://media.discordapp.net/icons/{}/{}.png?size=1024".format(
+                            dic.get("guildId", "0"), dic.get("guildIcon", "")
+                        ),
                     )
                     webhook_ = Webhook.from_url(
                         ch.get("Webhook", None), session=session
@@ -1919,7 +1928,10 @@ class GlobalCog(commands.Cog):
                             name=f"[{bag}] {message.author.name}/{message.author.id} [{message.author.primary_guild.tag if message.author.primary_guild.tag else 'なし'}]",
                             icon_url=message.author.default_avatar.url,
                         )
-                    embed_2 = discord.Embed(color=discord.Color.red()).set_footer(text=f"{message.guild.name} | {message.guild.id}", icon_url=message.guild.icon.url if message.guild.icon else None)
+                    embed_2 = discord.Embed(color=discord.Color.red()).set_footer(
+                        text=f"{message.guild.name} | {message.guild.id}",
+                        icon_url=message.guild.icon.url if message.guild.icon else None,
+                    )
                     if not message.attachments == []:
                         for kaku in [".png", ".jpg", ".jpeg", ".gif", ".webm"]:
                             if kaku in message.attachments[0].filename:
@@ -2043,7 +2055,11 @@ class GlobalCog(commands.Cog):
                             )
                             for kaku in [".png", ".jpg", ".jpeg", ".gif", ".webm"]:
                                 if kaku in dic["attachmentsUrl"][0]:
-                                    embed.set_image(url=urllib.parse.unquote(dic["attachmentsUrl"][0]))
+                                    embed.set_image(
+                                        url=urllib.parse.unquote(
+                                            dic["attachmentsUrl"][0]
+                                        )
+                                    )
                                     break
                         except:
                             pass
@@ -2108,7 +2124,9 @@ class GlobalCog(commands.Cog):
                             pass
                     embed_2 = discord.Embed(color=discord.Color.red()).set_footer(
                         text=f"{dic.get('guildName', '不明なサーバー')} | {dic.get('guildId', '不明')}",
-                        icon_url="https://media.discordapp.net/icons/{}/{}.png?size=1024".format(dic.get("guildId", "0"), dic.get("guildIcon", ""))
+                        icon_url="https://media.discordapp.net/icons/{}/{}.png?size=1024".format(
+                            dic.get("guildId", "0"), dic.get("guildIcon", "")
+                        ),
                     )
                     webhook_ = Webhook.from_url(
                         ch.get("Webhook", None), session=session

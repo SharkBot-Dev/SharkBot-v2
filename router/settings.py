@@ -313,10 +313,12 @@ async def welcome(request: Request, guild_id: str):
             "guild": guild,
             "channels": channels,
             "title": rep_name(msg.get("Title", "[name] さん、よろしく！")),
-            "description": rep_name(msg.get(
-                "Description",
-                "あなたは [count] 人目のメンバーです！\n\nアカウント作成日: [createdat]",
-            )),
+            "description": rep_name(
+                msg.get(
+                    "Description",
+                    "あなたは [count] 人目のメンバーです！\n\nアカウント作成日: [createdat]",
+                )
+            ),
         },
     )
 
@@ -365,6 +367,7 @@ async def welcome_send(
         )
 
     try:
+
         def rep_name(msg: str):
             return (
                 msg.replace("[name]", "<name>")

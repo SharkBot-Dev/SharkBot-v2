@@ -28,11 +28,11 @@ import math
 import yt_dlp
 
 SOUNDCLOUD_REGEX = re.compile(
-    r'^(https?://)?(www\.)?(soundcloud\.com|on\.soundcloud\.com)/.+'
+    r"^(https?://)?(www\.)?(soundcloud\.com|on\.soundcloud\.com)/.+"
 )
 
-IRASUTOTA_REGEX = re.compile(r'https://www\.irasutoya\.com/.+/.+/.+\.html')
-X_REGEX = re.compile(r'https://x.com/.+/status/.+')
+IRASUTOTA_REGEX = re.compile(r"https://www\.irasutoya\.com/.+/.+/.+\.html")
+X_REGEX = re.compile(r"https://x.com/.+/status/.+")
 
 ipv4_pattern = re.compile(
     r"^("
@@ -189,6 +189,7 @@ class EmbedMake(discord.ui.Modal, title="埋め込みを作成"):
 
 cooldown_afk = {}
 
+
 class CalcGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="calc", description="計算系のコマンドです。")
@@ -196,10 +197,7 @@ class CalcGroup(app_commands.Group):
     @app_commands.command(name="calculator", description="電卓を使用します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def calculator_(
-        self, interaction: discord.Interaction
-    ):
-
+    async def calculator_(self, interaction: discord.Interaction):
         def safe_calculator(expression: str):
             expression = expression.replace(" ", "")
 
@@ -214,9 +212,9 @@ class CalcGroup(app_commands.Group):
                 while i < len(tokens):
                     op = tokens[i]
                     num = float(tokens[i + 1])
-                    if op == '*':
+                    if op == "*":
                         result *= num
-                    elif op == '/':
+                    elif op == "/":
                         if num == 0:
                             return "0で割ることはできません。"
                         result /= num
@@ -224,11 +222,11 @@ class CalcGroup(app_commands.Group):
                 return result
 
             def parse_add_sub(expression):
-                tokens = re.findall(r'[+-]?\d+(?:\.\d+)?|[*/]', expression)
+                tokens = re.findall(r"[+-]?\d+(?:\.\d+)?|[*/]", expression)
                 new_tokens = []
                 i = 0
                 while i < len(tokens):
-                    if tokens[i] in '*/':
+                    if tokens[i] in "*/":
                         a = new_tokens.pop()
                         op = tokens[i]
                         b = tokens[i + 1]
@@ -243,11 +241,15 @@ class CalcGroup(app_commands.Group):
                 i = 1
                 while i < len(new_tokens):
                     op = new_tokens[i][0]
-                    num_str = new_tokens[i][1:] if len(new_tokens[i]) > 1 else new_tokens[i + 1]
+                    num_str = (
+                        new_tokens[i][1:]
+                        if len(new_tokens[i]) > 1
+                        else new_tokens[i + 1]
+                    )
                     num = check_number(float(num_str))
-                    if op == '+':
+                    if op == "+":
                         result = check_number(result + num)
-                    elif op == '-':
+                    elif op == "-":
                         result = check_number(result - num)
                     i += 1 if len(new_tokens[i]) > 1 else 2
                 return result
@@ -263,91 +265,125 @@ class CalcGroup(app_commands.Group):
                 self.calculator = "0"
 
             async def update_display(self, interaction: discord.Interaction):
-                await interaction.response.edit_message(content=self.calculator, view=self)
+                await interaction.response.edit_message(
+                    content=self.calculator, view=self
+                )
 
             # 数字ボタン
             @discord.ui.button(label="1", style=discord.ButtonStyle.secondary, row=1)
-            async def one(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def one(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 self.calculator = self.calculator.lstrip("0") + "1"
                 await self.update_display(interaction)
 
             @discord.ui.button(label="2", style=discord.ButtonStyle.secondary, row=1)
-            async def two(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def two(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 self.calculator = self.calculator.lstrip("0") + "2"
                 await self.update_display(interaction)
 
             @discord.ui.button(label="3", style=discord.ButtonStyle.secondary, row=1)
-            async def three(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def three(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 self.calculator = self.calculator.lstrip("0") + "3"
                 await self.update_display(interaction)
 
             @discord.ui.button(label="4", style=discord.ButtonStyle.secondary, row=1)
-            async def four(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def four(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 self.calculator = self.calculator.lstrip("0") + "4"
                 await self.update_display(interaction)
 
             @discord.ui.button(label="5", style=discord.ButtonStyle.secondary, row=2)
-            async def five(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def five(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 self.calculator = self.calculator.lstrip("0") + "5"
                 await self.update_display(interaction)
 
             @discord.ui.button(label="6", style=discord.ButtonStyle.secondary, row=2)
-            async def six(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def six(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 self.calculator = self.calculator.lstrip("0") + "6"
                 await self.update_display(interaction)
 
             @discord.ui.button(label="7", style=discord.ButtonStyle.secondary, row=2)
-            async def seven(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def seven(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 self.calculator = self.calculator.lstrip("0") + "7"
                 await self.update_display(interaction)
 
             @discord.ui.button(label="8", style=discord.ButtonStyle.secondary, row=2)
-            async def eight(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def eight(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 self.calculator = self.calculator.lstrip("0") + "8"
                 await self.update_display(interaction)
 
             @discord.ui.button(label="9", style=discord.ButtonStyle.secondary, row=3)
-            async def nine(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def nine(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 self.calculator = self.calculator.lstrip("0") + "9"
                 await self.update_display(interaction)
 
             @discord.ui.button(label="0", style=discord.ButtonStyle.secondary, row=3)
-            async def zero(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def zero(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 if self.calculator != "0":
                     self.calculator += "0"
                 await self.update_display(interaction)
 
             @discord.ui.button(label="00", style=discord.ButtonStyle.secondary, row=3)
-            async def zerotwo(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def zerotwo(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 if self.calculator != "0":
                     self.calculator += "00"
                 await self.update_display(interaction)
 
             # 演算子
             @discord.ui.button(label="+", style=discord.ButtonStyle.primary, row=4)
-            async def plus(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def plus(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 self.calculator += "+"
                 await self.update_display(interaction)
 
             @discord.ui.button(label="-", style=discord.ButtonStyle.primary, row=4)
-            async def minus(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def minus(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 self.calculator += "-"
                 await self.update_display(interaction)
 
             @discord.ui.button(label="=", style=discord.ButtonStyle.success, row=4)
-            async def equal(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def equal(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 result = safe_calculator(self.calculator)
                 self.calculator = str(result)
                 await self.update_display(interaction)
 
             @discord.ui.button(label="C", style=discord.ButtonStyle.red, row=4)
-            async def clear(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def clear(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 self.calculator = "0"
                 await self.update_display(interaction)
 
         await interaction.response.send_message(content="0", view=CalculatorView())
 
-    @app_commands.command(name="size-converter", description="ファイルの容量の単位を変換します。")
+    @app_commands.command(
+        name="size-converter", description="ファイルの容量の単位を変換します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
@@ -359,62 +395,82 @@ class CalcGroup(app_commands.Group):
         ]
     )
     async def size_converter(
-        self, interaction: discord.Interaction, 単位: app_commands.Choice[str], 変換元: int
+        self,
+        interaction: discord.Interaction,
+        単位: app_commands.Choice[str],
+        変換元: int,
     ):
         def gb_to_mb(gb):
             mb = gb * 1024
             return mb
+
         def mb_to_gb(mb):
             gb = mb / 1024
             return gb
+
         if 単位.value == "gm":
             mb = gb_to_mb(変換元)
-            await interaction.response.send_message(embed=discord.Embed(title="変換結果", color=discord.Color.green())
-                                                    .add_field(name="GB", value=f"{変換元}", inline=False)
-                                                    .add_field(name="MB", value=f"{mb}", inline=False))
+            await interaction.response.send_message(
+                embed=discord.Embed(title="変換結果", color=discord.Color.green())
+                .add_field(name="GB", value=f"{変換元}", inline=False)
+                .add_field(name="MB", value=f"{mb}", inline=False)
+            )
         elif 単位.value == "mg":
             gb = mb_to_gb(変換元)
-            await interaction.response.send_message(embed=discord.Embed(title="変換結果", color=discord.Color.green())
-                                                    .add_field(name="MB", value=f"{変換元}", inline=False)
-                                                    .add_field(name="GB", value=f"{gb}", inline=False))
+            await interaction.response.send_message(
+                embed=discord.Embed(title="変換結果", color=discord.Color.green())
+                .add_field(name="MB", value=f"{変換元}", inline=False)
+                .add_field(name="GB", value=f"{gb}", inline=False)
+            )
         elif 単位.value == "mk":
             kb = gb_to_mb(変換元)
-            await interaction.response.send_message(embed=discord.Embed(title="変換結果", color=discord.Color.green())
-                                                    .add_field(name="MB", value=f"{変換元}", inline=False)
-                                                    .add_field(name="KB", value=f"{kb}", inline=False))
+            await interaction.response.send_message(
+                embed=discord.Embed(title="変換結果", color=discord.Color.green())
+                .add_field(name="MB", value=f"{変換元}", inline=False)
+                .add_field(name="KB", value=f"{kb}", inline=False)
+            )
         elif 単位.value == "km":
             mb = mb_to_gb(変換元)
-            await interaction.response.send_message(embed=discord.Embed(title="変換結果", color=discord.Color.green())
-                                                    .add_field(name="KB", value=f"{変換元}", inline=False)
-                                                    .add_field(name="MB", value=f"{mb}", inline=False))
+            await interaction.response.send_message(
+                embed=discord.Embed(title="変換結果", color=discord.Color.green())
+                .add_field(name="KB", value=f"{変換元}", inline=False)
+                .add_field(name="MB", value=f"{mb}", inline=False)
+            )
+
 
 class OcrGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="ocr", description="OCR系のコマンドです。")
 
     async def ocr_async(self, image_: io.BytesIO):
-
         image = await asyncio.to_thread(Image.open, image_)
 
         text = await asyncio.to_thread(pytesseract.image_to_string, image, lang="jpn")
 
         return text
-    
+
     @app_commands.command(name="ocr", description="OCRをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def ocr(
-        self, interaction: discord.Interaction, 画像: discord.Attachment
-    ):
+    async def ocr(self, interaction: discord.Interaction, 画像: discord.Attachment):
         await interaction.response.defer()
 
-        if not 画像.filename.endswith(('.png', '.jpg', '.jpeg')):
-            return await interaction.followup.send(content="`.png`と`.jpg`のみ対応しています。")
+        if not 画像.filename.endswith((".png", ".jpg", ".jpeg")):
+            return await interaction.followup.send(
+                content="`.png`と`.jpg`のみ対応しています。"
+            )
         i = io.BytesIO(await 画像.read())
         text_ocrd = await self.ocr_async(i)
         i.close()
 
-        await interaction.followup.send(embed=discord.Embed(title="OCR結果", description=f"```{text_ocrd}```", color=discord.Color.green()))
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="OCR結果",
+                description=f"```{text_ocrd}```",
+                color=discord.Color.green(),
+            )
+        )
+
 
 class ToolsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -476,9 +532,17 @@ class ToolsCog(commands.Cog):
     async def afk_mention_write(self, user: int, message: discord.Message):
         database = self.bot.async_db["Main"].AFKMention
         await database.replace_one(
-            {"User": user, "Channel": message.channel.id, "MentionUser": message.author.id}, 
-            {"User": user, "MentionUser": message.author.id, "Channel": message.channel.id}, 
-            upsert=True
+            {
+                "User": user,
+                "Channel": message.channel.id,
+                "MentionUser": message.author.id,
+            },
+            {
+                "User": user,
+                "MentionUser": message.author.id,
+                "Channel": message.channel.id,
+            },
+            upsert=True,
         )
 
     @commands.Cog.listener("on_message")
@@ -512,7 +576,7 @@ class ToolsCog(commands.Cog):
                 return
 
     tools = app_commands.Group(name="tools", description="ツール系のコマンドです。")
-    
+
     tools.add_command(CalcGroup())
     tools.add_command(OcrGroup())
 
@@ -854,8 +918,14 @@ class ToolsCog(commands.Cog):
             app_commands.Choice(name="読み取り", value="read"),
         ]
     )
-    async def qrcode_make(self, interaction: discord.Interaction, 操作: app_commands.Choice[str], qrコード: discord.Attachment = None):
+    async def qrcode_make(
+        self,
+        interaction: discord.Interaction,
+        操作: app_commands.Choice[str],
+        qrコード: discord.Attachment = None,
+    ):
         if 操作.value == "create":
+
             class CreateModal(discord.ui.Modal, title="QRコード作成"):
                 url = discord.ui.TextInput(
                     label="URLを入力",
@@ -871,10 +941,13 @@ class ToolsCog(commands.Cog):
                             url=f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={self.url.value}"
                         )
                     )
+
             await interaction.response.send_modal(CreateModal())
         elif 操作.value == "read":
             if not qrコード:
-                return await interaction.response.send_message(ephemeral=True, content="Qrコードを添付してください。")
+                return await interaction.response.send_message(
+                    ephemeral=True, content="Qrコードを添付してください。"
+                )
             await interaction.response.defer()
             i_ = io.BytesIO(await qrコード.read())
             img = await asyncio.to_thread(Image.open, i_)
@@ -882,8 +955,14 @@ class ToolsCog(commands.Cog):
             if not decoded_objects:
                 await interaction.followup.send("QRコードが見つかりませんでした。")
                 return
-            results = '\n'.join([obj.data.decode("utf-8") for obj in decoded_objects])
-            await interaction.followup.send(embed=discord.Embed(title="QRコード読み取り結果", description=f"```{results}```", color=discord.Color.green()))
+            results = "\n".join([obj.data.decode("utf-8") for obj in decoded_objects])
+            await interaction.followup.send(
+                embed=discord.Embed(
+                    title="QRコード読み取り結果",
+                    description=f"```{results}```",
+                    color=discord.Color.green(),
+                )
+            )
             i_.close()
             await asyncio.to_thread(img.close)
 
@@ -949,14 +1028,16 @@ class ToolsCog(commands.Cog):
             match = re.fullmatch(pattern, timestr)
             if not match:
                 return None
-            time_params = {name: int(val) if val else 0 for name, val in match.groupdict().items()}
+            time_params = {
+                name: int(val) if val else 0 for name, val in match.groupdict().items()
+            }
             seconds = (
                 time_params["days"] * 86400
                 + time_params["hours"] * 3600
                 + time_params["minutes"] * 60
                 + time_params["seconds"]
             )
-            return seconds    
+            return seconds
 
         seconds = parse_time(時間)
         if seconds is None or seconds <= 0:
@@ -971,11 +1052,11 @@ class ToolsCog(commands.Cog):
 
         await self.bot.alert_add(
             f"reminder_{interaction.user.id}",  # ID
-            interaction.channel.id,             # 通知チャンネル
-            f"{interaction.user.mention}",      # メンション
-            "リマインダーのセットされた時間です！", # タイトル/本文
-            要件,                                # ユーザー指定メッセージ
-            seconds,                            # 待機時間(秒)
+            interaction.channel.id,  # 通知チャンネル
+            f"{interaction.user.mention}",  # メンション
+            "リマインダーのセットされた時間です！",  # タイトル/本文
+            要件,  # ユーザー指定メッセージ
+            seconds,  # 待機時間(秒)
         )
 
         return await interaction.response.send_message(
@@ -1051,7 +1132,8 @@ class ToolsCog(commands.Cog):
     ):
         choices = [
             app_commands.Choice(name=f, value=f)
-            for f in ["いらすとや", "X(Twitter)"] if current.lower() in f.lower()
+            for f in ["いらすとや", "X(Twitter)"]
+            if current.lower() in f.lower()
         ]
         return choices[:25]
 
@@ -1064,13 +1146,16 @@ class ToolsCog(commands.Cog):
 
         if タイプ == "いらすとや":
             if not IRASUTOTA_REGEX.match(url):
-                await interaction.followup.send(embed=discord.Embed(title="正しいURLを入力してください。", color=discord.Color.red()), ephemeral=True)
+                await interaction.followup.send(
+                    embed=discord.Embed(
+                        title="正しいURLを入力してください。", color=discord.Color.red()
+                    ),
+                    ephemeral=True,
+                )
                 return
 
             async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    url
-                ) as response:
+                async with session.get(url) as response:
                     bs4 = BeautifulSoup(await response.text(), "html.parser")
                     try:
                         img = bs4.select(".separator > a")[0]
@@ -1082,12 +1167,12 @@ class ToolsCog(commands.Cog):
                                 ),
                                 discord.ui.Separator(),
                                 discord.ui.MediaGallery(
-                                    discord.MediaGalleryItem(img.get('href'))
+                                    discord.MediaGalleryItem(img.get("href"))
                                 ),
                                 discord.ui.ActionRow(
                                     discord.ui.Button(
                                         label="ダウンロード",
-                                        url=img.get('href'),
+                                        url=img.get("href"),
                                     )
                                 ),
                                 accent_colour=discord.Colour.green(),
@@ -1095,30 +1180,44 @@ class ToolsCog(commands.Cog):
 
                         await interaction.followup.send(view=IrasutoyaView())
                     except Exception as e:
-                        return await interaction.followup.send(embed=discord.Embed(title="解析に失敗しました。", description=f"{e}", color=discord.Color.red()))
+                        return await interaction.followup.send(
+                            embed=discord.Embed(
+                                title="解析に失敗しました。",
+                                description=f"{e}",
+                                color=discord.Color.red(),
+                            )
+                        )
         elif タイプ == "X(Twitter)":
             if not X_REGEX.match(url):
-                await interaction.followup.send(embed=discord.Embed(title="正しいURLを入力してください。", color=discord.Color.red()), ephemeral=True)
+                await interaction.followup.send(
+                    embed=discord.Embed(
+                        title="正しいURLを入力してください。", color=discord.Color.red()
+                    ),
+                    ephemeral=True,
+                )
                 return
 
             if not interaction.channel.nsfw:
-                return await interaction.followup.send(embed=discord.Embed(title="NSFWチャンネルでのみ使用できます。", color=discord.Color.red()))
+                return await interaction.followup.send(
+                    embed=discord.Embed(
+                        title="NSFWチャンネルでのみ使用できます。",
+                        color=discord.Color.red(),
+                    )
+                )
+
             def twitter(url):
-                ydl_opts = {
-                    'quiet': True,
-                    'skip_download': True,
-                    "no_warnings": True
-                }
+                ydl_opts = {"quiet": True, "skip_download": True, "no_warnings": True}
 
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(url, download=False)
 
                     if "formats" in info:
                         for fmt in info["formats"]:
-                            if ".mp4" in fmt.get('url'):
-                                return fmt.get('url')
-                            
+                            if ".mp4" in fmt.get("url"):
+                                return fmt.get("url")
+
                         return None
+
             url = await asyncio.to_thread(twitter, url)
 
             class TwitterView(discord.ui.LayoutView):
@@ -1127,9 +1226,7 @@ class ToolsCog(commands.Cog):
                         f"### ダウンロード",
                     ),
                     discord.ui.Separator(),
-                    discord.ui.MediaGallery(
-                        discord.MediaGalleryItem(url)
-                    ),
+                    discord.ui.MediaGallery(discord.MediaGalleryItem(url)),
                     discord.ui.ActionRow(
                         discord.ui.Button(
                             label="ダウンロード",
@@ -1142,10 +1239,10 @@ class ToolsCog(commands.Cog):
             await interaction.followup.send(view=TwitterView())
         else:
             embed = discord.Embed(
-                title="タイプが見つかりません。",
-                color=discord.Color.red()
+                title="タイプが見つかりません。", color=discord.Color.red()
             )
             await interaction.followup.send(embed=embed)
+
 
 async def setup(bot):
     await bot.add_cog(ToolsCog(bot))

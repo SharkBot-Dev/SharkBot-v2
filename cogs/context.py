@@ -9,6 +9,7 @@ import datetime
 from models.permissions_text import PERMISSION_TRANSLATIONS
 import asyncio
 
+
 async def fetch_avatar(user: discord.User):
     if user.avatar:
         url_a = f"https://cdn.discordapp.com/avatars/{user.id}/{user.avatar.key}"
@@ -148,15 +149,29 @@ async def setup(bot: commands.Bot):
         c = 0
         while True:
             if c > 8:
-                return await interaction.followup.send(embed=discord.Embed(title="予期しないエラーが発生しました。", color=discord.Color.red()))
-            miq = await asyncio.to_thread(create_quote_image, 
-                message.author.display_name, message.content, av, back, text, color)
+                return await interaction.followup.send(
+                    embed=discord.Embed(
+                        title="予期しないエラーが発生しました。",
+                        color=discord.Color.red(),
+                    )
+                )
+            miq = await asyncio.to_thread(
+                create_quote_image,
+                message.author.display_name,
+                message.content,
+                av,
+                back,
+                text,
+                color,
+            )
             image_binary = io.BytesIO()
             await asyncio.to_thread(miq.save, image_binary, "PNG")
             image_binary.seek(0)
             try:
                 file = discord.File(fp=image_binary, filename="quote.png")
-                await interaction.followup.send(file=file, content=f"-# {c}回再試行しました。")
+                await interaction.followup.send(
+                    file=file, content=f"-# {c}回再試行しました。"
+                )
             except:
                 c += 1
                 await asyncio.sleep(0.5)
@@ -478,9 +493,7 @@ async def setup(bot: commands.Bot):
     @app_commands.context_menu(name="アバター表示")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    async def avatar_show(
-        interaction: discord.Interaction, member: discord.Member
-    ):
+    async def avatar_show(interaction: discord.Interaction, member: discord.Member):
         await interaction.response.defer()
         if member.avatar == None:
 

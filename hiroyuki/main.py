@@ -1,7 +1,7 @@
 from sentence_transformers import SentenceTransformer, util
 from flask import Flask, request
 
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 candidates = [
     "それで勝った気になってるんですか？だったら相当頭悪いっすね",
@@ -27,20 +27,21 @@ candidates = [
     "さっきと言ってること違いません？",
     "「すいません」？なんすか「すいません」って...",
     "何だろう。すみませんって言ってもらってもいいですか？",
-    "それで勝った気になってるんですか？だったら相当頭悪いっすね"
+    "それで勝った気になってるんですか？だったら相当頭悪いっすね",
 ]
 
 
 app = Flask(__name__)
 
+
 @app.get("/")
 def hiroyuki():
-
-    target_vec = model.encode(request.args.get('text', 'こんにちは'))
+    target_vec = model.encode(request.args.get("text", "こんにちは"))
     candidate_vecs = model.encode(candidates)
-    
+
     similarities = [util.cos_sim(target_vec, c_vec).item() for c_vec in candidate_vecs]
     best_index = similarities.index(max(similarities))
     return candidates[best_index]
+
 
 app.run(port=6100, host="0.0.0.0", debug=False)

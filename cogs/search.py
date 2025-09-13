@@ -18,13 +18,14 @@ import pytesseract
 from PIL import Image
 import io
 
-async def ocr_async(image_: io.BytesIO):
 
+async def ocr_async(image_: io.BytesIO):
     image = await asyncio.to_thread(Image.open, image_)
 
     text = await asyncio.to_thread(pytesseract.image_to_string, image)
 
     return text
+
 
 STATUS_EMOJIS = {
     discord.Status.online: "<:online:1407922300535181423>",
@@ -694,16 +695,17 @@ Botを追加したユーザーは？: {add_bot_user}
         interaction: discord.Interaction,
         翻訳先: app_commands.Choice[str],
         テキスト: str = None,
-        画像: discord.Attachment = None
+        画像: discord.Attachment = None,
     ):
         await interaction.response.defer()
 
         if テキスト:
-
             if 翻訳先.value == "nom":
                 loop = asyncio.get_running_loop()
                 nom = await loop.run_in_executor(None, partial(NomTranslater))
-                text = await loop.run_in_executor(None, partial(nom.translare, テキスト))
+                text = await loop.run_in_executor(
+                    None, partial(nom.translare, テキスト)
+                )
 
                 embed = discord.Embed(
                     title="翻訳 (ノムリッシュ語へ)",
@@ -733,20 +735,28 @@ Botを追加したユーザーは？: {add_bot_user}
                 await interaction.followup.send(embed=embed)
         else:
             if not 画像:
-                return await interaction.followup.send(content="テキストか画像、どちらかを指定してください。")
-            if not 画像.filename.endswith(('.png', '.jpg', '.jpeg')):
-                return await interaction.followup.send(content="`.png`と`.jpg`のみ対応しています。")
+                return await interaction.followup.send(
+                    content="テキストか画像、どちらかを指定してください。"
+                )
+            if not 画像.filename.endswith((".png", ".jpg", ".jpeg")):
+                return await interaction.followup.send(
+                    content="`.png`と`.jpg`のみ対応しています。"
+                )
             i = io.BytesIO(await 画像.read())
             text_ocrd = await ocr_async(i)
             i.close()
 
             if text_ocrd == "":
-                return await interaction.followup.send(content="画像にはテキストがありません。")
+                return await interaction.followup.send(
+                    content="画像にはテキストがありません。"
+                )
 
             if 翻訳先.value == "nom":
                 loop = asyncio.get_running_loop()
                 nom = await loop.run_in_executor(None, partial(NomTranslater))
-                text = await loop.run_in_executor(None, partial(nom.translare, text_ocrd))
+                text = await loop.run_in_executor(
+                    None, partial(nom.translare, text_ocrd)
+                )
 
                 embed = discord.Embed(
                     title="翻訳 (ノムリッシュ語へ)",

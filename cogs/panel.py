@@ -440,10 +440,11 @@ class PanelCog(commands.Cog):
                 return None
         return None
 
-
     def randstring(self, n):
-        randlst = [random.choice(string.ascii_letters + string.digits) for i in range(n)]
-        return ''.join(randlst)
+        randlst = [
+            random.choice(string.ascii_letters + string.digits) for i in range(n)
+        ]
+        return "".join(randlst)
 
     async def create_authimage(
         self, role: discord.Role, interaction: discord.Interaction

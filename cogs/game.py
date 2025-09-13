@@ -321,38 +321,73 @@ class GameCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def omikuji(self, interaction: discord.Interaction):
         omikuzi = [
-            "大吉"   if i < 2 else
-            "中吉"   if 2 <= i < 10 else
-            "小吉"   if 10 <= i < 20 else
-            "吉"     if 20 <= i < 40 else
-            "末吉"   if 40 <= i < 50 else
-            "凶"     if 50 <= i < 55 else
-            "中凶"   if 55 <= i < 59 else
-            "大凶"   for i in range(61)]
-        
-        await interaction.response.send_message(embed=discord.Embed(title="おみくじ結果", description=f"```{omikuzi[random.randrange(len(omikuzi))]}```", color=discord.Color.green())
-                                                .set_footer(text="結果は完全にランダムです。"), view=discord.ui.View().add_item(discord.ui.Button(label="おみくじWebで引く", url="https://dashboard.sharkbot.xyz/omikuji")))
+            "大吉"
+            if i < 2
+            else "中吉"
+            if 2 <= i < 10
+            else "小吉"
+            if 10 <= i < 20
+            else "吉"
+            if 20 <= i < 40
+            else "末吉"
+            if 40 <= i < 50
+            else "凶"
+            if 50 <= i < 55
+            else "中凶"
+            if 55 <= i < 59
+            else "大凶"
+            for i in range(61)
+        ]
+
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="おみくじ結果",
+                description=f"```{omikuzi[random.randrange(len(omikuzi))]}```",
+                color=discord.Color.green(),
+            ).set_footer(text="結果は完全にランダムです。"),
+            view=discord.ui.View().add_item(
+                discord.ui.Button(
+                    label="おみくじWebで引く",
+                    url="https://dashboard.sharkbot.xyz/omikuji",
+                )
+            ),
+        )
 
     @game.command(name="lovecalc", description="恋愛度計算機で遊びます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def lovecalc(self, interaction: discord.Interaction, メンバー1: discord.User, メンバー2: discord.User):
+    async def lovecalc(
+        self,
+        interaction: discord.Interaction,
+        メンバー1: discord.User,
+        メンバー2: discord.User,
+    ):
         await interaction.response.defer()
         love_percent = random.randint(0, 100)
 
         c = 0
 
         while True:
-
             if c > 8:
-                return await interaction.followup.send(embed=discord.Embed(title="予期しないエラーが発生しました。", color=discord.Color.red()))
+                return await interaction.followup.send(
+                    embed=discord.Embed(
+                        title="予期しないエラーが発生しました。",
+                        color=discord.Color.red(),
+                    )
+                )
 
-            img = await asyncio.to_thread(Image.new, "RGB", (600, 300), color=(255, 182, 193))
+            img = await asyncio.to_thread(
+                Image.new, "RGB", (600, 300), color=(255, 182, 193)
+            )
             draw = await asyncio.to_thread(ImageDraw.Draw, img)
 
             try:
-                font_title = await asyncio.to_thread(ImageFont.truetype, "data/DiscordFont.ttf", 40)
-                font_text = await asyncio.to_thread(ImageFont.truetype, "data/DiscordFont.ttf", 25)
+                font_title = await asyncio.to_thread(
+                    ImageFont.truetype, "data/DiscordFont.ttf", 40
+                )
+                font_text = await asyncio.to_thread(
+                    ImageFont.truetype, "data/DiscordFont.ttf", 25
+                )
             except:
                 font_title = await asyncio.to_thread(ImageFont.load_default)
                 font_text = await asyncio.to_thread(ImageFont.load_default)
@@ -364,7 +399,7 @@ class GameCog(commands.Cog):
                 avatar = await asyncio.to_thread(Image.open, io.BytesIO(avatar_bytes))
                 avatar = await asyncio.to_thread(avatar.convert, "RGB")
                 avatar = await asyncio.to_thread(avatar.resize, (128, 128))
-                
+
                 mask = await asyncio.to_thread(Image.new, "L", avatar.size, 0)
                 mask_draw = await asyncio.to_thread(ImageDraw.Draw, mask)
                 await asyncio.to_thread(mask_draw.ellipse, (0, 0, 128, 128), fill=255)
@@ -376,21 +411,42 @@ class GameCog(commands.Cog):
             await asyncio.to_thread(img.paste, avatar1, (100, 80), mask1)
             await asyncio.to_thread(img.paste, avatar2, (370, 80), mask2)
 
-            await asyncio.to_thread(draw.text, (0, 0), "SharkBot", font=font_text, fill=(0, 0, 0))
-            await asyncio.to_thread(draw.text, (200, 30), "恋愛度診断", font=font_title, fill=(255, 0, 0))
-            await asyncio.to_thread(draw.text, (260, 230), f"{love_percent}%", font=font_text, fill=(0, 0, 0))
+            await asyncio.to_thread(
+                draw.text, (0, 0), "SharkBot", font=font_text, fill=(0, 0, 0)
+            )
+            await asyncio.to_thread(
+                draw.text, (200, 30), "恋愛度診断", font=font_title, fill=(255, 0, 0)
+            )
+            await asyncio.to_thread(
+                draw.text,
+                (260, 230),
+                f"{love_percent}%",
+                font=font_text,
+                fill=(0, 0, 0),
+            )
 
             bar_x, bar_y = 150, 270
             bar_width, bar_height = 300, 20
-            await asyncio.to_thread(draw.rectangle, [bar_x, bar_y, bar_x + bar_width, bar_y + bar_height], fill=(200, 200, 200))
+            await asyncio.to_thread(
+                draw.rectangle,
+                [bar_x, bar_y, bar_x + bar_width, bar_y + bar_height],
+                fill=(200, 200, 200),
+            )
             filled_width = int(bar_width * (love_percent / 100))
-            await asyncio.to_thread(draw.rectangle, [bar_x, bar_y, bar_x + filled_width, bar_y + bar_height], fill=(255, 0, 0))
+            await asyncio.to_thread(
+                draw.rectangle,
+                [bar_x, bar_y, bar_x + filled_width, bar_y + bar_height],
+                fill=(255, 0, 0),
+            )
 
             with io.BytesIO() as image_binary:
                 try:
                     await asyncio.to_thread(img.save, image_binary, "PNG")
                     image_binary.seek(0)
-                    await interaction.followup.send(file=discord.File(fp=image_binary, filename="love.png"), content=f"-# {c}回再試行しました。")
+                    await interaction.followup.send(
+                        file=discord.File(fp=image_binary, filename="love.png"),
+                        content=f"-# {c}回再試行しました。",
+                    )
                 except:
                     c += 1
                     await asyncio.sleep(0.5)
