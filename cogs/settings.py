@@ -239,14 +239,14 @@ class WelcomeCommands(app_commands.Group):
                         placeholder="タイトルを入力",
                         style=discord.TextStyle.long,
                         required=True,
-                        default="<name> さん、よろしく！",
+                        default="<name> さん、さようなら・・",
                     )
                     self.desc = discord.ui.TextInput(
                         label="説明",
                         placeholder="説明を入力",
                         style=discord.TextStyle.long,
                         required=True,
-                        default="あなたは <count> 人目のメンバーです！\n\nアカウント作成日: <createdat>",
+                        default="またいつか会おうね！",
                     )
                     self.add_item(self.etitle)
                     self.add_item(self.desc)
