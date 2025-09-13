@@ -13,10 +13,15 @@ class LoggingCog(commands.Cog):
         self.bot = bot
         print("init -> LoggingCog")
 
-    async def get_logging_webhook(self, guild: discord.Guild):
+    async def get_logging_webhook(self, guild: discord.Guild, event: str | None = None):
         db = self.bot.async_db["Main"].EventLoggingChannel
         try:
-            dbfind = await db.find_one({"Guild": guild.id}, {"_id": False})
+            if event:
+                dbfind = await db.find_one({"Guild": guild.id, "Event": event}, {"_id": False})
+                if dbfind:
+                    return dbfind.get("Webhook", None)
+
+            dbfind = await db.find_one({"Guild": guild.id, "Event": {"$exists": False}}, {"_id": False})
         except:
             return None
         if dbfind is None:
@@ -36,7 +41,7 @@ class LoggingCog(commands.Cog):
     @commands.Cog.listener("on_message_delete")
     async def on_message_delete_log(self, message: discord.Message):
         try:
-            wh = await self.get_logging_webhook(message.guild)
+            wh = await self.get_logging_webhook(message.guild, "message_delete")
             if not wh:
                 return
             async with aiohttp.ClientSession() as session:
@@ -62,7 +67,7 @@ class LoggingCog(commands.Cog):
     @commands.Cog.listener("on_member_ban")
     async def on_member_ban_log(self, guild: discord.Guild, member: discord.Member):
         try:
-            wh = await self.get_logging_webhook(guild)
+            wh = await self.get_logging_webhook(guild, "member_ban")
             if not wh:
                 return
             async with aiohttp.ClientSession() as session:
@@ -90,7 +95,7 @@ class LoggingCog(commands.Cog):
         try:
             if before.display_name == after.display_name:
                 return
-            wh = await self.get_logging_webhook(after.guild)
+            wh = await self.get_logging_webhook(after.guild, "member_update")
             if not wh:
                 return
             async with aiohttp.ClientSession() as session:
@@ -118,7 +123,7 @@ class LoggingCog(commands.Cog):
         self, before: discord.Member, after: discord.Member
     ):
         try:
-            wh = await self.get_logging_webhook(after.guild)
+            wh = await self.get_logging_webhook(after.guild, "member_update")
             if not wh:
                 return
 
@@ -154,7 +159,7 @@ class LoggingCog(commands.Cog):
             added_roles = after_roles - before_roles
             removed_roles = before_roles - after_roles
 
-            wh = await self.get_logging_webhook(after.guild)
+            wh = await self.get_logging_webhook(after.guild, "member_update")
             if not wh:
                 return
 
@@ -215,7 +220,7 @@ class LoggingCog(commands.Cog):
                 return
             if before.content == after.content:
                 return
-            wh = await self.get_logging_webhook(after.guild)
+            wh = await self.get_logging_webhook(after.guild, "message_edit")
             if not wh:
                 return
             async with aiohttp.ClientSession() as session:
@@ -241,7 +246,7 @@ class LoggingCog(commands.Cog):
     @commands.Cog.listener("on_guild_channel_create")
     async def on_guild_channel_create_log(self, channel: discord.abc.GuildChannel):
         try:
-            wh = await self.get_logging_webhook(channel.guild)
+            wh = await self.get_logging_webhook(channel.guild, "channel_create")
             if not wh:
                 return
             async with aiohttp.ClientSession() as session:
@@ -260,7 +265,7 @@ class LoggingCog(commands.Cog):
     @commands.Cog.listener("on_guild_channel_delete")
     async def on_guild_channel_delete_log(self, channel: discord.abc.GuildChannel):
         try:
-            wh = await self.get_logging_webhook(channel.guild)
+            wh = await self.get_logging_webhook(channel.guild, "channel_delete")
             if not wh:
                 return
             async with aiohttp.ClientSession() as session:
@@ -279,7 +284,7 @@ class LoggingCog(commands.Cog):
     @commands.Cog.listener("on_invite_create")
     async def on_invite_create_log(self, invite: discord.Invite):
         try:
-            wh = await self.get_logging_webhook(invite.guild)
+            wh = await self.get_logging_webhook(invite.guild, "invite_create")
             if not wh:
                 return
             async with aiohttp.ClientSession() as session:
@@ -305,7 +310,7 @@ class LoggingCog(commands.Cog):
     @commands.Cog.listener("on_guild_role_create")
     async def on_guild_role_create_log(self, role: discord.Role):
         try:
-            wh = await self.get_logging_webhook(role.guild)
+            wh = await self.get_logging_webhook(role.guild, "role_create")
             if not wh:
                 return
             async with aiohttp.ClientSession() as session:
@@ -324,7 +329,7 @@ class LoggingCog(commands.Cog):
     @commands.Cog.listener("on_guild_role_delete")
     async def on_guild_role_delete_log(self, role: discord.Role):
         try:
-            wh = await self.get_logging_webhook(role.guild)
+            wh = await self.get_logging_webhook(role.guild, "role_delete")
             if not wh:
                 return
             async with aiohttp.ClientSession() as session:
@@ -343,7 +348,7 @@ class LoggingCog(commands.Cog):
     @commands.Cog.listener("on_member_join")
     async def on_member_join_log(self, member: discord.Member):
         try:
-            wh = await self.get_logging_webhook(member.guild)
+            wh = await self.get_logging_webhook(member.guild, "member_join")
             if not wh:
                 return
             async with aiohttp.ClientSession() as session:
@@ -369,7 +374,7 @@ class LoggingCog(commands.Cog):
     @commands.Cog.listener("on_member_remove")
     async def on_member_remove_log(self, member: discord.Member):
         try:
-            wh = await self.get_logging_webhook(member.guild)
+            wh = await self.get_logging_webhook(member.guild, "member_remove")
             if not wh:
                 return
             async with aiohttp.ClientSession() as session:
@@ -395,7 +400,7 @@ class LoggingCog(commands.Cog):
     @commands.Cog.listener("on_automod_action")
     async def on_automod_action_log(self, execution: discord.AutoModAction):
         try:
-            wh = await self.get_logging_webhook(execution.guild)
+            wh = await self.get_logging_webhook(execution.guild, "automod_action")
             if not wh:
                 return
             async with aiohttp.ClientSession() as session:
@@ -420,30 +425,50 @@ class LoggingCog(commands.Cog):
 
     log = app_commands.Group(name="logging", description="ログ系のコマンドです。")
 
-    @log.command(name="setup", description="ログの設定をします。")
-    @app_commands.checks.has_permissions(administrator=True)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @log.command(name="setup", description="イベントごとにログを設定します。")
+    @app_commands.describe(event="ログを取りたいイベント（未指定なら全て）")
+    @app_commands.choices(event=[
+        app_commands.Choice(name="メッセージ削除", value="message_delete"),
+        app_commands.Choice(name="メッセージ編集", value="message_edit"),
+        app_commands.Choice(name="メンバーBAN", value="member_ban"),
+        app_commands.Choice(name="メンバー参加", value="member_join"),
+        app_commands.Choice(name="メンバー退出", value="member_remove"),
+        app_commands.Choice(name="メンバー更新", value="member_update"),
+        app_commands.Choice(name="ロール作成", value="role_create"),
+        app_commands.Choice(name="ロール削除", value="role_delete"),
+        app_commands.Choice(name="チャンネル作成", value="channel_create"),
+        app_commands.Choice(name="チャンネル削除", value="channel_delete"),
+        app_commands.Choice(name="招待リンク作成", value="invite_create"),
+        app_commands.Choice(name="AutoModアクション", value="automod_action"),
+    ])
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def log_setup(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
+    @app_commands.checks.has_permissions(administrator=True)
+    async def log_setup(
+        self,
+        interaction: discord.Interaction,
+        event: app_commands.Choice[str] = None
+    ):
         db = self.bot.async_db["Main"].EventLoggingChannel
-        web = await interaction.channel.create_webhook(name="SharkBot-Log")
-        await db.replace_one(
-            {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-            {
-                "Guild": interaction.guild.id,
-                "Channel": interaction.channel.id,
-                "Webhook": web.url,
-            },
-            upsert=True,
-        )
+        web = await interaction.channel.create_webhook(name=f"SharkBot-Log-{event.value if event else 'all'}")
+
+        query = {"Guild": interaction.guild.id}
+        if event:
+            query["Event"] = event.value
+
+        data = {
+            "Guild": interaction.guild.id,
+            "Channel": interaction.channel.id,
+            "Webhook": web.url,
+        }
+        if event:
+            data["Event"] = event.value
+
+        await db.replace_one(query, data, upsert=True)
+
         await interaction.response.send_message(
             embed=discord.Embed(
-                title="ログをセットアップしました。", color=discord.Color.green()
+                title=f"{event.name if event else 'すべてのイベント'} のログをセットしました。",
+                color=discord.Color.green()
             )
         )
 
