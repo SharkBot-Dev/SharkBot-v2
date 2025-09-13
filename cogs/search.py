@@ -222,7 +222,6 @@ class SearchCog(commands.Cog):
             add_bot_user = await self.get_bot_adder_from_audit_log(
                 interaction.guild, user
             )
-            tag = await self.get_user_tag_(user)
             col = await self.get_user_color(user)
             embed = discord.Embed(
                 title=f"{user.display_name}の情報 (ページ1)", color=col
@@ -317,20 +316,14 @@ Botを追加したユーザーは？: {add_bot_user}
                 bag += "<:HypeSquadBalance:1399751701669478511> "
             if bag != "":
                 embed.add_field(name="バッジ", value=bag, inline=False)
-            embed2 = discord.Embed(
-                title=f"{user.display_name}の情報 (ページ2)", color=col
-            )
-            point_check = await self.get_user_point(user)
-            embed2.add_field(name="Sharkポイント", value=f"{point_check}P", inline=True)
-            embed2.add_field(name="称号", value=f"{tag}", inline=True)
-            embed2.set_image(url=user.banner.url if user.banner else None)
+            embed.set_image(url=user.banner.url if user.banner else None)
             roles = await self.roles_get(interaction.guild, user)
-            embed3 = discord.Embed(
-                title=f"{user.display_name}の情報 (ページ3)",
+            embed2 = discord.Embed(
+                title=f"{user.display_name}の情報 (ページ2)",
                 color=discord.Color.green(),
                 description=roles,
             )
-            pages = [embed, embed2, embed3]
+            pages = [embed, embed2]
 
             class PaginatorView(discord.ui.View):
                 def __init__(self):
