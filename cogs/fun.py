@@ -788,6 +788,7 @@ class ImageGroup(app_commands.Group):
         色=[
             app_commands.Choice(name="赤", value="FF0000"),
             app_commands.Choice(name="青", value="1111FF"),
+            app_commands.Choice(name="黄", value="FFFF00"),
             app_commands.Choice(name="黒", value="000000"),
         ]
     )
@@ -796,23 +797,39 @@ class ImageGroup(app_commands.Group):
         interaction: discord.Interaction,
         色: app_commands.Choice[str],
         テキスト: str,
+        正方形にするか: bool
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"https://emoji-gen.ninja/emoji?align=center&back_color=00000000&color={色.value.upper()}FF&font=notosans-mono-bold&locale=ja&public_fg=true&size_fixed=true&stretch=true&text={テキスト}"
-            ) as resp:
-                i = io.BytesIO(await resp.read())
-                await interaction.followup.send(
-                    file=discord.File(i, "emoji.png"),
-                    view=EditImageView(interaction.user),
-                )
-                i.close()
+        def make_text(text: str, color: str, sq: bool):
+            font = ImageFont.truetype("data/DiscordFont.ttf", 50)
+
+            dummy_img = Image.new("RGBA", (1, 1))
+            draw_dummy = ImageDraw.Draw(dummy_img)
+            bbox = draw_dummy.textbbox((0, 0), text, font=font)
+            text_w = bbox[2] - bbox[0]
+            text_h = bbox[3] - bbox[1]
+
+            padding = 0
+            img = Image.new("RGBA", (text_w + padding*2, text_h + padding*2), (255, 255, 255, 0))
+            draw = ImageDraw.Draw(img)
+
+            draw.text((padding - bbox[0], padding - bbox[1]), text, fill=f"#{color}", font=font)
+
+            if sq:
+                img = img.resize((200, 200))
+
+            i = io.BytesIO()
+            img.save(i, format="PNG")
+            i.seek(0)
+            return i
+                
+        image = await asyncio.to_thread(make_text, テキスト, 色.value, 正方形にするか)
+
+        await interaction.followup.send(
+            file=discord.File(image, "emoji.png"),
+            view=EditImageView(interaction.user),
+        )
+        image.close()
 
     @app_commands.command(name="httpcat", description="httpキャットを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
