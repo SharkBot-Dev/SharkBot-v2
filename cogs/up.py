@@ -440,6 +440,55 @@ class UpCog(commands.Cog):
             except:
                 return
 
+    @commands.Cog.listener("on_message_edit")
+    async def on_message_edit_discadia(
+        self, before: discord.Message, after: discord.Message
+    ):
+        if after.author.id == 1222548162741538938:
+            try:
+                if "has been successfully bumped!" in after.content:
+                    db = self.bot.async_db["Main"].DisCadiaChannel
+                    try:
+                        dbfind = await db.find_one(
+                            {"Channel": after.channel.id}, {"_id": False}
+                        )
+                    except:
+                        return
+                    if dbfind is None:
+                        return
+                    
+                    ment = await self.mention_get(after)
+                    await after.reply(
+                        embed=discord.Embed(
+                            title="Bumpを検知しました。",
+                            description=f"一日後に通知します。\n以下のロールに通知します。\n{ment}",
+                            color=discord.Color.green(),
+                        )
+                    )
+
+                    await self.bot.alert_add(
+                        "dissoku",
+                        after.channel.id,
+                        ment,
+                        "DiscadiaをUpしてね！",
+                        "</bump:1225075208394768496> でBump。\n注意！オーナーか管理者しかBumpできません！",
+                        86400,
+                    )
+                elif "Already bumped recently, please try again" in after.content:
+                    db = self.bot.async_db["Main"].DisCadiaChannel
+                    try:
+                        dbfind = await db.find_one(
+                            {"Channel": after.channel.id}, {"_id": False}
+                        )
+                    except:
+                        return
+                    if dbfind is None:
+                        return
+                    
+                    await after.reply(embed=discord.Embed(title="Bumpに失敗しました。", description="しばらく待ってから</bump:1225075208394768496>を実行してください。", color=discord.Color.red()))
+            except:
+                return
+
     bump = app_commands.Group(name="bump", description="Bump通知のコマンドです。")
 
     @bump.command(name="dicoall", description="DicoallのUp通知を有効化します。")
@@ -621,6 +670,36 @@ class UpCog(commands.Cog):
             await interaction.response.send_message(
                 embed=discord.Embed(
                     title="DCafeの通知をOFFにしました。", color=discord.Color.red()
+                )
+            )
+
+    @bump.command(name="discadia", description="discadiaの通知をします。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def discadia_bump(self, interaction: discord.Interaction, onか: bool):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
+
+        db = self.bot.async_db["Main"].DisCadiaChannel
+        if onか:
+            await db.replace_one(
+                {"Channel": interaction.channel.id},
+                {"Channel": interaction.channel.id},
+                upsert=True,
+            )
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="Discadiaの通知をONにしました。", color=discord.Color.green()
+                )
+            )
+        else:
+            await db.delete_one({"Channel": interaction.channel.id})
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="Discadiaの通知をOFFにしました。", color=discord.Color.red()
                 )
             )
 
