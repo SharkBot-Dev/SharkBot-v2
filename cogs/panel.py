@@ -880,6 +880,11 @@ class PanelCog(commands.Cog):
                                     "エラーが発生しました。\n指定されたカテゴリが見つかりません。",
                                     ephemeral=True,
                                 )
+                    except discord.Forbidden:
+                        await interaction.followup.send(
+                            f"チケット作成に必要な権限がありません。\n再度権限を確認してください。",
+                            ephemeral=True,
+                        )
                     except:
                         await interaction.followup.send(
                             f"チケット作成に失敗しました。\n{sys.exc_info()}",
@@ -936,6 +941,11 @@ class PanelCog(commands.Cog):
                         except:
                             pass
                         await interaction.channel.delete()
+                    except discord.Forbidden:
+                        await interaction.followup.send(
+                            f"チケット削除に必要な権限がありません。\n再度権限を確認してください。",
+                            ephemeral=True,
+                        )
                     except:
                         await interaction.followup.send(
                             f"チケット削除に失敗しました。\n{sys.exc_info()}",
