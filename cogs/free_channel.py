@@ -51,19 +51,21 @@ class FreeChannelModal(discord.ui.Modal):
             dbfind = await db.find_one({"Message": self.msgid}, {"_id": False})
         except:
             return
+
         nsfw = False if self.channeltype.component.values[0] == "text" else True
-        overwrites = {}
-        if interaction.channel and interaction.channel.overwrites:
-            for target, perm in dict(interaction.channel.overwrites).items():
-                overwrites[target] = perm
+
+        overwrites = dict(interaction.channel.overwrites) if interaction.channel else {}
 
         everyone_overwrite = overwrites.get(
             interaction.guild.default_role, discord.PermissionOverwrite()
         )
+
         everyone_overwrite.send_messages = True
         everyone_overwrite.attach_files = True
         everyone_overwrite.add_reactions = True
+
         overwrites[interaction.guild.default_role] = everyone_overwrite
+
         if dbfind is None:
             if interaction.channel.category:
                 channel = await interaction.channel.category.create_text_channel(
@@ -81,7 +83,7 @@ class FreeChannelModal(discord.ui.Modal):
                 )
         else:
             ch = interaction.guild.get_channel(dbfind.get("Channel", 0))
-            if type(ch) == discord.CategoryChannel:
+            if isinstance(ch, discord.CategoryChannel):
                 channel = await ch.create_text_channel(
                     name=self.channelname.component.value,
                     nsfw=nsfw,
@@ -90,9 +92,8 @@ class FreeChannelModal(discord.ui.Modal):
                 )
             else:
                 return
-        await channel.send(
-            f"{interaction.user.mention}: フリーチャンネルを作成しました。"
-        )
+
+        await channel.send(f"{interaction.user.mention}: フリーチャンネルを作成しました。")
 
 
 class FreeChannelCog(commands.Cog):
