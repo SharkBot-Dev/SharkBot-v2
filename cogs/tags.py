@@ -57,7 +57,7 @@ class TagsCog(commands.Cog):
                 text="コードを入力",
                 description="コードを入力してください。",
                 component=discord.ui.TextInput(
-                    style=discord.TextStyle.long, max_length=20, required=True
+                    style=discord.TextStyle.long, required=True
                 ),
             )
 
