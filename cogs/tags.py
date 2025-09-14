@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord import app_commands
 import TagScriptEngine as tse
 from consts import badword
+import io
 
 cooldown_tags = {}
 
@@ -33,8 +34,6 @@ class TagsCog(commands.Cog):
         )
         print("init -> TagsCog")
 
-    """
-
     tag = app_commands.Group(
         name="tag", description="タグスクリプトを設定します。"
     )
@@ -47,23 +46,39 @@ class TagsCog(commands.Cog):
     async def tag_create(
         self,
         interaction: discord.Interaction,
-        名前: str,
-        スクリプト: str
+        名前: str
     ):
-        lower_script = スクリプト.lower()
-        for word in badword.badwords:
-            if word.lower() in lower_script:
-                return await interaction.response.send_message(embed=discord.Embed(title="Tag作成に失敗しました。", color=discord.Color.red()))
 
-        db = self.bot.async_db["Main"].Tags
-        await db.update_one(
-            {"command": 名前, "guild_id": interaction.guild.id},
-            {"$set": {"tagscript": スクリプト}},
-            upsert=True
-        )
-        await interaction.response.send_message(
-            embed=discord.Embed(title="Tagを作成しました。", color=discord.Color.green())
-        )
+        class TagCreateModal(discord.ui.Modal):
+            def __init__(self):
+                super().__init__(title="Tagを作成する。", timeout=180)
+
+            code = discord.ui.Label(
+                text="コードを入力",
+                description="コードを入力してください。",
+                component=discord.ui.TextInput(
+                    style=discord.TextStyle.long, max_length=20, required=True
+                ),
+            )
+
+            async def on_submit(self, interaction_: discord.Interaction):
+                assert isinstance(self.code.component, discord.ui.TextInput)
+                lower_script = self.code.component.value.lower()
+                for word in badword.badwords:
+                    if word.lower() in lower_script:
+                        return await interaction_.response.send_message(embed=discord.Embed(title="Tag作成に失敗しました。", color=discord.Color.red()))
+
+                db = self.bot.async_db["Main"].Tags
+                await db.update_one(
+                    {"command": 名前, "guild_id": interaction_.guild.id},
+                    {"$set": {"tagscript": self.code.component.value}},
+                    upsert=True
+                )
+                await interaction_.response.send_message(
+                    embed=discord.Embed(title="Tagを作成しました。", color=discord.Color.green())
+                )
+
+        await interaction.response.send_modal(TagCreateModal())
 
     # ---------- タグ削除 ----------
     @tag.command(name="delete", description="tagを削除します。")
@@ -116,6 +131,24 @@ class TagsCog(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
+    @tag.command(name="export", description="タグをエクスポートします。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def tags_export(
+        self,
+        interaction: discord.Interaction,
+        名前: str
+    ):
+        db_tags = self.bot.async_db["Main"].Tags
+        doc = await db_tags.find_one({"guild_id": interaction.guild.id, "command": 名前})
+        if doc:
+            i = io.StringIO(doc.get('tagscript', 'None'))
+            await interaction.response.send_message(file=i)
+            i.close()
+        else:
+            await interaction.response.send_message(content="そのタグが見つかりません。", ephemeral=True)
+
     # ---------- メッセージ監視でカスタムタグ実行 ----------
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -138,32 +171,32 @@ class TagsCog(commands.Cog):
         db_tags = self.bot.async_db["Main"].Tags
         doc = await db_tags.find_one({"guild_id": message.guild.id, "command": cmd_name})
         if doc:
-            current_time = time.time()
-            last_message_time = cooldown_tags.get(message.guild.id, 0)
-            if current_time - last_message_time < 3:
-                return
-            cooldown_tags[message.guild.id] = current_time
+            try:
+                current_time = time.time()
+                last_message_time = cooldown_tags.get(message.guild.id, 0)
+                if current_time - last_message_time < 3:
+                    return
+                cooldown_tags[message.guild.id] = current_time
 
-            ts_script = doc["tagscript"]
-            response = self.engine.process(ts_script,     {
-                "args": tse.StringAdapter(args),        # ユーザーが入力した引数
-                "author": tse.StringAdapter(str(message.author)),  # 実行者の名前
-                "author_id": tse.StringAdapter(str(message.author.id)),  # 実行者の名前
-                "guild": tse.StringAdapter(str(message.guild.name)), # サーバーの名前
-                "channel": tse.StringAdapter(str(message.channel.name)),  # チャンネルの名前
-                "guild_id": tse.StringAdapter(str(message.guild.id)),  # サーバーの名前
-                "channel_id": tse.StringAdapter(str(message.channel.id)),  # サーバーの名前
-            })
-            await message.channel.send(response.body)
+                ts_script = doc["tagscript"]
+                response = self.engine.process(ts_script,     {
+                    "args": tse.StringAdapter(args),        # ユーザーが入力した引数
+                    "author": tse.StringAdapter(str(message.author)),  # 実行者の名前
+                    "author_id": tse.StringAdapter(str(message.author.id)),  # 実行者の名前
+                    "guild": tse.StringAdapter(str(message.guild.name)), # サーバーの名前
+                    "channel": tse.StringAdapter(str(message.channel.name)),  # チャンネルの名前
+                    "guild_id": tse.StringAdapter(str(message.guild.id)),  # サーバーの名前
+                    "channel_id": tse.StringAdapter(str(message.channel.id)),  # サーバーの名前
+                })
+                await message.channel.send(response.body + "\n-# これはタグスクリプトからのメッセージです。")
+            except Exception as e:
+                return await message.channel.send("エラーが発生しました。")
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error):
         if isinstance(error, commands.CommandNotFound):
             a = None
             return a
-
-    """
-
 
 async def setup(bot):
     await bot.add_cog(TagsCog(bot))
