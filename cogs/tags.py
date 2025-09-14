@@ -143,8 +143,8 @@ class TagsCog(commands.Cog):
         db_tags = self.bot.async_db["Main"].Tags
         doc = await db_tags.find_one({"guild_id": interaction.guild.id, "command": 名前})
         if doc:
-            i = io.StringIO(doc.get('tagscript', 'None'))
-            await interaction.response.send_message(file=i)
+            i = io.StringIO(str(doc.get('tagscript', 'None')))
+            await interaction.response.send_message(file=discord.File(i, filename="tag.txt"))
             i.close()
         else:
             await interaction.response.send_message(content="そのタグが見つかりません。", ephemeral=True)
@@ -153,6 +153,9 @@ class TagsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
+            return
+
+        if not message.guild:
             return
 
         db_prefix = self.bot.async_db["DashboardBot"].CustomPrefixBot
