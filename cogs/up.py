@@ -150,6 +150,34 @@ class UpCog(commands.Cog):
                         "</up:935190259111706754> でアップ。",
                         3600,
                     )
+                elif "サーバーが上位に表示されました" in message.embeds[0].description:
+                    db = self.bot.async_db["Main"].Dicoall
+                    try:
+                        dbfind = await db.find_one(
+                            {"Channel": message.channel.id}, {"_id": False}
+                        )
+                    except:
+                        return
+                    if dbfind is None:
+                        return
+                    ment = await self.mention_get(message)
+                    await message.reply(
+                        embed=discord.Embed(
+                            title="Upを検知しました。",
+                            description=f"一時間後に通知します。\n以下のロールに通知します。\n{ment}",
+                            color=discord.Color.green(),
+                        )
+                    )
+                    await self.add_money(message)
+                    # await asyncio.sleep(3600)
+                    await self.bot.alert_add(
+                        "dicoall",
+                        message.channel.id,
+                        ment,
+                        "DicoallをUpしてね！",
+                        "</up:935190259111706754> でアップ。",
+                        3600,
+                    )
             except:
                 return
 
