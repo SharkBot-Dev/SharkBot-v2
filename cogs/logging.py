@@ -423,6 +423,72 @@ class LoggingCog(commands.Cog):
         except:
             return
 
+    @commands.Cog.listener(name="on_voice_state_update")
+    async def on_voice_state_update_join_log(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ):
+        try:
+            wh = await self.get_logging_webhook(member.guild, "vc_join")
+            if not wh:
+                return
+            
+            if before.channel is None and after.channel is not None:
+                async with aiohttp.ClientSession() as session:
+                    webhook_ = Webhook.from_url(wh, session=session)
+                    await webhook_.send(
+                        avatar_url=self.bot.user.avatar.url,
+                        embed=discord.Embed(
+                            title="<:Plus:1367039505865113670> VCに参加しました。",
+                            description=f"名前: {member.name}\nチャンネル: {after.channel.name}\n参加した時間: {datetime.datetime.now()}",
+                            color=discord.Color.green(),
+                        )
+                        .set_footer(text=f"mid:{member.id}")
+                        .set_author(
+                            name=f"{member.name}",
+                            icon_url=member.avatar.url
+                            if member.avatar
+                            else member.default_avatar.url,
+                        ),
+                    )
+        except:
+            return
+        
+    @commands.Cog.listener(name="on_voice_state_update")
+    async def on_voice_state_update_leave_log(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ):
+        try:
+            wh = await self.get_logging_webhook(member.guild, "vc_leave")
+            if not wh:
+                return
+            
+            if before.channel is not None and after.channel is None:
+                async with aiohttp.ClientSession() as session:
+                    webhook_ = Webhook.from_url(wh, session=session)
+                    await webhook_.send(
+                        avatar_url=self.bot.user.avatar.url,
+                        embed=discord.Embed(
+                            title="<:Minus:1367039494322262096> VCから退出しました。",
+                            description=f"名前: {member.name}\nチャンネル: {before.channel.name}\n退出した時間: {datetime.datetime.now()}",
+                            color=discord.Color.red(),
+                        )
+                        .set_footer(text=f"mid:{member.id}")
+                        .set_author(
+                            name=f"{member.name}",
+                            icon_url=member.avatar.url
+                            if member.avatar
+                            else member.default_avatar.url,
+                        ),
+                    )
+        except:
+            return
+
     log = app_commands.Group(name="logging", description="ログ系のコマンドです。")
 
     @log.command(name="setup", description="イベントごとにログを設定します。")
@@ -440,6 +506,8 @@ class LoggingCog(commands.Cog):
         app_commands.Choice(name="チャンネル削除", value="channel_delete"),
         app_commands.Choice(name="招待リンク作成", value="invite_create"),
         app_commands.Choice(name="AutoModアクション", value="automod_action"),
+        app_commands.Choice(name="VC参加", value="vc_join"),
+        app_commands.Choice(name="VC退出", value="vc_leave"),
     ])
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(administrator=True)
