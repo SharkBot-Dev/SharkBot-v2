@@ -68,7 +68,7 @@ class TagsCog(commands.Cog):
                     if word.lower() in lower_script:
                         return await interaction_.response.send_message(embed=discord.Embed(title="Tag作成に失敗しました。", color=discord.Color.red()))
 
-                db = self.bot.async_db["Main"].Tags
+                db = interaction.client.async_db["Main"].Tags
                 await db.update_one(
                     {"command": 名前, "guild_id": interaction_.guild.id},
                     {"$set": {"tagscript": self.code.component.value}},
