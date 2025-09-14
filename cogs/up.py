@@ -467,7 +467,7 @@ class UpCog(commands.Cog):
                     )
 
                     await self.bot.alert_add(
-                        "dissoku",
+                        "discadia",
                         after.channel.id,
                         ment,
                         "DiscadiaをUpしてね！",
