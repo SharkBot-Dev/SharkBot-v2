@@ -956,14 +956,17 @@ class GlobalCog(commands.Cog):
                             inline=False,
                             value=f"{rmsg.content}",
                         )
-                    webhook_ = Webhook.from_url(
-                        channel.get("Webhook", None), session=session
-                    )
-                    await webhook_.send(
-                        embeds=[embed, embed_2],
-                        username="SharkBot-SGC",
-                        avatar_url=self.bot.user.avatar.url,
-                    )
+                    try:
+                        webhook_ = Webhook.from_url(
+                            channel.get("Webhook", None), session=session
+                        )
+                        await webhook_.send(
+                            embeds=[embed, embed_2],
+                            username="SharkBot-SGC",
+                            avatar_url=self.bot.user.avatar.url,
+                        )
+                    except:
+                        continue
                     count += 1
                     if count > 3:
                         await asyncio.sleep(1)
