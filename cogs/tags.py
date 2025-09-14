@@ -28,6 +28,8 @@ class TagsCog(commands.Cog):
                 tse.SubstringBlock(),
                 tse.ReplaceBlock(),
                 tse.URLEncodeBlock(),
+                tse.ShortCutRedirectBlock("args"),
+                tse.LooseVariableGetterBlock(),
             ]
         )
         print("init -> TagsCog")
