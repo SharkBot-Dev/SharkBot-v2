@@ -1134,14 +1134,17 @@ class GlobalCog(commands.Cog):
                             dic.get("guildId", "0"), dic.get("guildIcon", "")
                         ),
                     )
-                    webhook_ = Webhook.from_url(
-                        ch.get("Webhook", None), session=session
-                    )
-                    await webhook_.send(
-                        embeds=[embed, embed_2],
-                        username="SharkBot-SGC",
-                        avatar_url=self.bot.user.avatar.url,
-                    )
+                    try:
+                        webhook_ = Webhook.from_url(
+                            ch.get("Webhook", None), session=session
+                        )
+                        await webhook_.send(
+                            embeds=[embed, embed_2],
+                            username="SharkBot-SGC",
+                            avatar_url=self.bot.user.avatar.url,
+                        )
+                    except:
+                        continue
                     await asyncio.sleep(1)
         await message.add_reaction("✅")
 
