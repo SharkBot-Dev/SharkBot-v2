@@ -40,7 +40,7 @@ class TagsCog(commands.Cog):
 
     # ---------- タグ作成 ----------
     @tag.command(name="create", description="tagを作成します。")
-    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tag_create(
@@ -82,7 +82,7 @@ class TagsCog(commands.Cog):
 
     # ---------- タグ削除 ----------
     @tag.command(name="delete", description="tagを削除します。")
-    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tag_delete(
@@ -105,7 +105,7 @@ class TagsCog(commands.Cog):
         )
 
     @tag.command(name="tags", description="タグリストを表示します。")
-    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tags_list(
@@ -132,7 +132,7 @@ class TagsCog(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @tag.command(name="export", description="タグをエクスポートします。")
-    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tags_export(
