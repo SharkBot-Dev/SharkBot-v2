@@ -669,6 +669,7 @@ Botを追加したユーザーは？: {add_bot_user}
                         value="はい" if e.animated else "いいえ",
                         inline=False,
                     )
+                    .add_field(name="Botから見た絵文字", value=f"```{e.__str__()}```", inline=False)
                 )
                 return
         await interaction.followup.send(
