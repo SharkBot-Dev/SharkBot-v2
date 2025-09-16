@@ -703,6 +703,41 @@ class NounaiGroup(app_commands.Group):
             )
         )
 
+    @app_commands.command(name="busyo", description="武将メーカーで遊びます")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def busyo(self, interaction: discord.Interaction, 名前: str):
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="武将メーカー", color=discord.Color.green()
+            ).set_image(
+                url=f"https://usokomaker.com/busyo/img/{urllib.parse.quote(名前)}.gif"
+            )
+        )
+
+    @app_commands.command(name="kabuto", description="兜メーカーで遊びます")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def kabuto(self, interaction: discord.Interaction, 名前: str):
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="兜メーカー", color=discord.Color.green()
+            ).set_image(
+                url=f"https://usokomaker.com/kabuto/img/{urllib.parse.quote(名前)}.gif"
+            )
+        )
+
+    @app_commands.command(name="tenshoku", description="転職メーカーで遊びます")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def tenshoku(self, interaction: discord.Interaction, 名前: str):
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="転職メーカー", color=discord.Color.green()
+            ).set_image(
+                url=f"https://usokomaker.com/tenshoku/img/{urllib.parse.quote(名前)}.gif"
+            )
+        )
 
 class ImageGroup(app_commands.Group):
     def __init__(self):
