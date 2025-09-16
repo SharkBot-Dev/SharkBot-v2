@@ -562,6 +562,70 @@ class GameCog(commands.Cog):
                         content="画像の取得に失敗しました。"
                     )
 
+    @game.command(name="math-quiz", description="算数クイズをします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def math_quiz(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+        ans = []
+        for _ in range(3):
+            r = random.randint(100, 1000)
+            r2 = random.randint(100, 1000)
+            ans.append([f"{r}*{r2}", r * r2])
+
+        question_idx = 0
+        correct_answer = ans[question_idx][1]
+
+        class AnsView(discord.ui.View):
+            def __init__(self):
+                super().__init__(timeout=180)
+
+            async def check_answer(self, interaction_: discord.Interaction, idx: int):
+                if interaction.user.id != interaction_.user.id:
+                    await interaction_.response.send_message("あなたの問題ではありません。", ephemeral=True)
+                    return
+
+                await interaction_.response.defer()
+                await interaction_.message.edit(view=None)
+
+                if ans[idx][1] == correct_answer:
+                    return await interaction.channel.send(
+                        embed=discord.Embed(
+                            title="正解です！",
+                            description=f"正解は {correct_answer} です！",
+                            color=discord.Color.green(),
+                        )
+                    )
+                else:
+                    return await interaction.channel.send(
+                        embed=discord.Embed(
+                            title="不正解です",
+                            description=f"正解は {correct_answer} です！",
+                            color=discord.Color.red(),
+                        )
+                    )
+
+            @discord.ui.button(label=str(ans[0][1]), style=discord.ButtonStyle.gray)
+            async def ans_1(self, interaction_: discord.Interaction, button: discord.ui.Button):
+                await self.check_answer(interaction_, 0)
+
+            @discord.ui.button(label=str(ans[1][1]), style=discord.ButtonStyle.gray)
+            async def ans_2(self, interaction_: discord.Interaction, button: discord.ui.Button):
+                await self.check_answer(interaction_, 1)
+
+            @discord.ui.button(label=str(ans[2][1]), style=discord.ButtonStyle.gray)
+            async def ans_3(self, interaction_: discord.Interaction, button: discord.ui.Button):
+                await self.check_answer(interaction_, 2)
+
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="これの答えは？",
+                color=discord.Color.blue(),
+                description=f"```{ans[question_idx][0]}```"
+            ),
+            view=AnsView(),
+        )
 
 async def setup(bot):
     await bot.add_cog(GameCog(bot))
