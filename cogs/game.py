@@ -568,20 +568,40 @@ class GameCog(commands.Cog):
     async def math_quiz(self, interaction: discord.Interaction):
         await interaction.response.defer()
 
-        ans = []
-        for _ in range(3):
+        r_ = random.randint(0, 2)
+        if r_ == 0:
             r = random.randint(100, 1000)
             r2 = random.randint(100, 1000)
-            ans.append([f"{r}*{r2}", r * r2])
+            question = f"{r} * {r2}"
+            correct_answer = r * r2
+        elif r_ == 1:
+            r = random.randint(100, 1000)
+            r2 = random.randint(1, 1000)
+            question = f"{r} / {r2}"
+            correct_answer = round(r / r2, 2)
+        else:
+            r = random.randint(100, 1000)
+            r2 = random.randint(100, 1000)
+            question = f"{r} + {r2}"
+            correct_answer = r + r2
 
-        question_idx = 0
-        correct_answer = ans[question_idx][1]
+        choices = [correct_answer]
+        while len(choices) < 3:
+            if isinstance(correct_answer, float):
+                dummy = round(correct_answer + random.uniform(-50, 50), 2)
+            else:
+                dummy = correct_answer + random.randint(-50, 50)
+
+            if dummy != correct_answer and dummy not in choices:
+                choices.append(dummy)
+
+        random.shuffle(choices)
 
         class AnsView(discord.ui.View):
             def __init__(self):
                 super().__init__(timeout=180)
 
-            async def check_answer(self, interaction_: discord.Interaction, idx: int):
+            async def check_answer(self, interaction_: discord.Interaction, choice):
                 if interaction.user.id != interaction_.user.id:
                     await interaction_.response.send_message("あなたの問題ではありません。", ephemeral=True)
                     return
@@ -589,11 +609,11 @@ class GameCog(commands.Cog):
                 await interaction_.response.defer()
                 await interaction_.message.edit(view=None)
 
-                if ans[idx][1] == correct_answer:
+                if choice == correct_answer:
                     return await interaction.channel.send(
                         embed=discord.Embed(
                             title="正解です！",
-                            description=f"正解は {correct_answer} です！",
+                            description=f"正解は {correct_answer} でした！",
                             color=discord.Color.green(),
                         )
                     )
@@ -601,30 +621,28 @@ class GameCog(commands.Cog):
                     return await interaction.channel.send(
                         embed=discord.Embed(
                             title="不正解です",
-                            description=f"正解は {correct_answer} です！",
+                            description=f"正解は {correct_answer} でした！",
                             color=discord.Color.red(),
                         )
                     )
 
-            @discord.ui.button(label=str(ans[0][1]), style=discord.ButtonStyle.gray)
-            async def ans_1(self, interaction_: discord.Interaction, button: discord.ui.Button):
-                await self.check_answer(interaction_, 0)
+        view = AnsView()
+        for c in choices:
+            button = discord.ui.Button(label=str(c), style=discord.ButtonStyle.gray)
 
-            @discord.ui.button(label=str(ans[1][1]), style=discord.ButtonStyle.gray)
-            async def ans_2(self, interaction_: discord.Interaction, button: discord.ui.Button):
-                await self.check_answer(interaction_, 1)
+            async def callback(interaction_: discord.Interaction, choice=c):
+                await view.check_answer(interaction_, choice)
 
-            @discord.ui.button(label=str(ans[2][1]), style=discord.ButtonStyle.gray)
-            async def ans_3(self, interaction_: discord.Interaction, button: discord.ui.Button):
-                await self.check_answer(interaction_, 2)
+            button.callback = callback
+            view.add_item(button)
 
         await interaction.followup.send(
             embed=discord.Embed(
                 title="これの答えは？",
                 color=discord.Color.blue(),
-                description=f"```{ans[question_idx][0]}```"
+                description=f"```{question}```"
             ),
-            view=AnsView(),
+            view=view,
         )
 
 async def setup(bot):
