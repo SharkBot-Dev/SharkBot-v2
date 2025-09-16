@@ -290,6 +290,8 @@ class GlobalCog(commands.Cog):
         db = self.bot.async_db["Main"].NewGlobalChat
         channels = db.find({})
 
+        count = 0
+
         async for channel in channels:
             if channel["Channel"] == message.channel.id:
                 continue
@@ -303,7 +305,10 @@ class GlobalCog(commands.Cog):
             else:
                 continue
 
-            await asyncio.sleep(1)
+            count += 1
+            if count > 3:
+                await asyncio.sleep(1)
+                count = 0
 
     async def send_one_globalchat_selectbot(self, webhook: str, bot: discord.User):
         async with aiohttp.ClientSession() as session:
