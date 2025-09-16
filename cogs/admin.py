@@ -325,11 +325,7 @@ class AdminCog(commands.Cog):
 
         if 操作.value == "reboot":
 
-            while True:
-                await self.bot.change_presence(discord.CustomActivity(
-                        name=f"再起動中.."
-                    ), status=discord.Status.dnd)
-                await asyncio.sleep(5)
+            await self.bot.change_presence(status=discord.Status.dnd, activity=discord.Game(name="再起動中!!"))
 
     @admin.command(name="premium", description="プレミアムユーザーを手動で追加します。")
     @app_commands.choices(
