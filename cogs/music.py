@@ -8,8 +8,10 @@ import asyncio
 class YTDLSource:
     YTDL_OPTIONS = {
         'format': 'bestaudio',
-        'noplaylist': 'True',
-        'quiet': True,
+        "noplaylist": True,
+        "playlist_items": "1",
+        "quiet": True,
+        "no_warnings": True,
     }
 
     FFMPEG_OPTIONS = {
