@@ -956,11 +956,18 @@ class GlobalCog(commands.Cog):
                             inline=False,
                         )
                     if message.reference:
-                        embed.add_field(
-                            name=f"返信 ({rmsg.author.name}#{rmsg.author.discriminator})",
-                            inline=False,
-                            value=f"{rmsg.content}",
-                        )
+                        if rmsg.application_id != self.bot.user.id:
+                            embed.add_field(
+                                name=f"返信 ({rmsg.author.name}#{rmsg.author.discriminator})",
+                                inline=False,
+                                value=f"{rmsg.content}",
+                            )
+                        elif rmsg.application_id == self.bot.user.id:
+                            embed.add_field(
+                                name=f"返信 ({rmsg.embeds[0].author.name.split(']')[1].split('/')[0].replace(' ', '')})",
+                                inline=False,
+                                value=f"{rmsg.embeds[0].description}",
+                            )
                     try:
                         webhook_ = Webhook.from_url(
                             channel.get("Webhook", None), session=session
@@ -1954,11 +1961,18 @@ class GlobalCog(commands.Cog):
                             inline=False,
                         )
                     if message.reference:
-                        embed.add_field(
-                            name=f"返信 ({rmsg.author.name}#{rmsg.author.discriminator})",
-                            inline=False,
-                            value=f"{rmsg.content}",
-                        )
+                        if rmsg.application_id != self.bot.user.id:
+                            embed.add_field(
+                                name=f"返信 ({rmsg.author.name}#{rmsg.author.discriminator})",
+                                inline=False,
+                                value=f"{rmsg.content}",
+                            )
+                        elif rmsg.application_id == self.bot.user.id:
+                            embed.add_field(
+                                name=f"返信 ({rmsg.embeds[0].author.name.split(']')[1].split('/')[0].replace(' ', '')})",
+                                inline=False,
+                                value=f"{rmsg.embeds[0].description}",
+                            )
                     webhook_ = Webhook.from_url(
                         channel.get("Webhook", None), session=session
                     )

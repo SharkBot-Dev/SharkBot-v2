@@ -2032,13 +2032,15 @@ class PanelCog(commands.Cog):
     async def panel_enquete(
         self, interaction: discord.Interaction, タイトル: str, 質問1: str, 質問2: str=None, 質問3: str=None
     ):
+        await interaction.response.defer()
         q_s = [質問1, 質問2, 質問3]
         q_s = [q for q in q_s if q is not None]
         embed=discord.Embed(title=タイトル, color=discord.Color.green())
         for q in q_s:
             embed.add_field(name=q, inline=False, value="未回答")
         embed.set_footer(text="SharkBot Enquete")
-        await interaction.response.send_message(embed=embed, view=discord.ui.View().add_item(discord.ui.Button(label="回答する", custom_id="enquete_answer+")))
+        await interaction.channel.send(embed=embed, view=discord.ui.View().add_item(discord.ui.Button(label="回答する", custom_id="enquete_answer+")))
+        await interaction.delete_original_response()
 
     @panel.command(name="top", description="一コメを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
