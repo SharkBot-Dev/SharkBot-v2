@@ -268,6 +268,7 @@ class AudioGroup(app_commands.Group):
         声の種類=[
             app_commands.Choice(name="ゆっくり霊夢", value="reimu"),
             app_commands.Choice(name="ゆっくり魔理沙", value="marisa"),
+            app_commands.Choice(name="ひろゆき", value="hiroyuki"),
         ]
     )
     async def tts_(
@@ -297,6 +298,26 @@ class AudioGroup(app_commands.Group):
                         file=discord.File(io_, filename="tts.mp3")
                     )
                     io_.close()
+        elif 声の種類.value == "hiroyuki":
+            json_data = {
+                'variant': 'maker-tts',
+                'text': テキスト,
+            }
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"https://backend.coefont.cloud/coefonts/19d55439-312d-4a1d-a27b-28f0f31bedc5/try", json=json_data
+                ) as response:
+                    j = await response.json()
+                    if not j.get('location'):
+                        return await interaction.followup.send(embed=discord.Embed(title="音声生成に失敗しました。", color=discord.Color.red()))
+                    async with session.get(
+                        j['location']
+                    ) as response_wav:
+                        io_ = io.BytesIO(await response_wav.read())
+                        await interaction.followup.send(
+                            file=discord.File(io_, filename="tts.wav")
+                        )
+                        io_.close()
 
     @app_commands.command(name="distortion", description="音声を音割れさせます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
