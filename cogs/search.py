@@ -596,11 +596,6 @@ Botを追加したユーザーは？: {add_bot_user}
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def avatar(self, interaction: discord.Interaction, ユーザー: discord.User):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         if ユーザー.avatar == None:
 
@@ -648,6 +643,16 @@ Botを追加したユーザーは？: {add_bot_user}
             await interaction.followup.send(view=AvatarLayout())
 
         return
+
+    @search.command(name="banner", description="バナーを取得します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def banner(self, interaction: discord.Interaction, ユーザー: discord.User):
+        ユーザー = await self.bot.fetch_user(ユーザー.id)
+        if not ユーザー.banner:
+            return await interaction.response.send_message(ephemeral=True, content="その人はバナーをつけていません。")
+        await interaction.response.send_message(embed=discord.Embed(title=f"{ユーザー.name}さんのバナー", color=discord.Color.green())
+                                                .set_image(url=ユーザー.banner.url if ユーザー.banner else None))
 
     @search.command(name="emoji", description="絵文字を検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
