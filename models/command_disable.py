@@ -22,6 +22,14 @@ def extract_command_name(interaction: discord.Interaction) -> str:
 
     return " ".join(name_parts)
 
+async def command_enabled_check_by_cmdname(cmdname: str, guild: discord.Guild) -> bool:
+    cmds = await mongodb.mongo["DashboardBot"].CommandDisabled.find_one(
+        {"Guild": guild.id}
+    )
+
+    if not cmds or cmdname not in cmds.get("commands", []):
+        return True
+    return False
 
 async def command_enabled_check(interaction: discord.Interaction) -> bool:
     """

@@ -1,3 +1,5 @@
+import ast
+from pathlib import Path
 from discord.ext import commands
 import discord
 
@@ -6,6 +8,8 @@ from models import save_commands
 from discord import app_commands
 
 import asyncio
+
+import importlib.util
 
 class AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -29,6 +33,7 @@ class AdminCog(commands.Cog):
     @app_commands.choices(
         操作の種類=[
             app_commands.Choice(name="リロード", value="reload"),
+            app_commands.Choice(name="モジュールリロード", value="modulereload"),
             app_commands.Choice(name="ロード", value="load"),
         ]
     )
@@ -61,6 +66,21 @@ class AdminCog(commands.Cog):
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="Cogをロードしました。", color=discord.Color.green()
+                )
+            )
+        elif 操作の種類.value == "modulereload":
+            try:
+                mod = importlib.import_module(cog名)
+                importlib.reload(mod)
+            except Exception as e:
+                return await interaction.followup.send(
+                    embed=discord.Embed(
+                        title="モジュールリロードに失敗しました。", description=f"```{e}```", color=discord.Color.green()
+                    )
+                )
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="モジュールをリロードしました。", color=discord.Color.green()
                 )
             )
 
