@@ -1324,6 +1324,45 @@ class PanelCog(commands.Cog):
                         await interaction.followup.send(
                             "VIPルームに参加できませんでした。", ephemeral=True
                         )
+                elif "enquete_answer+" in custom_id:
+                    embed = interaction.message.embeds[0].fields
+                    class Modal_Qneuete(discord.ui.Modal):
+                        def __init__(self, embed_fields, message: discord.Message):
+                            super().__init__(title="アンケートに回答する", timeout=180)
+                            self.message = message
+
+                            for e in embed_fields[:5]:
+                                self.add_item(
+                                    discord.ui.TextInput(
+                                        label=e.name,
+                                        placeholder=f"{e.name}について回答してください",
+                                        style=discord.TextStyle.short,
+                                        required=True,
+                                        max_length=30
+                                    )
+                                )
+
+                        async def on_submit(self, interaction: discord.Interaction):
+                            embed = self.message.embeds[0]
+                            new_embed = discord.Embed(title=embed.title, color=embed.color)
+                            new_embed.set_footer(text="SharkBot Enquete")
+
+                            for i, field in enumerate(embed.fields):
+                                if i < len(self.children):
+                                    answer = self.children[i].value
+                                    user = interaction.user.name
+
+                                    old_value = "" if field.value == "未回答" else field.value
+
+                                    new_value = f"{old_value}\n{user}: {answer}" if old_value else f"{user}: {answer}"
+
+                                    new_embed.add_field(name=field.name, value=new_value, inline=False)
+                                else:
+                                    new_embed.add_field(name=field.name, value=field.value, inline=False)
+
+                            await self.message.edit(embed=new_embed)
+                            await interaction.response.send_message("回答を記録しました", ephemeral=True)
+                    await interaction.response.send_modal(Modal_Qneuete(embed, interaction.message))
         except:
             return
 
@@ -1985,6 +2024,21 @@ class PanelCog(commands.Cog):
             embed=discord.Embed(title="作成しました。", color=discord.Color.green()),
             ephemeral=True,
         )
+
+    @panel.command(name="enquete", description="アンケートを取ります。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def panel_enquete(
+        self, interaction: discord.Interaction, タイトル: str, 質問1: str, 質問2: str=None, 質問3: str=None
+    ):
+        q_s = [質問1, 質問2, 質問3]
+        q_s = [q for q in q_s if q is not None]
+        embed=discord.Embed(title=タイトル, color=discord.Color.green())
+        for q in q_s:
+            embed.add_field(name=q, inline=False, value="未回答")
+        embed.set_footer(text="SharkBot Enquete")
+        await interaction.response.send_message(embed=embed, view=discord.ui.View().add_item(discord.ui.Button(label="回答する", custom_id="enquete_answer+")))
 
     @panel.command(name="top", description="一コメを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
