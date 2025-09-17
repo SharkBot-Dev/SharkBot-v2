@@ -1634,6 +1634,36 @@ class GlobalCog(commands.Cog):
         await message.remove_reaction("🔄", self.bot.user)
         await message.add_reaction("✅")
 
+    async def globalchat_users_add(self, user: discord.User, message: discord.Message):
+        db = self.bot.async_db["Main"].GlobalChatRuleAgreeUser
+
+        try:
+            dbfind = await db.find_one({"User": user.id}, {"_id": False})
+            if dbfind is None:
+                await message.reply(embed=discord.Embed(title="これがグローバルチャットのルールです。", description="""
+荒らしをしない
+宣伝をしない (宣伝の場合は宣伝グローバルへ)
+r18やグロ関連のものを貼らない
+違法なリンクを貼らない・違法な会話をしない
+喧嘩などをしない。
+その他運営の禁止したものを貼らない
+
+同意できる場合は「同意」ボタンを押してください。
+""", color=discord.Color.green()), view=discord.ui.View().add_item(discord.ui.Button(label="同意", style=discord.ButtonStyle.green, custom_id="globalchat_agree+")))
+                return True
+        except Exception:
+            return False
+
+        await db.replace_one(
+            {"User": user.id},
+            {
+                "User": user.id,
+                "UserName": user.name
+            },
+            upsert=True,
+        )
+        return False
+
     @commands.Cog.listener("on_message")
     async def on_message_global(self, message: discord.Message):
         if message.author.bot:
@@ -1662,6 +1692,10 @@ class GlobalCog(commands.Cog):
         if current_time - last_message_time < COOLDOWN_TIMEGC:
             return print("クールダウン中です。")
         user_last_message_timegc[message.guild.id] = current_time
+
+        g_u = await self.globalchat_users_add(message.author, message)
+        if g_u:
+            return
 
         await message.add_reaction("🔄")
 

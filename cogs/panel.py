@@ -1363,6 +1363,17 @@ class PanelCog(commands.Cog):
                             await self.message.edit(embed=new_embed)
                             await interaction.response.send_message("回答を記録しました", ephemeral=True)
                     await interaction.response.send_modal(Modal_Qneuete(embed, interaction.message))
+                elif "globalchat_agree+" in custom_id:
+                    db = self.bot.async_db["Main"].GlobalChatRuleAgreeUser
+                    await db.replace_one(
+                        {"User": interaction.user.id},
+                        {
+                            "User": interaction.user.id,
+                            "UserName": interaction.user.name
+                        },
+                        upsert=True,
+                    )
+                    await interaction.response.send_message(ephemeral=True, content="グローバルチャットのルールに同意しました。")
         except:
             return
 

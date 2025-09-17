@@ -1,6 +1,6 @@
 from discord.ext import commands, tasks
 import discord
-from datetime import datetime, time
+from datetime import datetime, time, timezone, timedelta
 
 class HelloCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -8,7 +8,7 @@ class HelloCog(commands.Cog):
         self.check_goodmorning_alert.start()
         print("init -> HelloCog")
 
-    @tasks.loop(time=time(hour=8, minute=0))
+    @tasks.loop(time=time(hour=8, minute=0, tzinfo=timezone(timedelta(hours=9))))
     async def check_goodmorning_alert(self):
         now = datetime.now().strftime('%Y年%m月%d日')
 
