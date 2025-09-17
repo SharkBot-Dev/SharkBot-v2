@@ -1,15 +1,42 @@
 import time
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from discord import app_commands
 
+import aiohttp
+from bs4 import BeautifulSoup
+import ssl
+
 cooldown_eventalert = {}
 
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
 
 class AlertCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.check_news_alert.start()
+
+    @tasks.loop(hours=3)
+    async def check_news_alert(self):
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://mainichi.jp/", ssl=ssl_context) as response:
+                soup = BeautifulSoup(await response.text(), "html.parser")
+                title = soup.find_all("div", class_="toppickup")[0]
+                url = title.find_all("a")[0]
+
+                news_db = self.bot.async_db["Main"].NewsAlert
+                async for n in news_db.find({}):
+                    guild= self.bot.get_guild(n.get('Guild', 0))
+                    if guild:
+                        channel = guild.get_channel(n.get('Channel', 0))
+                        if channel:
+                            await channel.send(f"https:{url['href']}")
+
+    async def cog_unload(self):
+        self.check_news_alert.stop()
 
     async def get_mention(self, guild: discord.Guild, channel_id: int):
         db = self.bot.async_db["Main"].AlertMention
@@ -114,6 +141,39 @@ class AlertCog(commands.Cog):
             await interaction.response.send_message(
                 embed=discord.Embed(
                     title="イベント作成時に通知するチャンネルを削除しました。",
+                    color=discord.Color.red(),
+                ),
+                ephemeral=True,
+            )
+
+    @alert.command(
+        name="news", description="ニュースを通知するチャンネルを設定します。"
+    )
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def alert_news(
+        self, interaction: discord.Interaction, チャンネル: discord.TextChannel = None
+    ):
+        db = self.bot.async_db["Main"].NewsAlert
+        if チャンネル:
+            await db.replace_one(
+                {"Guild": interaction.guild.id},
+                {"Guild": interaction.guild.id, "Channel": チャンネル.id},
+                upsert=True,
+            )
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="ニュースを通知するチャンネルを設定しました。",
+                    color=discord.Color.green(),
+                ),
+                ephemeral=True,
+            )
+        else:
+            await db.delete_one({"Guild": interaction.guild.id})
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="ニュースを通知するチャンネルを削除しました。",
                     color=discord.Color.red(),
                 ),
                 ephemeral=True,
