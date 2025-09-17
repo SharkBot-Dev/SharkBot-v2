@@ -2004,6 +2004,45 @@ class SettingCog(commands.Cog):
                 )
             )
 
+    @settings.command(name="good-morning", description="おはよう挨拶チャンネルをセットアップします。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_messages=True)
+    async def good_morning(
+        self,
+        interaction: discord.Interaction,
+        有効にするか: bool,
+    ):
+        db = self.bot.async_db["Main"].GoodMorningChannel
+        if 有効にするか:
+            await db.replace_one(
+                {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+                {
+                    "Guild": interaction.guild.id,
+                    "Channel": interaction.channel.id
+                },
+                upsert=True,
+            )
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="おはよう挨拶を有効化しました。", description="毎日8時に通知します。", color=discord.Color.green()
+                )
+            )
+        else:
+            result = await db.delete_one(
+                {"Guild": interaction.guild.id, "Channel": interaction.channel.id}
+            )
+            if result.deleted_count == 0:
+                return await interaction.response.send_message(
+                    embed=discord.Embed(
+                        title="おはよう挨拶は有効化されていません。",
+                        color=discord.Color.red(),
+                    )
+                )
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="おはよう挨拶を無効化しました。", color=discord.Color.red()
+                )
+            )
 
 async def setup(bot):
     await bot.add_cog(SettingCog(bot))
