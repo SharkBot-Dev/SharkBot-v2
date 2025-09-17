@@ -1648,6 +1648,9 @@ r18やグロ関連のものを貼らない
 喧嘩などをしない。
 その他運営の禁止したものを貼らない
 
+これらルールに違反した場合は
+グローバルチャットが利用できなくなります。
+
 同意できる場合は「同意」ボタンを押してください。
 """, color=discord.Color.green()), view=discord.ui.View().add_item(discord.ui.Button(label="同意", style=discord.ButtonStyle.green, custom_id="globalchat_agree+")))
                 return True
