@@ -279,6 +279,7 @@ class GameCog(commands.Cog):
         self.quests = [
             {'miq': '/fun image miqでMake it a quoteを作ってみよう！'},
             {'geo': '地理クイズで正解してみよう！'},
+            {'8ball': '8ballで占ってもらおう！'},
         ]
         print("init -> GameCog")
 
@@ -305,13 +306,16 @@ class GameCog(commands.Cog):
             "可能性はあります。",
             "絶対にそうです！",
         ]
-        return await interaction.response.send_message(
+        await interaction.response.send_message(
             embed=discord.Embed(
                 title="8ball",
                 description=random.choice(responses),
                 color=discord.Color.green(),
             )
         )
+        await asyncio.sleep(1)
+        await quest.quest_clear(interaction, "8ball")
+        return
 
     @game.command(name="roll", description="さいころをふります。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
