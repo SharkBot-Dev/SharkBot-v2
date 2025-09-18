@@ -7,8 +7,8 @@ import asyncio
 
 class MusicView(discord.ui.LayoutView):
     container = discord.ui.Container(
-        discord.ui.TextDisplay("操作パネル"),
-        discord.ui.ActionRow(discord.ui.Button(emoji="💿", custom_id="music_add+"), discord.ui.Button(emoji="⏭️", custom_id="music_skip+"), discord.ui.Button(emoji="⏹️", custom_id="music_stop+"), discord.ui.Button(emoji="📝", custom_id="music_quote+")),
+        discord.ui.TextDisplay("### 操作パネル"),
+        discord.ui.ActionRow(discord.ui.Button(emoji="💿", custom_id="music_add+"), discord.ui.Button(emoji="⏭️", custom_id="music_skip+"), discord.ui.Button(emoji="⏹️", custom_id="music_stop+"), discord.ui.Button(emoji="📝", custom_id="music_quote+"), discord.ui.Button(emoji="❓", custom_id="music_help+")),
         accent_colour=discord.Colour.green()
     )
 
@@ -133,7 +133,7 @@ class MusicCog(commands.Cog):
                         await interaction.response.send_message("キューは空です。", ephemeral=True)
                     else:
                         desc = '\n'.join([f"{i+1}. {info['title']}" for i, info in enumerate(q_list)])
-                        await interaction.response.send_message(embed=discord.Embed(title="現在のキュー", description=desc, color=discord.Color.green()))
+                        await interaction.response.send_message(embed=discord.Embed(title="現在のキュー", description=desc, color=discord.Color.green()), ephemeral=True)
                 elif custom_id.startswith("music_add+"):
                     class MusicAddModal(discord.ui.Modal):
                         def __init__(self):
@@ -165,7 +165,7 @@ class MusicCog(commands.Cog):
                             voice = discord.utils.get(interaction.client.voice_clients, guild=interaction.guild)
 
                             async def add_to_queue(guild_id, item):
-                                await interaction.client.async_db['Main'].music_queue_collection.update_one(
+                                await interaction.client.async_db['Main'].MusicQueue.update_one(
                                     {"guild_id": guild_id},
                                     {"$push": {"queue": item}},
                                     upsert=True
@@ -179,6 +179,8 @@ class MusicCog(commands.Cog):
                                 await add_to_queue(interaction.guild.id, source_info)
                                 await interaction.channel.send(f"キューに追加: **{source_info['title']}**")
                     await interaction.response.send_modal(MusicAddModal())
+                elif custom_id.startswith('music_help+'):
+                    await interaction.response.send_message(ephemeral=True, content="ボタンの説明\n> 💿 .. 音楽を追加する\n> ⏭️ .. 音楽をスキップする\n> ⏹️ .. 音楽をストップする\n> 📝 .. キューリストを取得する\n> ❓ .. ヘルプを表示する")
         except:
             return
 
