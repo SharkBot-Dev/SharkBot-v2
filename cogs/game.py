@@ -14,7 +14,7 @@ import asyncio
 import aiohttp
 import json
 
-from consts import settings
+from models import quest
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
@@ -276,6 +276,10 @@ class GameCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.geo_s = "北海道,青森県,宮城県,秋田県,山形県,福島県,茨城県,栃木県,群馬県,埼玉県,千葉県,東京都,神奈川県,山梨県,長野県,新潟県,富山県,石川県,福井県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県,沖縄県"
+        self.quests = [
+            {'miq': '/fun image miqでMake it a quoteを作ってみよう！'},
+            {'geo': '地理クイズで正解してみよう！'},
+        ]
         print("init -> GameCog")
 
     game = app_commands.Group(name="game", description="ゲーム系のコマンドです。")
@@ -503,13 +507,18 @@ class GameCog(commands.Cog):
                                     return
                                 await interaction_.message.edit(view=None)
                                 if ans[idx] == ans[r]:
-                                    return await interaction.channel.send(
+                                    await interaction.channel.send(
                                         embed=discord.Embed(
                                             title="正解です！",
                                             description=f"正解は{ans[r]}です！",
                                             color=discord.Color.green(),
                                         )
                                     )
+
+                                    await asyncio.sleep(1)
+                                    await quest.quest_clear(interaction, "geo")
+
+                                    return
                                 return await interaction.channel.send(
                                     embed=discord.Embed(
                                         title="不正解です",
@@ -644,6 +653,41 @@ class GameCog(commands.Cog):
             ),
             view=view,
         )
+
+    @game.command(name="bot-quest", description="Botの出してくるクエストに挑戦するゲームです。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def bot_quest(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        db = self.bot.async_db["Main"].BotQuest
+
+        dbfind = await db.find_one({"User": interaction.user.id}, {"_id": False})
+
+        if dbfind is None:
+            quest = random.choice(self.quests)
+            await db.replace_one(
+                {"User": interaction.user.id},
+                {"User": interaction.user.id, "Quest": quest},
+                upsert=True,
+            )
+        else:
+            quest = dbfind.get("Quest")
+
+        if not quest:
+            await interaction.followup.send("現在進行中のクエストはありません。")
+            return
+
+        description = "\n".join(quest.values())
+        embed = (
+            discord.Embed(
+                title="Botのクエスト",
+                description=description,
+                color=discord.Color.green(),
+            )
+            .set_footer(text="クリアすると次のクエストが表示されます。")
+        )
+
+        await interaction.followup.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(GameCog(bot))

@@ -21,6 +21,8 @@ import aiofiles.os
 
 import urllib.parse
 
+from models import quest
+
 
 class EditImageView(discord.ui.View):
     def __init__(self, user: discord.User):
@@ -981,6 +983,7 @@ class ImageGroup(app_commands.Group):
                 await asyncio.sleep(0.5)
                 continue
             image_binary.close()
+            await quest.quest_clear(interaction, "miq")
             return
 
     @app_commands.command(name="ascii", description="アスキーアートを作成します。")
