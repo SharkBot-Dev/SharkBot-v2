@@ -5,6 +5,13 @@ from discord import app_commands
 import yt_dlp
 import asyncio
 
+class MusicView(discord.ui.LayoutView):
+    container = discord.ui.Container(
+        discord.ui.TextDisplay("操作パネル"),
+        discord.ui.ActionRow(discord.ui.Button(emoji="💿", custom_id="music_add+"), discord.ui.Button(emoji="⏭️", custom_id="music_skip+"), discord.ui.Button(emoji="⏹️", custom_id="music_stop+"), discord.ui.Button(emoji="📝", custom_id="music_quote+")),
+        accent_colour=discord.Colour.green()
+    )
+
 class YTDLSource:
     YTDL_OPTIONS = {
         'format': 'bestaudio',
@@ -101,6 +108,80 @@ class MusicCog(commands.Cog):
         voice.play(audio, after=after_playing)
         await interaction.channel.send(f"再生中の曲: **{queue_item['title']}**")
 
+    @commands.Cog.listener(name="on_interaction")
+    async def on_interaction_panel(self, interaction: discord.Interaction):
+        try:
+            if interaction.data["component_type"] == 2:
+                try:
+                    custom_id = interaction.data["custom_id"]
+                except:
+                    return
+                if custom_id.startswith("music_skip+"):
+                    await interaction.response.defer(ephemeral=True)
+                    voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
+                    if voice and voice.is_playing():
+                        voice.stop()
+                elif custom_id.startswith("music_stop+"):
+                    await interaction.response.defer(ephemeral=True)
+                    if interaction.guild.voice_client:
+                        await interaction.guild.voice_client.disconnect()
+                    await self.db["NowPLay"].delete_one(
+                        {"Guild": interaction.guild.id})
+                elif custom_id.startswith("music_quote+"):
+                    q_list = await self.get_queue(interaction.guild.id)
+                    if not q_list:
+                        await interaction.response.send_message("キューは空です。", ephemeral=True)
+                    else:
+                        desc = '\n'.join([f"{i+1}. {info['title']}" for i, info in enumerate(q_list)])
+                        await interaction.response.send_message(embed=discord.Embed(title="現在のキュー", description=desc, color=discord.Color.green()))
+                elif custom_id.startswith("music_add+"):
+                    class MusicAddModal(discord.ui.Modal):
+                        def __init__(self):
+                            super().__init__(title="音楽をキューに追加 (SoundCloud)", timeout=180)
+
+                        musicurl = discord.ui.Label(
+                            text="音楽のURL",
+                            description="音楽のURLを入力してください。",
+                            component=discord.ui.TextInput(
+                                style=discord.TextStyle.short, required=True
+                            ),
+                        )
+
+                        async def on_submit(self, interaction: discord.Interaction):
+                            assert isinstance(self.musicurl.component, discord.ui.TextInput)
+
+                            if interaction.user.voice is None:
+                                return await interaction.response.send_message("ボイスチャンネルに参加してください。")
+
+                            if not "soundcloud.com" in self.musicurl.component.value:
+                                return await interaction.response.send_message("SoundCloud以外に対応していません。")
+                            
+                            await interaction.response.defer()
+
+                            if interaction.guild.voice_client is None:
+                                await interaction.user.voice.channel.connect()
+
+                            source_info = await YTDLSource.create_source(self.musicurl.component.value)
+                            voice = discord.utils.get(interaction.client.voice_clients, guild=interaction.guild)
+
+                            async def add_to_queue(guild_id, item):
+                                await interaction.client.async_db['Main'].music_queue_collection.update_one(
+                                    {"guild_id": guild_id},
+                                    {"$push": {"queue": item}},
+                                    upsert=True
+                                )
+
+                            if not voice.is_playing():
+                                audio = YTDLSource.create_ffmpeg_player(source_info['url'])
+                                voice.play(audio, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(interaction, interaction.guild.id), interaction.client.loop))
+                                await interaction.channel.send(f"再生中の曲: **{source_info['title']}**")
+                            else:
+                                await add_to_queue(interaction.guild.id, source_info)
+                                await interaction.channel.send(f"キューに追加: **{source_info['title']}**")
+                    await interaction.response.send_modal(MusicAddModal())
+        except:
+            return
+
     music = app_commands.Group(
         name="music", description="音楽関連のコマンドです。"
     )
@@ -134,7 +215,7 @@ class MusicCog(commands.Cog):
             await self.add_to_queue(interaction.guild.id, source_info)
             await interaction.channel.send(f"キューに追加: **{source_info['title']}**")
 
-        await interaction.delete_original_response()
+        await interaction.followup.send(view=MusicView())
 
     @music.command(name="skip", description="音楽をスキップします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
