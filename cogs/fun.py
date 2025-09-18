@@ -980,6 +980,7 @@ class ImageGroup(app_commands.Group):
                 )
             except aiohttp.ClientOSError:
                 c += 1
+                image_binary.close()
                 await asyncio.sleep(0.5)
                 continue
             image_binary.close()

@@ -174,6 +174,7 @@ async def setup(bot: commands.Bot):
                 )
             except:
                 c += 1
+                image_binary.close()
                 await asyncio.sleep(0.5)
                 continue
             image_binary.close()
