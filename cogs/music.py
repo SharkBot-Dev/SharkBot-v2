@@ -136,7 +136,7 @@ class MusicCog(commands.Cog):
                         await interaction.response.send_message(embed=discord.Embed(title="現在のキュー", description=desc, color=discord.Color.green()), ephemeral=True)
                 elif custom_id.startswith("music_add+"):
                     class MusicAddModal(discord.ui.Modal):
-                        def __init__(self):
+                        def __init__(self_):
                             super().__init__(title="音楽をキューに追加 (SoundCloud)", timeout=180)
 
                         musicurl = discord.ui.Label(
@@ -147,13 +147,13 @@ class MusicCog(commands.Cog):
                             ),
                         )
 
-                        async def on_submit(self, interaction: discord.Interaction):
-                            assert isinstance(self.musicurl.component, discord.ui.TextInput)
+                        async def on_submit(self_, interaction: discord.Interaction):
+                            assert isinstance(self_.musicurl.component, discord.ui.TextInput)
 
                             if interaction.user.voice is None:
                                 return await interaction.response.send_message("ボイスチャンネルに参加してください。")
 
-                            if not "soundcloud.com" in self.musicurl.component.value:
+                            if not "soundcloud.com" in self_.musicurl.component.value:
                                 return await interaction.response.send_message("SoundCloud以外に対応していません。")
                             
                             await interaction.response.defer()
@@ -161,7 +161,7 @@ class MusicCog(commands.Cog):
                             if interaction.guild.voice_client is None:
                                 await interaction.user.voice.channel.connect()
 
-                            source_info = await YTDLSource.create_source(self.musicurl.component.value)
+                            source_info = await YTDLSource.create_source(self_.musicurl.component.value)
                             voice = discord.utils.get(interaction.client.voice_clients, guild=interaction.guild)
 
                             async def add_to_queue(guild_id, item):
