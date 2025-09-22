@@ -7,6 +7,8 @@ from models import command_disable
 import asyncio
 import psutil
 
+import io
+import aiohttp
 
 class BotCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -187,6 +189,56 @@ Sharkアカウント: {sharkaccount_count}人
 
         await interaction.response.send_message(view=FaqLayout())
 
+    @bot.command(name="custom", description="Botのアバターなどをカスタマイズします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(administrator=True)
+    async def bot_customize(self, interaction: discord.Interaction, アバター: discord.Attachment = None, バナー: discord.Attachment = None, 名前: str = None):
+        await interaction.response.defer()
+
+        async def check_nsfw(image_bytes):
+            async with aiohttp.ClientSession() as session:
+                data = aiohttp.FormData()
+                data.add_field(
+                    "image",
+                    image_bytes,
+                    filename="image.jpg",
+                    content_type="image/jpeg",
+                )
+
+                async with session.post(
+                    "http://localhost:3000/analyze", data=data
+                ) as resp:
+                    if resp.status == 200:
+                        result = await resp.json()
+                        return result
+                    else:
+                        return {"safe": False}
+
+        raw = self.bot.raw(bot=self.bot)
+        if アバター:
+            av_io = io.BytesIO(await アバター.read())
+            av_check = await check_nsfw(av_io)
+            if not av_check:
+                return await interaction.followup.send(content="不適切なアバターなため、設定できません。")
+            avatar = await raw.image_to_data_uri(io_=av_io)
+            av_io.close()
+        else:
+            avatar = None
+        if バナー:
+            bn_io = io.BytesIO(await バナー.read())
+            ba_check = await check_nsfw(bn_io)
+            if not ba_check:
+                return await interaction.followup.send(content="不適切なバナーなため、設定できません。")
+            banner = await raw.image_to_data_uri(io_=bn_io)
+            bn_io.close()
+        else:
+            banner = None
+        try:
+            await raw.modify_current_member(str(interaction.guild.id), avatarUri=avatar, bannerUri=banner, nick=名前)
+        except Exception as e:
+            return await interaction.followup.send(embed=discord.Embed(title="レートリミットです。", color=discord.Color.red(), description=f"何分かお待ちください。\n\nエラーコード\n```{e}```"))
+        await interaction.followup.send(embed=discord.Embed(title="Botのアバターなどをカスタマイズしました。", color=discord.Color.green()))
 
 async def setup(bot):
     await bot.add_cog(BotCog(bot))
