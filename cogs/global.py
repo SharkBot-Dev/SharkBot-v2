@@ -876,6 +876,10 @@ class GlobalCog(commands.Cog):
         if message.author.primary_guild.tag:
             dic.update({"x-userTag": message.author.primary_guild.tag})
 
+            dic.update({"x-userPrimaryGuild": {
+                'tag': message.author.primary_guild.tag
+            }})
+
         if message.reference:
             reference_msg = await message.channel.fetch_message(
                 message.reference.message_id
@@ -1056,14 +1060,14 @@ class GlobalCog(commands.Cog):
                     bag = await self.badge_build(message)
                     if dic["userAvatar"]:
                         embed.set_author(
-                            name=f"[{bag}] {dic['userName']}/{dic['userId']} [{dic.get('x-userTag', '不明') if dic.get('x-userTag', None) != None else 'なし'}]",
+                            name=f"[{bag}] {dic['userName']}/{dic['userId']} [{dic.get('x-userPrimaryGuild', {}).get('tag', None) if dic.get('x-userPrimaryGuild', {}).get('tag', None) != None else 'なし'}]",
                             icon_url="https://media.discordapp.net/avatars/{}/{}.png?size=1024".format(
                                 dic["userId"], dic["userAvatar"]
                             ),
                         )
                     else:
                         embed.set_author(
-                            name=f"[{bag}] {dic['userName']}/{dic['userId']} [{dic.get('x-userTag', '不明') if dic.get('x-userTag', None) != None else 'なし'}]",
+                            name=f"[{bag}] {dic['userName']}/{dic['userId']} [{dic.get('x-userPrimaryGuild', {}).get('tag', None) if dic.get('x-userPrimaryGuild', {}).get('tag', None) != None else 'なし'}]",
                             icon_url=message.author.default_avatar.url,
                         )
                     if not dic.get("attachmentsUrl") == []:
@@ -1914,6 +1918,10 @@ r18やグロ関連のものを貼らない
         if message.author.primary_guild.tag:
             dic.update({"x-userTag": message.author.primary_guild.tag})
 
+            dic.update({"x-userPrimaryGuild": {
+                'tag': message.author.primary_guild.tag
+            }})
+
         if message.reference:
             reference_msg = await message.channel.fetch_message(
                 message.reference.message_id
@@ -2096,14 +2104,14 @@ r18やグロ関連のものを貼らない
                     bag = await self.badge_build(message)
                     if dic["userAvatar"]:
                         embed.set_author(
-                            name=f"[{bag}] {dic['userName']}/{dic['userId']} [{dic.get('x-userTag', '不明') if dic.get('x-userTag', None) != None else 'なし'}]",
+                            name=f"[{bag}] {dic['userName']}/{dic['userId']} [{dic.get('x-userPrimaryGuild', {}).get('tag', None) if dic.get('x-userPrimaryGuild', {}).get('tag', None) != None else 'なし'}]",
                             icon_url="https://media.discordapp.net/avatars/{}/{}.png?size=1024".format(
                                 dic["userId"], dic["userAvatar"]
                             ),
                         )
                     else:
                         embed.set_author(
-                            name=f"[{bag}] {dic['userName']}/{dic['userId']} [{dic.get('x-userTag', '不明') if dic.get('x-userTag', None) != None else 'なし'}]",
+                            name=f"[{bag}] {dic['userName']}/{dic['userId']} [{dic.get('x-userPrimaryGuild', {}).get('tag', None) if dic.get('x-userPrimaryGuild', {}).get('tag', None) != None else 'なし'}]",
                             icon_url=message.author.default_avatar.url,
                         )
                     if not dic.get("attachmentsUrl") == []:
