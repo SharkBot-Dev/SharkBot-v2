@@ -415,6 +415,14 @@ class GachaGroup(app_commands.Group):
         await interaction.response.defer()
         db = interaction.client.async_db["Main"].ServerMoneyGacha
 
+        dbfind = await db.find_one(
+            {"Guild": interaction.guild.id, "Name": ガチャ名}, {"_id": False}
+        )
+        if dbfind is None:
+            return await interaction.followup.send(
+                ephemeral=True, content="ガチャが見つかりません。"
+            )
+
         sm = await Money(interaction.client).get_server_items(
             interaction.guild, アイテム名
         )
@@ -447,6 +455,14 @@ class GachaGroup(app_commands.Group):
         self, interaction: discord.Interaction, ガチャ名: str, アイテム名: str
     ):
         db = interaction.client.async_db["Main"].ServerMoneyGacha
+
+        dbfind = await db.find_one(
+            {"Guild": interaction.guild.id, "Name": ガチャ名}, {"_id": False}
+        )
+        if dbfind is None:
+            return await interaction.followup.send(
+                ephemeral=True, content="ガチャが見つかりません。"
+            )
 
         sm = await Money(interaction.client).get_server_items(
             interaction.guild, アイテム名
