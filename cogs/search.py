@@ -683,6 +683,27 @@ Botを追加したユーザーは？: {add_bot_user}
             )
         )
 
+    @search.command(name="spotify", description="メンバーの聞いている曲の情報を表示します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def spotify_info(self, interaction: discord.Interaction, メンバー: discord.User = None):
+        user = メンバー.id if メンバー else interaction.user.id
+
+        if not interaction.guild.get_member(user):
+            return await interaction.response.send_message(content="このサーバーにいるメンバーだけ指定できます。", ephemeral=True)
+
+        for activity in interaction.guild.get_member(user).activities:
+            if isinstance(activity, discord.Spotify):
+                await interaction.response.send_message(embed=discord.Embed(title=f"{interaction.guild.get_member(user).name}の聞いている曲", color=discord.Color.green())
+                                                        .add_field(name="曲名", value=activity.title, inline=False)
+                                                        .add_field(name="アーティスト", value=activity.artist, inline=False)
+                                                        .add_field(name="トラックid", value=activity.track_id, inline=False)
+                                                        .set_thumbnail(url=activity.album_cover_url)
+                                                        , view=discord.ui.View().add_item(discord.ui.Button(label="アクセスする", url=activity.track_url)))
+                return
+            
+        await interaction.response.send_message(ephemeral=True, content="曲を検出できませんでした。")
+
     @search.command(name="translate", description="翻訳をします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
