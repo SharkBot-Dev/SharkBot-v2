@@ -1206,19 +1206,25 @@ class ToolsCog(commands.Cog):
                 )
 
             def twitter(url):
-                ydl_opts = {"quiet": True, "skip_download": True, "no_warnings": True}
+                try:
+                    ydl_opts = {"quiet": True, "skip_download": True, "no_warnings": True}
 
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(url, download=False)
+                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(url, download=False)
 
-                    if "formats" in info:
-                        for fmt in info["formats"]:
-                            if ".mp4" in fmt.get("url"):
-                                return fmt.get("url")
+                        if "formats" in info:
+                            for fmt in info["formats"]:
+                                if ".mp4" in fmt.get("url"):
+                                    return fmt.get("url")
 
-                        return None
+                            return None
+                except:
+                    return None
 
             url = await asyncio.to_thread(twitter, url)
+
+            if not url:
+                return await interaction.followup.send(embed=discord.Embed(title="そのツイートには動画がありません。", color=discord.Color.red()))
 
             class TwitterView(discord.ui.LayoutView):
                 container = discord.ui.Container(
