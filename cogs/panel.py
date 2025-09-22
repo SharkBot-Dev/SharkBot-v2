@@ -1388,6 +1388,11 @@ class PanelCog(commands.Cog):
                             answer_embed = discord.Embed(color=discord.Color.blue())
                             for i, field in enumerate(self.embed_fields[:len(self.children)]):
                                 answer = self.children[i].value
+
+                                for b in badword.badwords:
+                                    if b in answer:
+                                        return await interaction.response.send_message(content="不適切な言葉が含まれています。", ephemeral=True)
+
                                 answer_embed.add_field(name=field.value, value=answer, inline=False)
 
                             answer_embed.set_author(
@@ -1402,9 +1407,6 @@ class PanelCog(commands.Cog):
                                 color=discord.Color.green()
                             )
                             for i, q in enumerate(self.embed_fields):
-                                for b in badword.badwords:
-                                    if b in q.value:
-                                        return await interaction.followup.send(content="不適切な言葉が含まれています。")
                                 question_embed.add_field(name=f"Q.{i+1}", value=q.value, inline=False)
 
                             question_embed.set_footer(text="SharkBot Templates")
