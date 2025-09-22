@@ -460,7 +460,7 @@ class GachaGroup(app_commands.Group):
             {"Guild": interaction.guild.id, "Name": ガチャ名}, {"_id": False}
         )
         if dbfind is None:
-            return await interaction.followup.send(
+            return await interaction.response.send_message(
                 ephemeral=True, content="ガチャが見つかりません。"
             )
 
