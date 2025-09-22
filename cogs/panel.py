@@ -1363,6 +1363,61 @@ class PanelCog(commands.Cog):
                             await self.message.edit(embed=new_embed)
                             await interaction.response.send_message("回答を記録しました", ephemeral=True)
                     await interaction.response.send_modal(Modal_Qneuete(embed, interaction.message))
+                elif "templates_answer+" in custom_id:
+                    embed_fields = interaction.message.embeds[0].fields
+
+                    class Modal_Qneuete(discord.ui.Modal):
+                        def __init__(self, embed_fields, message: discord.Message):
+                            super().__init__(title=f"{message.embeds[0].title}", timeout=180)
+                            self.message = message
+                            self.embed_fields = embed_fields
+
+                            for e in embed_fields[:5]:
+                                self.add_item(
+                                    discord.ui.TextInput(
+                                        label=e.value,
+                                        placeholder=f"{e.value}について回答してください",
+                                        style=discord.TextStyle.short,
+                                        required=True,
+                                        max_length=30
+                                    )
+                                )
+
+                        async def on_submit(self, interaction: discord.Interaction):
+                            answer_embed = discord.Embed(color=discord.Color.blue())
+                            for i, field in enumerate(self.embed_fields[:len(self.children)]):
+                                answer = self.children[i].value
+                                answer_embed.add_field(name=field.value, value=answer, inline=False)
+
+                            answer_embed.set_author(
+                                name=f"{interaction.user.name} / {interaction.user.id}",
+                                icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url
+                            )
+
+                            await interaction.channel.send(embed=answer_embed)
+
+                            question_embed = discord.Embed(
+                                title=self.message.embeds[0].title,
+                                color=discord.Color.green()
+                            )
+                            for i, q in enumerate(self.embed_fields):
+                                question_embed.add_field(name=f"Q.{i+1}", value=q.value, inline=False)
+
+                            question_embed.set_footer(text="SharkBot Templates")
+
+                            view = discord.ui.View()
+                            view.add_item(discord.ui.Button(label="発言する", custom_id="templates_answer+"))
+
+                            await interaction.channel.send(embed=question_embed, view=view)
+
+                            await interaction.response.send_message("回答を送信しました", ephemeral=True)
+
+                            await asyncio.sleep(2)
+
+                            await interaction.message.delete()
+
+                    await interaction.response.send_modal(Modal_Qneuete(embed_fields, interaction.message))
+
                 elif "globalchat_agree+" in custom_id:
                     db = self.bot.async_db["Main"].GlobalChatRuleAgreeUser
                     await db.replace_one(
@@ -2041,16 +2096,33 @@ class PanelCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_enquete(
-        self, interaction: discord.Interaction, タイトル: str, 質問1: str, 質問2: str=None, 質問3: str=None
+        self, interaction: discord.Interaction, タイトル: str, 質問1: str, 質問2: str=None, 質問3: str=None, 質問4: str=None, 質問5: str=None
     ):
         await interaction.response.defer()
-        q_s = [質問1, 質問2, 質問3]
+        q_s = [質問1, 質問2, 質問3, 質問4, 質問5]
         q_s = [q for q in q_s if q is not None]
         embed=discord.Embed(title=タイトル, color=discord.Color.green())
         for q in q_s:
             embed.add_field(name=q, inline=False, value="未回答")
         embed.set_footer(text="SharkBot Enquete")
         await interaction.channel.send(embed=embed, view=discord.ui.View().add_item(discord.ui.Button(label="回答する", custom_id="enquete_answer+")))
+        await interaction.delete_original_response()
+
+    @panel.command(name="templates", description="テンプレートに沿って話してもらうパネルを作成します。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def panel_templates(
+        self, interaction: discord.Interaction, タイトル: str, 質問1: str, 質問2: str=None, 質問3: str=None, 質問4: str=None, 質問5: str=None
+    ):
+        await interaction.response.defer()
+        q_s = [質問1, 質問2, 質問3, 質問4, 質問5]
+        q_s = [q for q in q_s if q is not None]
+        embed=discord.Embed(title=タイトル, color=discord.Color.green())
+        for i, q in enumerate(q_s):
+            embed.add_field(name=f"Q.{i+1}", inline=False, value=f"{q}")
+        embed.set_footer(text="SharkBot Templates")
+        await interaction.channel.send(embed=embed, view=discord.ui.View().add_item(discord.ui.Button(label="発言する", custom_id="templates_answer+")))
         await interaction.delete_original_response()
 
     @panel.command(name="top", description="一コメを取得します。")
