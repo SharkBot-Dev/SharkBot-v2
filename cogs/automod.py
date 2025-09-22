@@ -36,6 +36,13 @@ class AutoModCog(commands.Cog):
             return await interaction.response.send_message(
                 ephemeral=True, content="そのコマンドは無効化されています。"
             )
+        
+        db_automod = self.bot.async_db["Main"].AutoModDetecter
+        await db_automod.replace_one(
+            {"Guild": interaction.guild.id}, 
+            {"Guild": interaction.guild.id}, 
+            upsert=True
+        )
 
         await interaction.response.defer(ephemeral=True)
         if タイプ.value == "invite":
