@@ -10,6 +10,7 @@ from models import command_disable
 import sys
 from PIL import Image, ImageDraw, ImageFont
 import io
+from consts import badword
 
 
 class AuthModal_keisan(discord.ui.Modal, title="認証をする"):
@@ -1401,6 +1402,9 @@ class PanelCog(commands.Cog):
                                 color=discord.Color.green()
                             )
                             for i, q in enumerate(self.embed_fields):
+                                for b in badword.badwords:
+                                    if b in q.value:
+                                        return await interaction.followup.send(content="不適切な言葉が含まれています。")
                                 question_embed.add_field(name=f"Q.{i+1}", value=q.value, inline=False)
 
                             question_embed.set_footer(text="SharkBot Templates")
