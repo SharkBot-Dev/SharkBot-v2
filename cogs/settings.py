@@ -352,6 +352,49 @@ class WelcomeCommands(app_commands.Group):
                 )
             )
 
+    @app_commands.command(name="help", description="各メッセージのセットアップ方法のヘルプです。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def welcome_help(self, interaction: discord.Interaction):
+        await interaction.response.send_message(
+            embed=discord.Embed(title="各メッセージのセットアップ方法", color=discord.Color.green())
+            .add_field(name="よろしくメッセージ", value="""
+タイトルと説明を設定して、
+メンバー参加時にメッセージを送信します。
+以下が該当コマンドです。
+```
+/settings welcome welcome
+```
+また、参加したメンバーの名前などを送信させることもできます。
+""", inline=False)
+            .add_field(name="さようならメッセージ", value="""
+タイトルと説明を設定して、
+メンバー退出時にメッセージを送信します。
+以下が該当コマンドです。
+```
+/settings welcome goodbye
+```
+また、退出したメンバーの名前などを送信させることもできます。
+""", inline=False)
+            .add_field(name="BANメッセージ", value="""
+タイトルと説明を設定して、
+ユーザーBAN時にメッセージを送信します。
+以下が該当コマンドです。
+```
+/settings welcome ban
+```
+また、BANしたユーザーの名前などを送信させることもできます。
+""", inline=False)
+            .add_field(name="置き換えられる文字列たち", value=f"""
+これらの文字列は、メッセージ送信時に自動的に置き換えられます。
+```
+<name> .. 名前に置きかえられる
+<count> .. 現在のメンバー数に置き換えられる
+<guild> .. サーバー名に置き換えられる
+<createdat> .. メンバーのアカウント作成日に置き換えられる
+```""", inline=False)
+        )
 
 class SettingCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
