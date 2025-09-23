@@ -6,6 +6,8 @@ import TagScriptEngine as tse
 from consts import badword
 import io
 
+from models import make_embed
+
 cooldown_tags = {}
 
 
@@ -66,7 +68,8 @@ class TagsCog(commands.Cog):
                 lower_script = self.code.component.value.lower()
                 for word in badword.badwords:
                     if word.lower() in lower_script:
-                        return await interaction_.response.send_message(embed=discord.Embed(title="Tag作成に失敗しました。", color=discord.Color.red()))
+                        embed = make_embed.error_embed(title="Tag作成に失敗しました。")
+                        return await interaction_.response.send_message(embed=embed)
 
                 db = interaction.client.async_db["Main"].Tags
                 await db.update_one(
@@ -74,8 +77,9 @@ class TagsCog(commands.Cog):
                     {"$set": {"tagscript": self.code.component.value}},
                     upsert=True
                 )
+                embed = make_embed.success_embed(title="Tagを作成しました。")
                 await interaction_.response.send_message(
-                    embed=discord.Embed(title="Tagを作成しました。", color=discord.Color.green())
+                    embed=embed
                 )
 
         await interaction.response.send_modal(TagCreateModal())
@@ -95,13 +99,17 @@ class TagsCog(commands.Cog):
             {"guild_id": interaction.guild.id, "command": 名前}
         )
         if not doc:
+            embed = make_embed.error_embed(title="そのTagは存在しません。")
             return await interaction.response.send_message(
-                embed=discord.Embed(title="そのTagは存在しません。", color=discord.Color.red())
+                embed=embed
             )
 
         await db.delete_one({"guild_id": interaction.guild.id, "command": 名前})
+
+        embed = make_embed.success_embed(title="Tagを削除しました。")
+
         await interaction.response.send_message(
-            embed=discord.Embed(title="Tagを削除しました。", color=discord.Color.green())
+            embed=embed
         )
 
     @tag.command(name="tags", description="タグリストを表示します。")
