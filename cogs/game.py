@@ -14,7 +14,7 @@ import asyncio
 import aiohttp
 import json
 
-from models import quest
+from models import make_embed, quest
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
@@ -306,12 +306,9 @@ class GameCog(commands.Cog):
             "可能性はあります。",
             "絶対にそうです！",
         ]
+        embed = make_embed.success_embed(title=f"8ballの回答", description=random.choice(responses))
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title="8ball",
-                description=random.choice(responses),
-                color=discord.Color.green(),
-            )
+            embed=embed
         )
         await asyncio.sleep(1)
         await quest.quest_clear(interaction, "8ball")
@@ -364,12 +361,10 @@ class GameCog(commands.Cog):
             for i in range(61)
         ]
 
+        embed = make_embed.success_embed(title="おみくじを引きました。", description=f"```{omikuzi[random.randrange(len(omikuzi))]}```")
+
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title="おみくじ結果",
-                description=f"```{omikuzi[random.randrange(len(omikuzi))]}```",
-                color=discord.Color.green(),
-            ).set_footer(text="結果は完全にランダムです。"),
+            embed=embed.set_footer(text="結果は完全にランダムです。"),
             view=discord.ui.View().add_item(
                 discord.ui.Button(
                     label="おみくじWebで引く",
