@@ -55,12 +55,21 @@ async def on_ready():
 async def on_message(message):
     return
 
+async def load_cogs(bot: commands.Bot, base_folder="cogs"):
+    for root, dirs, files in os.walk(base_folder):
+        for file in files:
+            if file.endswith(".py") and not file.startswith("_"):
+                relative_path = os.path.relpath(os.path.join(root, file), base_folder)
+                module = relative_path.replace(os.sep, ".")[:-3]
+                module = f"{base_folder}.{module}"
+                try:
+                    await bot.load_extension(module)
+                except Exception as e:
+                    print(f"❌ Failed to load {module}: {e}")
 
 @bot.event
 async def setup_hook() -> None:
-    for cog in os.listdir("cogs"):
-        if cog.endswith(".py"):
-            await bot.load_extension(f"cogs.{cog[:-3]}")
+    await load_cogs(bot)
     try:
         await bot.tree.sync()
     except:
