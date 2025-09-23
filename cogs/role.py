@@ -3,7 +3,7 @@ import discord
 import datetime
 
 from discord import app_commands
-from models import command_disable
+from models import command_disable, make_embed
 
 
 class RoleCog(commands.Cog):
@@ -137,12 +137,9 @@ class RoleCog(commands.Cog):
             role = await interaction.guild.create_role(
                 name=ロール名, color=discord.Colour.gold()
             )
+        embed = make_embed.success_embed(title="色付きロールを作成しました。", description=f"作成したロール: {role.mention}")
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="色付きロールを作成しました。",
-                description=f"作成したロール: {role.mention}",
-                color=discord.Color.green(),
-            )
+            embed=embed
         )
 
     @role.command(name="info", description="ロール情報を確認します。")
@@ -220,10 +217,9 @@ class RoleCog(commands.Cog):
                 if value
             ]
             user_perms_str = ", ".join(user_perms)
+            embed = make_embed.success_embed(title=f"{ロール.name} の情報")
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title=f"{ロール.name} の情報", color=discord.Color.blue()
-                )
+                embed=embed
                 .add_field(name="ID", value=str(ロール.id), inline=False)
                 .add_field(name="名前", value=str(ロール.name), inline=False)
                 .add_field(

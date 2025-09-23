@@ -12,7 +12,7 @@ import datetime
 
 import requests
 from discord import app_commands
-from models import command_disable
+from models import command_disable, make_embed
 
 import pytesseract
 from PIL import Image
@@ -187,11 +187,6 @@ class SearchCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def user_search(self, interaction: discord.Interaction, user: discord.User):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         try:
             JST = datetime.timezone(datetime.timedelta(hours=9))
@@ -374,15 +369,8 @@ Botを追加したユーザーは？: {add_bot_user}
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def server_info(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
-        embed = discord.Embed(
-            title=f"{interaction.guild.name}の情報", color=discord.Color.green()
-        )
+        embed = make_embed.success_embed(title=f"{interaction.guild.name}の情報")
         embed.add_field(name="サーバー名", value=interaction.guild.name)
         embed.add_field(name="サーバーID", value=str(interaction.guild.id))
         embed.add_field(
@@ -527,7 +515,7 @@ Botを追加したユーザーは？: {add_bot_user}
     @app_commands.checks.has_permissions(manage_guild=True)
     async def bot_info(self, interaction: discord.Interaction, bot: discord.User):
         await interaction.response.defer()
-        embed = discord.Embed(title="Botの情報", color=discord.Color.green())
+        embed = make_embed.success_embed(title="Botの情報")
         embed.add_field(name="Bot名", value=bot.display_name, inline=False)
         embed.add_field(name="ユーザーid", value=f"{bot.id}", inline=False)
         bot_inv, time = await self.get_bot_inviter(interaction.guild, bot)
