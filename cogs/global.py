@@ -572,10 +572,9 @@ class GlobalCog(commands.Cog):
             },
             upsert=True,
         )
+        embed = make_embed.success_embed(title="サーバーを掲載しました。")
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="サーバーを掲載しました。", color=discord.Color.green()
-            )
+            embed=embed
         )
 
     async def get_reg(self, interaction: discord.Interaction):
@@ -602,12 +601,9 @@ class GlobalCog(commands.Cog):
         db = self.bot.async_db["Main"].Register
         inv, desc = await self.get_reg(interaction)
         if inv == "https://discord.com":
+            embed = make_embed.error_embed(title="まだ登録されていません。", description=f"/global registerで登録してください。")
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="まだ登録されていません。",
-                    color=discord.Color.red(),
-                    description="/global registerで登録してください。",
-                )
+                embed=embed
             )
             
         data = await db.find_one({"Guild": interaction.guild.id})
