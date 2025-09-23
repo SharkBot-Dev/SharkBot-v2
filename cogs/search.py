@@ -455,9 +455,7 @@ Botを追加したユーザーは？: {add_bot_user}
         await interaction.response.defer()
         try:
             ban_user = await interaction.guild.fetch_ban(ユーザー)
-            embed = discord.Embed(
-                title="BANされたユーザーの情報", color=discord.Color.green()
-            )
+            embed = make_embed.success_embed(title="BANされたユーザーの情報")
             embed.add_field(
                 name="ユーザー名",
                 value=f"{ban_user.user.display_name} ({ban_user.user.id})",
@@ -639,7 +637,8 @@ Botを追加したユーザーは？: {add_bot_user}
         ユーザー = await self.bot.fetch_user(ユーザー.id)
         if not ユーザー.banner:
             return await interaction.response.send_message(ephemeral=True, content="その人はバナーをつけていません。")
-        await interaction.response.send_message(embed=discord.Embed(title=f"{ユーザー.name}さんのバナー", color=discord.Color.green())
+        embed = make_embed.success_embed(title=f"{ユーザー.name}さんのバナー")
+        await interaction.response.send_message(embed=embed
                                                 .set_image(url=ユーザー.banner.url if ユーザー.banner else None))
 
     @search.command(name="emoji", description="絵文字を検索します。")
@@ -649,10 +648,9 @@ Botを追加したユーザーは？: {add_bot_user}
         await interaction.response.defer()
         for e in interaction.guild.emojis:
             if 絵文字 == e.__str__():
+                embed = make_embed.success_embed(title=f"{e.name} の情報")
                 await interaction.followup.send(
-                    embed=discord.Embed(
-                        title=f"{e.name} の情報", color=discord.Color.green()
-                    )
+                    embed=embed
                     .set_image(url=e.url)
                     .add_field(name="名前", value=e.name, inline=False)
                     .add_field(name="id", value=str(e.id), inline=False)
@@ -666,9 +664,7 @@ Botを追加したユーザーは？: {add_bot_user}
                 )
                 return
         await interaction.followup.send(
-            embed=discord.Embed(
-                title=f"絵文字が見つかりません。", color=discord.Color.red()
-            )
+            embed=make_embed.error_embed(title="絵文字が存在しません。", description="別サーバーにある場合も取得できません。")
         )
 
     @search.command(name="spotify", description="メンバーの聞いている曲の情報を表示します。")
