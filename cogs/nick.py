@@ -2,7 +2,7 @@ from discord.ext import commands
 import discord
 from discord import app_commands
 
-from models import command_disable
+from models import command_disable, make_embed
 
 
 class NickNameCog(commands.Cog):
@@ -29,9 +29,7 @@ class NickNameCog(commands.Cog):
             await interaction.response.defer()
             await メンバー.edit(nick=名前)
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="ニックネームを編集しました。", color=discord.Color.green()
-                )
+                embed=make_embed.success_embed(title="ニックネームを編集しました。")
             )
         except discord.Forbidden:
             return await interaction.followup.send(
@@ -57,10 +55,7 @@ class NickNameCog(commands.Cog):
             await interaction.response.defer()
             await メンバー.edit(nick=None)
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="ニックネームをリセットしました。",
-                    color=discord.Color.green(),
-                )
+                embed=make_embed.success_embed(title="ニックネームをリセットしました。")
             )
         except discord.Forbidden:
             return await interaction.followup.send(
