@@ -9,7 +9,7 @@ import aiohttp
 from google import genai
 import urllib.parse
 
-from models import command_disable
+from models import command_disable, make_embed
 import re
 
 from consts import settings
@@ -594,28 +594,10 @@ class GlobalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_up(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         if interaction.guild.icon == None:
             return await interaction.response.send_message(
                 "Upをするにはアイコンを設定する必要があります。"
             )
-
-        current_time = time.time()
-        last_message_time = user_last_message_timegc.get(interaction.guild.id, 0)
-        if current_time - last_message_time < 7200:
-            return await interaction.response.send_message(
-                ephemeral=True,
-                embed=discord.Embed(
-                    title="まだUpできません。",
-                    color=discord.Color.red(),
-                    description="2時間待ってください。",
-                ),
-            )
-        user_last_message_timegc[interaction.guild.id] = current_time
 
         db = self.bot.async_db["Main"].Register
         inv, desc = await self.get_reg(interaction)
@@ -627,6 +609,21 @@ class GlobalCog(commands.Cog):
                     description="/global registerで登録してください。",
                 )
             )
+            
+        data = await db.find_one({"Guild": interaction.guild.id})
+        now = time.time()
+        cooldown_time = 2 * 60 * 60
+
+        if data and "Up" in data:
+            last_up = float(data["Up"])
+            remaining = cooldown_time - (now - last_up)
+            if remaining > 0:
+                m, s = divmod(int(remaining), 60)
+                embed = make_embed.error_embed(title="まだUpできません。", description=f"あと **{m}分{s}秒** 待ってから再度お試しください。")
+                return await interaction.response.send_message(
+                    embed=embed
+                )
+
         await db.replace_one(
             {"Guild": interaction.guild.id},
             {
@@ -639,12 +636,11 @@ class GlobalCog(commands.Cog):
             },
             upsert=True,
         )
+
+        embed = make_embed.success_embed(title="サーバーをUpしました！", description="2時間後に再度Upできます。")
+
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title="サーバーをUpしました！",
-                description="2時間後に再度Upできます。",
-                color=discord.Color.green(),
-            )
+            embed=embed
         )
 
     @globalchat.command(
