@@ -651,6 +651,15 @@ class TextGroup(app_commands.Group):
             )
         )
 
+    @app_commands.command(name="unicode", description="テキストをUnicodeに変換します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def unicode_python(self, interaction: discord.Interaction, テキスト: str):
+        text = ""
+        for t in テキスト:
+            text += f"{ord(t)} "
+        await interaction.response.send_message(f"```{text}```", ephemeral=True)
+
     @app_commands.command(name="arm", description="armのasmを、バイナリに変換します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
