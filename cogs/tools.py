@@ -19,7 +19,7 @@ from discord import app_commands
 from PIL import Image
 import pytesseract
 from consts import badword
-from models import command_disable
+from models import command_disable, make_embed
 import ipaddress
 import socket
 from urllib.parse import urlparse
@@ -653,12 +653,9 @@ class ToolsCog(commands.Cog):
                 "https://www.uuidtools.com/api/generate/v1"
             ) as response:
                 jso = await response.json()
+                embed = make_embed.success_embed(title="UUIDを生成しました。", description=jso[0])
                 await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="UUID生成",
-                        description=f"{jso[0]}",
-                        color=discord.Color.green(),
-                    )
+                    embed=embed
                 )
 
     @tools.command(name="short", description="短縮urlを作成します。")
@@ -716,12 +713,9 @@ class ToolsCog(commands.Cog):
                     return self.curr_ver + oooified
 
             url_ = "https://ooooooooooooooooooooooo.ooo/" + OOO().encode_url(url)
+        embed = make_embed.success_embed(title="URLを短縮しました。", description=url_)
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="短縮されたurl",
-                description=f"{url_}",
-                color=discord.Color.green(),
-            ),
+            embed=embed,
             ephemeral=True,
         )
 
@@ -776,9 +770,7 @@ class ToolsCog(commands.Cog):
                             categorized_records[record_type] = []
                         categorized_records[record_type].append(record_entry)
 
-                embed = discord.Embed(
-                    title="NSLookup DNS情報", color=discord.Color.blue()
-                )
+                embed = make_embed.success_embed(title="NSLookupをしてDNS情報を取得しました。")
 
                 for record_type, entries in categorized_records.items():
                     value_text = "\n".join(entries)
@@ -841,11 +833,6 @@ class ToolsCog(commands.Cog):
         理由: str,
         終わったらやること: str = "まだ予定がありません。",
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         database = self.bot.async_db["Main"].AFK
         await database.replace_one(
@@ -853,12 +840,9 @@ class ToolsCog(commands.Cog):
             {"User": interaction.user.id, "Reason": 理由, "End": 終わったらやること},
             upsert=True,
         )
+        embed = make_embed.success_embed(title="AFKを設定しました。", description=理由)
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="AFKを設定しました。",
-                description=f"{理由}",
-                color=discord.Color.green(),
-            )
+            embed=embed
         )
 
     @tools.command(name="timer", description="タイマーをセットします。")
@@ -934,12 +918,11 @@ class ToolsCog(commands.Cog):
                 )
 
                 async def on_submit(self, interaction_: discord.Interaction):
-                    await interaction_.response.send_message(
-                        embed=discord.Embed(
-                            title="QRコード作成", color=discord.Color.green()
-                        ).set_image(
-                            url=f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={self.url.value}"
-                        )
+                    await interaction_.response.defer()
+                    embed = make_embed.success_embed(title="QRコードを作成しました。")
+                    embed.set_image(url=f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={self.url.value}")
+                    await interaction_.followup.send(
+                        embed=embed
                     )
 
             await interaction.response.send_modal(CreateModal())
@@ -956,12 +939,9 @@ class ToolsCog(commands.Cog):
                 await interaction.followup.send("QRコードが見つかりませんでした。")
                 return
             results = "\n".join([obj.data.decode("utf-8") for obj in decoded_objects])
+            embed = make_embed.success_embed(title="QRコード読み取りました。", description=f"```{results}```")
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="QRコード読み取り結果",
-                    description=f"```{results}```",
-                    color=discord.Color.green(),
-                )
+                embed=embed
             )
             i_.close()
             await asyncio.to_thread(img.close)
@@ -993,11 +973,7 @@ class ToolsCog(commands.Cog):
                 for dt, w in zip(time_defs, weathers):
                     weather_info.append((dt, w))
 
-                embed = discord.Embed(
-                    title=f"天気予報 ({場所.name})",
-                    description="気象庁データを元にしています",
-                    color=discord.Color.blue(),
-                )
+                embed = make_embed.success_embed(title=f"{場所.name} の天気を取得しました。", description="気象庁データを元にしています")
 
                 for dt, w in weather_info:
                     embed.add_field(name=dt, value=w, inline=False)
@@ -1059,12 +1035,10 @@ class ToolsCog(commands.Cog):
             seconds,  # 待機時間(秒)
         )
 
+        embed = make_embed.success_embed(title="リマインダーをセットしました。", description=f"{seconds}秒後に通知します。")
+
         return await interaction.response.send_message(
-            embed=discord.Embed(
-                title="リマインダーをセットしました。",
-                description=f"{seconds}秒後に通知します。",
-                color=discord.Color.green(),
-            )
+            embed=embed
         )
 
     @tools.command(name="webshot", description="スクリーンショットを撮影します。")
@@ -1114,12 +1088,9 @@ class ToolsCog(commands.Cog):
         )
 
         filepath = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{filename}"
+        embed = make_embed.success_embed(title="スクリーンショットを撮影しました。", description="一日の終わりにファイルが削除されます。")
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="スクリーンショットを撮影しました。",
-                description="一日の終わりにファイルが削除されます。",
-                color=discord.Color.green(),
-            ),
+            embed=embed,
             view=discord.ui.View().add_item(
                 discord.ui.Button(label="結果を確認する", url=filepath)
             ),
