@@ -3,6 +3,7 @@ from discord.ext import commands
 import discord
 from models import permissions_text
 
+from models import make_embed
 
 class ErrorHandleCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -39,22 +40,15 @@ class ErrorHandleCog(commands.Cog):
                 return
 
             print("App command error:", error)
+            embed = make_embed.error_embed(title="予期しないエラーが発生しました。", description="開発チームに報告してください。")
             if not interaction.response.is_done():
                 await interaction.response.send_message(
-                    embed=discord.Embed(
-                        title="予期しないエラーが発生しました。",
-                        color=discord.Color.red(),
-                        description="開発チームに報告してください。",
-                    ),
+                    embed=embed,
                     ephemeral=True,
                 )
             else:
                 await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="予期しないエラーが発生しました。",
-                        color=discord.Color.red(),
-                        description="開発チームに報告してください。",
-                    )
+                    embed=embed
                 )
 
     @commands.Cog.listener("on_error")

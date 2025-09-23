@@ -2,6 +2,8 @@ from discord.ext import commands
 import discord
 from discord import app_commands
 
+from models import make_embed
+
 from models import command_disable
 
 import asyncio
@@ -54,13 +56,11 @@ class BotCog(commands.Cog):
             return await interaction.response.send_message(
                 ephemeral=True, content="そのコマンドは無効化されています。"
             )
+        
+        embed = make_embed.success_embed(title="Pingを測定しました。", description=f"DiscordAPI: {round(self.bot.latency * 1000)}ms")
 
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title="Pingを測定しました。",
-                description=f"DiscordAPI: {round(self.bot.latency * 1000)}ms",
-                color=discord.Color.green(),
-            )
+            embed=embed
         )
 
     def create_bar(self, percentage, length=20):
@@ -152,14 +152,10 @@ Sharkアカウント: {sharkaccount_count}人
         gu = interaction.guild.default_role
         mem_kengen = discord.utils.oauth_url(botのid.id, permissions=gu.permissions)
 
-        embed = discord.Embed(
-            title=f"{botのid}を招待する。",
-            description=f"""# [☢️管理者権限で招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=8&integration_type=0&scope=bot+applications.commands)
+        embed = make_embed.success_embed(title=f"{botのid}の招待リンクを作成しました。", description=f"""# [☢️管理者権限で招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=8&integration_type=0&scope=bot+applications.commands)
 # [🖊️権限を選んで招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=1759218604441591&integration_type=0&scope=bot+applications.commands)
 # [✅メンバーの権限で招待]({mem_kengen})
-# [😆権限なしで招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=0&integration_type=0&scope=bot+applications.commands)""",
-            color=discord.Color.green(),
-        )
+# [😆権限なしで招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=0&integration_type=0&scope=bot+applications.commands)""")
 
         await interaction.followup.send(embed=embed)
 
