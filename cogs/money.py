@@ -6,6 +6,8 @@ from discord import app_commands
 import io
 import json
 
+from models import make_embed
+
 user_last_message_time_work = {}
 
 # トランプカード
@@ -804,8 +806,8 @@ class ManageGroup(app_commands.Group):
             interaction.guild, メンバー, 金額
         )
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="金額を追加しました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="金額を追加しました。"
             )
         )
 
@@ -821,8 +823,8 @@ class ManageGroup(app_commands.Group):
             interaction.guild, メンバー, -金額
         )
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="金額を減らしました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="金額を減らしました。"
             )
         )
 
@@ -961,8 +963,8 @@ class ServerMoneyCog(commands.Cog):
         )
         if current_time - last_message_time < 1800:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="30分に一回働けます。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="30分に一回働けます。"
                 ),
                 ephemeral=True,
             )
@@ -974,10 +976,9 @@ class ServerMoneyCog(commands.Cog):
             interaction.guild, interaction.user, m
         )
         await interaction.followup.send(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title="働きました。",
-                description=f"{m}コイン入手しました。",
-                color=discord.Color.green(),
+                description=f"{m}コイン入手しました。"
             )
         )
 
@@ -993,10 +994,9 @@ class ServerMoneyCog(commands.Cog):
         target = メンバー or interaction.user
         sm = await Money(interaction.client).get_server_money(interaction.guild, target)
         await interaction.followup.send(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title=f"{target.name}の残高です。",
-                description=f"{sm}コイン",
-                color=discord.Color.green(),
+                description=f"{sm}コイン"
             )
         )
 
@@ -1006,7 +1006,7 @@ class ServerMoneyCog(commands.Cog):
     async def economy_ranking_server(self, interaction: discord.Interaction):
         text = await Money(interaction.client).get_server_ranking(interaction.guild)
         await interaction.response.send_message(
-            embed=discord.Embed(description=text, color=discord.Color.yellow())
+            embed=make_embed.success_embed(title="お金持ちランキングです。", description=text)
         )
 
     # ====== buy ======
@@ -1021,8 +1021,8 @@ class ServerMoneyCog(commands.Cog):
         )
         if not sm:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="アイテムが見つかりません。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="アイテムが見つかりません。"
                 )
             )
 
@@ -1031,10 +1031,9 @@ class ServerMoneyCog(commands.Cog):
         )
         if m < sm["Money"]:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="残高が足りません。",
-                    description=f"「{アイテム名}」を買うには {sm.get('Money', 0)}コインが必要です。",
-                    color=discord.Color.red(),
+                    description=f"「{アイテム名}」を買うには {sm.get('Money', 0)}コインが必要です。"
                 )
             )
 
@@ -1045,10 +1044,9 @@ class ServerMoneyCog(commands.Cog):
             interaction.guild, interaction.user, -sm["Money"]
         )
         await interaction.followup.send(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title="アイテムを買いました。",
-                description=f"「{アイテム名}」",
-                color=discord.Color.green(),
+                description=f"「{アイテム名}」"
             )
         )
 
@@ -1064,8 +1062,8 @@ class ServerMoneyCog(commands.Cog):
         )
         if not sm:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="アイテムが見つかりません。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="アイテムが見つかりません。"
                 )
             )
 
@@ -1074,8 +1072,8 @@ class ServerMoneyCog(commands.Cog):
         )
         if count < 1:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="アイテムを持っていません。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="アイテムを持っていません。"
                 )
             )
 
@@ -1093,10 +1091,9 @@ class ServerMoneyCog(commands.Cog):
             interaction.guild, interaction.user, アイテム名, -1
         )
         await interaction.followup.send(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title="アイテムを使用しました。",
-                description=flag,
-                color=discord.Color.green(),
+                description=flag
             )
         )
 
@@ -1111,8 +1108,8 @@ class ServerMoneyCog(commands.Cog):
             interaction.guild, interaction.user
         )
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="アイテムリスト", description=text, color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="アイテムリストです。", description=text
             )
         )
 
