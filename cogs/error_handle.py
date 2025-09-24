@@ -28,19 +28,16 @@ class ErrorHandleCog(commands.Cog):
                     for perm in error.missing_permissions
                 ]
                 missing_perms_str = ", ".join(missing_perms)
+                embed = make_embed.error_embed(title="コマンドを実行する権限がありません！", description=f"不足している権限: {missing_perms_str}")
                 if not interaction.response.is_done():
                     await interaction.response.send_message(
-                        embed=discord.Embed(
-                            title="コマンドを実行する権限がありません！",
-                            description=f"不足している権限: {missing_perms_str}",
-                            color=discord.Color.red(),
-                        ),
+                        embed=embed,
                         ephemeral=True,
                     )
                 return
 
             print("App command error:", error)
-            embed = make_embed.error_embed(title="予期しないエラーが発生しました。", description="開発チームに報告してください。")
+            embed = make_embed.error_embed(title="予期しないエラーが発生しました。", description=f"開発チームに報告してください。\n\nエラーコード```{error}```")
             if not interaction.response.is_done():
                 await interaction.response.send_message(
                     embed=embed,
