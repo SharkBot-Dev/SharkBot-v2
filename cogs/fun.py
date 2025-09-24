@@ -1077,6 +1077,56 @@ class ImageGroup(app_commands.Group):
         except:
             return await interaction.followup.send(f"検索に失敗しました。")
 
+    @app_commands.command(name="game", description="ゲームのコラ画像を作成します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        タイプ=[
+            app_commands.Choice(name="3ds", value="_3ds")
+        ]
+    )
+    async def game_package_image_(self, interaction: discord.Interaction, タイプ: app_commands.Choice[str], 添付ファイル: discord.Attachment):
+        await interaction.response.defer(ephemeral=True)
+
+        def make_image(type_: str, image: io.BytesIO) -> io.BytesIO:
+            if type_ == "3ds":
+                with Image.open("data/3ds.jpg") as base, Image.open(image) as im:
+                    im = im.resize((772, 774))
+                    base.paste(im, (5, 18))
+                    output = io.BytesIO()
+                    base.save(output, "PNG")
+                    output.seek(0)
+                    return output
+            return image
+
+        c = 0
+        while True:
+            if c > 8:
+                return await interaction.followup.send(
+                    embed=discord.Embed(
+                        title="予期しないエラーが発生しました。",
+                        color=discord.Color.red(),
+                    ),
+                    ephemeral=True
+                )
+
+            img = io.BytesIO(await 添付ファイル.read())
+            try:
+                image = await asyncio.to_thread(make_image, タイプ.name, img)
+                await interaction.followup.send(
+                    file=discord.File(image, filename=f"{タイプ.name}.png"),
+                    content=f"-# {c}回再試行しました。",
+                    ephemeral=True
+                )
+            except Exception as e:
+                c += 1
+                await asyncio.sleep(0.5)
+                continue
+            finally:
+                img.close()
+                image.close()
+            return
+
     @app_commands.command(name="profile", description="自己紹介カードを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
