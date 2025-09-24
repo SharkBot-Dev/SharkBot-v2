@@ -82,3 +82,4 @@ sentence_transformers
 pyzbar
 pytesseract
 opencv-python
+cowsay

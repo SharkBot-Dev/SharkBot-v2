@@ -23,6 +23,7 @@ import urllib.parse
 
 from models import quest
 
+import cowsay
 
 class EditImageView(discord.ui.View):
     def __init__(self, user: discord.User):
@@ -258,6 +259,45 @@ def create_quote_image(
     else:
         return img.convert("L")
 
+class SayGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="say", description="いろいろなキャラクターに発言させます。")
+
+    @app_commands.command(name="caw", description="牛にしゃべらせます。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def say_cow(
+        self,
+        interaction: discord.Interaction,
+        テキスト: str
+    ):
+        text = cowsay.get_output_string('cow', テキスト)
+        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="牛が発言しました。", description=f"```{text}```", color=discord.Color.green())
+                                                .set_footer(text="コピーして貼り付けると会話中にしようできます。"))
+
+    @app_commands.command(name="dragon", description="ドラゴンにしゃべらせます。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def say_dragon(
+        self,
+        interaction: discord.Interaction,
+        テキスト: str
+    ):
+        text = cowsay.get_output_string('dragon', テキスト)
+        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="ドラゴンが発言しました。", description=f"```{text}```", color=discord.Color.green())
+                                                .set_footer(text="コピーして貼り付けると会話中にしようできます。"))
+
+    @app_commands.command(name="penguin", description="ペンギンにしゃべらせます。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def say_tux(
+        self,
+        interaction: discord.Interaction,
+        テキスト: str
+    ):
+        text = cowsay.get_output_string('tux', テキスト)
+        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="ペンギンが発言しました。", description=f"```{text}```", color=discord.Color.green())
+                                                .set_footer(text="コピーして貼り付けると会話中にしようできます。"))
 
 class AudioGroup(app_commands.Group):
     def __init__(self):
@@ -1141,6 +1181,7 @@ class FunCog(commands.Cog):
     fun.add_command(NounaiGroup())
     fun.add_command(MovieGroup())
     fun.add_command(AudioGroup())
+    fun.add_command(SayGroup())
 
     @fun.command(name="janken", description="じゃんけんをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
