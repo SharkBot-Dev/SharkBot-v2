@@ -902,16 +902,31 @@ class ImageGroup(app_commands.Group):
             app_commands.Choice(name="黒", value="000000"),
         ]
     )
+    @app_commands.choices(
+        フォント=[
+            app_commands.Choice(name="Discordフォント", value="discordfont"),
+            app_commands.Choice(name="ガマフォント", value="gamafont"),
+            app_commands.Choice(name="クラフト明朝", value="craft")
+        ]
+    )
     async def textmoji(
         self,
         interaction: discord.Interaction,
         色: app_commands.Choice[str],
+        フォント: app_commands.Choice[str],
         テキスト: str,
         正方形にするか: bool
     ):
         await interaction.response.defer()
-        def make_text(text: str, color: str, sq: bool):
-            font = ImageFont.truetype("data/DiscordFont.ttf", 50)
+        def make_text(text: str, color: str, sq: bool, font: str):
+            if font == "discordfont":
+                font = ImageFont.truetype("data/DiscordFont.ttf", 50)
+            elif font == "gamafont":
+                font = ImageFont.truetype("data/GamaFont.ttf", 50)
+            elif font == "craft":
+                font = ImageFont.truetype("data/CraftFont.otf", 50)
+            else:
+                font = ImageFont.truetype("data/DiscordFont.ttf", 50)
 
             dummy_img = Image.new("RGBA", (1, 1))
             draw_dummy = ImageDraw.Draw(dummy_img)
@@ -933,7 +948,7 @@ class ImageGroup(app_commands.Group):
             i.seek(0)
             return i
                 
-        image = await asyncio.to_thread(make_text, テキスト, 色.value, 正方形にするか)
+        image = await asyncio.to_thread(make_text, テキスト, 色.value, 正方形にするか, フォント.value)
 
         await interaction.followup.send(
             file=discord.File(image, "emoji.png"),
