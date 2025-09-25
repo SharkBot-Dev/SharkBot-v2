@@ -1113,9 +1113,9 @@ class ToolsCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.autocomplete(タイプ=choice_download_autocomplete)
     async def download(self, interaction: discord.Interaction, タイプ: str, url: str):
-        await interaction.response.defer()
-
         if タイプ == "いらすとや":
+            await interaction.response.defer()
+            
             if not IRASUTOTA_REGEX.match(url):
                 await interaction.followup.send(
                     embed=discord.Embed(
@@ -1134,7 +1134,7 @@ class ToolsCog(commands.Cog):
                         class IrasutoyaView(discord.ui.LayoutView):
                             container = discord.ui.Container(
                                 discord.ui.TextDisplay(
-                                    f"### ダウンロード",
+                                    f"### いらすとやのダウンロード",
                                 ),
                                 discord.ui.Separator(),
                                 discord.ui.MediaGallery(
@@ -1159,61 +1159,57 @@ class ToolsCog(commands.Cog):
                             )
                         )
         elif タイプ == "X(Twitter)":
-            if not X_REGEX.match(url):
-                await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="正しいURLを入力してください。", color=discord.Color.red()
-                    ),
-                    ephemeral=True,
-                )
-                return
-
-            if not interaction.channel.nsfw:
-                return await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="NSFWチャンネルでのみ使用できます。",
-                        color=discord.Color.red(),
-                    )
+            tweet_id_match = re.search(r"status/(\d+)", url)
+            if not tweet_id_match:
+                return await interaction.response.send_message(
+                    "無効なURLです", ephemeral=True
                 )
 
-            def twitter(url):
-                try:
-                    ydl_opts = {"quiet": True, "skip_download": True, "no_warnings": True}
+            await interaction.response.defer(ephemeral=True)
 
-                    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                        info = ydl.extract_info(url, download=False)
+            tweet_id = tweet_id_match.group(1)
+            API_BASE_URL = "https://api.fxtwitter.com/status/"
+            api_url = f"{API_BASE_URL}{tweet_id}"
 
-                        if "formats" in info:
-                            for fmt in info["formats"]:
-                                if ".mp4" in fmt.get("url"):
-                                    return fmt.get("url")
+            async with aiohttp.ClientSession() as session:
+                async with session.get(api_url) as resp:
+                    if resp.status != 200:
+                        return await interaction.followup.send("APIリクエストに失敗しました")
+                    data = await resp.json()
 
-                            return None
-                except:
-                    return None
+            tweet = data["tweet"]
 
-            url = await asyncio.to_thread(twitter, url)
+            if "media" not in tweet or "videos" not in tweet["media"] or not tweet["media"]["videos"]:
+                return await interaction.followup.send("このツイートには動画がありません")
 
-            if not url:
-                return await interaction.followup.send(embed=discord.Embed(title="そのツイートには動画がありません。", color=discord.Color.red()))
+            videos_under_1080p = [v for v in tweet["media"]["videos"] if v.get("height", 9999) <= 1080]
 
-            class TwitterView(discord.ui.LayoutView):
-                container = discord.ui.Container(
-                    discord.ui.TextDisplay(
-                        f"### ダウンロード",
-                    ),
-                    discord.ui.Separator(),
-                    discord.ui.MediaGallery(discord.MediaGalleryItem(url)),
-                    discord.ui.ActionRow(
-                        discord.ui.Button(
-                            label="ダウンロード",
-                            url=url,
-                        )
-                    ),
-                    accent_colour=discord.Colour.green(),
+            if not videos_under_1080p:
+                return await interaction.followup.send("1080p以下の動画が見つかりませんでした")
+
+            embeds = []
+            buttons = []
+
+            for index, video in enumerate(videos_under_1080p, start=1):
+                embed = discord.Embed(
+                    title="X(Twitter)にある動画のダウンロード",
+                    url=tweet["url"],
+                    description=tweet.get("text", ""),
+                    color=discord.Color.green()
+                )
+                embed.set_author(name=tweet["author"]["name"], icon_url=tweet["author"]["avatar_url"])
+                embed.set_image(url=video["thumbnail_url"])
+
+                button = discord.ui.Button(
+                    label=f"動画{index}",
+                    style=discord.ButtonStyle.link,
+                    url=video["url"]
                 )
 
-            await interaction.followup.send(view=TwitterView())
+                embeds.append(embed)
+                buttons.append(button)
+
+            await interaction.followup.send(embeds=embeds, view=discord.ui.View().add_item(*buttons), ephemeral=True)
         else:
             embed = discord.Embed(
                 title="タイプが見つかりません。", color=discord.Color.red()
