@@ -225,10 +225,10 @@ class Money:
         rr = await self.get_server_items(guild, itemname)
         if not rr:
             return dbfind.get("count", 0), 0
-        return dbfind.get("count", 0), rr.get("Role", 0)
+        return dbfind.get("count", 0), rr.get("Role", 0), rr.get('DM', "なし")
 
     async def create_server_items(
-        self, guild: discord.Guild, money: int, itemname: str, role: discord.Role = None
+        self, guild: discord.Guild, money: int, itemname: str, role: discord.Role = None, dm: str = None
     ):
         db = self.bot.async_db["Main"].ServerMoneyItems
         await db.replace_one(
@@ -237,6 +237,7 @@ class Money:
                 "Guild": guild.id,
                 "ItemName": itemname,
                 "Role": role.id if role else 0,
+                "DM": dm if dm else "なし",
                 "Money": money,
             },
             upsert=True,
@@ -876,6 +877,7 @@ class ItemGroup(app_commands.Group):
         アイテム名: str,
         値段: int,
         ロール: discord.Role = None,
+        使用時にdmに送信するメッセージ: str = None
     ):
         await interaction.response.defer()
         if ロール and not interaction.user.guild_permissions.administrator:
@@ -886,7 +888,7 @@ class ItemGroup(app_commands.Group):
             )
 
         await Money(interaction.client).create_server_items(
-            interaction.guild, 値段, アイテム名, ロール
+            interaction.guild, 値段, アイテム名, ロール, 使用時にdmに送信するメッセージ
         )
         await interaction.followup.send(
             embed=discord.Embed(
@@ -1067,7 +1069,7 @@ class ServerMoneyCog(commands.Cog):
                 )
             )
 
-        count, role = await Money(interaction.client).get_server_item(
+        count, role, dm = await Money(interaction.client).get_server_item(
             interaction.guild, interaction.user, アイテム名
         )
         if count < 1:
@@ -1096,6 +1098,10 @@ class ServerMoneyCog(commands.Cog):
                 description=flag
             )
         )
+
+        if dm != "なし":
+            await interaction.user.send(embed=discord.Embed(title=f"{アイテム名}にメッセージが添付されていました！", description=f"内容\n```{dm}```", color=discord.Color.blue())
+                                        .set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon.url if interaction.guild.icon else None))
 
     # ====== items ======
     @server_economy.command(
