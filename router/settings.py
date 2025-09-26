@@ -922,3 +922,91 @@ async def autoreply_delete(request: Request, guild_id: str, tri: str = Form(...)
     await db.delete_one({"Word": safe_trigger, "Guild": int(guild_id)})
 
     return RedirectResponse(f"/settings/{guild_id}/autoreply", status_code=303)
+
+# タグ
+
+@router.get("/{guild_id}/tags", dependencies=[Depends(rate_limiter)])
+async def tags(request: Request, guild_id: str):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one(
+        {"User": u.get("id")}
+    )
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    db = mongodb.mongo["Main"].Tags
+    tags = [doc async for doc in db.find({"guild_id": int(guild_id)})]
+
+    return templates.templates.TemplateResponse(
+        "tags.html", {"request": request, "guild": guild, "autos": tags}
+    )
+
+@router.post("/{guild_id}/tags_set", dependencies=[Depends(rate_limiter)])
+async def tags_set(
+    request: Request, guild_id: str, tri: str = Form(...), reply: str = Form(...)
+):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one(
+        {"User": u.get("id")}
+    )
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    if not tri:
+        return RedirectResponse(f"/settings/{guild_id}/tags", status_code=303)
+
+    if not reply:
+        return RedirectResponse(f"/settings/{guild_id}/tags", status_code=303)
+
+    safe_trigger = html.escape(tri)
+    safe_replyword = html.escape(reply)
+
+    db = mongodb.mongo["Main"].Tags
+    await db.replace_one(
+        {"guild_id": int(guild_id), "command": safe_trigger},
+        {"guild_id": int(guild_id), "tagscript": safe_replyword, "command": safe_trigger},
+        upsert=True,
+    )
+
+    return RedirectResponse(f"/settings/{guild_id}/tags", status_code=303)
+
+
+@router.post("/{guild_id}/tags_delete", dependencies=[Depends(rate_limiter)])
+async def tags_delete(request: Request, guild_id: str, tri: str = Form(...)):
+    u = request.session.get("user")
+    if u is None:
+        return RedirectResponse("/login")
+
+    guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one(
+        {"User": u.get("id")}
+    )
+    guild = next((g for g in guilds.get("Guilds", []) if g.get("id") == guild_id), None)
+    if guild is None:
+        return RedirectResponse("/login/guilds")
+
+    if not await check_owner(u, guild_id):
+        return RedirectResponse("/login/guilds")
+
+    if not tri:
+        return RedirectResponse(f"/settings/{guild_id}/autoreply", status_code=303)
+
+    safe_trigger = html.escape(tri)
+
+    db = mongodb.mongo["Main"].Tags
+    await db.delete_one({"command": safe_trigger, "guild_id": int(guild_id)})
+
+    return RedirectResponse(f"/settings/{guild_id}/tags", status_code=303)
