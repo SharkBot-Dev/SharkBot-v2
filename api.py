@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse
 import httpx
 import uvicorn
 from router import settings as s_r
-from router import mainpage
+from router import mainpage, economy
 from starlette.middleware.sessions import SessionMiddleware
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -27,6 +27,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(s_r.router)
 app.include_router(mainpage.router)
+app.include_router(economy.router)
 
 
 @app.get("/login")
