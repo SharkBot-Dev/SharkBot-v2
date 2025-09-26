@@ -55,14 +55,14 @@ class HelpCog(commands.Cog):
                 self.add_item(
                     discord.ui.Button(
                         emoji="⏮️",
-                        style=discord.ButtonStyle.red,
+                        style=discord.ButtonStyle.green,
                         custom_id="help_prex_skip",
                     )
                 )
                 self.add_item(
                     discord.ui.Button(
                         emoji="◀️",
-                        style=discord.ButtonStyle.secondary,
+                        style=discord.ButtonStyle.green,
                         custom_id="help_prev",
                     )
                 )
@@ -76,14 +76,14 @@ class HelpCog(commands.Cog):
                 self.add_item(
                     discord.ui.Button(
                         emoji="▶️",
-                        style=discord.ButtonStyle.secondary,
+                        style=discord.ButtonStyle.green,
                         custom_id="help_next",
                     )
                 )
                 self.add_item(
                     discord.ui.Button(
                         emoji="⏭️",
-                        style=discord.ButtonStyle.red,
+                        style=discord.ButtonStyle.green,
                         custom_id="help_next_skip",
                     )
                 )
