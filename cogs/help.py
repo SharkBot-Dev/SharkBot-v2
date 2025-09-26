@@ -23,11 +23,6 @@ class HelpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def help(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         pages = []
 
@@ -41,7 +36,7 @@ class HelpCog(commands.Cog):
                     )
                 )
             elif type(c) == app_commands.Group:
-                embed = discord.Embed(title=f"/{c.name}", color=discord.Color.blue())
+                embed = discord.Embed(title=f"/{c.name} ({c.description})", color=discord.Color.blue())
                 text = ""
                 for cc in c.commands:
                     text += f"{cc.name} .. {cc.description}\n"
@@ -57,6 +52,13 @@ class HelpCog(commands.Cog):
 
             def update_buttons(self):
                 self.clear_items()
+                self.add_item(
+                    discord.ui.Button(
+                        emoji="⏮️",
+                        style=discord.ButtonStyle.red,
+                        custom_id="help_prex_skip",
+                    )
+                )
                 self.add_item(
                     discord.ui.Button(
                         emoji="◀️",
@@ -78,6 +80,13 @@ class HelpCog(commands.Cog):
                         custom_id="help_next",
                     )
                 )
+                self.add_item(
+                    discord.ui.Button(
+                        emoji="⏭️",
+                        style=discord.ButtonStyle.red,
+                        custom_id="help_next_skip",
+                    )
+                )
 
             async def interaction_check(self, interaction: discord.Interaction) -> bool:
                 try:
@@ -89,16 +98,10 @@ class HelpCog(commands.Cog):
                             self.current_page += 1
                         else:
                             self.current_page = 0
-                    elif interaction.data["custom_id"] == "help_custom":
-                        cmds = await self.get_commands(interaction.guild)
-                        await interaction.response.edit_message(
-                            embed=discord.Embed(
-                                title="カスタムコマンドヘルプ",
-                                description="\n".join(cmds),
-                                color=discord.Color.red(),
-                            )
-                        )
-                        return
+                    elif interaction.data["custom_id"] == "help_next_skip":
+                        self.current_page = len(pages) - 1
+                    elif interaction.data["custom_id"] == "help_prex_skip":
+                        self.current_page = 0
                     self.update_buttons()
                     await interaction.response.edit_message(
                         embed=pages[self.current_page], view=self
