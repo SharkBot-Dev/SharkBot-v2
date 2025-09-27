@@ -23,11 +23,6 @@ class RoleCog(commands.Cog):
         メンバー: discord.User,
         ロール: discord.Role,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         if interaction.guild.get_member(メンバー.id) is None:
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -65,11 +60,6 @@ class RoleCog(commands.Cog):
         メンバー: discord.User,
         ロール: discord.Role,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         if interaction.guild.get_member(メンバー.id) is None:
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -147,11 +137,6 @@ class RoleCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def role_info(self, interaction: discord.Interaction, ロール: discord.Role):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         try:
             JST = datetime.timezone(datetime.timedelta(hours=9))
             await interaction.response.defer()
@@ -222,6 +207,7 @@ class RoleCog(commands.Cog):
                 embed=embed
                 .add_field(name="ID", value=str(ロール.id), inline=False)
                 .add_field(name="名前", value=str(ロール.name), inline=False)
+                .add_field(name="ロールを持っている人数", value=str(len(ロール.members)) + "人", inline=False)
                 .add_field(
                     name="作成日時",
                     value=str(ロール.created_at.astimezone(JST)),
