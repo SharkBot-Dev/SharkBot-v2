@@ -16,7 +16,7 @@ class MusicView(discord.ui.LayoutView):
 
 class ShuugiinSource:
     YTDL_OPTIONS = {
-        'format': '250k',
+        'format': '500k',
         "noplaylist": True,
         "playlist_items": "1",
         "quiet": True,
