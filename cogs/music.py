@@ -5,6 +5,8 @@ from discord import app_commands
 import yt_dlp
 import asyncio
 
+from urllib.parse import urlparse
+
 class MusicView(discord.ui.LayoutView):
     container = discord.ui.Container(
         discord.ui.TextDisplay("### 操作パネル"),
@@ -153,7 +155,9 @@ class MusicCog(commands.Cog):
                             if interaction.user.voice is None:
                                 return await interaction.response.send_message("ボイスチャンネルに参加してください。")
 
-                            if not "soundcloud.com" in self_.musicurl.component.value:
+                            parsed_url = urlparse(self_.musicurl.component.value)
+                            host = parsed_url.hostname
+                            if not (host == "soundcloud.com" or (host and host.endswith(".soundcloud.com"))):
                                 return await interaction.response.send_message("SoundCloud以外に対応していません。")
                             
                             await interaction.response.defer()
@@ -196,10 +200,12 @@ class MusicCog(commands.Cog):
     ):
         if interaction.user.voice is None:
             return await interaction.response.send_message("ボイスチャンネルに参加してください。")
-
-        if not "soundcloud.com" in url:
-            return await interaction.response.send_message("SoundCloud以外に対応していません。")
         
+        parsed_url = urlparse(url)
+        host = parsed_url.hostname
+        if not (host == "soundcloud.com" or (host and host.endswith(".soundcloud.com"))):
+            return await interaction.response.send_message("SoundCloud以外に対応していません。")
+
         await interaction.response.defer()
 
         if interaction.guild.voice_client is None:
