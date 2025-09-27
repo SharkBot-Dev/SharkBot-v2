@@ -14,6 +14,40 @@ class MusicView(discord.ui.LayoutView):
         accent_colour=discord.Colour.green()
     )
 
+class ShuugiinSource:
+    YTDL_OPTIONS = {
+        'format': '250k',
+        "noplaylist": True,
+        "playlist_items": "1",
+        "quiet": True,
+        "no_warnings": True,
+    }
+
+    FFMPEG_OPTIONS = {
+        'before_options': '-nostdin',
+        'options': '-vn'
+    }
+
+    ytdl = yt_dlp.YoutubeDL(YTDL_OPTIONS)
+
+    @classmethod
+    async def create_source(cls, search: str):
+        loop = asyncio.get_event_loop()
+        data = await loop.run_in_executor(None, lambda: cls.ytdl.extract_info(search, download=False))
+
+        if 'entries' in data:
+            data = data['entries'][0]
+
+        return {
+            'title': data.get('title'),
+            'url': data.get('url'),
+            'webpage_url': data.get('webpage_url'),
+        }
+
+    @classmethod
+    def create_ffmpeg_player(cls, url):
+        return discord.FFmpegPCMAudio(url, **cls.FFMPEG_OPTIONS)
+
 class YTDLSource:
     YTDL_OPTIONS = {
         'format': 'bestaudio',
@@ -238,23 +272,38 @@ class MusicCog(commands.Cog):
         if url:
             parsed_url = urlparse(url)
             host = parsed_url.hostname
-            if not (host == "soundcloud.com" or (host and host.endswith(".soundcloud.com"))):
-                return await interaction.response.send_message("SoundCloud以外に対応していません。")
+            if (host == "soundcloud.com" or (host and host.endswith(".soundcloud.com"))):
+                await interaction.response.defer()
 
-            await interaction.response.defer()
+                source_info = await YTDLSource.create_source(url)
 
-            source_info = await YTDLSource.create_source(url)
+                if not voice.is_playing():
+                    audio = YTDLSource.create_ffmpeg_player(source_info['url'])
+                    voice.play(audio, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(interaction, interaction.guild.id), self.bot.loop))
+                    await self.now_play_set(interaction.guild.id, source_info["title"])
+                    await interaction.channel.send(f"再生中の曲: **{source_info['title']}**")
+                else:
+                    await self.add_to_queue(interaction.guild.id, source_info)
+                    await interaction.channel.send(f"キューに追加: **{source_info['title']}**")
 
-            if not voice.is_playing():
-                audio = YTDLSource.create_ffmpeg_player(source_info['url'])
-                voice.play(audio, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(interaction, interaction.guild.id), self.bot.loop))
-                await self.now_play_set(interaction.guild.id, source_info["title"])
-                await interaction.channel.send(f"再生中の曲: **{source_info['title']}**")
+                return await interaction.followup.send(view=MusicView())
+            elif (host == "shugiintv.go.jp" or (host and host.endswith(".shugiintv.go.jp"))):
+                await interaction.response.defer()
+
+                source_info = await ShuugiinSource.create_source(url)
+
+                if not voice.is_playing():
+                    audio = ShuugiinSource.create_ffmpeg_player(source_info['url'])
+                    voice.play(audio, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(interaction, interaction.guild.id), self.bot.loop))
+                    await self.now_play_set(interaction.guild.id, source_info["title"])
+                    await interaction.channel.send(f"再生中の曲: **{source_info['title']}**")
+                else:
+                    await self.add_to_queue(interaction.guild.id, source_info)
+                    await interaction.channel.send(f"キューに追加: **{source_info['title']}**")
+
+                return await interaction.followup.send(view=MusicView())
             else:
-                await self.add_to_queue(interaction.guild.id, source_info)
-                await interaction.channel.send(f"キューに追加: **{source_info['title']}**")
-
-            return await interaction.followup.send(view=MusicView())
+                return await interaction.response.send_message("SoundCloud以外に対応していません。")
 
         return await interaction.response.send_message("URL または ファイルを指定してください。")
 
