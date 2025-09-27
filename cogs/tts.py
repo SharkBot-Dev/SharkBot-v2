@@ -129,10 +129,11 @@ class TTSCog(commands.Cog):
     @tts.command(name="end", description="読み上げを終了します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tts_end(self, interaction: discord.Interaction):
+        await interaction.response.defer()
         try:
             await interaction.guild.voice_client.disconnect()
         except:
-            return await interaction.response.send_message(
+            return await interaction.followup.send(
                 embed=discord.Embed(
                     title="読み上げ退出に失敗しました。",
                     color=discord.Color.red(),
@@ -268,7 +269,7 @@ ID | 説明
                 {"Channel": チャンネル.id, "Guild": interaction.guild.id},
                 upsert=True,
             )
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 embed=discord.Embed(
                     title="自動接続を有効化しました。", color=discord.Color.green()
                 )
@@ -277,7 +278,7 @@ ID | 説明
             await ttscheck.delete_one(
                 {"Channel": チャンネル.id, "Guild": interaction.guild.id}
             )
-            return await interaction.response.send_message(
+            return await interaction.followup.send(
                 embed=discord.Embed(
                     title="自動接続を無効化しました。", color=discord.Color.red()
                 )
