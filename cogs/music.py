@@ -139,7 +139,7 @@ class MusicCog(commands.Cog):
                 elif custom_id.startswith("music_add+"):
                     class MusicAddModal(discord.ui.Modal):
                         def __init__(self_):
-                            super().__init__(title="音楽をキューに追加 (SoundCloud)", timeout=180)
+                            super().__init__(title="音楽をキューに追加 (SoundCloudのみ)", timeout=180)
 
                         musicurl = discord.ui.Label(
                             text="音楽のURL",
@@ -196,34 +196,67 @@ class MusicCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def music_play(
-        self, interaction: discord.Interaction, url: str
+        self, interaction: discord.Interaction, url: str = None, ファイル: discord.Attachment = None
     ):
         if interaction.user.voice is None:
             return await interaction.response.send_message("ボイスチャンネルに参加してください。")
-        
-        parsed_url = urlparse(url)
-        host = parsed_url.hostname
-        if not (host == "soundcloud.com" or (host and host.endswith(".soundcloud.com"))):
-            return await interaction.response.send_message("SoundCloud以外に対応していません。")
-
-        await interaction.response.defer()
 
         if interaction.guild.voice_client is None:
             await interaction.user.voice.channel.connect()
 
-        source_info = await YTDLSource.create_source(url)
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
 
-        if not voice.is_playing():
-            audio = YTDLSource.create_ffmpeg_player(source_info['url'])
-            voice.play(audio, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(interaction, interaction.guild.id), self.bot.loop))
-            await self.now_play_set(interaction.guild.id, source_info["title"])
-            await interaction.channel.send(f"再生中の曲: **{source_info['title']}**")
-        else:
-            await self.add_to_queue(interaction.guild.id, source_info)
-            await interaction.channel.send(f"キューに追加: **{source_info['title']}**")
+        if ファイル:
+            MAX_FILE_SIZE = 15 * 1024 * 1024
+            if ファイル.size > MAX_FILE_SIZE:
+                return await interaction.response.send_message(
+                    f"ファイルサイズが大きすぎます。（上限 {MAX_FILE_SIZE // (1024*1024)}MB）"
+                )
+            
+            if not ファイル.filename.endswith(('.mp3', '.wav', '.mp4')):
+                return await interaction.response.send_message(content="そのファイルは対応していません。\n対応ファイル: `.mp3`, `.wav`, `.mp4`")
 
-        await interaction.followup.send(view=MusicView())
+            await interaction.response.defer()
+
+            item = {
+                "title": ファイル.filename,
+                "url": ファイル.url,
+                "source": "file"
+            }
+
+            if not voice.is_playing():
+                audio = YTDLSource.create_ffmpeg_player(item["url"])
+                voice.play(audio, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(interaction, interaction.guild.id), self.bot.loop))
+                await self.now_play_set(interaction.guild.id, item["title"])
+                await interaction.channel.send(f"再生中の曲: **{item['title']}**")
+            else:
+                await self.add_to_queue(interaction.guild.id, item)
+                await interaction.channel.send(f"キューに追加: **{item['title']}**")
+
+            return await interaction.followup.send(view=MusicView())
+
+        if url:
+            parsed_url = urlparse(url)
+            host = parsed_url.hostname
+            if not (host == "soundcloud.com" or (host and host.endswith(".soundcloud.com"))):
+                return await interaction.response.send_message("SoundCloud以外に対応していません。")
+
+            await interaction.response.defer()
+
+            source_info = await YTDLSource.create_source(url)
+
+            if not voice.is_playing():
+                audio = YTDLSource.create_ffmpeg_player(source_info['url'])
+                voice.play(audio, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(interaction, interaction.guild.id), self.bot.loop))
+                await self.now_play_set(interaction.guild.id, source_info["title"])
+                await interaction.channel.send(f"再生中の曲: **{source_info['title']}**")
+            else:
+                await self.add_to_queue(interaction.guild.id, source_info)
+                await interaction.channel.send(f"キューに追加: **{source_info['title']}**")
+
+            return await interaction.followup.send(view=MusicView())
+
+        return await interaction.response.send_message("URL または ファイルを指定してください。")
 
     @music.command(name="skip", description="音楽をスキップします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
