@@ -19,9 +19,9 @@ class LockMessageCog(commands.Cog):
                 except:
                     return
                 if "lockmessage_delete+" in custom_id:
-                    await interaction.response.defer(ephemeral=True)
                     if not interaction.user.guild_permissions.manage_channels:
-                        return
+                        return await interaction.response.send_message(ephemeral=True, content="固定メッセージを削除するにはチャンネルの管理権限が必要です。")
+                    await interaction.response.defer(ephemeral=True)
                     db = interaction.client.async_db["Main"].LockMessage
                     result = await db.delete_one(
                         {
@@ -30,7 +30,7 @@ class LockMessageCog(commands.Cog):
                     )
                     await interaction.message.delete()
                     await interaction.followup.send(
-                        "LockMessageを削除しました。", ephemeral=True
+                        "固定メッセージを削除しました。", ephemeral=True
                     )
         except:
             return
