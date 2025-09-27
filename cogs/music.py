@@ -347,5 +347,15 @@ class MusicCog(commands.Cog):
             desc = '\n'.join([f"{i+1}. {info['title']}" for i, info in enumerate(q_list)])
             await interaction.response.send_message(embed=discord.Embed(title="現在のキュー", description=desc, color=discord.Color.green()))
 
+    @music.command(name="source", description="対応ソースを表示します")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def music_source(
+        self, interaction: discord.Interaction
+    ):
+        await interaction.response.send_message(embed=discord.Embed(title="対応ソース", color=discord.Color.green())
+                                                .add_field(name="SoundCloud", value="音楽再生する用です。", inline=False)
+                                                .add_field(name="衆議院配信", value="説明を忘れました。", inline=False))
+
 async def setup(bot):
     await bot.add_cog(MusicCog(bot))
