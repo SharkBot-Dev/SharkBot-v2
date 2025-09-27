@@ -19,6 +19,16 @@ class AlertCog(commands.Cog):
         self.bot = bot
         self.check_news_alert.start()
 
+    async def get_mention(self, guild: discord.Guild, channel_id: int):
+        db = self.bot.async_db["Main"].AlertMention
+        try:
+            dbfind = await db.find_one({"Channel": channel_id}, {"_id": False})
+        except:
+            return None
+        if dbfind is None:
+            return None
+        return guild.get_role(dbfind.get("Role")).mention
+
     @tasks.loop(hours=3)
     async def check_news_alert(self):
         async with aiohttp.ClientSession() as session:
@@ -33,20 +43,12 @@ class AlertCog(commands.Cog):
                     if guild:
                         channel = guild.get_channel(n.get('Channel', 0))
                         if channel:
-                            await channel.send(f"https:{url['href']}")
+                            mention = await self.get_mention(guild, channel.id)
+                            mention = mention if mention else ""
+                            await channel.send(f"{mention}\nhttps:{url['href']}")
 
     async def cog_unload(self):
         self.check_news_alert.stop()
-
-    async def get_mention(self, guild: discord.Guild, channel_id: int):
-        db = self.bot.async_db["Main"].AlertMention
-        try:
-            dbfind = await db.find_one({"Channel": channel_id}, {"_id": False})
-        except:
-            return None
-        if dbfind is None:
-            return None
-        return guild.get_role(dbfind.get("Role")).mention
 
     @commands.Cog.listener("on_scheduled_event_create")
     async def on_scheduled_event_create_alert(self, event: discord.ScheduledEvent):
