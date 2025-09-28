@@ -471,6 +471,50 @@ class OcrGroup(app_commands.Group):
             )
         )
 
+class TwitterGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="twitter", description="ツイッター系のコマンドです。")
+
+    @app_commands.command(name="info", description="そのツイートの情報を取得します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def tweet_info(self, interaction: discord.Interaction, tweet_url: str):
+        tweet_id_match = re.search(r"status/(\d+)", tweet_url)
+        if not tweet_id_match:
+            return await interaction.response.send_message(
+                "無効なURLです", ephemeral=True
+            )
+
+        await interaction.response.defer(ephemeral=True)
+
+        tweet_id = tweet_id_match.group(1)
+        API_BASE_URL = "https://api.fxtwitter.com/status/"
+        api_url = f"{API_BASE_URL}{tweet_id}"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(api_url) as resp:
+                if resp.status != 200:
+                    return await interaction.followup.send("APIリクエストに失敗しました")
+                data = await resp.json()
+
+        tweet = data["tweet"]
+
+        source = tweet.get('source', '取得失敗').replace('Twitter ', '')
+
+        await interaction.followup.send(embed=discord.Embed(title="ツイートの情報を取得しました。", description=tweet.get('text', 'なし'), color=discord.Color.green(), url=tweet['url'])
+                                        .set_author(name=tweet["author"]["name"], icon_url=tweet["author"]["avatar_url"])
+                                        .add_field(name="名前", value=tweet["author"]["name"])
+                                        .add_field(name="スクリーン名前", value=tweet["author"]['screen_name'])
+                                        .add_field(name="アバターの色", value=tweet["author"]['avatar_color'])
+                                        .add_field(name="投稿日時", value=tweet.get('created_at', '取得失敗'))
+                                        .add_field(name="リツイート回数", value=str(tweet["retweets"]) + '回')
+                                        .add_field(name="いいね回数", value=str(tweet["likes"]) + '回')
+                                        .add_field(name="表示回数", value=str(tweet["views"]) + '回')
+                                        .add_field(name="返信回数", value=str(tweet["replies"]) + '回')
+                                        .add_field(name="機種", value=source)
+                                        .add_field(name="言語id", value=tweet['lang'])
+                                        .add_field(name="ツイートの色", value=tweet['color'])
+                                        )
 
 class ToolsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -579,6 +623,7 @@ class ToolsCog(commands.Cog):
 
     tools.add_command(CalcGroup())
     tools.add_command(OcrGroup())
+    tools.add_command(TwitterGroup())
 
     @tools.command(name="embed", description="埋め込みを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)
