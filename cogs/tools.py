@@ -1,6 +1,7 @@
 import asyncio
 from functools import partial
 import io
+import json
 import re
 import socket
 import textwrap
@@ -516,6 +517,207 @@ class TwitterGroup(app_commands.Group):
                                         .add_field(name="ツイートの色", value=tweet['color'])
                                         )
 
+class NetworkGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="network", description="ネットワークツール系コマンドです。")
+
+    @app_commands.command(name="whois", description="Whoisします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def whois(self, interaction: discord.Interaction, ドメイン: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
+
+        await interaction.response.defer()
+        data = await fetch_whois(ドメイン)
+        return await interaction.followup.send(file=discord.File(data, "whois.txt"))
+
+    @app_commands.command(name="nslookup", description="DNS情報を見ます。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def nslookup(self, interaction: discord.Interaction, ドメイン: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
+
+        await interaction.response.defer()
+        l = []
+        domain = ドメイン
+        json_data = {
+            "domain": domain,
+            "dnsServer": "cloudflare",
+        }
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "https://www.nslookup.io/api/v1/records", json=json_data
+            ) as response:
+                js = await response.json()
+                records_data = js.get("records", {})
+                categorized_records = {}
+
+                for record_type, record_info in records_data.items():
+                    response = record_info.get("response", {})
+                    answers = response.get("answer", [])
+
+                    for answer in answers:
+                        record_details = answer.get("record", {})
+                        ip_info = answer.get("ipInfo", {})
+
+                        record_entry = f"{record_details.get('raw', 'N/A')}"
+
+                        if record_type not in categorized_records:
+                            categorized_records[record_type] = []
+                        categorized_records[record_type].append(record_entry)
+
+                embed = make_embed.success_embed(title="NSLookupをしてDNS情報を取得しました。")
+
+                for record_type, entries in categorized_records.items():
+                    value_text = "\n".join(entries)
+                    embed.add_field(
+                        name=record_type.upper(), value=value_text[:1024], inline=False
+                    )
+
+                await interaction.followup.send(embed=embed)
+
+    @app_commands.command(name="iplookup", description="IP情報を見ます。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def iplookup(self, interaction: discord.Interaction, ipアドレス: str):
+        if not await command_disable.command_enabled_check(interaction):
+            return await interaction.response.send_message(
+                ephemeral=True, content="そのコマンドは無効化されています。"
+            )
+
+        if ipv4_pattern.match(ipアドレス):
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"http://ip-api.com/json/{ipアドレス}?lang=ja"
+                ) as response:
+                    try:
+                        js = await response.json()
+                        await interaction.response.send_message(
+                            embed=discord.Embed(
+                                title=f"IPアドレス情報 ({ipアドレス})",
+                                description=f"""
+    国名: {js.get("country", "不明")}
+    都市名: {js.get("city", "不明")}
+    プロバイダ: {js.get("isp", "不明")}
+    緯度: {js.get("lat", "不明")}
+    経度: {js.get("lon", "不明")}
+    タイムゾーン: {js.get("timezone", "不明")}
+    """,
+                                color=discord.Color.green(),
+                            )
+                        )
+                    except:
+                        return await interaction.response.send_message(
+                            embed=discord.Embed(
+                                title="APIのレートリミットです。",
+                                color=discord.Color.red(),
+                            )
+                        )
+        else:
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="無効なIPアドレスです。", color=discord.Color.red()
+                )
+            )
+
+    @app_commands.command(name="webshot", description="スクリーンショットを撮影します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def webshot(self, interaction: discord.Interaction, url: str):
+        if not is_url.search(url):
+            return await interaction.response.send_message(
+                ephemeral=True, content="URLを入力してください。"
+            )
+
+        if await asyncio.to_thread(is_blocked_url, url):
+            return await interaction.response.send_message(
+                ephemeral=True, content="有効なURLを入力してください。"
+            )
+
+        await interaction.response.defer()
+
+        hti = Html2Image(
+            output_path=f"files/static/{interaction.user.id}/",
+            custom_flags=[
+                "--proxy-server=socks5://127.0.0.1:9050",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--disable-software-rasterizer",
+                "--headless=new",
+                "--mute-audio",
+                "--disable-geolocation",
+                "--use-fake-device-for-media-stream",
+                "--use-fake-ui-for-media-stream",
+                "--deny-permission-prompts",
+                "--log-level=3",
+                "--disable-logging",
+                "--disable-breakpad",
+                "--disable-hang-monitor",
+                "--disable-client-side-phishing-detection",
+                "--disable-component-update",
+                "--no-zygote",
+            ],
+        )
+
+        filename = f"{uuid.uuid4()}.png"
+
+        await asyncio.to_thread(
+            hti.screenshot, url=url, size=(1280, 720), save_as=filename
+        )
+
+        filepath = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{filename}"
+        embed = make_embed.success_embed(title="スクリーンショットを撮影しました。", description="一日の終わりにファイルが削除されます。")
+        await interaction.followup.send(
+            embed=embed,
+            view=discord.ui.View().add_item(
+                discord.ui.Button(label="結果を確認する", url=filepath)
+            ),
+        )
+
+    @app_commands.command(name="ping", description="ドメインにpingを送信します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def ping_domein(self, interaction: discord.Interaction, ドメイン: str, ポート: int):
+        await interaction.response.defer()
+        data = {
+            'params': f'target_domain={ドメイン}&target_port={ポート}',
+        }
+
+        headers = {
+            'accept': 'application/json, text/javascript, */*; q=0.01',
+            'accept-language': 'ja,en-US;q=0.9,en;q=0.8',
+            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'origin': 'https://tech-unlimited.com',
+            'priority': 'u=1, i',
+            'referer': 'https://tech-unlimited.com/ping.html',
+            'sec-ch-ua': '"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-origin',
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+            'x-requested-with': 'XMLHttpRequest'
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "https://tech-unlimited.com/proc/ping.php", data=data, headers=headers
+            ) as response:
+                text = await response.text()
+                
+                check = json.loads(text)
+                await interaction.followup.send(embed=make_embed.success_embed(title="ドメインにPingを送信しました。")
+                                                .add_field(name="ステータス", value=check['result'], inline=False)
+                                                .add_field(name="反応までかかった時間", value=check['response_time'], inline=False))
+
 class ToolsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -624,6 +826,7 @@ class ToolsCog(commands.Cog):
     tools.add_command(CalcGroup())
     tools.add_command(OcrGroup())
     tools.add_command(TwitterGroup())
+    tools.add_command(NetworkGroup())
 
     @tools.command(name="embed", description="埋め込みを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)
@@ -763,111 +966,6 @@ class ToolsCog(commands.Cog):
             embed=embed,
             ephemeral=True,
         )
-
-    @tools.command(name="whois", description="Whoisします。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def whois(self, interaction: discord.Interaction, ドメイン: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
-        await interaction.response.defer()
-        data = await fetch_whois(ドメイン)
-        return await interaction.followup.send(file=discord.File(data, "whois.txt"))
-
-    @tools.command(name="nslookup", description="DNS情報を見ます。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def nslookup(self, interaction: discord.Interaction, ドメイン: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
-        await interaction.response.defer()
-        l = []
-        domain = ドメイン
-        json_data = {
-            "domain": domain,
-            "dnsServer": "cloudflare",
-        }
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "https://www.nslookup.io/api/v1/records", json=json_data
-            ) as response:
-                js = await response.json()
-                records_data = js.get("records", {})
-                categorized_records = {}
-
-                for record_type, record_info in records_data.items():
-                    response = record_info.get("response", {})
-                    answers = response.get("answer", [])
-
-                    for answer in answers:
-                        record_details = answer.get("record", {})
-                        ip_info = answer.get("ipInfo", {})
-
-                        record_entry = f"{record_details.get('raw', 'N/A')}"
-
-                        if record_type not in categorized_records:
-                            categorized_records[record_type] = []
-                        categorized_records[record_type].append(record_entry)
-
-                embed = make_embed.success_embed(title="NSLookupをしてDNS情報を取得しました。")
-
-                for record_type, entries in categorized_records.items():
-                    value_text = "\n".join(entries)
-                    embed.add_field(
-                        name=record_type.upper(), value=value_text[:1024], inline=False
-                    )
-
-                await interaction.followup.send(embed=embed)
-
-    @tools.command(name="iplookup", description="IP情報を見ます。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def iplookup(self, interaction: discord.Interaction, ipアドレス: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
-        if ipv4_pattern.match(ipアドレス):
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"http://ip-api.com/json/{ipアドレス}?lang=ja"
-                ) as response:
-                    try:
-                        js = await response.json()
-                        await interaction.response.send_message(
-                            embed=discord.Embed(
-                                title=f"IPアドレス情報 ({ipアドレス})",
-                                description=f"""
-    国名: {js.get("country", "不明")}
-    都市名: {js.get("city", "不明")}
-    プロバイダ: {js.get("isp", "不明")}
-    緯度: {js.get("lat", "不明")}
-    経度: {js.get("lon", "不明")}
-    タイムゾーン: {js.get("timezone", "不明")}
-    """,
-                                color=discord.Color.green(),
-                            )
-                        )
-                    except:
-                        return await interaction.response.send_message(
-                            embed=discord.Embed(
-                                title="APIのレートリミットです。",
-                                color=discord.Color.red(),
-                            )
-                        )
-        else:
-            return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="無効なIPアドレスです。", color=discord.Color.red()
-                )
-            )
 
     @tools.command(name="afk", description="AFKを設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -1084,61 +1182,6 @@ class ToolsCog(commands.Cog):
 
         return await interaction.response.send_message(
             embed=embed
-        )
-
-    @tools.command(name="webshot", description="スクリーンショットを撮影します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def webshot(self, interaction: discord.Interaction, url: str):
-        if not is_url.search(url):
-            return await interaction.response.send_message(
-                ephemeral=True, content="URLを入力してください。"
-            )
-
-        if await asyncio.to_thread(is_blocked_url, url):
-            return await interaction.response.send_message(
-                ephemeral=True, content="有効なURLを入力してください。"
-            )
-
-        await interaction.response.defer()
-
-        hti = Html2Image(
-            output_path=f"files/static/{interaction.user.id}/",
-            custom_flags=[
-                "--proxy-server=socks5://127.0.0.1:9050",
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-gpu",
-                "--disable-software-rasterizer",
-                "--headless=new",
-                "--mute-audio",
-                "--disable-geolocation",
-                "--use-fake-device-for-media-stream",
-                "--use-fake-ui-for-media-stream",
-                "--deny-permission-prompts",
-                "--log-level=3",
-                "--disable-logging",
-                "--disable-breakpad",
-                "--disable-hang-monitor",
-                "--disable-client-side-phishing-detection",
-                "--disable-component-update",
-                "--no-zygote",
-            ],
-        )
-
-        filename = f"{uuid.uuid4()}.png"
-
-        await asyncio.to_thread(
-            hti.screenshot, url=url, size=(1280, 720), save_as=filename
-        )
-
-        filepath = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{filename}"
-        embed = make_embed.success_embed(title="スクリーンショットを撮影しました。", description="一日の終わりにファイルが削除されます。")
-        await interaction.followup.send(
-            embed=embed,
-            view=discord.ui.View().add_item(
-                discord.ui.Button(label="結果を確認する", url=filepath)
-            ),
         )
 
     async def choice_download_autocomplete(
