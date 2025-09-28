@@ -920,6 +920,36 @@ class ItemGroup(app_commands.Group):
                 )
             )
 
+class ShopPanelGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="shop", description="ショップパネルを作成するためのコマンドたちです。")
+
+    @app_commands.command(name="item", description="アイテムショップパネルを作成します。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def economy_shop_item_create(
+        self,
+        interaction: discord.Interaction,
+        タイトル: str,
+        アイテム名1: str,
+        アイテム名2: str = None,
+        アイテム名3: str = None,
+        アイテム名4: str = None,
+        アイテム名5: str = None
+    ):
+        await interaction.response.defer()
+        items = [i for i in [アイテム名1, アイテム名2, アイテム名3, アイテム名4, アイテム名5] if i is not None]
+        embed=discord.Embed(title=タイトル, color=discord.Color.green())
+        view = discord.ui.View()
+        for _, i in enumerate(items):
+            db = await Money(interaction.client).get_server_items(interaction.guild, i)
+            if not db:
+                return await interaction.followup.send(embed=discord.Embed(title=f"{i} というアイテムが見つかりません。", color=discord.Color.red()))
+            embed.add_field(name=i, value=f"{db.get('Money', 0)} コイン", inline=False)
+            view.add_item(discord.ui.Button(label=i, custom_id=f"item_shop+{_}"))
+        await interaction.channel.send(embed=embed, view=view)
+        await interaction.delete_original_response()
 
 class ServerMoneyCog(commands.Cog):
     def __init__(self, bot):
@@ -944,6 +974,39 @@ class ServerMoneyCog(commands.Cog):
             message.guild, message.author, dbfind.get("Money", 0)
         )
 
+    @commands.Cog.listener(name="on_interaction")
+    async def on_interaction_shop_panel(self, interaction: discord.Interaction):
+        try:
+            if interaction.data["component_type"] == 2:
+                try:
+                    custom_id = interaction.data["custom_id"]
+                except:
+                    return
+                if custom_id.startswith('item_shop+'):
+                    await interaction.response.defer(ephemeral=True)
+                    f = interaction.message.embeds[0].fields[int(custom_id.split('item_shop+')[1])]
+
+                    m = await Money(interaction.client).get_server_money(
+                        interaction.guild, interaction.user
+                    )
+                    if m < int(f.value.split(' ')[0]):
+                        return await interaction.followup.send(
+                            embed=make_embed.error_embed(
+                                title="残高が足りません。",
+                                description=f"「{f.name}」を買うには {f.value.split(' ')[0]}コインが必要です。"
+                            ),
+                            ephemeral=True
+                        )
+                    
+                    await Money(interaction.client).add_server_money(
+                        interaction.guild, interaction.user, -int(f.value.split(' ')[0])
+                    )
+
+                    await Money(self.bot).add_server_item(interaction.guild, interaction.user, f.name, 1)
+                    await interaction.followup.send(embed=make_embed.success_embed(title="アイテムを買いました。", description=f"「{f.name}」"), ephemeral=True)
+        except:
+            return
+
     server_economy = app_commands.Group(
         name="economy", description="サーバー内の経済機能"
     )
@@ -952,6 +1015,7 @@ class ServerMoneyCog(commands.Cog):
     server_economy.add_command(ManageGroup())
     server_economy.add_command(GamesGroup())
     server_economy.add_command(GachaGroup())
+    server_economy.add_command(ShopPanelGroup())
 
     # ====== work ======
     @server_economy.command(name="work", description="30分に1回働けます。")
