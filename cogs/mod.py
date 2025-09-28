@@ -390,11 +390,6 @@ class ModCog(commands.Cog):
     async def warn(
         self, interaction: discord.Interaction, メンバー: discord.User, 理由: str
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         if interaction.guild.get_member(メンバー.id) is None:
             return await interaction.response.send_message(
@@ -410,7 +405,8 @@ class ModCog(commands.Cog):
                     title=f"あなたは`{interaction.guild.name}`\nで警告されました。",
                     color=discord.Color.yellow(),
                     description=f"```{理由}```",
-                )
+                ).set_footer(text=f"{interaction.guild.name} / {interaction.guild.id}", icon_url=interaction.guild.icon.url if interaction.guild.icon else None)
+                .set_author(name=f"{interaction.user.name} / {interaction.user.id}", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url)
             )
         except:
             return await interaction.followup.send(
@@ -421,15 +417,64 @@ class ModCog(commands.Cog):
                     description="Dmを送信できませんでした。",
                 ),
             )
+        
+        db = self.bot.async_db["Main"].Warns
+        await db.update_one(
+            {"Guild": interaction.guild.id, "User": メンバー.id},
+            {"$push": {"Reason": 理由}},
+            upsert=True
+        )
+
+        await db.update_one(
+            {"Guild": interaction.guild.id, "User": メンバー.id},
+            {"$push": {"Mod": interaction.user.name}},
+            upsert=True
+        )
+
+        await db.update_one(
+            {"Guild": interaction.guild.id, "User": メンバー.id},
+            {"$inc": {"Count": 1}},
+            upsert=True
+        )
 
         await interaction.followup.send(
             ephemeral=True,
             embed=discord.Embed(
                 title="警告しました。",
-                description=f"```{理由}```",
+                description=f"理由```{理由}```",
                 color=discord.Color.green(),
             ),
         )
+
+    @moderation.command(name="warns", description="メンバーの警告理由・回数を取得します。")
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def warns(
+        self, interaction: discord.Interaction, メンバー: discord.User
+    ):
+        db = self.bot.async_db["Main"].Warns
+
+        try:
+            dbfind = await db.find_one(
+                {"Guild": interaction.guild.id, "User": メンバー.id},
+                {"_id": False},
+            )
+        except:
+            return await interaction.response.send_message(ephemeral=True, content="取得に失敗しました。")
+        
+        if dbfind is None:
+            return await interaction.response.send_message(ephemeral=True, content="まだ処罰されていないようです。")
+
+        mods = dbfind.get('Mod', [])
+        reason = dbfind.get('Reason', [])
+        text = ""
+        for _, mod in enumerate(mods):
+            text += f'{reason[_]} by {mod}\n'
+
+        await interaction.response.send_message(embed=discord.Embed(title=f"{メンバー.name} さんの警告リスト", color=discord.Color.green())
+                                                .add_field(name="合計警告回数", value=str(dbfind.get('Count', 0)) + "回", inline=False)
+                                                .add_field(name="理由・処罰者", value=text, inline=True))
 
     @moderation.command(name="remake", description="チャンネルを再生成します。")
     @app_commands.checks.has_permissions(administrator=True)
