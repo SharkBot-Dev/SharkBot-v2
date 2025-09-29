@@ -121,10 +121,10 @@ class AutoResetCog(commands.Cog):
                 upsert=True,
             )
             await asyncio.sleep(1)
-            await ch.edit(position=channel.position + 1)
+            await ch_.edit(position=channel.position + 1)
             await asyncio.sleep(1)
             await channel.delete()
-            await ch.send(
+            await ch_.send(
                 embed=discord.Embed(
                     title="チャンネルがリセットされました。", color=discord.Color.red()
                 )
