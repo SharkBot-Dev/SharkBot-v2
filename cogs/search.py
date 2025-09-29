@@ -215,41 +215,21 @@ class SearchCog(commands.Cog):
                     permissions = "SharkBot"
             except:
                 pass
-            add_bot_user = await self.get_bot_adder_from_audit_log(
-                interaction.guild, user
-            )
-            col = await self.get_user_color(user)
             embed = discord.Embed(
-                title=f"{user.display_name}の情報 (ページ1)", color=col
+                title=f"{user.display_name}の情報 (ページ1)", color=discord.Color.green()
             )
             embed.add_field(
                 name="基本情報",
                 value=f"ID: **{user.id}**\nユーザーネーム: **{user.name}#{user.discriminator}**\n作成日: **{user.created_at.astimezone(JST)}**\nこの鯖に？: **{isguild}**\nBot？: **{isbot}**\n認証Bot？: **{'はい' if user.public_flags.verified_bot else 'いいえ'}**",
             ).add_field(name="サービス情報", value=f"権限: **{permissions}**")
-            userdata = await self.get_user_savedata(user)
-            if userdata:
-                logininfo = f"**言語**: {userdata['Lang']}\n"
-                embed.add_field(name="ログイン情報", value=logininfo, inline=False)
-                pre = userdata["Nitro"]
-                if pre == 0:
-                    embed.add_field(name="Nitro", value="なし", inline=False)
-                elif pre == 1:
-                    embed.add_field(name="Nitro", value="Nitro Classic", inline=False)
-                elif pre == 2:
-                    embed.add_field(name="Nitro", value="Nitro", inline=False)
-                elif pre == 3:
-                    embed.add_field(name="Nitro", value="Nitro Basic", inline=False)
             if not user.bot:
                 p_g = user.primary_guild
                 if p_g != None:
                     t_name = p_g.tag
-                    t_bag = p_g.badge
                 else:
                     t_name = "なし"
-                    t_bag = "なし"
             else:
                 t_name = "なし"
-                t_bag = "リクエストなし"
 
             if interaction.guild.get_member(user.id):
                 mem_status = interaction.guild.get_member(user.id)
@@ -280,8 +260,7 @@ class SearchCog(commands.Cog):
 スパムアカウントか？: {"✅" if user.public_flags.spammer else "❌"}
 HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "❌"}
 早期チームユーザーか？: {"✅" if user.public_flags.team_user else "❌"}
-サーバータグ: {t_name} ({t_bag})
-Botを追加したユーザーは？: {add_bot_user}
+サーバータグ: {t_name}
 """,
                 inline=False,
             )
@@ -305,7 +284,7 @@ Botを追加したユーザーは？: {add_bot_user}
             if user.public_flags.early_supporter:
                 bag += "<:fast_support:1399750316660101172> "
             if user.public_flags.hypesquad_bravery:
-                bag += "<:HouseofBravery:1399751204430675968> "
+                bag += "<:HouseofBravery:1422122705964240936> "
             if user.public_flags.hypesquad_brilliance:
                 bag += "<:HypeSquadBrilliance:1399751490049933322> "
             if user.public_flags.hypesquad_balance:
@@ -349,11 +328,6 @@ Botを追加したユーザーは？: {add_bot_user}
                         await self.update_message(interaction)
 
             view = PaginatorView()
-            view.add_item(
-                discord.ui.Button(
-                    label="サポートサーバー", url="https://discord.gg/mUyByHYMGk"
-                )
-            )
             if user.avatar:
                 await interaction.followup.send(
                     embed=embed.set_thumbnail(url=user.avatar.url), view=view
