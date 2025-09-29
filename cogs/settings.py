@@ -200,9 +200,8 @@ class WelcomeCommands(app_commands.Group):
                         upsert=True,
                     )
                     await interaction_.response.send_message(
-                        embed=discord.Embed(
-                            title="ウェルカムメッセージを有効化しました。",
-                            color=discord.Color.green(),
+                        embed=make_embed.success_embed(
+                            title="よろしくメッセージを有効化しました。"
                         )
                     )
 
@@ -215,9 +214,8 @@ class WelcomeCommands(app_commands.Group):
                 }
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="ウェルカムメッセージを無効化しました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="よろしくメッセージを無効化しました。"
                 )
             )
 
@@ -267,9 +265,8 @@ class WelcomeCommands(app_commands.Group):
                         upsert=True,
                     )
                     await interaction_.response.send_message(
-                        embed=discord.Embed(
-                            title="さようならメッセージを有効化しました。",
-                            color=discord.Color.green(),
+                        embed=make_embed.success_embed(
+                            title="さようならメッセージを有効化しました。"
                         )
                     )
 
@@ -282,9 +279,8 @@ class WelcomeCommands(app_commands.Group):
                 }
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="さようならメッセージを無効化しました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="さようならメッセージを無効化しました。"
                 )
             )
 
@@ -332,9 +328,8 @@ class WelcomeCommands(app_commands.Group):
                         upsert=True,
                     )
                     await interaction_.response.send_message(
-                        embed=discord.Embed(
-                            title="BANメッセージを有効化しました。",
-                            color=discord.Color.green(),
+                        embed=make_embed.success_embed(
+                            title="BANメッセージを有効化しました。"
                         )
                     )
 
@@ -347,8 +342,8 @@ class WelcomeCommands(app_commands.Group):
                 }
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="BANメッセージを無効化しました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="BANメッセージを無効化しました。"
                 )
             )
 
