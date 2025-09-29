@@ -215,8 +215,8 @@ class SearchCog(commands.Cog):
                     permissions = "SharkBot"
             except:
                 pass
-            embed = discord.Embed(
-                title=f"{user.display_name}の情報 (ページ1)", color=discord.Color.green()
+            embed = make_embed.success_embed(
+                title=f"{user.display_name}の情報 (ページ1)"
             )
             embed.add_field(
                 name="基本情報",
@@ -293,9 +293,8 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
                 embed.add_field(name="バッジ", value=bag, inline=False)
             embed.set_image(url=user.banner.url if user.banner else None)
             roles = await self.roles_get(interaction.guild, user)
-            embed2 = discord.Embed(
+            embed2 = make_embed.success_embed(
                 title=f"{user.display_name}の情報 (ページ2)",
-                color=discord.Color.green(),
                 description=roles,
             )
             pages = [embed, embed2]
@@ -514,7 +513,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
                 )
             )
         embed = (
-            discord.Embed(title="招待リンクの情報", color=discord.Color.green())
+            make_embed.success_embed(title="招待リンクの情報")
             .add_field(name="サーバー名", value=f"{invite.guild.name}", inline=False)
             .add_field(name="サーバーid", value=f"{invite.guild.id}", inline=False)
             .add_field(
