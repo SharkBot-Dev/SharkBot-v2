@@ -12,7 +12,7 @@ import aiohttp
 from discord import app_commands
 
 from consts import mongodb
-from models import command_disable
+from models import command_disable, make_embed
 
 COOLDOWN_TIME_KEIGO = 5
 cooldown_keigo_time = {}
@@ -352,6 +352,25 @@ class WelcomeCommands(app_commands.Group):
                 )
             )
 
+    @app_commands.command(name="rta", description="即抜けをするとメッセージを送信するようにします。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def welcome_rta(self, interaction: discord.Interaction, 有効か: bool):
+        db = interaction.client.async_db["Main"].FastGoodByeRTAMessage
+        await db.replace_one(
+            {
+                "Channel": interaction.channel.id,
+                "Guild": interaction.guild.id,
+            },
+            {
+                "Channel": interaction.channel.id,
+                "Guild": interaction.guild.id
+            },
+            upsert=True,
+        )
+        await interaction.response.send_message(embed=make_embed.success_embed(title=f"即抜けメッセージを {'有効化' if 有効か else '無効化'} しました。", description="参加してから1分以内に退出するとメッセージを送信します。"))
+
     @app_commands.command(name="help", description="各メッセージのセットアップ方法のヘルプです。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -409,6 +428,71 @@ class SettingCog(commands.Cog):
         self.bot.remove_check(self.ban_user_block)
         self.bot.remove_check(self.ban_guild_block)
         self.bot.remove_check(self.disable_channel)
+
+    @commands.Cog.listener("on_member_remove")
+    async def on_member_remove_role_backup(self, member: discord.Member):
+        if member.bot:
+            return
+        
+        db = self.bot.async_db["Main"].RoleRestore
+        try:
+            dbfind = await db.find_one({"Guild": member.guild.id}, {"_id": False})
+        except:
+            return
+        if dbfind is None:
+            return
+
+        role_ids = [r.id for r in member.roles if r.name != "@everyone"]
+        if role_ids:
+            db_rs = self.bot.async_db["Main"].RoleRestoreBackup
+            await db_rs.update_one(
+                {"Guild": member.guild.id, "UserID": member.id},
+                {"$set": {"Roles": role_ids}},
+                upsert=True
+            )
+
+    @commands.Cog.listener("on_member_join")
+    async def on_member_join_role_restore(self, member: discord.Member):
+        if member.bot:
+            return
+        
+        db = self.bot.async_db["Main"].RoleRestore
+        try:
+            dbfind = await db.find_one({"Guild": member.guild.id}, {"_id": False})
+        except:
+            return
+        if dbfind is None:
+            return
+        
+        db_rs = self.bot.async_db["Main"].RoleRestoreBackup
+        data = await db_rs.find_one_and_delete({"Guild": member.guild.id, "UserID": member.id})
+
+        if data and "Roles" in data:
+
+            roles = [member.guild.get_role(rid) for rid in data["Roles"]]
+            roles = [r for r in roles if r]
+
+            added_roles = []
+            error_roles = []
+
+            for role in roles:
+                try:
+                    await member.add_roles(role, reason="ロール復元機能による再付与")
+                    added_roles.append(role.name)
+                    await asyncio.sleep(0.8)
+                except:
+                    error_roles.append(role.name)
+                    continue
+
+            await asyncio.sleep(3)
+
+            try:
+                embed = discord.Embed(title="ロールが復元されました。", color=discord.Color.green())
+                if added_roles:
+                    embed.add_field(name="復元したロール", value="\n".join(added_roles))
+                await member.send(embed=embed)
+            except:
+                return
 
     async def disable_channel(self, ctx: commands.Context):
         db = self.bot.async_db["Main"].CommandDisable

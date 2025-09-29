@@ -1,3 +1,4 @@
+import asyncio
 from discord.ext import commands
 import discord
 import aiohttp
@@ -75,6 +76,46 @@ class WelcomeCog(commands.Cog):
             return
 
     @commands.Cog.listener("on_member_join")
+    async def on_member_join_sokunuke_rta(self, member: discord.Member):
+        g = member.guild
+        db = self.bot.async_db["Main"].FastGoodByeRTAMessage
+
+        try:
+            dbfind = await db.find_one({"Guild": g.id}, {"_id": False})
+        except Exception as e:
+            print(f"DB error: {e}")
+            return
+
+        if not dbfind:
+            return
+
+        ch = g.get_channel(dbfind.get("Channel", 0))
+        if not ch:
+            return
+
+        def check(m: discord.Member):
+            return m.guild.id == g.id and m.id == member.id
+
+        try:
+            m = await self.bot.wait_for(
+                "member_remove", check=check, timeout=60
+            )
+        except asyncio.TimeoutError:
+            return
+        except Exception as e:
+            print(f"wait_for error: {e}")
+            return
+
+        embed = (
+            discord.Embed(
+                title=f"{m.name} さんが即抜けしたよ・・",
+                color=discord.Color.yellow(),
+            )
+            .set_thumbnail(url=m.display_avatar.url)
+        )
+        await ch.send(embed=embed)
+
+    @commands.Cog.listener("on_member_join")
     async def on_member_join_welcome(self, member: discord.Member):
         g = self.bot.get_guild(member.guild.id)
         db = self.bot.async_db["Main"].WelcomeMessage
@@ -103,12 +144,11 @@ class WelcomeCog(commands.Cog):
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(webhooks.url, session=session)
                 try:
-                    col = await self.get_user_color_welcome(member)
                     await webhook.send(
                         embed=discord.Embed(
                             title=f"{await rep_name(dbfind['Title'], member=member)}",
                             description=f"{await rep_name(dbfind['Description'], member=member)}",
-                            color=col,
+                            color=discord.Color.green(),
                         ),
                         username="SharkBot Welcome",
                         avatar_url=self.bot.user.avatar.url,
@@ -152,7 +192,7 @@ class WelcomeCog(commands.Cog):
                         embed=discord.Embed(
                             title=f"{await rep_name(dbfind['Title'], member=member)}",
                             description=f"{await rep_name(dbfind['Description'], member=member)}",
-                            color=col,
+                            color=discord.Color.red(),
                         ),
                         username="SharkBot Goodbye",
                         avatar_url=self.bot.user.avatar.url,
@@ -194,7 +234,7 @@ class WelcomeCog(commands.Cog):
                         embed=discord.Embed(
                             title=f"{await rep_name(dbfind['Title'], member=member)}",
                             description=f"{await rep_name(dbfind['Description'], member=member)}",
-                            color=col,
+                            color=discord.Color.green(),
                         ),
                         username="SharkBot Ban",
                         avatar_url=self.bot.user.avatar.url,
