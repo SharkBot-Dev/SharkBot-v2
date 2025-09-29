@@ -3,6 +3,7 @@ from discord.ext import commands
 import discord
 import aiohttp
 from discord import Webhook
+import datetime
 
 
 class WelcomeCog(commands.Cog):
@@ -105,11 +106,14 @@ class WelcomeCog(commands.Cog):
         except Exception as e:
             print(f"wait_for error: {e}")
             return
+        
+        joined_after = datetime.datetime.now(datetime.timezone.utc) - member.joined_at
 
         embed = (
             discord.Embed(
                 title=f"{m.name} さんが即抜けしたよ・・",
                 color=discord.Color.yellow(),
+                description=f"{round(joined_after.seconds, 6)} 秒で即抜けしました。",
             )
             .set_thumbnail(url=m.display_avatar.url)
         )
