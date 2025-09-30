@@ -13,7 +13,7 @@ from cryptography.fernet import Fernet, InvalidToken
 import pykakasi
 from discord import app_commands
 from consts import settings
-from models import command_disable
+from models import command_disable, make_embed
 import asyncio
 import uuid
 from deep_translator import GoogleTranslator
@@ -814,26 +814,21 @@ class NounaiGroup(app_commands.Group):
             )
         )
 
-class ImageGroup(app_commands.Group):
+class AnimalGroup(app_commands.Group):
     def __init__(self):
-        super().__init__(name="image", description="画像系の面白いコマンド")
+        super().__init__(name="animal", description="動物系の面白いコマンド")
 
     @app_commands.command(name="cat", description="ネコの画像を生成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def cat(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 "https://api.thecatapi.com/v1/images/search?size=med&mime_types=jpg&format=json&has_breeds=true&order=RANDOM&page=0&limit=1"
             ) as cat:
                 msg = await interaction.response.send_message(
-                    embed=discord.Embed(
-                        title="猫の画像", color=discord.Color.green()
+                    embed=make_embed.success_embed(
+                        title="猫の画像を生成しました。"
                     ).set_image(url=json.loads(await cat.text())[0]["url"])
                 )
 
@@ -841,18 +836,41 @@ class ImageGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def dog(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         async with aiohttp.ClientSession() as session:
             async with session.get("https://dog.ceo/api/breeds/image/random") as dog_:
                 await interaction.response.send_message(
-                    embed=discord.Embed(
-                        title="犬の画像", color=discord.Color.green()
+                    embed=make_embed.success_embed(
+                        title="犬の画像を生成しました。"
                     ).set_image(url=f"{json.loads(await dog_.text())['message']}")
                 )
+
+    @app_commands.command(name="fox", description="キツネの画像を生成します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def fox(self, interaction: discord.Interaction):
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://randomfox.ca/floof/") as dog_:
+                await interaction.response.send_message(
+                    embed=make_embed.success_embed(
+                        title="キツネの画像を生成しました。"
+                    ).set_image(url=f"{json.loads(await dog_.text())['image']}")
+                )
+
+    @app_commands.command(name="duck", description="アヒルの画像を生成します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def duck(self, interaction: discord.Interaction):
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://random-d.uk/api/random") as dog_:
+                await interaction.response.send_message(
+                    embed=make_embed.success_embed(
+                        title="アヒルの画像を生成しました。"
+                    ).set_image(url=f"{json.loads(await dog_.text())['url']}")
+                )
+
+class ImageGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="image", description="画像系の面白いコマンド")
 
     @app_commands.command(name="5000", description="5000兆円ほしい！")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -1243,6 +1261,7 @@ class FunCog(commands.Cog):
 
     fun.add_command(TextGroup())
     fun.add_command(ImageGroup())
+    fun.add_command(AnimalGroup())
     fun.add_command(NounaiGroup())
     fun.add_command(MovieGroup())
     fun.add_command(AudioGroup())
