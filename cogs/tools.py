@@ -893,16 +893,157 @@ class ToolsCog(commands.Cog):
         text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "R")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "R") + "\n"
         await interaction.response.send_message(content=text)
 
+    @commands.Cog.listener(name="on_interaction")
+    async def on_interaction_todo_(self, interaction: discord.Interaction):
+        try:
+            if interaction.data["component_type"] == 2:
+                try:
+                    custom_id = interaction.data["custom_id"]
+                except:
+                    return
+                if custom_id == "todo_add+":
+                    class TodoAddModal(discord.ui.Modal):
+                        def __init__(self):
+                            super().__init__(title="Todoに追加", timeout=180)
+
+                        text = discord.ui.Label(
+                            text="やることを入力",
+                            description="やることを入力してください。",
+                            component=discord.ui.TextInput(
+                                style=discord.TextStyle.short, max_length=30, required=True
+                            ),
+                        )
+
+                        async def on_submit(self, interaction: discord.Interaction):
+                            await interaction.response.defer(ephemeral=True, thinking=False)
+                            
+                            assert isinstance(self.text.component, discord.ui.TextInput)
+
+                            msg = interaction.message.embeds[0].description
+                            if interaction.message.embeds[0].description:
+                                count = len(interaction.message.embeds[0].description.split('\n')) + 1
+                                msg = msg + f"\n{count}. {self.text.component.value.replace('.', '')} .. ❌"
+                            else:
+                                msg = f"\n1. {self.text.component.value.replace('.', '')} .. ❌\n"
+                            em = discord.Embed(title=interaction.message.embeds[0].title, description=msg, color=interaction.message.embeds[0].color)
+                            await interaction.message.edit(embed=em)
+                    await interaction.response.send_modal(TodoAddModal())
+                elif custom_id == "todo_end+":
+                    if interaction.message.embeds[0].description:
+                        todo_s = [discord.SelectOption(label=t.split(' .. ')[0].split('. ')[1], value=t.split(' .. ')[0].split('. ')[1]) for t in interaction.message.embeds[0].description.split('\n') if t.split(' .. ')[1] == "❌"]
+                        await interaction.response.send_message(ephemeral=True, content=f"どれを終了させる？\n{interaction.message.id}", view=discord.ui.View()
+                                                                .add_item(discord.ui.Select(custom_id="todo_end_select+", placeholder="終了させるTodoを選択", options=todo_s)))
+                    else:
+                        return await interaction.response.send_message(ephemeral=True, content="まだTodoがありません。")
+                elif custom_id == "todo_delete+":
+
+                    embed = interaction.message.embeds[0]
+                    if embed.description:
+                        todo_s = [
+                            discord.SelectOption(
+                                label=t.split(" .. ")[0].split(". ")[1],
+                                value=t.split(" .. ")[0].split(". ")[1],
+                            )
+                            for t in embed.description.split("\n")
+                        ]
+
+                        if not todo_s:
+                            return await interaction.response.send_message(
+                                ephemeral=True, content="削除できるTodoはありません。"
+                            )
+
+                        view = discord.ui.View()
+                        view.add_item(
+                            discord.ui.Select(
+                                custom_id=f"todo_delete_select+",
+                                placeholder="削除するTodoを選択",
+                                options=todo_s,
+                            )
+                        )
+
+                        await interaction.response.send_message(
+                            ephemeral=True,
+                            content=f"どれを削除する？\n{interaction.message.id}",
+                            view=view,
+                        )
+                    else:
+                        return await interaction.response.send_message(
+                            ephemeral=True, content="まだTodoがありません。"
+                        )
+            elif interaction.data["component_type"] == 3:
+                custom_id = interaction.data.get("custom_id")
+                if not custom_id:
+                    return
+
+                if custom_id.startswith("todo_end_select+"):
+                    await interaction.response.defer(ephemeral=True)
+                    original_msg_id = int(interaction.message.content.split('\n')[1])
+                    msg = await interaction.channel.fetch_message(original_msg_id)
+
+                    embed = msg.embeds[0]
+                    desc = embed.description
+
+                    for t in desc.split("\n"):
+                        if t.split(" .. ")[0].split(". ")[1] == interaction.data["values"][0]:
+                            new_line = t.replace("❌", "✅")
+                            desc = desc.replace(t, new_line)
+                            break
+
+                    em = discord.Embed(
+                        title=embed.title,
+                        description=desc,
+                        color=embed.color,
+                    )
+                    await msg.edit(embed=em)
+
+                    await interaction.followup.send(
+                        ephemeral=True, content="Todoを完了しました"
+                    )
+                elif custom_id.startswith("todo_delete_select+"):
+                    original_msg_id = int(interaction.message.content.split('\n')[1])
+                    msg = await interaction.channel.fetch_message(original_msg_id)
+
+                    embed = msg.embeds[0]
+                    desc = embed.description
+
+                    new_lines = []
+                    for t in desc.split("\n"):
+                        if t.split(" .. ")[0].split(". ")[1] != interaction.data["values"][0]:
+                            new_lines.append(t)
+
+                    new_desc = "\n".join(
+                        [f"{i+1}. {line.split('. ',1)[1]}" for i, line in enumerate(new_lines)]
+                    )
+
+                    em = discord.Embed(
+                        title=embed.title,
+                        description=new_desc,
+                        color=embed.color,
+                    )
+                    await msg.edit(embed=em)
+
+                    await interaction.response.send_message(
+                        ephemeral=True, content="Todoを削除しました"
+                    )
+        except:
+            return
+
+    @tools.command(name="todo", description="Todoパネルを作成します。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def todo(self, interaction: discord.Interaction, タイトル: str):
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(label="追加", style=discord.ButtonStyle.blurple, custom_id="todo_add+"))
+        view.add_item(discord.ui.Button(label="完了", style=discord.ButtonStyle.green, custom_id="todo_end+"))
+        view.add_item(discord.ui.Button(label="削除", style=discord.ButtonStyle.red, custom_id="todo_delete+"))
+        await interaction.response.send_message(embed=discord.Embed(title=タイトル, color=discord.Color.blue()), view=view)
+        
     @tools.command(name="invite", description="招待リンクを作成します。")
     @app_commands.checks.has_permissions(create_instant_invite=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def invite(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         if not interaction.guild.vanity_url:
             inv = await interaction.channel.create_invite()
             inv = inv.url
@@ -917,11 +1058,6 @@ class ToolsCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def uuid(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         async with aiohttp.ClientSession() as session:
             async with session.get(
