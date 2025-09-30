@@ -3,7 +3,7 @@ from pathlib import Path
 from discord.ext import commands
 import discord
 
-from models import make_embed, save_commands
+from models import make_embed, save_commands, translate
 
 from discord import app_commands
 
@@ -392,6 +392,12 @@ class AdminCog(commands.Cog):
         if ctx.author.id == 1335428061541437531:
             await self.bot.load_extension(f"cogs.{cogname}")
             await ctx.reply(f"LoadOK .. `cogs.{cogname}`")
+
+    @commands.command(name="reload_lang", hidden=True)
+    async def reload_lang(self, ctx: commands.Context):
+        if ctx.author.id == 1335428061541437531:
+            await translate.load()
+            await ctx.message.add_reaction('✅')
 
     @commands.command(name="save", hidden=True)
     async def save(self, ctx):

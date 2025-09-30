@@ -12,7 +12,7 @@ import aiohttp
 from discord import app_commands
 
 from consts import mongodb
-from models import command_disable, make_embed
+from models import command_disable, make_embed, translate
 
 COOLDOWN_TIME_KEIGO = 5
 cooldown_keigo_time = {}
@@ -2165,6 +2165,23 @@ class SettingCog(commands.Cog):
                     title="おはよう挨拶を無効化しました。", color=discord.Color.red()
                 )
             )
+
+    @settings.command(name="lang", description="Change the bot's language. (Beta)")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.choices(
+        言語=[
+            app_commands.Choice(name="日本語", value="ja"),
+            app_commands.Choice(name="English", value="en"),
+        ]
+    )
+    async def bot_langs(
+        self,
+        interaction: discord.Interaction,
+        言語: app_commands.Choice[str]
+    ):
+        await translate.set_guild_lang(interaction.guild.id, 言語.value)
+        await interaction.response.send_message(embed=make_embed.success_embed(title="Change the bot's language.", description=言語.name))
 
 async def setup(bot):
     await bot.add_cog(SettingCog(bot))

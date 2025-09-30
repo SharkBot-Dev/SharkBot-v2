@@ -29,7 +29,7 @@ class AutoGifAddChannelGroup(app_commands.Group):
             {'$addToSet': {"Channel": interaction.channel.id}},
             upsert=True,
         )
-        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title=translate.get('ja', 'autogif', '自動gif返信のチャンネルを追加しました。'), color=discord.Color.green()))
+        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title=translate.get(interaction.extras["lang"], 'autogif', '自動gif返信のチャンネルを追加しました。'), color=discord.Color.green()))
 
     @app_commands.command(name="remove", description="自動gif返信のチャンネルを削除します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -45,7 +45,7 @@ class AutoGifAddChannelGroup(app_commands.Group):
             {'$pull': {"Channel": interaction.channel.id}},
             upsert=True,
         )
-        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title=translate.get('ja', 'autogif', '自動gif返信のチャンネルを削除しました。'), color=discord.Color.green()))
+        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title=translate.get(interaction.extras["lang"], 'autogif', '自動gif返信のチャンネルを削除しました。'), color=discord.Color.green()))
 
 async def reply_gif(message: discord.Message):
     if message.content == "":
@@ -89,7 +89,7 @@ class AutoGifCog(commands.Cog):
                 js = await resp.json()
                 try:
                     gif_url = js.get('results', [])[0].get('media_formats', {}).get('gif', {}).get('url', None)
-                    return await interaction.followup.send(embed=make_embed.success_embed(title=translate.get('ja', 'autogif', 'GIFの検索結果')).set_image(url=gif_url))
+                    return await interaction.followup.send(embed=make_embed.success_embed(title=translate.get(interaction.extras["lang"], 'autogif', 'GIFの検索結果')).set_image(url=gif_url))
                 except Exception as e:
                     embed = make_embed.error_embed(title=translate.get('ja', 'autogif', 'gifが見つかりませんでした。'), description=f"```{e}```")
                     return await interaction.followup.send(embed=embed)
