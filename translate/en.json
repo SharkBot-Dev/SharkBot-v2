@@ -1,0 +1,9 @@
+{
+    "autogif": {
+        "自動gif返信のチャンネルを追加しました。": "Added a channel for automatic gif replies.",
+        "自動gif返信のチャンネルを削除しました。": "Removed the auto-gif reply channel.",
+        "GIFで返しました。": "I replied with a GIF.",
+        "gifが見つかりませんでした。": "No gifs found.",
+        "GIFの検索結果": "GIF search results"
+    }
+}

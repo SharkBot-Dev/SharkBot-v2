@@ -4,7 +4,7 @@ import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
 import dotenv
-from models import custom_tree
+from models import custom_tree, translate
 
 dotenv.load_dotenv()
 
@@ -69,6 +69,7 @@ async def load_cogs(bot: commands.Bot, base_folder="cogs"):
 
 @bot.event
 async def setup_hook() -> None:
+    await translate.load()
     await load_cogs(bot)
     try:
         await bot.tree.sync()

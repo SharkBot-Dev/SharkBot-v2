@@ -1,7 +1,7 @@
 import time
 import discord
 
-from models import command_disable, channel_command_disable, bot_ban
+from models import command_disable, channel_command_disable, bot_ban, translate
 
 cooldown_check = {}
 
@@ -41,6 +41,8 @@ class CustomTree(discord.app_commands.CommandTree):
                         ephemeral=True,
                         content="あなた、もしくはサーバーがBotからBanされています。",
                     )
+                
+                interaction.extras["lang"] = await translate.get_guild_lang(interaction.guild.id)
 
                 await self._call(interaction)
 
