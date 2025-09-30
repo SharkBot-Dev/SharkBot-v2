@@ -3,7 +3,7 @@ from pathlib import Path
 from discord.ext import commands
 import discord
 
-from models import save_commands
+from models import make_embed, save_commands
 
 from discord import app_commands
 
@@ -46,9 +46,8 @@ class AdminCog(commands.Cog):
         if interaction.user.id != 1335428061541437531:
             return await interaction.response.send_message(
                 ephemeral=True,
-                embed=discord.Embed(
-                    title="あなたはSharkBotのオーナーではないため実行できません。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="あなたはSharkBotのオーナーではないため実行できません。"
                 ),
             )
 
@@ -57,15 +56,15 @@ class AdminCog(commands.Cog):
         if 操作の種類.value == "reload":
             await self.bot.reload_extension(f"cogs.{cog名}")
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="Cogをリロードしました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="Cogをリロードしました。"
                 )
             )
         elif 操作の種類.value == "load":
             await self.bot.load_extension(f"cogs.{cog名}")
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="Cogをロードしました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="Cogをロードしました。"
                 )
             )
         elif 操作の種類.value == "modulereload":
@@ -74,13 +73,13 @@ class AdminCog(commands.Cog):
                 importlib.reload(mod)
             except Exception as e:
                 return await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="モジュールリロードに失敗しました。", description=f"```{e}```", color=discord.Color.green()
+                    embed=make_embed.error_embed(
+                        title="モジュールリロードに失敗しました。", description=f"```{e}```"
                     )
                 )
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="モジュールをリロードしました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="モジュールをリロードしました。"
                 )
             )
 
@@ -111,9 +110,8 @@ class AdminCog(commands.Cog):
         if not isadmin:
             return await interaction.response.send_message(
                 ephemeral=True,
-                embed=discord.Embed(
-                    title="あなたはSharkBotの管理者ではないため実行できません。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="あなたはSharkBotの管理者ではないため実行できません。"
                 ),
             )
 
@@ -127,9 +125,8 @@ class AdminCog(commands.Cog):
                 db = self.bot.async_db["Main"].BlockUser
                 await db.replace_one({"User": user.id}, {"User": user.id}, upsert=True)
                 await interaction.followup.send(
-                    embed=discord.Embed(
-                        title=f"{user.name}をBotからBANしました。",
-                        color=discord.Color.green(),
+                    embed=make_embed.success_embed(
+                        title=f"{user.name}をBotからBANしました。"
                     )
                 )
             elif 操作.value == "remove":
@@ -137,9 +134,8 @@ class AdminCog(commands.Cog):
                 db = self.bot.async_db["Main"].BlockUser
                 await db.delete_one({"User": user.id})
                 await interaction.followup.send(
-                    embed=discord.Embed(
-                        title=f"{user.name}のBotからのBanを解除しました。",
-                        color=discord.Color.red(),
+                    embed=make_embed.success_embed(
+                        title=f"{user.name}のBotからのBanを解除しました。"
                     )
                 )
         elif 操作の種類.value == "server":
@@ -149,18 +145,16 @@ class AdminCog(commands.Cog):
                     {"Guild": int(内容)}, {"Guild": int(内容)}, upsert=True
                 )
                 await interaction.followup.send(
-                    embed=discord.Embed(
-                        title=f"サーバーをBotからBANしました。",
-                        color=discord.Color.green(),
+                    embed=make_embed.success_embed(
+                        title=f"サーバーをBotからBANしました。"
                     )
                 )
             elif 操作.value == "remove":
-                db = self.bot.async_db["Main"].BlockUser
+                db = self.bot.async_db["Main"].BlockGuild
                 await db.delete_one({"Guild": int(内容)})
                 await interaction.followup.send(
-                    embed=discord.Embed(
-                        title=f"サーバーのBotからのBanを解除しました。",
-                        color=discord.Color.red(),
+                    embed=make_embed.success_embed(
+                        title=f"サーバーのBotからのBanを解除しました。"
                     )
                 )
 
@@ -185,9 +179,8 @@ class AdminCog(commands.Cog):
         if not isadmin:
             return await interaction.response.send_message(
                 ephemeral=True,
-                embed=discord.Embed(
-                    title="あなたはSharkBotの管理者ではないため実行できません。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="あなたはSharkBotの管理者ではないため実行できません。"
                 ),
             )
 
@@ -196,8 +189,8 @@ class AdminCog(commands.Cog):
         if 操作.value == "leave":
             await self.bot.get_guild(int(内容)).leave()
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="サーバーから退出しました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="サーバーから退出しました。"
                 )
             )
         elif 操作.value == "warn":
@@ -209,8 +202,8 @@ class AdminCog(commands.Cog):
                 ).set_footer(text="詳しくはSharkBot公式サポートサーバーまで。")
             )
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="サーバーを警告しました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="サーバーを警告しました。"
                 )
             )
 
@@ -233,9 +226,8 @@ class AdminCog(commands.Cog):
         if not isadmin:
             return await interaction.response.send_message(
                 ephemeral=True,
-                embed=discord.Embed(
-                    title="あなたはSharkBotの管理者ではないため実行できません。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="あなたはSharkBotの管理者ではないため実行できません。"
                 ),
             )
 
@@ -245,10 +237,9 @@ class AdminCog(commands.Cog):
             msg = await interaction.channel.fetch_message(int(内容))
             await interaction.followup.send(
                 ephemeral=True,
-                embed=discord.Embed(
+                embed=make_embed.success_embed(
                     title="埋め込みを解析しました。",
-                    description=f"```{msg.embeds[0].to_dict()}```",
-                    color=discord.Color.green(),
+                    description=f"```{msg.embeds[0].to_dict()}```"
                 ),
             )
         elif 操作.value == "prefixreset":
@@ -260,15 +251,15 @@ class AdminCog(commands.Cog):
             )
             await interaction.followup.send(
                 ephemeral=True,
-                embed=discord.Embed(
-                    title="頭文字をリセットしました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="頭文字をリセットしました。"
                 ),
             )
         else:
             await interaction.followup.send(
                 ephemeral=True,
-                embed=discord.Embed(
-                    title="デバッグしました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="デバッグしました。"
                 ),
             )
 
@@ -288,9 +279,8 @@ class AdminCog(commands.Cog):
         if interaction.user.id != 1335428061541437531:
             return await interaction.response.send_message(
                 ephemeral=True,
-                embed=discord.Embed(
-                    title="あなたはSharkBotのオーナーではないため実行できません。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="あなたはSharkBotのオーナーではないため実行できません。"
                 ),
             )
         db = self.bot.async_db["Main"].BotAdmins
@@ -299,15 +289,15 @@ class AdminCog(commands.Cog):
                 {"User": ユーザー.id}, {"User": ユーザー.id}, upsert=True
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="管理者を追加しました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="管理者を追加しました。"
                 )
             )
         else:
             await db.delete_one({"User": ユーザー.id})
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="管理者を削除しました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="管理者を削除しました。"
                 )
             )
 
@@ -326,9 +316,8 @@ class AdminCog(commands.Cog):
         if interaction.user.id != 1335428061541437531:
             return await interaction.response.send_message(
                 ephemeral=True,
-                embed=discord.Embed(
-                    title="あなたはSharkBotのオーナーではないため実行できません。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="あなたはSharkBotのオーナーではないため実行できません。"
                 ),
             )
         
@@ -363,9 +352,8 @@ class AdminCog(commands.Cog):
         if interaction.user.id != 1335428061541437531:
             return await interaction.response.send_message(
                 ephemeral=True,
-                embed=discord.Embed(
-                    title="あなたはSharkBotのオーナーではないため実行できません。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="あなたはSharkBotのオーナーではないため実行できません。"
                 ),
             )
 
@@ -375,17 +363,15 @@ class AdminCog(commands.Cog):
                 {"User": ユーザー.id}, {"User": ユーザー.id}, upsert=True
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="プレミアムユーザーを追加しました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="プレミアムユーザーを追加しました。"
                 )
             )
         else:
             await db.delete_one({"User": ユーザー.id})
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="プレミアムユーザーを削除しました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="プレミアムユーザーを削除しました。"
                 )
             )
 
