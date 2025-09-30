@@ -47,7 +47,7 @@ class BotCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def ping_bot(self, interaction: discord.Interaction):
-        embed = make_embed.success_embed(title=translate.get(interaction.extras["lang"], 'autogif', 'Pingを測定しました。'), description=f"DiscordAPI: {round(self.bot.latency * 1000)}ms")
+        embed = make_embed.success_embed(title=translate.get(interaction.extras["lang"], 'bot', 'Pingを測定しました。'), description=f"DiscordAPI: {round(self.bot.latency * 1000)}ms")
 
         await interaction.response.send_message(
             embed=embed
