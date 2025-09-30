@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 from functools import partial
 import io
 import json
@@ -34,6 +35,8 @@ SOUNDCLOUD_REGEX = re.compile(
 
 IRASUTOTA_REGEX = re.compile(r"https://www\.irasutoya\.com/.+/.+/.+\.html")
 X_REGEX = re.compile(r"https://x.com/.+/status/.+")
+
+TIMESTAMP_REGEX = re.compile(r"(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?")
 
 ipv4_pattern = re.compile(
     r"^("
@@ -833,10 +836,6 @@ class ToolsCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tools_embed(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
         await interaction.response.send_modal(EmbedMake())
 
     @tools.command(name="button", description="ボタンを作成します。")
@@ -846,11 +845,6 @@ class ToolsCog(commands.Cog):
     async def tools_button(
         self, interaction: discord.Interaction, ラベル: str, url: str
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         for b in badword.badwords:
             if b in ラベル:
                 return await interaction.response.send_message(
@@ -865,6 +859,39 @@ class ToolsCog(commands.Cog):
         await interaction.response.send_message(
             view=discord.ui.View().add_item(discord.ui.Button(label=ラベル, url=url))
         )
+
+    @tools.command(name="timestamp", description="タイムスタンプを作成します。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def tools_timestamp(
+        self, interaction: discord.Interaction, 時間: str
+    ):
+        def parse_time(timestr: str):
+            match = TIMESTAMP_REGEX.fullmatch(timestr.strip().lower())
+            if not match:
+                raise ValueError("時間の形式が正しくありません")
+
+            days, hours, minutes, seconds = match.groups(default="0")
+            return datetime.timedelta(
+                days=int(days),
+                hours=int(hours),
+                minutes=int(minutes),
+                seconds=int(seconds),
+            )
+        try:
+            timed = parse_time(時間)
+        except ValueError:
+            return await interaction.response.send_message(ephemeral=True, content="時間の形式が正しくありません。\nサンプル: `2h3m`")
+        text = ""
+        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "t")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "t") + "\n"
+        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "T")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "T") + "\n"
+        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "d")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "d") + "\n"
+        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "D")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "D") + "\n"
+        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "f")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "f") + "\n"
+        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "F")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "F") + "\n"
+        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "R")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "R") + "\n"
+        await interaction.response.send_message(content=text)
 
     @tools.command(name="invite", description="招待リンクを作成します。")
     @app_commands.checks.has_permissions(create_instant_invite=True)

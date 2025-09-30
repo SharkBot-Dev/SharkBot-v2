@@ -20,7 +20,7 @@ class AutoResetCog(commands.Cog):
                     continue
                 ch_ = await ch.clone()
                 await db.replace_one(
-                    {"Guild": ch_.guild.id},
+                    {"Guild": ch_.guild.id, "Channel": ch_.id},
                     {"Guild": ch_.guild.id, "Channel": ch_.id},
                     upsert=True,
                 )
@@ -106,29 +106,32 @@ class AutoResetCog(commands.Cog):
             )
         ]
         for ch in channels:
-            channel = interaction.guild.get_channel(ch.get("Channel"))
-            if channel.id == interaction.channel.id:
-                return await interaction.followup.send(
+            try:
+                channel = interaction.guild.get_channel(ch.get("Channel"))
+                if channel.id == interaction.channel.id:
+                    return await interaction.followup.send(
+                        embed=discord.Embed(
+                            title="自動リセットの設定されているチャンネルでは\nリセットコマンドを実行できません。",
+                            color=discord.Color.red(),
+                        )
+                    )
+                ch_ = await channel.clone()
+                await self.bot.async_db["Main"].AutoResetChannel.replace_one(
+                    {"Guild": interaction.guild.id, "Channel": ch.get("Channel")},
+                    {"Guild": interaction.guild.id, "Channel": ch_.id},
+                    upsert=True,
+                )
+                await asyncio.sleep(1)
+                await ch_.edit(position=channel.position + 1)
+                await asyncio.sleep(1)
+                await channel.delete()
+                await ch_.send(
                     embed=discord.Embed(
-                        title="自動リセットの設定されているチャンネルでは\nリセットコマンドを実行できません。",
-                        color=discord.Color.red(),
+                        title="チャンネルがリセットされました。", color=discord.Color.red()
                     )
                 )
-            ch_ = await channel.clone()
-            await self.bot.async_db["Main"].AutoResetChannel.replace_one(
-                {"Guild": interaction.guild.id, "Channel": ch.get("Channel")},
-                {"Guild": interaction.guild.id, "Channel": ch_.id},
-                upsert=True,
-            )
-            await asyncio.sleep(1)
-            await ch_.edit(position=channel.position + 1)
-            await asyncio.sleep(1)
-            await channel.delete()
-            await ch_.send(
-                embed=discord.Embed(
-                    title="チャンネルがリセットされました。", color=discord.Color.red()
-                )
-            )
+            except:
+                continue
         await interaction.followup.send(
             embed=discord.Embed(title="リセットしました。", color=discord.Color.green())
         )
