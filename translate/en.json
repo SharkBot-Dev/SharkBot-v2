@@ -5,5 +5,8 @@
         "GIFで返しました。": "I replied with a GIF.",
         "gifが見つかりませんでした。": "No gifs found.",
         "GIFの検索結果": "GIF search results"
+    },
+    "bot": {
+        "Pingを測定しました。": "I measured the ping."
     }
 }

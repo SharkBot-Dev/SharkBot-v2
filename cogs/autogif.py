@@ -91,7 +91,7 @@ class AutoGifCog(commands.Cog):
                     gif_url = js.get('results', [])[0].get('media_formats', {}).get('gif', {}).get('url', None)
                     return await interaction.followup.send(embed=make_embed.success_embed(title=translate.get(interaction.extras["lang"], 'autogif', 'GIFの検索結果')).set_image(url=gif_url))
                 except Exception as e:
-                    embed = make_embed.error_embed(title=translate.get('ja', 'autogif', 'gifが見つかりませんでした。'), description=f"```{e}```")
+                    embed = make_embed.error_embed(title=translate.get(interaction.extras["lang"], 'autogif', 'gifが見つかりませんでした。'), description=f"```{e}```")
                     return await interaction.followup.send(embed=embed)
 
     @commands.Cog.listener('on_message')

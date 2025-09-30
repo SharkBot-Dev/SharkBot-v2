@@ -4,7 +4,7 @@ from discord import app_commands
 
 from models import make_embed
 
-from models import command_disable
+from models import command_disable, translate
 
 import asyncio
 import psutil
@@ -23,11 +23,6 @@ class BotCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def about_bot(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         view = discord.ui.View()
         view.add_item(
             discord.ui.Button(
@@ -52,12 +47,7 @@ class BotCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def ping_bot(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-        
-        embed = make_embed.success_embed(title="Pingを測定しました。", description=f"DiscordAPI: {round(self.bot.latency * 1000)}ms")
+        embed = make_embed.success_embed(title=translate.get(interaction.extras["lang"], 'autogif', 'Pingを測定しました。'), description=f"DiscordAPI: {round(self.bot.latency * 1000)}ms")
 
         await interaction.response.send_message(
             embed=embed
