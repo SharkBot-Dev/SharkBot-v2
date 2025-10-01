@@ -194,6 +194,59 @@ class GroupCog(commands.Cog):
         return await interaction.response.send_message(
             embed=make_embed.success_embed(title="グループから退出しました。")
         )
+    
+    @group.command(name="kick", description="グループからメンバーを退出させます（オーナー専用）。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def group_kick(self, interaction: discord.Interaction, グループ名: str, ユーザー: discord.User):
+        db = self.bot.async_db["Main"].Group
+        dbfing = await db.find_one({"Name": グループ名})
+
+        if dbfing is None:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="そのグループはありません。",
+                    description="グループが見つからないためキックできません。"
+                )
+            )
+
+        if dbfing["Owner"] != interaction.user.id:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="権限がありません。",
+                    description="メンバーをキックできるのはグループのオーナーだけです。"
+                )
+            )
+
+        if dbfing['Owner'] == ユーザー.id:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="オーナーはキックできません。"
+                )
+            )
+
+        if ユーザー.id not in dbfing.get("Member", []):
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="そのユーザーは参加していません。",
+                    description="別のユーザーを指定してください。"
+                )
+            )
+
+        await db.update_one(
+            {"Name": グループ名},
+            {'$pull': {'Member': ユーザー.id}}
+        )
+
+        return await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title=f"{ユーザー.display_name} をグループから退出させました。"
+            )
+        )
 
     @group.command(name="list", description="参加しているグループを表示します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -256,11 +309,11 @@ class GroupCog(commands.Cog):
         member_mentions = []
         for mid in members:
             user = interaction.guild.get_member(mid)
-            member_mentions.append(user.name if user else f"Unknown({mid})")
+            member_mentions.append(f"{user.name} ({mid})" if user else f"Unknown ({mid})")
 
         description = io.StringIO("\n".join(member_mentions))
         await interaction.response.send_message(
-            file=discord.File(description, "rule.txt")
+            file=discord.File(description, "members.txt")
         )
         description.close()
 
