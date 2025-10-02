@@ -122,6 +122,9 @@ class AutoReplyCog(commands.Cog):
         word = dbfind.get("ReplyWord", None)
         if not word:
             return
+        if dbfind.get('TextChannel', 0) != 0:
+            if dbfind.get('TextChannel', 0) != message.channel.id:
+                return
         for b in blacklist_word:
             if b in word:
                 return await message.reply("不適切な言葉が含まれています。")
@@ -149,7 +152,7 @@ class AutoReplyCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreply_create_(
-        self, interaction: discord.Interaction, 条件: str, 結果: str
+        self, interaction: discord.Interaction, 条件: str, 結果: str, 特定のチャンネルだけ: discord.TextChannel = None
     ):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(
@@ -159,7 +162,7 @@ class AutoReplyCog(commands.Cog):
         db = self.bot.async_db["Main"].AutoReply
         await db.replace_one(
             {"Guild": interaction.guild.id, "Word": 条件},
-            {"Guild": interaction.guild.id, "Word": 条件, "ReplyWord": 結果},
+            {"Guild": interaction.guild.id, "Word": 条件, "ReplyWord": 結果, "TextChannel": 特定のチャンネルだけ.id if 特定のチャンネルだけ.id else 0},
             upsert=True,
         )
         await interaction.response.send_message(
