@@ -125,6 +125,28 @@ class AutoReplyCog(commands.Cog):
         if dbfind.get('TextChannel', 0) != 0:
             if dbfind.get('TextChannel', 0) != message.channel.id:
                 return
+        if dbfind.get('Roles', []) != []:
+            for r in dbfind.get('Roles', []):
+                if message.guild.get_role(r) in message.author.roles:
+                    for b in blacklist_word:
+                        if b in word:
+                            return await message.reply("不適切な言葉が含まれています。")
+
+                    word = word.split("|")
+
+                    if len(word) != 1:
+                        word = random.choice(word)
+                    else:
+                        word = dbfind.get("ReplyWord", None)
+                    try:
+                        await message.reply(
+                            word.replace("\\n", "\n")
+                            + "\n-# このメッセージは自動返信機能によるものです。"
+                        )
+                    except:
+                        return
+                    return
+            return
         for b in blacklist_word:
             if b in word:
                 return await message.reply("不適切な言葉が含まれています。")
@@ -152,17 +174,15 @@ class AutoReplyCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreply_create_(
-        self, interaction: discord.Interaction, 条件: str, 結果: str, 特定のチャンネルだけ: discord.TextChannel = None
+        self, interaction: discord.Interaction, 条件: str, 結果: str, 特定のチャンネルだけ: discord.TextChannel = None, 反応するロール1: discord.Role = None, 反応するロール2: discord.Role = None, 反応するロール3: discord.Role = None
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
+        roles = [r.id for r in (反応するロール1, 反応するロール2, 反応するロール3) if r]
 
+        channel_id = 特定のチャンネルだけ.id if 特定のチャンネルだけ else 0
         db = self.bot.async_db["Main"].AutoReply
         await db.replace_one(
             {"Guild": interaction.guild.id, "Word": 条件},
-            {"Guild": interaction.guild.id, "Word": 条件, "ReplyWord": 結果, "TextChannel": 特定のチャンネルだけ.id if 特定のチャンネルだけ.id else 0},
+            {"Guild": interaction.guild.id, "Word": 条件, "ReplyWord": 結果, "TextChannel": channel_id, "Roles": roles},
             upsert=True,
         )
         await interaction.response.send_message(
@@ -176,11 +196,6 @@ class AutoReplyCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreply_delete(self, interaction: discord.Interaction, 条件: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].AutoReply
         result = await db.delete_one({"Guild": interaction.guild.id, "Word": 条件})
         if result.deleted_count == 0:
@@ -200,11 +215,6 @@ class AutoReplyCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreply_list(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         db = self.bot.async_db["Main"].AutoReply
         word_list = [
