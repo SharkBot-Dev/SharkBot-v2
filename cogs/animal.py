@@ -92,7 +92,6 @@ class AnimalCog(commands.Cog):
                         )
 
             except Exception:
-                traceback.print_exc()
                 continue
 
     animal = app_commands.Group(
@@ -105,6 +104,8 @@ class AnimalCog(commands.Cog):
             app_commands.Choice(name="犬", value="dog"),
             app_commands.Choice(name="猫", value="cat"),
             app_commands.Choice(name="馬", value="horse"),
+            app_commands.Choice(name="牛", value="caw"),
+            app_commands.Choice(name="ハムスター", value="hamster"),
         ]
     )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -153,6 +154,8 @@ class AnimalCog(commands.Cog):
             app_commands.Choice(name="犬", value="dog"),
             app_commands.Choice(name="猫", value="cat"),
             app_commands.Choice(name="馬", value="horse"),
+            app_commands.Choice(name="牛", value="caw"),
+            app_commands.Choice(name="ハムスター", value="hamster"),
         ]
     )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -204,6 +207,8 @@ class AnimalCog(commands.Cog):
             app_commands.Choice(name="犬", value="dog"),
             app_commands.Choice(name="猫", value="cat"),
             app_commands.Choice(name="馬", value="horse"),
+            app_commands.Choice(name="牛", value="caw"),
+            app_commands.Choice(name="ハムスター", value="hamster"),
         ]
     )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -263,6 +268,8 @@ class AnimalCog(commands.Cog):
             app_commands.Choice(name="犬", value="dog"),
             app_commands.Choice(name="猫", value="cat"),
             app_commands.Choice(name="馬", value="horse"),
+            app_commands.Choice(name="牛", value="caw"),
+            app_commands.Choice(name="ハムスター", value="hamster"),
         ]
     )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
