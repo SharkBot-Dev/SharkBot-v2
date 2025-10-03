@@ -23,6 +23,24 @@ class BotCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def about_bot(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+        command = self.bot.tree.get_commands()
+
+        cmd_count = 0
+
+        for cmd in command:
+            if isinstance(cmd, discord.app_commands.Group):
+                cmd_count += 1
+                for sub in cmd.commands:
+                    if isinstance(sub, discord.app_commands.Group):
+                        cmd_count += 1
+                        cmd_count += len(sub.commands)
+                    else:
+                        cmd_count += 1
+            else:
+                cmd_count += 1
+
         view = discord.ui.View()
         view.add_item(
             discord.ui.Button(
@@ -41,7 +59,8 @@ class BotCog(commands.Cog):
         ).add_field(name="ユーザー数", value=f"{len(self.bot.users)}人")
         em.add_field(name="サブ管理者", value="3人")
         em.add_field(name="モデレーター", value="8人")
-        await interaction.response.send_message(embed=em)
+        em.add_field(name="コマンド数", value=f"{cmd_count}個")
+        await interaction.followup.send(embed=em)
 
     @bot.command(name="ping", description="Pingを見ます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
