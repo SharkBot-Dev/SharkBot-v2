@@ -119,9 +119,9 @@ class AnimalCog(commands.Cog):
         await interaction.response.defer()
         db = self.bot.async_db["Main"].Animals
         if not await self.is_keeping_animal(interaction.user, 種類.value):
-            await db.replace_one(
+            await db.update_one(
                 {"User": interaction.user.id, "Kinds": 種類.value},
-                {
+                {"$set": {
                     "User": interaction.user.id,
                     "Kinds": 種類.value,
                     "Name": 名前,
@@ -130,7 +130,7 @@ class AnimalCog(commands.Cog):
                     "Status": "いつも通り",
                     "IV": random.randint(100, 130),
                     "LastFeed": None,
-                },
+                }},
                 upsert=True,
             )
             await interaction.followup.send(

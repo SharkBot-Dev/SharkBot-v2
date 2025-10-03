@@ -93,13 +93,13 @@ class AutoReactionCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreact_channel(self, interaction: discord.Interaction, 絵文字: str):
         db = self.bot.async_db["Main"].AutoReactionChannel
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-            {
+            {"$set": {
                 "Guild": interaction.guild.id,
                 "Channel": interaction.channel.id,
                 "Emoji": 絵文字,
-            },
+            }},
             upsert=True,
         )
         await interaction.response.send_message(
@@ -120,9 +120,9 @@ class AutoReactionCog(commands.Cog):
         self, interaction: discord.Interaction, 言葉: str, 絵文字: str
     ):
         db = self.bot.async_db["Main"].AutoReactionWord
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id, "Word": 言葉},
-            {"Guild": interaction.guild.id, "Word": 言葉, "Emoji": 絵文字},
+            {"$set": {"Guild": interaction.guild.id, "Word": 言葉, "Emoji": 絵文字}},
             upsert=True,
         )
         await interaction.response.send_message(
