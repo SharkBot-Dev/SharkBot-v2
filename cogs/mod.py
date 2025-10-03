@@ -3,7 +3,7 @@ from discord.ext import commands
 import discord
 import datetime
 from discord import app_commands
-from models import command_disable
+from models import command_disable, make_embed
 import asyncio
 import re
 
@@ -35,11 +35,6 @@ class BanGroup(app_commands.Group):
     async def ban(
         self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -49,7 +44,7 @@ class BanGroup(app_commands.Group):
             )
         await interaction.response.defer()
         try:
-            await interaction.guild.ban(ユーザー, reason=理由)
+            await interaction.guild.ban(ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN")
         except:
             return await interaction.followup.send(
                 embed=discord.Embed(
@@ -59,9 +54,40 @@ class BanGroup(app_commands.Group):
                 )
             )
         return await interaction.followup.send(
-            embed=discord.Embed(
-                title=f"{ユーザー.name}をBanしました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title=f"{ユーザー.name}をBanしました。"
+            ).add_field(name="理由", value=理由 + f"\n{interaction.user.id} によってBAN", inline=False)
+        )
+
+    @app_commands.command(name="unban", description="ユーザーのBanを解除します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def unban(
+        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
+    ):
+        if ユーザー.id == interaction.user.id:
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="自分自身のBanは解除できません。", color=discord.Color.red()
+                ),
+                ephemeral=True,
             )
+        await interaction.response.defer()
+        try:
+            await interaction.guild.unban(ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN解除")
+        except:
+            return await interaction.followup.send(
+                embed=discord.Embed(
+                    title="Ban解除に失敗しました。",
+                    description="権限が足りないかも！？",
+                    color=discord.Color.red(),
+                )
+            )
+        return await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title=f"{ユーザー.name}のBanを解除しました。"
+            ).add_field(name="理由", value=理由 + f"\n{interaction.user.id} によってBAN解除", inline=False)
         )
 
     @app_commands.command(name="softban", description="ユーザーをSoftBanします。")
@@ -71,11 +97,6 @@ class BanGroup(app_commands.Group):
     async def softban(
         self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -85,10 +106,10 @@ class BanGroup(app_commands.Group):
             )
         await interaction.response.defer()
         try:
-            await interaction.guild.ban(ユーザー, reason=理由)
+            await interaction.guild.ban(ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN")
 
             await asyncio.sleep(2)
-            await interaction.guild.unban(ユーザー, reason=理由)
+            await interaction.guild.unban(ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN解除")
         except:
             return await interaction.followup.send(
                 embed=discord.Embed(
@@ -98,8 +119,8 @@ class BanGroup(app_commands.Group):
                 )
             )
         return await interaction.followup.send(
-            embed=discord.Embed(
-                title=f"{ユーザー.name}をSoftBanしました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title=f"{ユーザー.name}をSoftBanしました。"
             )
         )
 
