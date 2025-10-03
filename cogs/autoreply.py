@@ -180,10 +180,16 @@ class AutoReplyCog(commands.Cog):
 
         channel_id = 特定のチャンネルだけ.id if 特定のチャンネルだけ else 0
         db = self.bot.async_db["Main"].AutoReply
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id, "Word": 条件},
-            {"Guild": interaction.guild.id, "Word": 条件, "ReplyWord": 結果, "TextChannel": channel_id, "Roles": roles},
-            upsert=True,
+            {"$set": {
+                "Guild": interaction.guild.id,
+                "Word": 条件,
+                "ReplyWord": 結果,
+                "TextChannel": channel_id,
+                "Roles": roles
+            }},
+            upsert=True
         )
         await interaction.response.send_message(
             embed=discord.Embed(
@@ -255,10 +261,14 @@ class AutoReplyCog(commands.Cog):
                 ("こんばんは", "こんばんは"),
                 ("おはよう", "おはようございます"),
             ]:
-                await db.replace_one(
+                await db.update_one(
                     {"Guild": interaction.guild.id, "Word": t[0]},
-                    {"Guild": interaction.guild.id, "Word": t[0], "ReplyWord": t[1]},
-                    upsert=True,
+                    {"$set": {
+                        "Guild": interaction.guild.id,
+                        "Word": t[0],
+                        "ReplyWord": t[1]
+                    }},
+                    upsert=True
                 )
         elif テンプレート.value == "fun":
             for t in [
@@ -269,17 +279,25 @@ class AutoReplyCog(commands.Cog):
                 ("いいね", "あぁ〜^いいっすねぇ〜^"),
                 ("ぬるぽ", "ガッ！"),
             ]:
-                await db.replace_one(
+                await db.update_one(
                     {"Guild": interaction.guild.id, "Word": t[0]},
-                    {"Guild": interaction.guild.id, "Word": t[0], "ReplyWord": t[1]},
-                    upsert=True,
+                    {"$set": {
+                        "Guild": interaction.guild.id,
+                        "Word": t[0],
+                        "ReplyWord": t[1]
+                    }},
+                    upsert=True
                 )
         elif テンプレート.value == "emoji":
             for t in [("🌾", '草刈り～(o⌒▽⌒)o>━━"((卍))"ﾌﾞﾝﾌﾞﾝ♪'), ("👈", "👈")]:
-                await db.replace_one(
+                await db.update_one(
                     {"Guild": interaction.guild.id, "Word": t[0]},
-                    {"Guild": interaction.guild.id, "Word": t[0], "ReplyWord": t[1]},
-                    upsert=True,
+                    {"$set": {
+                        "Guild": interaction.guild.id,
+                        "Word": t[0],
+                        "ReplyWord": t[1]
+                    }},
+                    upsert=True
                 )
         await interaction.response.send_message(
             embed=discord.Embed(
