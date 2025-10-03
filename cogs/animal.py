@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import random
-import traceback
+from models import make_embed
 
 
 class AnimalCog(commands.Cog):
@@ -134,17 +134,15 @@ class AnimalCog(commands.Cog):
                 upsert=True,
             )
             await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.success_embed(
                     title="ペットを飼いました！",
-                    description=f"名前: {名前}\n種類: {種類.name}",
-                    color=discord.Color.green(),
+                    description=f"名前: {名前}\n種類: {種類.name}"
                 )
             )
         else:
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="すでにその種類のペットを飼っています！",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="すでにその種類のペットを飼っています！"
                 )
             )
 
@@ -171,10 +169,9 @@ class AnimalCog(commands.Cog):
 
         if not await self.is_keeping_animal(target, 種類.value):
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="まだそのペットを飼っていません！",
-                    description="/animal keeping で飼えます。",
-                    color=discord.Color.red(),
+                    description="/animal keeping で飼えます。"
                 )
             )
 
@@ -188,7 +185,7 @@ class AnimalCog(commands.Cog):
                 await self.change_status(target, 種類.value, "餌をほしがっている・・")
 
         await interaction.followup.send(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title=f"{status.get('Name', '名前')}のステータス",
                 description=(
                     f"名前: {status.get('Name')}\n"
@@ -197,7 +194,6 @@ class AnimalCog(commands.Cog):
                     f"XP: {status.get('XP', 0)} / {status.get('IV', 60)}\n"
                     f"ステータス: {status.get('Status', 'いつも通り')}"
                 ),
-                color=discord.Color.blue(),
             )
         )
 
@@ -222,10 +218,9 @@ class AnimalCog(commands.Cog):
         status = await self.get_animal_status(interaction.user, 種類.value)
         if not status:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="そのペットは飼っていません！",
-                    description="/animal keeping で飼えます。",
-                    color=discord.Color.red(),
+                    description="/animal keeping で飼えます。"
                 )
             )
 
@@ -238,10 +233,9 @@ class AnimalCog(commands.Cog):
                 remaining = timedelta(hours=1) - elapsed
                 minutes, seconds = divmod(int(remaining.total_seconds()), 60)
                 return await interaction.followup.send(
-                    embed=discord.Embed(
+                    embed=make_embed.error_embed(
                         title="まだ餌をあげられません！",
-                        description=f"次に餌をあげられるまで **{minutes}分{seconds}秒**",
-                        color=discord.Color.orange(),
+                        description=f"次に餌をあげられるまで **{minutes}分{seconds}秒**"
                     )
                 )
 
@@ -255,10 +249,9 @@ class AnimalCog(commands.Cog):
         await self.change_status(interaction.user, 種類.value, "いつも通り")
 
         await interaction.followup.send(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title=f"{status.get('Name', '名無し')}に餌をあげました！",
-                description=f"XPが **+{xp_gain}** 増えたよ！",
-                color=discord.Color.green(),
+                description=f"XPが **+{xp_gain}** 増えたよ！"
             )
         )
 
@@ -283,10 +276,9 @@ class AnimalCog(commands.Cog):
         status = await self.get_animal_status(interaction.user, 種類.value)
         if not status:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="そのペットは飼っていません！",
-                    description="/animal keeping で飼えます。",
-                    color=discord.Color.red(),
+                    description="/animal keeping で飼えます。"
                 )
             )
 
@@ -299,10 +291,9 @@ class AnimalCog(commands.Cog):
                 remaining = timedelta(hours=1) - elapsed
                 minutes, seconds = divmod(int(remaining.total_seconds()), 60)
                 return await interaction.followup.send(
-                    embed=discord.Embed(
+                    embed=make_embed.error_embed(
                         title="まだ訓練できません！",
-                        description=f"次に訓練ができるまで **{minutes}分{seconds}秒**",
-                        color=discord.Color.orange(),
+                        description=f"次に訓練ができるまで **{minutes}分{seconds}秒**"
                     )
                 )
 
@@ -311,14 +302,12 @@ class AnimalCog(commands.Cog):
             xp_gain = random.randint(10, 20)
             await self.add_xp(interaction.user, 種類.value, xp_gain)
             result_text = f"訓練に成功しました！ \nXPが **+{xp_gain}** 増えたよ！"
-            color = discord.Color.green()
         else:
             xp_gain = random.randint(0, 5)
             await self.add_xp(interaction.user, 種類.value, xp_gain)
             result_text = (
                 f"訓練に失敗しました… \nXPが **+{xp_gain}** しか増えなかった。"
             )
-            color = discord.Color.red()
 
         await self.change_status(interaction.user, 種類.value, "訓練中…")
 
@@ -328,10 +317,9 @@ class AnimalCog(commands.Cog):
         )
 
         await interaction.followup.send(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title=f"{status.get('Name', '名無し')}の訓練結果",
-                description=result_text,
-                color=color,
+                description=result_text
             )
         )
 
