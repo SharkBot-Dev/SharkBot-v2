@@ -49,14 +49,17 @@ class AlertCheckCog(commands.Cog):
         async for doc in db.find({"NotifyAt": {"$lte": now}}):
             ch = self.bot.get_channel(doc["Channel"])
             if ch:
-                await ch.send(
-                    content=doc.get("Text", "メンションするロールがありません。"),
-                    embed=discord.Embed(
-                        title=doc.get("Title", "タイトルです"),
-                        description=doc.get("Description", "説明です"),
-                        color=discord.Color.green(),
-                    ),
-                )
+                try:
+                    await ch.send(
+                        content=doc.get("Text", "メンションするロールがありません。"),
+                        embed=discord.Embed(
+                            title=doc.get("Title", "タイトルです"),
+                            description=doc.get("Description", "説明です"),
+                            color=discord.Color.green(),
+                        ),
+                    )
+                except:
+                    pass
             await db.delete_one(
                 {"Channel": doc["Channel"], "ID": doc.get("ID", "none")}
             )
