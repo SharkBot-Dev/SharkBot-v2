@@ -102,6 +102,39 @@ class GroupCog(commands.Cog):
                 description=rules
             )
         )
+    
+    @group.command(name="info", description="グループの情報を表示します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def group_info(self, interaction: discord.Interaction, グループ名: str):
+        db = self.bot.async_db["Main"].Group
+        dbfing = await db.find_one({"Name": グループ名})
+
+        if dbfing is None:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="そのグループは存在しません。",
+                    description="ルールを表示できません。"
+                )
+            )
+        
+        if interaction.user.id not in dbfing.get("Member", []):
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="参加していません。",
+                    description="参加していないグループの情報は表示できません。"
+                )
+            )
+        
+        rules = dbfing.get("Rules", "ルールは設定されていません。")
+        return await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title=f"グループ「{グループ名}」の情報"
+            )
+            .add_field(name="説明", value=dbfing.get("Text", "説明なし"), inline=False)
+            .add_field(name="ルール", value=rules, inline=False)
+        )
 
     @group.command(name="delete", description="グループを削除します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
