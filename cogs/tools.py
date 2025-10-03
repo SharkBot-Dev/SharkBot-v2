@@ -1,4 +1,5 @@
 import asyncio
+import calendar
 import datetime
 from functools import partial
 import io
@@ -27,7 +28,7 @@ import socket
 from urllib.parse import urlparse
 import pyzbar.pyzbar
 import math
-import yt_dlp
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 SOUNDCLOUD_REGEX = re.compile(
     r"^(https?://)?(www\.)?(soundcloud\.com|on\.soundcloud\.com)/.+"
@@ -1346,6 +1347,77 @@ class ToolsCog(commands.Cog):
         return await interaction.response.send_message(
             embed=embed
         )
+
+    @tools.command(name="calendar", description="カレンダーを表示します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def calendar(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+        def make_image():
+            today = datetime.date.today()
+            year, month, day_today = today.year, today.month, today.day
+            cell_w, cell_h = 100, 80
+            font_size = 24
+            title_font_size = 36
+
+            cal = calendar.Calendar(firstweekday=6)
+            month_days = cal.monthdayscalendar(year, month)
+
+            img_w = cell_w * 7
+            img_h = cell_h * (len(month_days) + 2)
+            img = Image.new("RGB", (img_w, img_h), "white")
+            draw = ImageDraw.Draw(img)
+
+            try:
+                font = ImageFont.truetype("data/DiscordFont.ttf", font_size)
+                title_font = ImageFont.truetype("data/DiscordFont.ttf", title_font_size)
+            except:
+                font = ImageFont.load_default()
+                title_font = font
+
+            title = f"{year}年 {month}月"
+            bbox = draw.textbbox((0, 0), title, font=title_font)
+            tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+            draw.text(((img_w - tw) // 2, 10), title, font=title_font, fill="black")
+
+            weekdays = ["日", "月", "火", "水", "木", "金", "土"]
+            for i, wd in enumerate(weekdays):
+                x = i * cell_w + cell_w // 3
+                y = cell_h + 10
+                color = "red" if i == 0 else "blue" if i == 6 else "black"
+                draw.text((x, y), wd, font=font, fill=color)
+
+            for row, week in enumerate(month_days):
+                for col, day in enumerate(week):
+                    if day != 0:
+                        x = col * cell_w + 10
+                        y = (row + 2) * cell_h + 10
+
+                        if day == day_today:
+                            x0, y0 = col * cell_w, (row + 2) * cell_h
+                            x1, y1 = x0 + cell_w, y0 + cell_h
+                            draw.rectangle([x0, y0, x1, y1], fill="#ffe5e5", outline="red", width=3)
+
+                        draw.text((x, y), str(day), font=font, fill="black")
+
+                    x0, y0 = col * cell_w, (row + 2) * cell_h
+                    x1, y1 = x0 + cell_w, y0 + cell_h
+                    draw.rectangle([x0, y0, x1, y1], outline="gray")
+
+            i = io.BytesIO()
+
+            img.save(i, "png")
+
+            i.seek(0)
+
+            return i
+
+        img = await asyncio.to_thread(make_image)
+
+        await interaction.followup.send(file=discord.File(img, filename="calendar.png"))
+
+        img.close()
 
     async def choice_download_autocomplete(
         self,
