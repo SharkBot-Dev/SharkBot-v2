@@ -826,7 +826,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @search.command(name="safeweb", description="サイトの安全性を調べます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def wikipedia(self, interaction: discord.Interaction, url: str):
+    async def safeweb(self, interaction: discord.Interaction, url: str):
         await interaction.response.defer()
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -914,6 +914,29 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
                             )
                         )
 
+    @search.command(name="anime", description="アニメを検索します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def anime(self, interaction: discord.Interaction, タイトル: str):
+        await interaction.response.defer()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://kitsu.io/api/edge/anime?filter[text]={タイトル}") as response:
+                js = await response.json()
+                datas = js["data"]
+                if datas == []:
+                    return await interaction.followup.send(embed=make_embed.error_embed(title="見つかりませんでした", description="別のタイトルで試してください。"))
+                anime = datas[0]
+                info = anime["attributes"]
+                titlename = info["titles"]["ja_jp"]
+                posterImage = info["posterImage"]["medium"]
+                description = info["description"]
+                loop = asyncio.get_running_loop()
+                translator = await loop.run_in_executor(None, partial(GoogleTranslator, source="auto", target="ja"))
+                translated_text = await loop.run_in_executor(None, partial(translator.translate, description))
+                await interaction.followup.send(embed=make_embed.success_embed(title="アニメの検索結果")
+                                .add_field(name="タイトル", value=titlename, inline=False)
+                                .add_field(name="説明", value=translated_text, inline=False)
+                                .set_image(url=posterImage))
 
 async def setup(bot):
     await bot.add_cog(SearchCog(bot))
