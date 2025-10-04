@@ -1,3 +1,4 @@
+import datetime
 from discord.ext import commands
 import discord
 import random
@@ -147,6 +148,45 @@ class Money:
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         pass
+
+    async def add_cooldown(
+        self,
+        guild: discord.Guild,
+        author: discord.User,
+        cooldown: int = 3600,
+        cooldown_type: str = "work"
+    ):
+        db = self.bot.async_db["Main"].ServerMoneyCooldwon
+        key = f"{guild.id}-{author.id}-{cooldown_type}"
+        current_time = time.time()
+
+        user_data = await db.find_one({"_id": key})
+
+        if user_data:
+            last_time = user_data.get("last_time", 0)
+            elapsed = current_time - last_time
+
+            if elapsed < cooldown:
+                remaining = int(cooldown - elapsed)
+                return False, remaining
+
+            await db.update_one(
+                {"_id": key},
+                {"$set": {"last_time": current_time}},
+            )
+
+        else:
+            await db.insert_one(
+                {
+                    "_id": key,
+                    "Guild": guild.id,
+                    "User": author.id,
+                    "last_time": current_time,
+                    "type": cooldown_type,
+                }
+            )
+
+        return True, 0
 
     async def add_server_money(
         self, guild: discord.Guild, author: discord.User, coin: int
@@ -1023,27 +1063,65 @@ class ServerMoneyCog(commands.Cog):
     async def economy_work_server(self, interaction: discord.Interaction):
         await interaction.response.defer()
         m = random.randint(300, 1500)
-        current_time = time.time()
-        last_message_time = user_last_message_time_work.get(
-            f"{interaction.user.id}-{interaction.guild.id}", 0
+        ok, remaining = await Money(interaction.client).add_cooldown(
+            guild=interaction.guild,
+            author=interaction.user,
+            cooldown=3600,
+            cooldown_type="work"
         )
-        if current_time - last_message_time < 1800:
+
+        if not ok:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
-                    title="30分に一回働けます。"
-                ),
-                ephemeral=True,
+                    title="まだ働けません。",
+                    description=f"あと {str(datetime.timedelta(seconds=remaining))} 待ってください。"
+                )
             )
 
-        user_last_message_time_work[f"{interaction.user.id}-{interaction.guild.id}"] = (
-            current_time
-        )
         await Money(interaction.client).add_server_money(
             interaction.guild, interaction.user, m
         )
         await interaction.followup.send(
             embed=make_embed.success_embed(
                 title="働きました。",
+                description=f"{m}コイン入手しました。"
+            )
+        )
+
+    @server_economy.command(name="beg", description="物乞いをしてお金を得ます。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    async def economy_beg_server(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        m = random.randint(10, 300)
+        ok, remaining = await Money(interaction.client).add_cooldown(
+            guild=interaction.guild,
+            author=interaction.user,
+            cooldown=600,
+            cooldown_type="beg"
+        )
+
+        if not ok:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="まだ物乞いできません。",
+                    description=f"あと {str(datetime.timedelta(seconds=remaining))} 待ってください。"
+                )
+            )
+        
+        if random.randint(1, 2) == 2:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="物乞いに失敗しました。",
+                    description="誰もお金をくれませんでした。"
+                )
+            )
+
+        await Money(interaction.client).add_server_money(
+            interaction.guild, interaction.user, m
+        )
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="物乞いをしました。",
                 description=f"{m}コイン入手しました。"
             )
         )
