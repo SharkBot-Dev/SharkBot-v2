@@ -1058,7 +1058,7 @@ class ServerMoneyCog(commands.Cog):
     server_economy.add_command(ShopPanelGroup())
 
     # ====== work ======
-    @server_economy.command(name="work", description="30分に1回働けます。")
+    @server_economy.command(name="work", description="60分に1回働けます。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_work_server(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -1122,6 +1122,65 @@ class ServerMoneyCog(commands.Cog):
         await interaction.followup.send(
             embed=make_embed.success_embed(
                 title="物乞いをしました。",
+                description=f"{m}コイン入手しました。"
+            )
+        )
+
+    @server_economy.command(name="crime", description="犯罪をしてお金を得ます。(リスクあり)")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    @app_commands.choices(
+        内容=[
+            app_commands.Choice(name="強盗", value="gotou"),
+            app_commands.Choice(name="詐欺", value="sagi"),
+            app_commands.Choice(name="横領", value="ouyou"),
+            app_commands.Choice(name="闇バイト", value="yamibaito"),
+        ]
+    )
+    async def economy_crime_server(self, interaction: discord.Interaction, 内容: app_commands.Choice[str]):
+        await interaction.response.defer()
+        m = random.randint(100, 1000)
+        ok, remaining = await Money(interaction.client).add_cooldown(
+            guild=interaction.guild,
+            author=interaction.user,
+            cooldown=3600,
+            cooldown_type="crime"
+        )
+
+        if not ok:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="まだ犯罪できません。",
+                    description=f"あと {str(datetime.timedelta(seconds=remaining))} 待ってください。"
+                )
+            )
+
+        if random.randint(1, 4) == 4:
+            lost = random.randint(100, 500)
+            await Money(interaction.client).add_server_money(
+                interaction.guild, interaction.user, -lost
+            )
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title=f"{内容.name}に失敗しました。",
+                    description=f"{lost}コインを失いました。"
+                )
+            )
+        
+        if 内容.value == "gotou":
+            m = random.randint(500, 3000)
+        elif 内容.value == "sagi":
+            m = random.randint(300, 2000)
+        elif 内容.value == "ouyou":
+            m = random.randint(200, 1500)
+        else:
+            m = random.randint(100, 1000)    
+
+        await Money(interaction.client).add_server_money(
+            interaction.guild, interaction.user, m
+        )
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title=f"{内容.name}をしました。",
                 description=f"{m}コイン入手しました。"
             )
         )
