@@ -259,6 +259,110 @@ def create_quote_image(
     else:
         return img.convert("L")
 
+class BirthdayGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="birthday", description="誕生日を設定&祝ってもらうためのコマンドです。")
+
+    @app_commands.command(name="set", description="誕生日を設定します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def birthday_set(
+        self,
+        interaction: discord.Interaction,
+        月: int,
+        日: int
+    ):
+        if 月 < 1 or 月 > 12:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(title="月の値が不正です。", description="1～12の間で指定してください。"),
+                ephemeral=True
+            )
+        if 日 < 1 or 日 > 31:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(title="日の値が不正です。", description="1～31の間で指定してください。"),
+                ephemeral=True
+            )
+        if 月 == 2 and 日 > 29:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(title="日の値が不正です。", description="2月は29日までしかありません。"),
+                ephemeral=True
+            )
+        if 月 in [4, 6, 9, 11] and 日 > 30:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(title="日の値が不正です。", description=f"{月}月は30日までしかありません。"),
+                ephemeral=True
+            )
+
+        db = interaction.client.async_db["Main"].Birthdays
+        await db.update_one(
+            {"user_id": interaction.user.id, "guild_id": interaction.guild_id},
+            {"$set": {"month": 月, "day": 日}},
+            upsert=True
+        )
+
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(title="誕生日を設定しました。", description=f"{月}月{日}日 が誕生日に設定されました。"),
+            ephemeral=True
+        )
+
+    @app_commands.command(name="get", description="ほかの人の誕生日を取得します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def birthday_get(
+        self,
+        interaction: discord.Interaction,
+        メンバー: discord.User = None
+    ):
+        if interaction.guild.get_member(interaction.user.id) is None:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(title="サーバーに参加していません。", description="このコマンドではサーバーに参加している人の誕生日のみ取得できます。"),
+                ephemeral=True
+            )
+
+        if not メンバー:
+            メンバー = interaction.user
+
+        db = interaction.client.async_db["Main"].Birthdays
+        data = await db.find_one({"user_id": メンバー.id, "guild_id": interaction.guild_id})
+
+        if not data:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(title="誕生日が設定されていません。", description=f"{メンバー} さんは誕生日を設定していません。"),
+                ephemeral=True
+            )
+
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(title=f"{メンバー.name} さんの誕生日", description=f"{メンバー.name} さんの誕生日は {data['month']}月{data['day']}日 です。")
+        )
+
+    @app_commands.command(name="list", description="今月が誕生日の人を表示します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def birthday_list(
+        self,
+        interaction: discord.Interaction,
+        月: int = None
+    ):
+        db = interaction.client.async_db["Main"].Birthdays
+        data = db.find({"guild_id": interaction.guild_id, "month": 月 if 月 else interaction.created_at.month})
+
+        members = []
+        async for d in data:
+            member = interaction.guild.get_member(d['user_id'])
+            if member:
+                members.append(f"{member.name} さん - {d['month']}月{d['day']}日")
+
+        if not members:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(title=f"{月 if 月 else interaction.created_at.month}月 が誕生日の人はいません。"),
+                ephemeral=True
+            )
+
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(title=f"{月 if 月 else interaction.created_at.month}月 が誕生日の人を表示しています。", description="\n".join(members[:30]),)
+            .set_footer(text="30人までしか表示されません。")
+        )
+
 class SayGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="say", description="いろいろなキャラクターに発言させます。")
@@ -1266,6 +1370,7 @@ class FunCog(commands.Cog):
     fun.add_command(MovieGroup())
     fun.add_command(AudioGroup())
     fun.add_command(SayGroup())
+    fun.add_command(BirthdayGroup())
 
     @fun.command(name="janken", description="じゃんけんをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
