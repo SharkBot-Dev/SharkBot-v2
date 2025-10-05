@@ -1,4 +1,5 @@
 import ast
+import datetime
 from pathlib import Path
 from discord.ext import commands
 import discord
@@ -165,6 +166,7 @@ class AdminCog(commands.Cog):
         操作=[
             app_commands.Choice(name="退出", value="leave"),
             app_commands.Choice(name="警告", value="warn"),
+            app_commands.Choice(name="情報取得", value="getinfo"),
         ]
     )
     async def manage_server(
@@ -172,7 +174,7 @@ class AdminCog(commands.Cog):
         interaction: discord.Interaction,
         操作: app_commands.Choice[str],
         内容: str,
-        理由: str,
+        理由: str = None,
     ):
         isadmin = await self.get_admins(interaction.user)
 
@@ -194,6 +196,13 @@ class AdminCog(commands.Cog):
                 )
             )
         elif 操作.value == "warn":
+            if 理由 is None:
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="警告理由を入力してください。"
+                    )
+                )
+
             await self.bot.get_guild(int(内容)).owner.send(
                 embed=discord.Embed(
                     title=f"{self.bot.get_guild(int(内容))} はSharkBotから警告されました。",
@@ -206,6 +215,70 @@ class AdminCog(commands.Cog):
                     title="サーバーを警告しました。"
                 )
             )
+        elif 操作.value == "getinfo":
+            guild = self.bot.get_guild(int(内容))
+
+            embed = make_embed.success_embed(title=f"{guild.name}の情報")
+            embed.add_field(name="サーバー名", value=guild.name)
+            embed.add_field(name="サーバーID", value=str(guild.id))
+            embed.add_field(
+                name="チャンネル数", value=f"{len(guild.channels)}個"
+            )
+            embed.add_field(name="絵文字数", value=f"{len(guild.emojis)}個")
+            embed.add_field(name="ロール数", value=f"{len(guild.roles)}個")
+            embed.add_field(name="ロールリスト", value="`/listing role`\nで見れます。")
+            embed.add_field(name="メンバー数", value=f"{guild.member_count}人")
+            embed.add_field(
+                name="Nitroブースト",
+                value=f"{guild.premium_subscription_count}人",
+            )
+            embed.add_field(
+                name="オーナー名",
+                value=self.bot.get_user(guild.owner_id).name
+                if self.bot.get_user(guild.owner_id)
+                else "取得失敗",
+            )
+            embed.add_field(name="オーナーID", value=str(guild.owner_id))
+            JST = datetime.timezone(datetime.timedelta(hours=9))
+            embed.add_field(
+                name="作成日", value=guild.created_at.astimezone(JST)
+            )
+
+            onlines = [
+                m for m in guild.members if m.status == discord.Status.online
+            ]
+            idles = [
+                m for m in guild.members if m.status == discord.Status.idle
+            ]
+            dnds = [m for m in guild.members if m.status == discord.Status.dnd]
+            offlines = [
+                m for m in guild.members if m.status == discord.Status.offline
+            ]
+
+            pcs = [m for m in guild.members if m.client_status.desktop]
+            sms = [m for m in guild.members if m.client_status.mobile]
+            webs = [m for m in guild.members if m.client_status.web]
+
+            embed.add_field(
+                name="ステータス情報",
+                value=f"""
+<:online:1407922300535181423> {len(onlines)}人
+<:idle:1407922295711727729> {len(idles)}人
+<:dnd:1407922294130741348> {len(dnds)}人
+<:offline:1407922298563854496> {len(offlines)}人
+💻 {len(pcs)}人
+📱 {len(sms)}人
+🌐 {len(webs)}人
+""",
+                inline=False,
+            )
+
+            if guild.icon:
+                await interaction.followup.send(
+                    embed=embed.set_thumbnail(url=guild.icon.url)
+                )
+            else:
+                await interaction.followup.send(embed=embed)
 
     @admin.command(name="debug", description="デバッグコマンドを実行します。")
     @app_commands.choices(
