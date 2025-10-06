@@ -653,6 +653,45 @@ class GameCog(commands.Cog):
             view=view,
         )
 
+    @game.command(name="guess", description="数字あてゲームをします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def guess(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        number = random.randint(1, 100)
+        await interaction.followup.send(embed=make_embed.success_embed(title="数字あてゲーム", description="1から100までの数字を当ててください。10回以内に当ててね！"))
+
+        def check(m: discord.Message):
+            return m.author == interaction.user and m.channel == interaction.channel
+        
+        attempts = 0
+        while attempts < 10:
+            try:
+                msg = await self.bot.wait_for("message", check=check, timeout=30)
+
+                await asyncio.sleep(0.8)
+
+                guess = int(msg.content)
+                attempts += 1
+
+                if guess < number:
+                    await interaction.channel.send(embed=discord.Embed(title="ヒント", description="もっと大きい数字です。", color=discord.Color.orange()))
+                elif guess > number:
+                    await interaction.channel.send(embed=discord.Embed(title="ヒント", description="もっと小さい数字です。", color=discord.Color.orange()))
+                else:
+                    await interaction.channel.send(embed=make_embed.success_embed(description=f"正解です！ {attempts} 回で当てました。", title="おめでとう！"))
+                    return
+            except ValueError:
+                await interaction.channel.send(embed=make_embed.error_embed(title="エラー", description="数字以外が入力されました。ゲームを終了します。"))
+                return
+            except asyncio.TimeoutError:
+                await interaction.channel.send(make_embed.error_embed(description="時間切れです。ゲームを終了します。", title="エラー"))
+                return
+            
+        await asyncio.sleep(0.8)
+            
+        await interaction.channel.send(embed=make_embed.error_embed(description=f"残念！正解は {number} でした。", title="ゲームオーバー"))
+
     @game.command(name="bot-quest", description="Botの出してくるクエストに挑戦するゲームです。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
