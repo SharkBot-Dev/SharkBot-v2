@@ -1035,8 +1035,10 @@ class SettingCog(commands.Cog):
                 try:
                     await self.warn_user(message)
                     sc = await self.score_get(message.guild, message.author)
+
                     await message.channel.send(
-                        f"スコアが追加されました。\n現在のスコア: {sc}"
+                        embed=discord.Embed(description=f"全体メンションを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
+                        content=f"{message.author.mention}"
                     )
                 except:
                     return
@@ -1048,8 +1050,10 @@ class SettingCog(commands.Cog):
                 try:
                     await self.warn_user(message)
                     sc = await self.score_get(message.guild, message.author)
+
                     await message.channel.send(
-                        f"スコアが追加されました。\n現在のスコア: {sc}"
+                        embed=discord.Embed(description=f"全体メンションを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
+                        content=f"{message.author.mention}"
                     )
                 except:
                     return
@@ -1081,7 +1085,8 @@ class SettingCog(commands.Cog):
                     await self.warn_user(message)
                     sc = await self.score_get(message.guild, message.author)
                     await message.channel.send(
-                        f"スコアが追加されました。\n現在のスコア: {sc}"
+                        embed=discord.Embed(description=f"招待リンクを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
+                        content=f"{message.author.mention}"
                     )
                 except:
                     return
@@ -1089,8 +1094,10 @@ class SettingCog(commands.Cog):
                 try:
                     await self.warn_user(message)
                     sc = await self.score_get(message.guild, message.author)
+
                     await message.channel.send(
-                        f"スコアが追加されました。\n現在のスコア: {sc}"
+                        embed=discord.Embed(description=f"招待リンクを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
+                        content=f"{message.author.mention}"
                     )
                 except:
                     return
@@ -1126,7 +1133,8 @@ class SettingCog(commands.Cog):
                     await self.warn_user(message)
                     sc = await self.score_get(message.guild, message.author)
                     await message.channel.send(
-                        f"スコアが追加されました。\n現在のスコア: {sc}"
+                        embed=discord.Embed(description=f"Tokenを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
+                        content=f"{message.author.mention}"
                     )
                 except:
                     return
@@ -1139,7 +1147,8 @@ class SettingCog(commands.Cog):
                     await self.warn_user(message)
                     sc = await self.score_get(message.guild, message.author)
                     await message.channel.send(
-                        f"スコアが追加されました。\n現在のスコア: {sc}"
+                        embed=discord.Embed(description=f"Tokenを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
+                        content=f"{message.author.mention}"
                     )
                 except:
                     return
@@ -1276,7 +1285,8 @@ class SettingCog(commands.Cog):
                 await self.warn_user_automod(guild, member)
                 sc = await self.score_get(guild, member)
                 await execution.channel.send(
-                    f"スコアが追加されました。\n現在のスコア: {sc}"
+                    embed=discord.Embed(description=f"{automod_rule.name.replace('対策', '')} を送信しようとしたため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
+                    content=f"{member.mention}"
                 )
             except:
                 return
