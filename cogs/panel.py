@@ -1424,6 +1424,44 @@ class PanelCog(commands.Cog):
 
                     await interaction.response.send_modal(Modal_Qneuete(embed_fields, interaction.message))
 
+                elif custom_id.startswith("quick_tik+"):
+                    embed_fields = interaction.message.embeds[0].fields
+                    channel_id = interaction.guild.get_channel(int(custom_id.split("+")[1]))
+
+                    if not channel_id:
+                        return await interaction.response.send_message("チケットの送信先チャンネルが見つかりません。\n管理者にお問い合わせください。", ephemeral=True)
+
+                    class Modal_Ticket(discord.ui.Modal):
+                        def __init__(self):
+                            super().__init__(title=interaction.message.embeds[0].title, timeout=180)
+
+                            for e in embed_fields:
+                                self.add_item(
+                                    discord.ui.TextInput(
+                                        label=e.value,
+                                        placeholder=f"{e.value}",
+                                        style=discord.TextStyle.short,
+                                        required=True,
+                                        max_length=100
+                                    )
+                                )
+
+                        async def on_submit(self, interaction: discord.Interaction):
+                            await interaction.response.defer(ephemeral=True)
+                            ticket_embed = discord.Embed(color=discord.Color.blue())
+                            for i, field in enumerate(embed_fields[:len(self.children)]):
+                                answer = self.children[i].value
+                                ticket_embed.add_field(name=field.value, value=answer, inline=False)
+                            ticket_embed.set_author(
+                                name=f"{interaction.user.name} / {interaction.user.id}",
+                                icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url
+                            )
+                            ticket_embed.set_footer(text="SharkBot Quick Ticket")
+                            await channel_id.send(embed=ticket_embed)
+                            await interaction.followup.send("チケットを送信しました。", ephemeral=True)
+
+                    await interaction.response.send_modal(Modal_Ticket())
+
                 elif "globalchat_agree+" in custom_id:
                     db = self.bot.async_db["Main"].GlobalChatRuleAgreeUser
                     await db.replace_one(
@@ -2062,6 +2100,37 @@ class PanelCog(commands.Cog):
             embed=discord.Embed(title="作成しました。", color=discord.Color.green()),
             ephemeral=True,
         )
+
+    @panel.command(name="quick-ticket", description="チャンネルを作成しないチケットパネルを作成します。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def panel_quick_ticket(
+        self,
+        interaction: discord.Interaction,
+        タイトル: str,
+        説明: str,
+        送信先チャンネル: discord.TextChannel,
+        質問1: str,
+        質問2: str = None,
+        質問3: str = None,
+        質問4: str = None,
+        質問5: str = None,
+    ):
+        questions = [質問1, 質問2, 質問3, 質問4, 質問5]
+        questions = [q for q in questions if q is not None]
+        embed = discord.Embed(title=タイトル, description=説明, color=discord.Color.blue())
+        for i, q in enumerate(questions):
+            embed.add_field(name=f"Q.{i+1}", value=q, inline=False)
+        embed.set_footer(text="SharkBot Quick Ticket")
+        await interaction.response.defer()
+        await interaction.channel.send(
+            embed=embed,
+            view=discord.ui.View().add_item(
+                discord.ui.Button(label="チケットを送信", custom_id=f"quick_tik+{送信先チャンネル.id}")
+            ),
+        )
+        await interaction.delete_original_response()
 
     @panel.command(name="party", description="様々な募集をします。")
     @app_commands.checks.has_permissions(manage_channels=True)
