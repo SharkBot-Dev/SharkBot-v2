@@ -85,13 +85,13 @@ class CountCog(commands.Cog):
     async def count_setup(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         db = self.bot.async_db["Main"].Counting
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-            {
+            {"$set": {
                 "Guild": interaction.guild.id,
                 "Channel": interaction.channel.id,
                 "Now": 0,
-            },
+            }},
             upsert=True,
         )
         await interaction.channel.send(
@@ -153,13 +153,13 @@ class CountCog(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-            {
+            {"$set": {
                 "Guild": interaction.guild.id,
                 "Channel": interaction.channel.id,
                 "Now": 数字,
-            },
+            }},
             upsert=True,
         )
         return await interaction.followup.send(
@@ -195,13 +195,13 @@ class CountCog(commands.Cog):
                     color=discord.Color.red(),
                 )
             )
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-            {
+            {"$set": {
                 "Guild": interaction.guild.id,
                 "Channel": interaction.channel.id,
                 "Now": 0,
-            },
+            }},
             upsert=True,
         )
         return await interaction.followup.send(

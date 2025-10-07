@@ -206,9 +206,9 @@ class ChannelCog(commands.Cog):
 
         db = self.bot.async_db["Main"].CommandDisable
         if not コマンドが使えるか:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-                {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+                {"$set": {"Guild": interaction.guild.id, "Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
