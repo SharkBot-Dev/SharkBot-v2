@@ -1749,12 +1749,34 @@ class PanelCog(commands.Cog):
         ロール5: discord.Role = None,
         説明: str = None,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
 
         await interaction.response.defer()
+
+        class NewGuiRolePanel(discord.ui.LayoutView):
+            container = discord.ui.Container(
+                discord.ui.TextDisplay(f"### {タイトル}"),
+                accent_color=discord.Color.green().__int__()
+            )
+
+            if 説明:
+                container.add_item(discord.ui.TextDisplay(f"{説明}"))
+
+            for c in [r for r in [ロール1, ロール2, ロール3, ロール4, ロール5] if r is not None]:
+                button = discord.ui.Section(discord.ui.TextDisplay(content=f"{c.mention}"), accessory=discord.ui.Button(
+                    label=f"取得",
+                    style=discord.ButtonStyle.primary,
+                    custom_id=f"rolepanel_v1+{c.id}",
+                ))
+                container.add_item(button)
+
+        await interaction.channel.send(
+            view=NewGuiRolePanel(),
+            allowed_mentions=discord.AllowedMentions().none()
+        )
+
+        await interaction.delete_original_response()
+        return
+
         cont = self.bot.container(self.bot)
         cont.add_view(cont.text(f"# {タイトル}"))
         if 説明:
@@ -1806,50 +1828,46 @@ class PanelCog(commands.Cog):
         ロール: discord.Role,
         削除か追加か: discord.app_commands.Choice[str],
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
 
         try:
-            メッセージ = await interaction.channel.fetch_message(int(メッセージ))
+            メッセージ_ = await interaction.channel.fetch_message(int(メッセージ))
         except:
             await interaction.delete_original_response()
             return
+        
+        cont = メッセージ_.components[0]
 
-        cont = self.bot.container(self.bot)
-        con = await cont.fetch(メッセージ, interaction.channel.id)
-        cont.comp = con[0].get("components", [])
-        if 削除か追加か.name == "デバッグ":
-            if not interaction.user.id == 1335428061541437531:
-                return await interaction.followup.send("オーナーのみ実行可能です。")
-            await interaction.followup.send(f"{cont.comp}")
-        elif 削除か追加か.name == "追加":
-            b1 = cont.labeled_customid_button(
-                button_label="取得", custom_id=f"rolepanel_v1+{ロール.id}", style=1
-            )
-            cont.add_view(cont.labeled_button(f"{ロール.name} ({ロール.id})", b1))
-            await cont.edit(メッセージ, interaction.channel.id)
-        elif 削除か追加か.name == "削除":
-            ls = []
-            b1 = cont.labeled_customid_button(
-                button_label="取得", custom_id=f"rolepanel_v1+{ロール.id}", style=1
-            )
-            for c in cont.comp:
-                if c.get("components", {}) == {}:
-                    ls.append(c)
-                    continue
-                if c.get("type", 0) == 9:
-                    if (
-                        c.get("components", {})[0].get("content", None)
-                        == f"{ロール.name} ({ロール.id})"
-                    ):
-                        continue
-                    ls.append(c)
-            cont.comp = ls
-            await cont.edit(メッセージ, interaction.channel.id)
+        cont = discord.ui.Container().from_component(cont)
+
+        copyd_cont = cont.copy()
+        if 削除か追加か.name == "追加":
+            button = discord.ui.Section(discord.ui.TextDisplay(content=f"{ロール.mention}"), accessory=discord.ui.Button(
+                label=f"取得",
+                style=discord.ButtonStyle.primary,
+                custom_id=f"rolepanel_v1+{ロール.id}",
+            ))
+
+            copyd_cont.add_item(button)
+
+            v = discord.ui.LayoutView().add_item(copyd_cont)
+
+            await メッセージ_.edit(view=v, allowed_mentions=discord.AllowedMentions().none())
+        else:
+            c = []
+            for ch in copyd_cont.children:
+                if type(ch) != discord.ui.Section:
+                    c.append(ch)
+                elif type(ch) == discord.ui.Section:
+                    if type(ch.children[0]) == discord.ui.TextDisplay:
+                        if ch.children[0].content != ロール.mention:
+                            c.append(ch)
+
+            copyd_cont.children = c
+
+            v = discord.ui.LayoutView().add_item(copyd_cont)
+
+            await メッセージ_.edit(view=v, allowed_mentions=discord.AllowedMentions().none())
 
         await interaction.delete_original_response()
 
