@@ -133,14 +133,14 @@ class GlobalCog(commands.Cog):
     async def globalchat_join(self, ctx: discord.Interaction):
         web = await ctx.channel.create_webhook(name="SharkBot-Global")
         db = self.bot.async_db["Main"].NewGlobalChat
-        await db.replace_one(
+        await db.update_one(
             {"Guild": ctx.guild.id},
-            {
+            {"$set": {
                 "Guild": ctx.guild.id,
                 "Channel": ctx.channel.id,
                 "GuildName": ctx.guild.name,
                 "Webhook": web.url,
-            },
+            }},
             upsert=True,
         )
         return True
@@ -148,14 +148,14 @@ class GlobalCog(commands.Cog):
     async def globalchat_join_newch(self, channel: discord.TextChannel):
         web = await channel.create_webhook(name="SharkBot-Global")
         db = self.bot.async_db["Main"].NewGlobalChat
-        await db.replace_one(
+        await db.update_one(
             {"Guild": channel.guild.id},
-            {
+            {"$set": {
                 "Guild": channel.guild.id,
                 "Channel": channel.id,
                 "GuildName": channel.guild.name,
                 "Webhook": web.url,
-            },
+            }},
             upsert=True,
         )
         return True
@@ -366,15 +366,15 @@ class GlobalCog(commands.Cog):
     async def globalchat_room_join(self, ctx: discord.Interaction, roomname: str):
         web = await ctx.channel.create_webhook(name="SharkBot-GlobalRoom")
         db = self.bot.async_db["Main"].NewGlobalChatRoom
-        await db.replace_one(
+        await db.update_one(
             {"Guild": ctx.guild.id, "Channel": ctx.channel.id},
-            {
+            {"$set": {
                 "Guild": ctx.guild.id,
                 "Channel": ctx.channel.id,
                 "GuildName": ctx.guild.name,
                 "Webhook": web.url,
                 "Name": roomname,
-            },
+            }},
             upsert=True,
         )
         return True
@@ -486,8 +486,8 @@ class GlobalCog(commands.Cog):
 
     async def set_emoji_guild(self, emoji: str, guild: discord.Guild):
         db = self.bot.async_db["Main"].NewGlobalChatEmoji
-        await db.replace_one(
-            {"Guild": guild.id}, {"Guild": guild.id, "Emoji": emoji}, upsert=True
+        await db.update_one(
+            {"Guild": guild.id}, {"$set": {"Guild": guild.id, "Emoji": emoji}}, upsert=True
         )
 
     @globalchat.command(
@@ -561,15 +561,15 @@ class GlobalCog(commands.Cog):
             )
 
         inv = await interaction.channel.create_invite()
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id},
-            {
+            {"$set": {
                 "Guild": interaction.guild.id,
                 "Name": interaction.guild.name,
                 "Description": 説明,
                 "Invite": inv.url,
                 "Icon": interaction.guild.icon.url,
-            },
+            }},
             upsert=True,
         )
         embed = make_embed.success_embed(title="サーバーを掲載しました。")
@@ -620,16 +620,16 @@ class GlobalCog(commands.Cog):
                     embed=embed
                 )
 
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id},
-            {
+            {"$set": {
                 "Guild": interaction.guild.id,
                 "Name": interaction.guild.name,
                 "Description": desc,
                 "Invite": inv,
                 "Icon": interaction.guild.icon.url,
                 "Up": str(time.time()),
-            },
+            }},
             upsert=True,
         )
 
@@ -677,16 +677,16 @@ class GlobalCog(commands.Cog):
                     web = await interaction.channel.create_webhook(
                         name="SharkBot-PrivateGlobal"
                     )
-                    await db.replace_one(
+                    await db.update_one(
                         {"Guild": interaction.guild.id, "Name": self.name.value},
-                        {
+                        {"$set": {
                             "Guild": interaction.guild.id,
                             "Name": self.name.value,
                             "Password": self.password.value,
                             "Owner": interaction.user.id,
                             "Channel": interaction.channel.id,
                             "Webhook": web.url,
-                        },
+                        }},
                         upsert=True,
                     )
                     await interaction.followup.send(
@@ -747,16 +747,16 @@ class GlobalCog(commands.Cog):
                     web = await interaction.channel.create_webhook(
                         name="SharkBot-PrivateGlobal"
                     )
-                    await db.replace_one(
+                    await db.update_one(
                         {"Guild": interaction.guild.id, "Name": self.name.value},
-                        {
+                        {"$set": {
                             "Guild": interaction.guild.id,
                             "Name": self.name.value,
                             "Password": self.password.value,
                             "Owner": dbfind.get("Owner"),
                             "Channel": interaction.channel.id,
                             "Webhook": web.url,
-                        },
+                        }},
                         upsert=True,
                     )
                     await interaction.followup.send(
@@ -983,14 +983,14 @@ class GlobalCog(commands.Cog):
     async def super_join_global_chat(self, interaction: discord.Interaction):
         wh = await interaction.channel.create_webhook(name="SharkBot-Global")
         db = self.bot.async_db["Main"].AlpheSuperGlobalChat
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id},
-            {
+            {"$set": {
                 "Guild": interaction.guild.id,
                 "Channel": interaction.channel.id,
                 "GuildName": interaction.guild.name,
                 "Webhook": wh.url,
-            },
+            }},
             upsert=True,
         )
 
@@ -1312,14 +1312,14 @@ class GlobalCog(commands.Cog):
             )
         wh = await interaction.channel.create_webhook(name="SharkBot-しりとり")
         db = self.bot.async_db["Main"].GlobalShiritori
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id},
-            {
+            {"$set": {
                 "Guild": interaction.guild.id,
                 "Channel": interaction.channel.id,
                 "GuildName": interaction.guild.name,
                 "Webhook": wh.url,
-            },
+            }},
             upsert=True,
         )
         await interaction.followup.send(
@@ -1343,14 +1343,14 @@ class GlobalCog(commands.Cog):
     async def globalads_join(self, interaction: discord.Interaction):
         web = await interaction.channel.create_webhook(name="SharkBot-Global")
         db = self.bot.async_db["Main"].NewGlobalAds
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id},
-            {
+            {"$set": {
                 "Guild": interaction.guild.id,
                 "Channel": interaction.channel.id,
                 "GuildName": interaction.guild.name,
                 "Webhook": web.url,
-            },
+            }},
             upsert=True,
         )
         return True
@@ -1649,12 +1649,12 @@ r18やグロ関連のものを貼らない
         except Exception:
             return False
 
-        await db.replace_one(
+        await db.update_one(
             {"User": user.id},
-            {
+            {"$set": {
                 "User": user.id,
                 "UserName": user.name
-            },
+            }},
             upsert=True,
         )
         return False
@@ -1824,14 +1824,14 @@ r18やグロ関連のものを貼らない
     async def debug_super_join_global_chat(self, interaction: discord.Interaction):
         wh = await interaction.channel.create_webhook(name="SharkBot-Global")
         db = self.bot.async_db["Main"].AlpheSuperGlobalChatDebug
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id},
-            {
+            {"$set": {
                 "Guild": interaction.guild.id,
                 "Channel": interaction.channel.id,
                 "GuildName": interaction.guild.name,
                 "Webhook": wh.url,
-            },
+            }},
             upsert=True,
         )
 
