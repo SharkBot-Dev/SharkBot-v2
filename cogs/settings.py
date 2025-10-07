@@ -122,9 +122,9 @@ class RoleCommands(app_commands.Group):
     async def sticky_role(self, interaction: discord.Interaction, 有効化するか: bool):
         db = interaction.client.async_db["Main"].RoleRestore
         if 有効化するか:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"Guild": interaction.guild.id},
+                {"$set": {"Guild": interaction.guild.id}},
                 upsert=True,
             )
             return await interaction.response.send_message(
@@ -186,17 +186,17 @@ class WelcomeCommands(app_commands.Group):
 
                 async def on_submit(self, interaction_: discord.Interaction) -> None:
                     db = self.db["Main"].WelcomeMessage
-                    await db.replace_one(
+                    await db.update_one(
                         {
                             "Channel": interaction_.channel.id,
                             "Guild": interaction_.guild.id,
                         },
-                        {
+                        {"$set": {
                             "Channel": interaction_.channel.id,
                             "Guild": interaction_.guild.id,
                             "Title": self.etitle.value,
                             "Description": self.desc.value,
-                        },
+                        }},
                         upsert=True,
                     )
                     await interaction_.response.send_message(
@@ -251,17 +251,17 @@ class WelcomeCommands(app_commands.Group):
 
                 async def on_submit(self, interaction_: discord.Interaction) -> None:
                     db = self.db["Main"].GoodByeMessage
-                    await db.replace_one(
+                    await db.update_one(
                         {
                             "Channel": interaction_.channel.id,
                             "Guild": interaction_.guild.id,
                         },
-                        {
+                        {"$set": {
                             "Channel": interaction_.channel.id,
                             "Guild": interaction_.guild.id,
                             "Title": self.etitle.value,
                             "Description": self.desc.value,
-                        },
+                        }},
                         upsert=True,
                     )
                     await interaction_.response.send_message(
@@ -314,17 +314,17 @@ class WelcomeCommands(app_commands.Group):
 
                 async def on_submit(self, interaction_: discord.Interaction) -> None:
                     db = self.db["Main"].BanMessage
-                    await db.replace_one(
+                    await db.update_one(
                         {
                             "Channel": interaction.channel.id,
                             "Guild": interaction.guild.id,
                         },
-                        {
+                        {"$set": {
                             "Channel": interaction.channel.id,
                             "Guild": interaction.guild.id,
                             "Title": self.etitle.value,
                             "Description": self.desc.value,
-                        },
+                        }},
                         upsert=True,
                     )
                     await interaction_.response.send_message(
@@ -353,15 +353,15 @@ class WelcomeCommands(app_commands.Group):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def welcome_rta(self, interaction: discord.Interaction, 有効か: bool):
         db = interaction.client.async_db["Main"].FastGoodByeRTAMessage
-        await db.replace_one(
+        await db.update_one(
             {
                 "Channel": interaction.channel.id,
                 "Guild": interaction.guild.id,
             },
-            {
+            {"$set": {
                 "Channel": interaction.channel.id,
                 "Guild": interaction.guild.id
-            },
+            }},
             upsert=True,
         )
         await interaction.response.send_message(embed=make_embed.success_embed(title=f"即抜けメッセージを {'有効化' if 有効か else '無効化'} しました。", description="参加してから1分以内に退出するとメッセージを送信します。"))
@@ -1963,9 +1963,9 @@ class SettingCog(commands.Cog):
     ):
         db = self.bot.async_db["Main"].ExpandSettings
         if 有効化するか:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"Guild": interaction.guild.id},
+                {"$set": {"Guild": interaction.guild.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
@@ -1995,9 +1995,9 @@ class SettingCog(commands.Cog):
         if not tf:
             return await db.delete_one({"Guild": guild.id, "Channel": channel.id})
         else:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": guild.id, "Channel": channel.id},
-                {"Guild": guild.id, "Channel": channel.id},
+                {"$set": {"Guild": guild.id, "Channel": channel.id}},
                 upsert=True,
             )
 
@@ -2105,13 +2105,13 @@ class SettingCog(commands.Cog):
 
         db = self.bot.async_db["Main"].AutoTranslate
         if 有効にするか:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-                {
+                {"$set": {
                     "Guild": interaction.guild.id,
                     "Channel": interaction.channel.id,
                     "Lang": 翻訳先.value,
-                },
+                }},
                 upsert=True,
             )
             await interaction.response.send_message(
@@ -2146,12 +2146,12 @@ class SettingCog(commands.Cog):
     ):
         db = self.bot.async_db["Main"].GoodMorningChannel
         if 有効にするか:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-                {
+                {"$set": {
                     "Guild": interaction.guild.id,
                     "Channel": interaction.channel.id
-                },
+                }},
                 upsert=True,
             )
             await interaction.response.send_message(
