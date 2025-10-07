@@ -703,9 +703,9 @@ class GameCog(commands.Cog):
 
         if dbfind is None:
             quest = random.choice(self.quests)
-            await db.replace_one(
+            await db.update_one(
                 {"User": interaction.user.id},
-                {"User": interaction.user.id, "Quest": quest},
+                {"$set": {"User": interaction.user.id, "Quest": quest}},
                 upsert=True,
             )
         else:
