@@ -139,6 +139,36 @@ class TagsCog(commands.Cog):
         )
         await interaction.response.send_message(embed=embed)
 
+    @tag.command(name="use", description="tagを使用します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def tags_use(
+        self,
+        interaction: discord.Interaction,
+        コマンド名: str,
+        引数: str = "No Args."
+    ):
+        await interaction.response.defer()
+        db_tags = self.bot.async_db["Main"].Tags
+        doc = await db_tags.find_one({"guild_id": interaction.guild.id, "command": コマンド名})
+        if doc:
+            try:
+                ts_script = doc["tagscript"]
+                response = self.engine.process(ts_script,     {
+                    "args": tse.StringAdapter(引数),        # ユーザーが入力した引数
+                    "author": tse.StringAdapter(str(interaction.user)),  # 実行者の名前
+                    "author_id": tse.StringAdapter(str(interaction.user.id)),  # 実行者の名前
+                    "guild": tse.StringAdapter(str(interaction.guild.name)), # サーバーの名前
+                    "channel": tse.StringAdapter(str(interaction.channel.name)),  # チャンネルの名前
+                    "guild_id": tse.StringAdapter(str(interaction.guild.id)),  # サーバーの名前
+                    "channel_id": tse.StringAdapter(str(interaction.channel.id)),  # サーバーの名前
+                })
+                await interaction.followup.send(response.body + "\n-# これはタグスクリプトからのメッセージです。")
+            except Exception as e:
+                return await interaction.followup.send("エラーが発生しました。")
+        else:
+            await interaction.followup.send(embed=make_embed.error_embed(title="Tagが見つかりません。", description=f"`/tag create`で作成できます。"))
+
     @tag.command(name="export", description="タグをエクスポートします。")
     @app_commands.checks.has_permissions(manage_messages=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
