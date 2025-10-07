@@ -30,9 +30,9 @@ class LevelCog(commands.Cog):
     async def new_user_write(self, guild: discord.Guild, user: discord.User):
         try:
             db = self.bot.async_db["Main"].Leveling
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": guild.id, "User": user.id},
-                {"Guild": guild.id, "User": user.id, "Level": 0, "XP": 1},
+                {"$set": {"Guild": guild.id, "User": user.id, "Level": 0, "XP": 1}},
                 upsert=True,
             )
         except:
@@ -43,9 +43,9 @@ class LevelCog(commands.Cog):
     ):
         try:
             db = self.bot.async_db["Main"].Leveling
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": guild.id, "User": user.id},
-                {"Guild": guild.id, "User": user.id, "Level": level, "XP": xp},
+                {"$set": {"Guild": guild.id, "User": user.id, "Level": level, "XP": xp}},
                 upsert=True,
             )
         except:
@@ -86,8 +86,8 @@ class LevelCog(commands.Cog):
     async def set_user_image(self, user: discord.User, url: str):
         try:
             db = self.bot.async_db["Main"].LevelingBackImage
-            await db.replace_one(
-                {"User": user.id}, {"User": user.id, "Image": url}, upsert=True
+            await db.update_one(
+                {"User": user.id}, {"$set": {"User": user.id, "Image": url}}, upsert=True
             )
         except:
             return
@@ -115,9 +115,9 @@ class LevelCog(commands.Cog):
                 await db.delete_one({"Guild": guild.id})
                 return
             db = self.bot.async_db["Main"].LevelingUpAlertChannel
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": guild.id, "Channel": channel.id},
-                {"Guild": guild.id, "Channel": channel.id},
+                {"$set": {"Guild": guild.id, "Channel": channel.id}},
                 upsert=True,
             )
         except:
@@ -149,9 +149,9 @@ class LevelCog(commands.Cog):
                 await db.delete_one({"Guild": guild.id})
                 return
 
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": guild.id},
-                {"Guild": guild.id, "Role": role.id, "Level": level},
+                {"$set": {"Guild": guild.id, "Role": role.id, "Level": level}},
                 upsert=True,
             )
         except Exception as e:
@@ -306,9 +306,9 @@ class LevelCog(commands.Cog):
 
         db = self.bot.async_db["Main"].LevelingSetting
         if 有効か:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"Guild": interaction.guild.id},
+                {"$set": {"Guild": interaction.guild.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
@@ -666,9 +666,9 @@ class LevelCog(commands.Cog):
                 )
             )
         db = self.bot.async_db["Main"].LevelingUpTiming
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id},
-            {"Guild": interaction.guild.id, "Timing": xp},
+            {"$set": {"Guild": interaction.guild.id, "Timing": xp}},
             upsert=True,
         )
         return await interaction.followup.send(

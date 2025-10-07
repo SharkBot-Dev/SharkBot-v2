@@ -88,15 +88,15 @@ class LockMessageCog(commands.Cog):
             )
             msg = await message.channel.send(embed=embed, view=view)
 
-            await db.replace_one(
+            await db.update_one(
                 {"Channel": message.channel.id, "Guild": message.guild.id},
-                {
+                {"$set": {
                     "Channel": message.channel.id,
                     "Guild": message.guild.id,
                     "Title": dbfind.get("Title", ""),
                     "Desc": dbfind.get("Desc", ""),
                     "MessageID": msg.id,
-                },
+                }},
                 upsert=True,
             )
 
