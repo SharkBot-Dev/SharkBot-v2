@@ -551,7 +551,6 @@ class LoggingCog(commands.Cog):
             )
 
         db = self.bot.async_db["Main"].EventLoggingChannel
-        web = await interaction.channel.create_webhook(name="SharkBot-Log")
         await db.delete_one({"Guild": interaction.guild.id})
         await interaction.response.send_message(
             embed=discord.Embed(
