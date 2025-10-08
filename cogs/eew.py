@@ -98,7 +98,7 @@ class EEWCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def eew_start(self, interaction: discord.Interaction):
-        db = self.bot.async_db["Main"].EEWAlert
+        db = self.bot.async_db["MainTwo"].EEWAlert
         try:
             web = await interaction.channel.create_webhook(name="SharkBot-EEW")
         except discord.Forbidden:
@@ -127,7 +127,7 @@ class EEWCog(commands.Cog):
     @eew.command(name="end", description="地震速報の受信を終了します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     async def eew_end(self, interaction: discord.Interaction):
-        db = self.bot.async_db["Main"].EEWAlert
+        db = self.bot.async_db["MainTwo"].EEWAlert
         await db.delete_one({"Guild": interaction.guild.id})
         await interaction.response.send_message(embed=make_embed.success_embed(title="地震速報の受信を終了しました。"))
 
@@ -136,7 +136,7 @@ class EEWCog(commands.Cog):
         asyncio.create_task(self.p2pquake_ws())
 
     async def p2pquake_ws(self):
-        db = self.bot.async_db["Main"].EEWAlert
+        db = self.bot.async_db["MainTwo"].EEWAlert
         while True:
             try:
                 async with aiohttp.ClientSession() as session:
