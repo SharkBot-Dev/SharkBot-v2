@@ -53,14 +53,17 @@ class BotCog(commands.Cog):
                 label="サポートサーバー", url="https://discord.gg/mUyByHYMGk"
             )
         )
-        em = discord.Embed(title="`SharkBot`の情報", color=discord.Color.green())
+        em = discord.Embed(title="SharkBotの情報", color=discord.Color.green())
         em.add_field(
             name="サーバー数", value=f"{len(self.bot.guilds)}サーバー"
         ).add_field(name="ユーザー数", value=f"{len(self.bot.users)}人")
         em.add_field(name="サブ管理者", value="3人")
         em.add_field(name="モデレーター", value="8人")
         em.add_field(name="コマンド数", value=f"{cmd_count}個")
-        await interaction.followup.send(embed=em)
+
+        em.set_thumbnail(url=self.bot.user.avatar.url)
+
+        await interaction.followup.send(embeds=[em], view=view)
 
     @bot.command(name="ping", description="Pingを見ます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
