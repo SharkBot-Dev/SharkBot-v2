@@ -255,7 +255,7 @@ class AuthGroup(app_commands.Group):
                         description=self.rule.value,
                         color=discord.Color.green(),
                     )
-                    .set_thumbnail(url=interaction.client.user.avatar.url)
+                    .set_thumbnail(url=interaction.guild.icon.url if interaction.guild.icon else None)
                     .set_footer(
                         text="Discord コミュニティガイドライン も忘れないようにして下さい。"
                     ),
