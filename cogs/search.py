@@ -3,6 +3,7 @@ from functools import partial
 import json
 import ssl
 from urllib.parse import urlparse
+import urllib.parse
 import aiohttp
 from bs4 import BeautifulSoup
 from deep_translator import GoogleTranslator
@@ -672,6 +673,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             app_commands.Choice(name="韓国語へ", value="ko"),
             app_commands.Choice(name="ロシア語へ", value="ru"),
             app_commands.Choice(name="ノムリッシュ語へ", value="nom"),
+            app_commands.Choice(name="ルーン文字へ", value="rune"),
         ]
     )
     async def translate(
@@ -698,6 +700,18 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
                 )
                 await interaction.followup.send(embed=embed)
                 return
+            
+            if 翻訳先.value == "rune":
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(f"https://api-ryo001339.onrender.com/rune/{urllib.parse.quote(テキスト)}", ssl=ssl_context) as response:
+                        js = await response.json()
+                        embed = discord.Embed(
+                            title="ルーン文字へ",
+                            description=f"```{js.get('transformatedText', '？？？')}```",
+                            color=discord.Color.green(),
+                        )
+                        await interaction.followup.send(embed=embed)
+                        return
 
             try:
                 translator = GoogleTranslator(source="auto", target=翻訳先.value)
@@ -749,7 +763,19 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
                 )
                 await interaction.followup.send(embed=embed)
                 return
-
+            
+            if 翻訳先.value == "rune":
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(f"https://api-ryo001339.onrender.com/rune/{urllib.parse.quote(text_ocrd)}", ssl=ssl_context) as response:
+                        js = await response.json()
+                        embed = discord.Embed(
+                            title="ルーン文字へ",
+                            description=f"```{js.get('transformatedText', '？？？')}```",
+                            color=discord.Color.green(),
+                        )
+                        await interaction.followup.send(embed=embed)
+                        return
+                    
             try:
                 translator = GoogleTranslator(source="auto", target=翻訳先.value)
                 translated_text = translator.translate(text_ocrd)
