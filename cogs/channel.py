@@ -192,7 +192,7 @@ class ChannelCog(commands.Cog):
             "Botを使った低速モードを設定しました。", ephemeral=True
         )
 
-    @channel.command(name="command-disable", description="低速モードを設定するよ")
+    @channel.command(name="command-disable", description="このチャンネルではコマンドを無効化するよ")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
