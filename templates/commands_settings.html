@@ -1,14 +1,16 @@
 {% extends "layout.html" %}
 {% block content %}
     <style>
-      .settings-box {
-        background-color: #36393f;
-        padding: 2rem;
-        border-radius: 15px;
-        width: 100%;
-        max-width: 1700px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      input[type="text"] {
+        width: 40%;
+        padding: 0.8rem;
+        border: none;
+        border-radius: 8px;
+        background-color: #202225;
+        color: #ffffff;
+        font-size: 1rem;
       }
+
       h1 {
         margin-bottom: 1rem;
         font-size: 1.6rem;
@@ -51,7 +53,6 @@
         margin-top: 0.2rem;
       }
       .actions {
-        text-align: right;
         margin-top: 2rem;
       }
       button {
@@ -130,6 +131,11 @@
         <h1>{{ guild.name }} のコマンド設定</h1>
       </div>
 
+      <div class="actions">
+        <input type="text" id="search_text">
+        <button onclick="search()">検索</button>
+      </div>
+
       <form
         method="post"
         action="/settings/{{ guild.id }}/command_disable"
@@ -167,4 +173,35 @@
           <button type="submit">保存</button>
         </div>
       </form>
+
+      <script>
+        function search() {
+          const text = document.getElementById('search_text').value;
+          const cmdsContainer = document.getElementsByClassName('commands-grid')[0];
+
+          if (!cmdsContainer) {
+            console.error("Element with class 'commands-grid' not found.");
+            return;
+          }
+
+          const cmds = cmdsContainer.children;
+          
+          Array.from(cmds).forEach(c => {
+            const label = c.getElementsByTagName('label')[1];
+            const strong = label ? label.getElementsByTagName('strong')[0] : null;
+            
+            const itemText = strong.textContent;
+
+            if (text === "") {
+              c.style.display = '';
+              return;
+            }
+            if (!itemText.includes(text)) {
+              c.style.display = 'none';
+            } else {
+              c.style.display = '';
+            }
+          });
+        }
+      </script>
 {% endblock %}
