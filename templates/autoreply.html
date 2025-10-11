@@ -1,29 +1,6 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>SharkBot v2 | AutoReply</title>
+{% extends "layout.html" %}
+{% block content %}
     <style>
-      body {
-        margin: 0;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #2f3136;
-        color: #ffffff;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        min-height: 100vh;
-        padding: 2rem;
-      }
-
-      .settings-box {
-        background-color: #36393f;
-        padding: 2rem;
-        border-radius: 15px;
-        width: 100%;
-        max-width: 800px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-      }
-
       h1 {
         margin-bottom: 1rem;
         font-size: 1.6rem;
@@ -166,8 +143,6 @@
     </style>
   </head>
 
-  <body>
-    <div class="settings-box">
       <div class="guild-header">
         <button onclick="location.href = '/settings/{{ guild.id }}/';">戻る</button>　　　
         <img
@@ -231,6 +206,4 @@
           <button type="submit">追加する</button>
         </div>
       </form>
-    </div>
-  </body>
-</html>
+{% endblock %}

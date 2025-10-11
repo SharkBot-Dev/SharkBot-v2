@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title or "SharkBot v2" }}</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            background-color: black;
+        }
+
+        .dashboard {
+            display: flex;
+            height: 100vh;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: #2f3136;
+            color: #dcddde;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #00b3ff;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 8px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+
+        .sidebar a:hover {
+            background-color: #333;
+        }
+
+        .content {
+            margin-left: 240px;
+            padding: 20px;
+            background: #000000;
+            flex: 1;
+            overflow-y: auto;
+            color: white;
+        }
+
+        /* トグルスイッチ */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #555;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4caf50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <h2>SharkBot</h2>
+            <ul>
+                <li><a href="/login/guilds">🏠 サーバー一覧</a></li>
+                <hr>
+                <li><a href="/settings/{{ guild.id }}/commands">💬 コマンド設定</a></li>
+                <li><a href="/settings/{{ guild.id }}/welcome">🤝 よろしくメッセージ</a></li>
+                <li><a href="/settings/{{ guild.id }}/automod">🤖 自動モデレーション</a></li>
+                <hr>
+                <li><a href="/settings/{{ guild.id }}/create_embed">🗃️ 埋め込み作成</a></li>
+                <li><a href="/settings/{{ guild.id }}/pin_message">📌 固定メッセージ作成</a></li>
+                <li><a href="/settings/{{ guild.id }}/logging">🪵 ログ記録</a></li>
+                <li><a href="/settings/{{ guild.id }}/autoreply">🐸 自動返信</a></li>
+                <li><a href="/settings/{{ guild.id }}/expand">🔗 メッセージ展開</a></li>
+                <li><a href="/settings/{{ guild.id }}/tags">🏷️ タグ</a></li>
+                <hr>
+                <li><a href="/settings/{{ guild.id }}/leveling">🏆 レベル機能</a></li>
+            </ul>
+        </aside>
+
+        <main class="content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>
