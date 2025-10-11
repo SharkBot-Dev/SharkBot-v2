@@ -14,7 +14,11 @@ from slowapi.errors import RateLimitExceeded
 from consts import mongodb
 from consts import settings, templates
 
-app = FastAPI()
+app = FastAPI(
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None
+)
 
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSINKEY)
 
