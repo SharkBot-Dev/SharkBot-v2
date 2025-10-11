@@ -32,11 +32,6 @@ class AutoModCog(commands.Cog):
     async def automod_create(
         self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-        
         db_automod = self.bot.async_db["Main"].AutoModDetecter
         await db_automod.replace_one(
             {"Guild": interaction.guild.id}, 
@@ -132,16 +127,12 @@ class AutoModCog(commands.Cog):
             app_commands.Choice(name="メールアドレス", value="mail"),
             app_commands.Choice(name="メッセージスパム", value="spam"),
             app_commands.Choice(name="スラッシュコマンドスパム", value="slashspam"),
+            app_commands.Choice(name="カスタムワード", value="customword"),
         ]
     )
     async def automod_delete(
         self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer(ephemeral=True)
 
         guild = interaction.guild
@@ -175,10 +166,49 @@ class AutoModCog(commands.Cog):
         elif タイプ.value == "slashspam":
             await db.UserApplicationSpamBlock.delete_one({"Guild": guild.id})
 
+        elif タイプ.value == "customword":
+            rules = await guild.fetch_automod_rules()
+            for r in rules:
+                if r.name == "カスタムワード対策":
+                    await r.delete()
+
         await interaction.followup.send(
             ephemeral=True, content=f"AutoModの「{タイプ.name}」を削除しました。"
         )
 
+    @automod.command(name="customword", description="カスタムワードのAutoModを作成します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def automod_customword(
+        self, interaction: discord.Interaction
+    ):
+        class AddCustomWordModal(discord.ui.Modal, title='カスタムワード追加'): 
+            wordinput = discord.ui.TextInput(
+                label='カスタムワードの入力',
+                placeholder='test, hello, world',
+                style=discord.TextStyle.long,
+            )
+
+            async def on_submit(self, interaction_modal: discord.Interaction):
+                try:
+                    await interaction_modal.response.defer(ephemeral=True)
+                    await interaction_modal.guild.create_automod_rule(
+                        name="カスタムワード対策",
+                        event_type=discord.AutoModRuleEventType.message_send,
+                        trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, keyword_filter=self.wordinput.value.split(", ")),
+                        actions=[
+                            discord.AutoModRuleAction(
+                                type=discord.AutoModRuleActionType.block_message
+                            )
+                        ],
+                        enabled=True
+                    )
+                    await interaction_modal.followup.send(ephemeral=True, content="カスタムワードを追加しました。")
+                except:
+                    return await interaction_modal.followup.send(ephemeral=True, content="追加に失敗しました。")
+
+        await interaction.response.send_modal(AddCustomWordModal())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoModCog(bot))
