@@ -853,6 +853,26 @@ class TextGroup(app_commands.Group):
 
         await interaction.response.send_modal(send())
 
+    @app_commands.command(name="morse", description="モールス信号に変換します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def morse_convert(self, interaction: discord.Interaction, テキスト: str):
+        words = {"A": "・－","B": "－・・・","C": "－・－・","D": "－・・","E": "・","F": "・・－・",
+                    "G": "－－・","H": "・・・・","I": "・・","J": "・－－－","K": "－・－","L": "・－・・",
+                    "M": "－－","N": "－・","O": "－－－","P": "・－－・","Q": "－－・－","R": "・－・",
+                    "S": "・・・","T": "－","U": "・・－","V": "・・・－","W": "・－－","X": "－・・－","Y": "－・－－","Z": "－－・・"
+        }
+        
+        def morse_code_encrypt(st: str):
+            try:
+                codes = [words[s] for s in st.upper() if s in words]
+                return '  '.join(codes)
+            except:
+                return None
+            
+        text = morse_code_encrypt(テキスト)
+        
+        await interaction.response.send_message(embed=make_embed.success_embed(title="モールス信号に変換しました。", description=text if text else '変換に失敗しました。\n英語にしか対応していません。'))
 
 class NounaiGroup(app_commands.Group):
     def __init__(self):
