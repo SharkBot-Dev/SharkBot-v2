@@ -385,23 +385,29 @@ class ModCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def clear(self, interaction: discord.Interaction, メッセージ数: int):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
+    async def clear(self, interaction: discord.Interaction, メッセージ数: int, ユーザー: discord.User = None):
         await interaction.response.defer(ephemeral=True)
 
         now = discord.utils.utcnow()
         two_weeks = datetime.timedelta(days=14)
 
         def check(msg: discord.Message):
-            return (now - msg.created_at) < two_weeks
+            if (now - msg.created_at) > two_weeks:
+                return False
+            if ユーザー is not None and msg.author.id != ユーザー.id:
+                return False
+            return True
 
         deleted = await interaction.channel.purge(limit=メッセージ数, check=check)
+
+        if len(deleted) == 0:
+            await interaction.followup.send(
+                ephemeral=True, embed=make_embed.error_embed(title=f"メッセージを一個も削除できませんでした。")
+            )
+            return
+
         await interaction.followup.send(
-            ephemeral=True, content=f"{len(deleted)} 件のメッセージを削除しました"
+            ephemeral=True, embed=make_embed.success_embed(title=f"{len(deleted)}個のメッセージを削除しました。")
         )
 
     @moderation.command(name="warn", description="メンバーを警告します。")
