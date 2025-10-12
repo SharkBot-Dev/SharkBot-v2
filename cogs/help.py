@@ -144,6 +144,8 @@ class HelpCog(commands.Cog):
         else:
             pages = []
 
+            pages.append(discord.Embed(title="カテゴリ別のヘルプ", description="▶️ ボタンでメインのヘルプを閲覧できます。", color=discord.Color.blue()).add_field(name="このヘルプについて", value="スラッシュコマンド版のヘルプです。\n頭文字コマンド用ヘルプは !.help を使用してください。", inline=False))
+
             for c in self.bot.tree.get_commands():
                 if type(c) == app_commands.Command:
                     pages.append(
