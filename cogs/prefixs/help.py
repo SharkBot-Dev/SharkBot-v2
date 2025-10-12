@@ -32,7 +32,7 @@ class Prefixs_HelpCog(commands.Cog):
         self.bot = bot
         print("init -> Prefixs_HelpCog")
 
-    @commands.command(name="help", aliases=["h"], hidden=True)
+    @commands.command(name="help", aliases=["h"], description="頭文字用ヘルプを表示します。")
     @commands.cooldown(2, 5, type=commands.BucketType.guild)
     async def help_prefix(self, ctx: commands.Context):
         if not await command_disable.command_enabled_check_by_cmdname("help", ctx.guild):
@@ -62,7 +62,7 @@ class Prefixs_HelpCog(commands.Cog):
 
         await ctx.reply(embed=ems[0], view=Paginator(ems))
 
-    @commands.command(name="dashboard", aliases=["d"], hidden=True)
+    @commands.command(name="dashboard", aliases=["d"], description="ダッシュボードの案内を表示します。")
     @commands.cooldown(2, 5, type=commands.BucketType.guild)
     async def dashboard_prefix(self, ctx: commands.Context):
         if not await command_disable.command_enabled_check_by_cmdname("dashboard", ctx.guild):
