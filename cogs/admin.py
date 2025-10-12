@@ -124,7 +124,7 @@ class AdminCog(commands.Cog):
                     return
                 user = await self.bot.fetch_user(int(内容))
                 db = self.bot.async_db["Main"].BlockUser
-                await db.replace_one({"User": user.id}, {"User": user.id}, upsert=True)
+                await db.update_one({"User": user.id}, {'$set': {"User": user.id}}, upsert=True)
                 await interaction.followup.send(
                     embed=make_embed.success_embed(
                         title=f"{user.name}をBotからBANしました。"
@@ -142,8 +142,8 @@ class AdminCog(commands.Cog):
         elif 操作の種類.value == "server":
             if 操作.value == "add":
                 db = self.bot.async_db["Main"].BlockGuild
-                await db.replace_one(
-                    {"Guild": int(内容)}, {"Guild": int(内容)}, upsert=True
+                await db.update_one(
+                    {"Guild": int(内容)}, {'$set': {"Guild": int(内容)}}, upsert=True
                 )
                 await interaction.followup.send(
                     embed=make_embed.success_embed(
@@ -358,8 +358,8 @@ class AdminCog(commands.Cog):
             )
         db = self.bot.async_db["Main"].BotAdmins
         if 操作.value == "add":
-            await db.replace_one(
-                {"User": ユーザー.id}, {"User": ユーザー.id}, upsert=True
+            await db.update_one(
+                {"User": ユーザー.id}, {'$set': {"User": ユーザー.id}}, upsert=True
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
@@ -447,47 +447,6 @@ class AdminCog(commands.Cog):
                     title="プレミアムユーザーを削除しました。"
                 )
             )
-
-    @commands.command(name="reload", aliases=["r"], hidden=True)
-    async def reload(self, ctx: commands.Context, cogname: str):
-        if ctx.author.id == 1335428061541437531:
-            await self.bot.reload_extension(f"cogs.{cogname}")
-            await ctx.reply(f"ReloadOK .. `cogs.{cogname}`")
-
-    @commands.command(name="sync_slash", aliases=["sy"], hidden=True)
-    async def sync_slash(self, ctx: commands.Context):
-        if ctx.author.id == 1335428061541437531:
-            await self.bot.tree.sync()
-            await ctx.reply("スラッシュコマンドを同期しました。")
-
-    @commands.command(name="load", hidden=True)
-    async def load_admin(self, ctx, cogname: str):
-        if ctx.author.id == 1335428061541437531:
-            await self.bot.load_extension(f"cogs.{cogname}")
-            await ctx.reply(f"LoadOK .. `cogs.{cogname}`")
-
-    @commands.command(name="reload_lang", hidden=True)
-    async def reload_lang(self, ctx: commands.Context):
-        if ctx.author.id == 1335428061541437531:
-            await translate.load()
-            await ctx.message.add_reaction('✅')
-
-    @commands.command(name="save", hidden=True)
-    async def save(self, ctx):
-        if ctx.author.id == 1335428061541437531:
-            await save_commands.clear_commands()
-
-            count = 0
-            for cmd in self.bot.tree.get_commands():
-                await save_commands.save_command(cmd)
-                count += 1
-
-            for g in self.bot.guilds:
-                await self.bot.async_db["DashboardBot"].bot_joind_guild.replace_one(
-                    {"Guild": g.id}, {"Guild": g.id}, upsert=True
-                )
-
-            await ctx.reply(f"コマンドをセーブしました。\n{count}件。")
 
     @commands.command(name="ban_user", hidden=True)
     async def banuser(self, ctx, user: discord.User):
