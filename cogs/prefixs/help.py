@@ -42,6 +42,9 @@ class Prefixs_HelpCog(commands.Cog):
 
         for start in range(0, len(list(self.bot.commands)), 10):
             embed = make_embed.success_embed(title="SharkBotのヘルプ (頭文字バージョン)", description="頭文字バージョンです。\nスラッシュコマンド用ヘルプは、\n`/help`を使用してください。\n\nちなみに、頭文字コマンドは、\n`[頭文字]コマンド名`と送信することで機能します。\n\n標準頭文字: `!.`")
+            
+            embed.add_field(name="コマンド一覧", value="以下がコマンド一覧です。\n下のボタンでページを切り替えられます。", inline=False)
+            
             for cmd in list(self.bot.commands)[start : start + 10]:
                 if "load" in cmd.name:
                     continue
@@ -58,6 +61,14 @@ class Prefixs_HelpCog(commands.Cog):
             ems.append(embed)
 
         await ctx.reply(embed=ems[0], view=Paginator(ems))
+
+    @commands.command(name="dashboard", aliases=["d"], hidden=True)
+    @commands.cooldown(2, 5, type=commands.BucketType.guild)
+    async def dashboard_prefix(self, ctx: commands.Context):
+        if not await command_disable.command_enabled_check_by_cmdname("dashboard", ctx.guild):
+            return
+        
+        await ctx.reply(f"以下のリンクからアクセスできます。\n{settings.DASHBOARD_URL}\n\n-# ダッシュボードは開発中です。メイン設定はスラッシュコマンドでお願いします。")
 
 async def setup(bot):
     await bot.add_cog(Prefixs_HelpCog(bot))
