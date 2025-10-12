@@ -29,6 +29,7 @@ from urllib.parse import urlparse
 import pyzbar.pyzbar
 import math
 from PIL import Image, ImageDraw, ImageFont, ImageOps
+import aiohttp_socks
 
 SOUNDCLOUD_REGEX = re.compile(
     r"^(https?://)?(www\.)?(soundcloud\.com|on\.soundcloud\.com)/.+"
@@ -529,11 +530,6 @@ class NetworkGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def whois(self, interaction: discord.Interaction, ドメイン: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         data = await fetch_whois(ドメイン)
         return await interaction.followup.send(file=discord.File(data, "whois.txt"))
@@ -542,11 +538,6 @@ class NetworkGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def nslookup(self, interaction: discord.Interaction, ドメイン: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         l = []
         domain = ドメイン
@@ -590,11 +581,6 @@ class NetworkGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def iplookup(self, interaction: discord.Interaction, ipアドレス: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         if ipv4_pattern.match(ipアドレス):
             async with aiohttp.ClientSession() as session:
                 async with session.get(
@@ -721,6 +707,52 @@ class NetworkGroup(app_commands.Group):
                 await interaction.followup.send(embed=make_embed.success_embed(title="ドメインにPingを送信しました。")
                                                 .add_field(name="ステータス", value=check['result'], inline=False)
                                                 .add_field(name="反応までかかった時間", value=check['response_time'], inline=False))
+
+    @app_commands.command(name="meta", description="サイトのメタデータを取得します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def sites_meta(self, interaction: discord.Interaction, url: str):
+        await interaction.response.defer()
+
+        connector = aiohttp_socks.ProxyConnector('127.0.0.1', port=9050)
+        async with aiohttp.ClientSession(connector=connector) as session:
+            async with session.get('https://rakko.tools/tools/34/') as response:
+                regex = r"var (?:tokenId|token) = '([^']+)'"
+
+                text = await response.text()
+
+                match = re.findall(regex, text)
+
+                data = {
+                    'token_id': match[0],
+                    'token': match[1],
+                    'value': url,
+                }
+
+                headers = {
+                    'accept': 'application/json, text/javascript, */*; q=0.01',
+                    'accept-language': 'ja,en-US;q=0.9,en;q=0.8',
+                    'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'origin': 'https://rakko.tools',
+                    'priority': 'u=1, i',
+                    'referer': 'https://rakko.tools/tools/34/',
+                    'sec-ch-ua': '"Google Chrome";v="141", "Not?A_Brand";v="8", "Chromium";v="141"',
+                    'sec-ch-ua-mobile': '?0',
+                    'sec-ch-ua-platform': '"Windows"',
+                    'sec-fetch-dest': 'empty',
+                    'sec-fetch-mode': 'cors',
+                    'sec-fetch-site': 'same-origin',
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+                    'x-requested-with': 'XMLHttpRequest',
+                }
+
+                async with session.post('https://rakko.tools/tools/34/urlToTitleController.php', data=data, headers=headers) as response_2:
+                    js = json.loads(await response_2.text())
+
+                    await interaction.followup.send(embed=make_embed.success_embed(title="サイトのメタデータを取得しました。")
+                                                    .add_field(name="サイト名", value=js['result'][0].get('title', '取得失敗'), inline=False)
+                                                    .add_field(name="サイト説明", value=js['result'][0].get('metadata_description', '取得失敗'), inline=False)
+                                                    .add_field(name="ロボット", value=js['result'][0].get('metadata_robot', '取得失敗'), inline=False))
 
 class ToolsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
