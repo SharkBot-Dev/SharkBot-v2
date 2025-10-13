@@ -251,44 +251,48 @@ class ModCog(commands.Cog):
         時間: str,
         理由: str = None,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
+    
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="自分自身はタイムアウトできません。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="自分自身はタイムアウトできません。"
                 ),
                 ephemeral=True,
             )
-        if interaction.guild.get_member(ユーザー.id) is None:
+        member = interaction.guild.get_member(ユーザー.id)
+        if member is None:
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="このサーバーにいないメンバーはタイムアウトできません。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="このサーバーにいないメンバーはタイムアウトできません。"
                 )
             )
+        
+        if member.top_role >= interaction.user.top_role and interaction.user != interaction.guild.owner:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="タイムアウトできません。",
+                    description=f"{member.mention} はあなたより上位、または同等の権限を持っています。"
+                ),
+                ephemeral=True,
+            )
+
         await interaction.response.defer()
         try:
             duration = parse_time(時間)
-            await interaction.guild.get_member(ユーザー.id).edit(
-                timeout=discord.utils.utcnow() + duration, reason=理由
+            await member.edit(
+                timed_out_until=discord.utils.utcnow() + duration, reason=理由
             )
         except:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="タイムアウトに失敗しました。",
-                    description="権限が足りないかも！？",
-                    color=discord.Color.red(),
+                    description="権限が足りないかも！？"
                 )
             )
         return await interaction.followup.send(
-            embed=discord.Embed(
-                title=f"{ユーザー.name}をタイムアウトしました。",
-                color=discord.Color.green(),
+            embed=make_embed.success_embed(
+                title=f"タイムアウトしました。",
+                description=f"{member.mention} のタイムアウトをしました。"
             )
         )
 
@@ -302,38 +306,55 @@ class ModCog(commands.Cog):
         ユーザー: discord.User,
         理由: str = None,
     ):
-        if not await command_disable.command_enabled_check(interaction):
+        member = interaction.guild.get_member(ユーザー.id)
+
+        if member is None:
             return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
+                embed=make_embed.error_embed(
+                    title="メンバーが見つかりません。",
+                    description="このサーバーにいないユーザーのタイムアウトは解除できません。"
+                ),
+                ephemeral=True,
             )
 
-        if interaction.guild.get_member(ユーザー.id) is None:
+        if member.top_role >= interaction.user.top_role and interaction.user != interaction.guild.owner:
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="このサーバーにいないメンバーのタイムアウトは解除できません。",
-                    color=discord.Color.red(),
-                )
+                embed=make_embed.error_embed(
+                    title="タイムアウト解除できません。",
+                    description=f"{member.mention} はあなたより上位、または同等の権限を持っています。"
+                ),
+                ephemeral=True,
             )
+
         await interaction.response.defer()
-        try:
-            await interaction.guild.get_member(ユーザー.id).edit(
-                timeout=None, reason=理由
-            )
-        except:
-            return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="タイムアウトの解除に失敗しました。",
-                    description="権限が足りないかも！？",
-                    color=discord.Color.red(),
-                )
-            )
-        return await interaction.followup.send(
-            embed=discord.Embed(
-                title=f"{ユーザー.name}のタイムアウトを解除しました。",
-                color=discord.Color.green(),
-            )
-        )
 
+        try:
+            await member.edit(timed_out_until=None, reason=理由)
+        except discord.Forbidden:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="タイムアウト解除に失敗しました。",
+                    description="Botに十分な権限がない可能性があります。"
+                ),
+                ephemeral=True,
+            )
+        except Exception as e:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="予期せぬエラーが発生しました。",
+                    description=f"```{e}```"
+                ),
+                ephemeral=True,
+            )
+
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="タイムアウトを解除しました。",
+                description=f"{member.mention} のタイムアウトを解除しました。"
+            ),
+            ephemeral=False,
+        )
+        
     @moderation.command(name="max-timeout", description="最大までタイムアウトします。")
     @app_commands.checks.has_permissions(moderate_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
