@@ -361,7 +361,7 @@ ID | 説明
             return "メンション"
         if "#" in message.content:
             return "チャンネル"
-        if len(message.content) > 70:
+        if len(message.content) > 50:
             return "省略しました。"
         r_w = await self.replace_word(message.content, message.guild)
         em_repd = re.sub(r"<:([a-zA-Z0-9_]+):(\d+)>", r"絵文字", r_w)
