@@ -39,13 +39,13 @@ class StarBoardCog(commands.Cog):
 
     async def save_message(self, original: discord.Message, board_msg: discord.Message):
         db = self.bot.async_db["Main"].ReactionBoardMessage
-        await db.replace_one(
+        await db.update_one(
             {"Guild": original.guild.id},
-            {
+            {'$set': {
                 "Guild": original.guild.id,
                 "ID": original.id,
                 "ReactMessageID": board_msg.id,
-            },
+            }},
             upsert=True,
         )
 
@@ -208,9 +208,9 @@ class StarBoardCog(commands.Cog):
         絵文字: str,
     ):
         db = self.bot.async_db["Main"].ReactionBoard
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id, "Channel": チャンネル.id},
-            {"Guild": interaction.guild.id, "Channel": チャンネル.id, "Emoji": 絵文字},
+            {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id, "Emoji": 絵文字}},
             upsert=True,
         )
 
