@@ -22,13 +22,13 @@ class DictGroup(app_commands.Group):
         self, interaction: discord.Interaction, ワード: str, 置き換えるワード: str
     ):
         ttsdict = self.bot.async_db["Main"].TTSWord
-        await ttsdict.replace_one(
+        await ttsdict.update_one(
             {"Guild": interaction.guild.id},
-            {
+            {'$set': {
                 "Guild": interaction.guild.id,
                 "Word": ワード,
                 "ReplaceWord": 置き換えるワード,
-            },
+            }},
             upsert=True,
         )
         await interaction.response.send_message(
@@ -113,9 +113,9 @@ class TTSCog(commands.Cog):
             )
             return
         ttscheck = self.bot.async_db["Main"].TTSCheckBeta
-        await ttscheck.replace_one(
+        await ttscheck.update_one(
             {"Guild": interaction.guild.id},
-            {"Channel": interaction.channel.id, "Guild": interaction.guild.id},
+            {'$set': {"Channel": interaction.channel.id, "Guild": interaction.guild.id}},
             upsert=True,
         )
         return await interaction.response.send_message(
@@ -167,36 +167,36 @@ ID | 説明
         else:
             ttscheck = self.bot.async_db["Main"].TTSVoiceBeta
             if 声 == "ミク":
-                await ttscheck.replace_one(
+                await ttscheck.update_one(
                     {"User": interaction.user.id},
-                    {"User": interaction.user.id, "Voice": "miku"},
+                    {'$set': {"User": interaction.user.id, "Voice": "miku"}},
                     upsert=True,
                 )
                 await interaction.response.send_message(
                     content=f"声を {声} に変更しました。", ephemeral=True
                 )
             elif 声 == "緋惺":
-                await ttscheck.replace_one(
+                await ttscheck.update_one(
                     {"User": interaction.user.id},
-                    {"User": interaction.user.id, "Voice": "akesato"},
+                    {'$set': {"User": interaction.user.id, "Voice": "akesato"}},
                     upsert=True,
                 )
                 await interaction.response.send_message(
                     content=f"声を {声} に変更しました。", ephemeral=True
                 )
             elif 声 == "句音":
-                await ttscheck.replace_one(
+                await ttscheck.update_one(
                     {"User": interaction.user.id},
-                    {"User": interaction.user.id, "Voice": "kuon"},
+                    {'$set': {"User": interaction.user.id, "Voice": "kuon"}},
                     upsert=True,
                 )
                 await interaction.response.send_message(
                     content=f"声を {声} に変更しました。", ephemeral=True
                 )
             elif 声 == "霊夢":
-                await ttscheck.replace_one(
+                await ttscheck.update_one(
                     {"User": interaction.user.id},
-                    {"User": interaction.user.id, "Voice": "reimu"},
+                    {'$set': {"User": interaction.user.id, "Voice": "reimu"}},
                     upsert=True,
                 )
                 await interaction.response.send_message(
@@ -264,9 +264,9 @@ ID | 説明
         await interaction.response.defer()
         ttscheck = self.bot.async_db["Main"].TTSAutoJoin
         if 有効化するか:
-            await ttscheck.replace_one(
+            await ttscheck.update_one(
                 {"Channel": チャンネル.id, "Guild": interaction.guild.id},
-                {"Channel": チャンネル.id, "Guild": interaction.guild.id},
+                {'$set': {"Channel": チャンネル.id, "Guild": interaction.guild.id}},
                 upsert=True,
             )
             await interaction.followup.send(
@@ -297,9 +297,9 @@ ID | 説明
 
     async def autojoin_channel(self, channel: discord.VoiceChannel):
         ttscheck = self.bot.async_db["Main"].TTSCheckBeta
-        await ttscheck.replace_one(
+        await ttscheck.update_one(
             {"Guild": channel.guild.id},
-            {"Channel": channel.id, "Guild": channel.guild.id},
+            {'$set': {"Channel": channel.id, "Guild": channel.guild.id}},
             upsert=True,
         )
 
