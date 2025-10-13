@@ -23,6 +23,81 @@ def parse_time(timestr: str):
         seconds=int(seconds),
     )
 
+class PauseGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="pause", description="セキュリティ処置用のコマンド")
+
+    @app_commands.command(name="invite", description="サーバー招待の一時停止状態を切り替えます")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def pause_invite(
+        self, interaction: discord.Interaction, 一時停止するか: bool, 時間: str = None
+    ):
+        await interaction.response.defer()
+        if 一時停止するか:
+            if not 時間:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="時間を指定する必要があります。", description="指定方法の例: `1d3h5m`"))
+            try:
+                time = parse_time(時間)
+            except ValueError:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="正しい時間を指定する必要があります。", description="指定方法の例: `1d3h5m`"))
+            try:
+                await interaction.guild.edit(reason="招待停止コマンド実行のため。", invites_disabled_until=discord.utils.utcnow() + time)
+            except:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="サーバー招待を停止できませんでした。", description="権限を確認、または最大停止時間を超えていないかを確認してください。\n\nちなみに、最大1日まで停止できます。"))
+            await interaction.followup.send(embed=make_embed.success_embed(title="サーバー招待を停止しました。"))
+        else:
+            await interaction.guild.edit(reason="招待停止解除コマンド実行のため。", invites_disabled_until=None)
+            await interaction.followup.send(embed=make_embed.success_embed(title="サーバー招待を再開しました。"))
+
+    @app_commands.command(name="dm", description="このサーバーからのDMの一時停止状態を切り替えます")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def pause_dm(
+        self, interaction: discord.Interaction, 一時停止するか: bool, 時間: str = None
+    ):
+        await interaction.response.defer()
+        if 一時停止するか:
+            if not 時間:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="時間を指定する必要があります。", description="指定方法の例: `1d3h5m`"))
+            try:
+                time = parse_time(時間)
+            except ValueError:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="正しい時間を指定する必要があります。", description="指定方法の例: `1d3h5m`"))
+            try:
+                await interaction.guild.edit(reason="DM停止コマンド実行のため。", dms_disabled_until=discord.utils.utcnow() + time)
+            except Exception as e:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="DMを停止できませんでした。", description=f"権限を確認、または最大停止時間を超えていないかを確認してください。\n\nちなみに、最大1日まで停止できます。"))
+            await interaction.followup.send(embed=make_embed.success_embed(title="DMを停止しました。"))
+        else:
+            await interaction.guild.edit(reason="DM停止コマンド実行のため。", dms_disabled_until=None)
+            await interaction.followup.send(embed=make_embed.success_embed(title="DMを再開しました。"))
+
+    @app_commands.command(name="both", description="このサーバーの招待リンクとDM、どちらも停止します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def pause_both(
+        self, interaction: discord.Interaction, 一時停止するか: bool, 時間: str = None
+    ):
+        await interaction.response.defer()
+        if 一時停止するか:
+            if not 時間:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="時間を指定する必要があります。", description="指定方法の例: `1d3h5m`"))
+            try:
+                time = parse_time(時間)
+            except ValueError:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="正しい時間を指定する必要があります。", description="指定方法の例: `1d3h5m`"))
+            try:
+                await interaction.guild.edit(reason="Dmと正体リンク停止コマンド実行のため。", dms_disabled_until=discord.utils.utcnow() + time, invites_disabled=discord.utils.utcnow() + time)
+            except Exception as e:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="どちらも停止できませんでした。", description=f"権限を確認、または最大停止時間を超えていないかを確認してください。\n\nちなみに、最大1日まで停止できます。"))
+            await interaction.followup.send(embed=make_embed.success_embed(title="DMとサーバー招待を停止しました。"))
+        else:
+            await interaction.guild.edit(reason="Dmと正体リンク停止コマンド実行のため。", dms_disabled_until=None, invites_disabled=None)
+            await interaction.followup.send(embed=make_embed.success_embed(title="DMとサーバー招待を再開しました。"))
 
 class BanGroup(app_commands.Group):
     def __init__(self):
@@ -196,6 +271,7 @@ class ModCog(commands.Cog):
     )
 
     moderation.add_command(BanGroup())
+    moderation.add_command(PauseGroup())
 
     @moderation.command(name="kick", description="メンバーをキックします。")
     @app_commands.checks.has_permissions(kick_members=True)
