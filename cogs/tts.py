@@ -1,3 +1,4 @@
+import re
 from discord.ext import commands
 import discord
 import time
@@ -363,7 +364,8 @@ ID | 説明
         if len(message.content) > 70:
             return "省略しました。"
         r_w = await self.replace_word(message.content, message.guild)
-        return r_w
+        em_repd = re.sub(r"<:([a-zA-Z0-9_]+):(\d+)>", r"絵文字", r_w)
+        return em_repd
 
     async def get_voice_file(self, author: discord.User):
         voices = {
