@@ -19,7 +19,7 @@ class ExpandCog(commands.Cog):
         if message.author.bot:
             return  # ボットのメッセージは無視
         if not message.content:
-            return  # ボットのメッセージは無視
+            return  # からのメッセージなら無視
         if type(message.channel) == discord.DMChannel:
             return
         db = self.bot.async_db["Main"].ExpandSettings
