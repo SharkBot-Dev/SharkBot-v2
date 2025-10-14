@@ -1970,7 +1970,8 @@ class SettingCog(commands.Cog):
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
-                    title="メッセージ展開を有効化しました。"
+                    title="メッセージ展開を有効化しました。",
+                    description="メッセージURLを送信すると自動的に展開します。"
                 )
             )
         else:
