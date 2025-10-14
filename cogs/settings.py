@@ -1969,22 +1969,21 @@ class SettingCog(commands.Cog):
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="メッセージ展開を有効化しました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="メッセージ展開を有効化しました。"
                 )
             )
         else:
             result = await db.delete_one({"Guild": interaction.guild.id})
             if result.deleted_count == 0:
                 return await interaction.response.send_message(
-                    embed=discord.Embed(
-                        title="メッセージ展開は無効です。", color=discord.Color.red()
+                    embed=make_embed.error_embed(
+                        title="メッセージ展開は無効です。"
                     )
                 )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="メッセージ展開を無効化しました。", color=discord.Color.red()
+                embed=make_embed.success_embed(
+                    title="メッセージ展開を無効化しました。"
                 )
             )
 
@@ -2010,27 +2009,21 @@ class SettingCog(commands.Cog):
         チャンネル: discord.TextChannel,
         有効にするか: bool,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         try:
             await interaction.response.defer()
             await self.announce_pun_set_setting(
                 interaction.guild, チャンネル, 有効にするか
             )
             await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.success_embed(
                     title="自動アナウンス公開を設定しました。",
-                    color=discord.Color.green(),
+                    description=f"{チャンネル.mention} で {'有効' if 有効にするか else '無効'} にしました。"
                 )
             )
         except discord.Forbidden:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="自動アナウンス公開を設定できませんでした。",
-                    color=discord.Color.red(),
                     description="権限エラーです。",
                 )
             )
@@ -2066,9 +2059,8 @@ class SettingCog(commands.Cog):
                 upsert=True,
             )
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title=f"`.{拡張子.replace('.', '')}`をブロックするようにしました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title=f"`.{拡張子.replace('.', '')}`をブロックするようにしました。"
                 )
             )
         else:
@@ -2077,9 +2069,8 @@ class SettingCog(commands.Cog):
                 {"$pull": {"end": 拡張子.replace(".", "")}},
             )
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title=f"`.{拡張子.replace('.', '')}`をブロックしないようにしました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title=f"`.{拡張子.replace('.', '')}`をブロックしないようにしました。"
                 )
             )
 
@@ -2115,8 +2106,8 @@ class SettingCog(commands.Cog):
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="自動翻訳を有効化しました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="自動翻訳を有効化しました。"
                 )
             )
         else:
@@ -2125,14 +2116,13 @@ class SettingCog(commands.Cog):
             )
             if result.deleted_count == 0:
                 return await interaction.response.send_message(
-                    embed=discord.Embed(
-                        title="自動翻訳は有効化されていません。",
-                        color=discord.Color.red(),
+                    embed=make_embed.error_embed(
+                        title="自動翻訳は有効化されていません。"
                     )
                 )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="自動翻訳を無効化しました。", color=discord.Color.red()
+                embed=make_embed.success_embed(
+                    title="自動翻訳を無効化しました。"
                 )
             )
 
@@ -2155,8 +2145,8 @@ class SettingCog(commands.Cog):
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="おはよう挨拶を有効化しました。", description="毎日8時に通知します。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="おはよう挨拶を有効化しました。", description="毎日8時に通知します。"
                 )
             )
         else:
@@ -2166,13 +2156,12 @@ class SettingCog(commands.Cog):
             if result.deleted_count == 0:
                 return await interaction.response.send_message(
                     embed=discord.Embed(
-                        title="おはよう挨拶は有効化されていません。",
-                        color=discord.Color.red(),
+                        title="おはよう挨拶は有効化されていません。"
                     )
                 )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="おはよう挨拶を無効化しました。", color=discord.Color.red()
+                embed=make_embed.success_embed(
+                    title="おはよう挨拶を無効化しました。"
                 )
             )
 
