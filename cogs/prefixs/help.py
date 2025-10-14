@@ -60,6 +60,13 @@ class Prefixs_HelpCog(commands.Cog):
 
             ems.append(embed)
 
+        c = 1
+        for e in ems:
+            if type(e) != discord.Embed:
+                continue
+            e.set_footer(text=f"{c} / {len(ems)}")
+            c += 1
+
         await ctx.reply(embed=ems[0], view=Paginator(ems))
 
     @commands.command(name="dashboard", aliases=["d"], description="ダッシュボードの案内を表示します。")
