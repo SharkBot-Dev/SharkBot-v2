@@ -1,4 +1,5 @@
 import io
+import random
 from discord.ext import commands
 import discord
 import datetime
@@ -787,6 +788,109 @@ class ModCog(commands.Cog):
         await interaction.followup.send(file=discord.File(t, "auditlog.txt"))
         t.close()
 
+    @moderation.command(
+        name="lottery",
+        description="抽選をします。",
+    )
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        選ぶ先=[
+            app_commands.Choice(name="ロールから", value="role"),
+            app_commands.Choice(name="リアクションから", value="reaction"),
+            app_commands.Choice(name="テキストチャンネルのメッセージから", value="messages"),
+        ]
+    )
+    async def lottery(
+        self, interaction: discord.Interaction, 何個選ぶか: int, 選ぶ先: app_commands.Choice[str], ロール: discord.Role = None, メッセージ: str = None, 絵文字: str = None, テキストチャンネル: discord.TextChannel = None
+    ):
+        await interaction.response.defer(thinking=True)
+
+        if 選ぶ先.value == "role":
+            if ロール is None:
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="引数を指定してください。",
+                        description="ロールを指定してください。"
+                    ),
+                    ephemeral=True
+                )
+
+            members = [m for m in ロール.members]
+            if not members:
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(title="抽選失敗です", description="指定されたロールに有効なメンバーがいません。")
+                )
+
+            winners = random.sample(members, min(何個選ぶか, len(members)))
+            desc = "\n".join([m.mention for m in winners])
+            return await interaction.followup.send(
+                embed=make_embed.success_embed(title="抽選結果です (ロールから)", description=desc)
+            )
+
+        elif 選ぶ先.value == "reaction":
+            if メッセージ is None:
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(title="引数を指定してください。", description="メッセージIDを指定してください。"),
+                    ephemeral=True
+                )
+            if 絵文字 is None:
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(title="引数を指定してください。", description="絵文字を指定してください。"),
+                    ephemeral=True
+                )
+
+            channel = テキストチャンネル or interaction.channel
+            try:
+                message = await channel.fetch_message(int(メッセージ))
+            except Exception:
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(title="取得失敗です", description="指定されたメッセージが見つかりませんでした。")
+                )
+
+            reaction = discord.utils.get(message.reactions, emoji=絵文字)
+            if reaction is None:
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(title="エラーです", description=f"指定の絵文字({絵文字})のリアクションが見つかりませんでした。")
+                )
+
+            users = [u async for u in reaction.users()]
+            if not users:
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(title="抽選失敗です", description="リアクションしているユーザーがいません。")
+                )
+
+            winners = random.sample(users, min(何個選ぶか, len(users)))
+            desc = "\n".join([u.mention for u in winners])
+            return await interaction.followup.send(
+                embed=make_embed.success_embed(title="抽選結果です (リアクションから)", description=desc)
+            )
+        elif 選ぶ先.value == "messages":
+            if テキストチャンネル is None:
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(title="引数を指定してください。", description="テキストチャンネルを指定してください。"),
+                    ephemeral=True
+                )
+
+            try:
+                messages = [m async for m in テキストチャンネル.history(limit=100)]
+            except discord.Forbidden:
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(title="権限エラーです。", description="メッセージ履歴を取得できません。権限を確認してください。")
+                )
+
+            authors = list({m.author for m in messages})
+            if not authors:
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(title="抽選失敗です。", description="対象チャンネルに有効なメッセージ送信者がいません。")
+                )
+
+            winners = random.sample(authors, min(何個選ぶか, len(authors)))
+            desc = "\n".join([a.mention for a in winners])
+            return await interaction.followup.send(
+                embed=make_embed.success_embed(title="抽選結果です (テキストチャンネルのメッセージから)", description=desc)
+            )
 
 async def setup(bot):
     await bot.add_cog(ModCog(bot))
