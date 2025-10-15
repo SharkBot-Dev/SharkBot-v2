@@ -24,6 +24,12 @@ class Prefixs_ErrorHandleCog(commands.Cog):
         elif isinstance(error, commands.NoPrivateMessage):
             a = None
             return a
+        elif isinstance(error, commands.BadArgument):
+            a = None
+            return a
+        elif isinstance(error, commands.MissingRequiredArgument):
+            a = None
+            return a
         else:
             print(f"Prefix Command error: {error}")
             return await ctx.reply(embed=make_embed.error_embed(title="予期しないエラーが発生しました。", description=f"開発チームに報告してください。\n\nエラーコード\n```{error}```"))

@@ -90,7 +90,24 @@ class Prefixs_HelpCog(commands.Cog):
         
         base_url = "https://github.com/SharkBot-Dev/SharkBot-v2"
 
-        await ctx.reply(f"{base_url}")
+        await ctx.reply(base_url)
+
+    @commands.command(name="aliases", aliases=["a"], description="頭文字コマンドの別名からコマンドを検索します。")
+    @commands.cooldown(2, 5, type=commands.BucketType.guild)
+    @commands.guild_only()
+    async def aliases_prefix(self, ctx: commands.Context, aliases: str):
+        if not await command_disable.command_enabled_check_by_cmdname("help", ctx.guild):
+            return
+        
+        command = self.bot.commands
+        for c in command:
+            if aliases in list(c.aliases):
+                return await ctx.reply(embed=make_embed.success_embed(title=f"{c.name} を発見しました。")
+                                       .add_field(name="コマンド名", value=c.name, inline=False)
+                                       .add_field(name="説明", value=c.description, inline=False)
+                                       .add_field(name="ほかの別名", value=", ".join(list(c.aliases))))
+            
+        await ctx.reply(embed=make_embed.error_embed(title="コマンドが見つかりませんでした。", description="ヘルプコマンドで正しい別名を確認してください。"))
 
 async def setup(bot):
     await bot.add_cog(Prefixs_HelpCog(bot))
