@@ -23,7 +23,6 @@ class YTDLSource:
         "no_warnings": True,
     }
 
-    # FFmpeg基本設定
     BASE_FFMPEG = '-nostdin'
     BASE_OPTIONS = '-vn -ac 2'
 
@@ -46,7 +45,7 @@ class YTDLSource:
     @classmethod
     def create_ffmpeg_player(cls, url: str, boost: bool = False):
         if boost:
-            filter_opt = ' -b:a 64k -filter:a "equalizer=f=80:width_type=h:width=200:g=8"'
+            filter_opt = ' -b:a 128k -filter:a "equalizer=f=80:width_type=h:width=200:g=8"'
         else:
             filter_opt = ' -b:a 64k'
 
@@ -82,7 +81,7 @@ class ShuugiinSource:
     @classmethod
     def create_ffmpeg_player(cls, url: str, boost: bool = False):
         if boost:
-            options = f"{cls.BASE_OPTIONS} -b:a 64k -filter:a \"equalizer=f=80:width_type=h:width=200:g=8\""
+            options = f"{cls.BASE_OPTIONS} -b:a 128k -filter:a \"equalizer=f=80:width_type=h:width=200:g=8\""
         else:
             options = f"{cls.BASE_OPTIONS} -b:a 64k"
         return discord.FFmpegPCMAudio(url, before_options=cls.BASE_FFMPEG, options=options)
@@ -373,7 +372,7 @@ class MusicCog(commands.Cog):
             {"$set": {"boost": 'true' if 有効化するか else 'false'}},
             upsert=True
         )
-        await interaction.response.send_message(embed=discord.Embed(title=f"低音ブーストを {'有効化' if 有効化するか else '無効化'} しました。", description="SoundCloudとファイルのみ適用されます。"))
+        await interaction.response.send_message(embed=discord.Embed(title=f"低音ブーストを {'有効化' if 有効化するか else '無効化'} しました。", description="SoundCloudとファイルのみ適用されます。", color=discord.Color.green()))
 
     @music.command(name="source", description="対応ソースを表示します")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
