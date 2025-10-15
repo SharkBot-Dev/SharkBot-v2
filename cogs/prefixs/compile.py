@@ -12,6 +12,7 @@ class Prefixs_CompileCog(commands.Cog):
 
     @commands.command(name="python", aliases=['py'], description="Pythonを実行します。")
     @commands.cooldown(2, 5, type=commands.BucketType.guild)
+    @commands.guild_only()
     async def compile_python(self, ctx: commands.Context, *, program: str):
         if not await command_disable.command_enabled_check_by_cmdname("shell compile", ctx.guild):
             return
@@ -81,6 +82,7 @@ class Prefixs_CompileCog(commands.Cog):
 
     @commands.command(name="nodejs", aliases=['njs'], description="Nodejsを実行します。")
     @commands.cooldown(2, 5, type=commands.BucketType.guild)
+    @commands.guild_only()
     async def compile_nodejs(self, ctx: commands.Context, *, program: str):
         if not await command_disable.command_enabled_check_by_cmdname("shell compile", ctx.guild):
             return

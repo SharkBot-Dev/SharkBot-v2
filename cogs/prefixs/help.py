@@ -34,6 +34,7 @@ class Prefixs_HelpCog(commands.Cog):
 
     @commands.command(name="help", aliases=["h"], description="頭文字用ヘルプを表示します。")
     @commands.cooldown(2, 5, type=commands.BucketType.guild)
+    @commands.guild_only()
     async def help_prefix(self, ctx: commands.Context):
         if not await command_disable.command_enabled_check_by_cmdname("help", ctx.guild):
             return
@@ -71,6 +72,7 @@ class Prefixs_HelpCog(commands.Cog):
 
     @commands.command(name="dashboard", aliases=["d"], description="ダッシュボードの案内を表示します。")
     @commands.cooldown(2, 5, type=commands.BucketType.guild)
+    @commands.guild_only()
     async def dashboard_prefix(self, ctx: commands.Context):
         if not await command_disable.command_enabled_check_by_cmdname("dashboard", ctx.guild):
             return

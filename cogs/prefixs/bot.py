@@ -9,6 +9,7 @@ class Prefixs_BotCog(commands.Cog):
 
     @commands.command(name="ping", description="Pingを測定します。")
     @commands.cooldown(2, 5, type=commands.BucketType.guild)
+    @commands.guild_only()
     async def ping_prefix(self, ctx: commands.Context):
         if not await command_disable.command_enabled_check_by_cmdname("bot ping", ctx.guild):
             return
