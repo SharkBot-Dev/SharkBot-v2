@@ -1,8 +1,10 @@
+import io
 from discord.ext import commands
 import discord
 from consts import settings
 from discord import app_commands
 from models import command_disable, make_embed
+import aiohttp
 
 class Paginator(discord.ui.View):
     def __init__(self, embeds: list[discord.Embed]):
@@ -78,6 +80,17 @@ class Prefixs_HelpCog(commands.Cog):
             return
         
         await ctx.reply(f"以下のリンクからアクセスできます。\n{settings.DASHBOARD_URL}\n\n-# ダッシュボードは開発中です。メイン設定はスラッシュコマンドでお願いします。")
+
+    @commands.command(name="source", aliases=["so"], description="Botのソースコードを表示します。")
+    @commands.cooldown(2, 5, type=commands.BucketType.guild)
+    @commands.guild_only()
+    async def source_prefix(self, ctx: commands.Context):
+        if not await command_disable.command_enabled_check_by_cmdname("help", ctx.guild):
+            return
+        
+        base_url = "https://github.com/SharkBot-Dev/SharkBot-v2"
+
+        await ctx.reply(f"{base_url}")
 
 async def setup(bot):
     await bot.add_cog(Prefixs_HelpCog(bot))
