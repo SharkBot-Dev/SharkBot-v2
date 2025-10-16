@@ -1351,8 +1351,8 @@ class ToolsCog(commands.Cog):
             "reminder_sendtime",        # イベント名
             interaction.user.id,           # args
             interaction.guild.id, # args
-            interaction.channel_id,
-            要件
+            channel_id=interaction.channel_id,
+            reason=要件
         )
 
         embed = make_embed.success_embed(
@@ -1363,7 +1363,9 @@ class ToolsCog(commands.Cog):
         await interaction.response.send_message(embed=embed)
     
     @commands.Cog.listener('on_reminder_sendtime')
-    async def on_reminder_sendtime_main(self, user_id: int, guild_id: int, channel_id: int, reason: str):
+    async def on_reminder_sendtime_main(self, user_id: int, guild_id: int, **kwargs):
+        channel_id = kwargs.get('channel_id')
+        reason = kwargs.get('reason')
         print(f'リマインダーの時間になりました: {user_id}')
         guild = self.bot.get_guild(guild_id)
         if not guild:
