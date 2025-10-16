@@ -1324,61 +1324,56 @@ class ToolsCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True, manage_guild=True)
     async def reminder(self, interaction: discord.Interaction, 要件: str, 時間: str):
-        db = self.bot.async_db["Main"].AlertQueue
-
-        dbfind = await db.find_one(
-            {"ID": f"reminder_{interaction.user.id}"}, {"_id": False}
-        )
-        if dbfind is not None:
-            return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="リマインダーはすでにセットされています。",
-                    color=discord.Color.red(),
-                ),
-                ephemeral=True,
-            )
-
         def parse_time(timestr: str) -> int:
             pattern = r"((?P<days>\d+)d)?((?P<hours>\d+)h)?((?P<minutes>\d+)m)?((?P<seconds>\d+)s)?"
             match = re.fullmatch(pattern, timestr)
             if not match:
                 return None
-            time_params = {
-                name: int(val) if val else 0 for name, val in match.groupdict().items()
-            }
-            seconds = (
-                time_params["days"] * 86400
-                + time_params["hours"] * 3600
-                + time_params["minutes"] * 60
-                + time_params["seconds"]
+            time_params = {k: int(v) if v else 0 for k, v in match.groupdict().items()}
+            return (
+                time_params["days"] * 86400 +
+                time_params["hours"] * 3600 +
+                time_params["minutes"] * 60 +
+                time_params["seconds"]
             )
-            return seconds
 
         seconds = parse_time(時間)
         if seconds is None or seconds <= 0:
-            return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="時間の指定が正しくありません。",
-                    description="例: `1d2h3m4s`",
-                    color=discord.Color.red(),
-                ),
-                ephemeral=True,
+            embed = discord.Embed(
+                title="時間の指定が正しくありません。",
+                description="例: `1d2h3m4s`",
+                color=discord.Color.red()
             )
+            return await interaction.response.send_message(embed=embed, ephemeral=True)
 
-        await self.bot.alert_add(
-            f"reminder_{interaction.user.id}",  # ID
-            interaction.channel.id,  # 通知チャンネル
-            f"{interaction.user.mention}",  # メンション
-            "リマインダーのセットされた時間です！",  # タイトル/本文
-            要件,  # ユーザー指定メッセージ
-            seconds,  # 待機時間(秒)
+        await self.bot.reminder_create(
+            datetime.timedelta(seconds=seconds),
+            "reminder_sendtime",        # イベント名
+            interaction.user.id,           # args
+            interaction.guild.id, # args
+            interaction.channel_id,
+            要件
         )
 
-        embed = make_embed.success_embed(title="リマインダーをセットしました。", description=f"{seconds}秒後に通知します。")
-
-        return await interaction.response.send_message(
-            embed=embed
+        embed = make_embed.success_embed(
+            title="リマインダーをセットしました。",
+            description=f"{seconds}秒後に通知します。"
         )
+
+        await interaction.response.send_message(embed=embed)
+    
+    @commands.Cog.listener('on_reminder_sendtime')
+    async def on_reminder_sendtime_main(self, user_id: int, guild_id: int, channel_id: int, reason: str):
+        print(f'リマインダーの時間になりました: {user_id}')
+        guild = self.bot.get_guild(guild_id)
+        if not guild:
+            return
+        channel = guild.get_channel(channel_id)
+        if channel:
+            try:
+                await channel.send(embed=make_embed.success_embed(title="リマインダーのセットされた時間になりました。", description=reason), content=f"<@{user_id}>")
+            except:
+                return
 
     @tools.command(name="calendar", description="カレンダーを表示します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
