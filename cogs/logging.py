@@ -578,14 +578,35 @@ class LoggingCog(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def log_disable(self, interaction: discord.Interaction):
+    @app_commands.choices(event=[
+        app_commands.Choice(name="メッセージ削除", value="message_delete"),
+        app_commands.Choice(name="メッセージ編集", value="message_edit"),
+        app_commands.Choice(name="メンバーBAN", value="member_ban"),
+        app_commands.Choice(name="メンバー参加", value="member_join"),
+        app_commands.Choice(name="メンバー退出", value="member_remove"),
+        app_commands.Choice(name="メンバー更新", value="member_update"),
+        app_commands.Choice(name="ロール作成", value="role_create"),
+        app_commands.Choice(name="ロール削除", value="role_delete"),
+        app_commands.Choice(name="チャンネル作成", value="channel_create"),
+        app_commands.Choice(name="チャンネル削除", value="channel_delete"),
+        app_commands.Choice(name="招待リンク作成", value="invite_create"),
+        app_commands.Choice(name="AutoModアクション", value="automod_action"),
+        app_commands.Choice(name="VC参加", value="vc_join"),
+        app_commands.Choice(name="VC退出", value="vc_leave"),
+        app_commands.Choice(name="Bot導入", value="bot_join"),
+    ])
+    async def log_disable(self, interaction: discord.Interaction, event: app_commands.Choice[str] = None):
         if not await command_disable.command_enabled_check(interaction):
             return await interaction.response.send_message(
                 ephemeral=True, content="そのコマンドは無効化されています。"
             )
-
-        db = self.bot.async_db["Main"].EventLoggingChannel
-        await db.delete_one({"Guild": interaction.guild.id})
+        
+        if event:
+            db = self.bot.async_db["Main"].EventLoggingChannel
+            await db.delete_one({"Guild": interaction.guild.id, "Event": event.value})
+        else:
+            db = self.bot.async_db["Main"].EventLoggingChannel
+            await db.delete_many({"Guild": interaction.guild.id})
         await interaction.response.send_message(
             embed=discord.Embed(
                 title="ログを無効化しました。", color=discord.Color.green()
