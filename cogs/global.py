@@ -9,7 +9,7 @@ import aiohttp
 from google import genai
 import urllib.parse
 
-from models import command_disable, make_embed
+from models import command_disable, make_embed, is_ban
 import re
 
 from consts import settings
@@ -1172,14 +1172,9 @@ class GlobalCog(commands.Cog):
         if not check:
             return
 
-        block = await self.user_block(message)
+        block = await is_ban.is_blockd_by_message(message)
 
-        if block:
-            current_time = time.time()
-            last_message_time = user_last_message_time_mute.get(message.guild.id, 0)
-            if current_time - last_message_time < 30:
-                return
-            user_last_message_time_mute[message.guild.id] = current_time
+        if not block:
             return
 
         current_time = time.time()
@@ -1511,9 +1506,9 @@ class GlobalCog(commands.Cog):
         if not check:
             return
 
-        block = await self.user_block(message)
+        block = await is_ban.is_blockd_by_message(message)
 
-        if block:
+        if not block:
             return
 
         current_time = time.time()
@@ -1672,14 +1667,9 @@ r18やグロ関連のものを貼らない
         if not check:
             return
 
-        block = await self.user_block(message)
+        block = await is_ban.is_blockd_by_message(message)
 
-        if block:
-            current_time = time.time()
-            last_message_time = user_last_message_time_mute.get(message.guild.id, 0)
-            if current_time - last_message_time < 30:
-                return
-            user_last_message_time_mute[message.guild.id] = current_time
+        if not block:
             return
 
         current_time = time.time()
@@ -1779,15 +1769,11 @@ r18やグロ関連のものを貼らない
         if not check:
             return
 
-        block = await self.user_block(message)
+        block = await is_ban.is_blockd_by_message(message)
 
-        if block:
-            current_time = time.time()
-            last_message_time = user_last_message_time_mute.get(message.guild.id, 0)
-            if current_time - last_message_time < 30:
-                return
-            user_last_message_time_mute[message.guild.id] = current_time
+        if not block:
             return
+        
         current_time = time.time()
         last_message_time = user_last_message_timegc.get(message.guild.id, 0)
         if current_time - last_message_time < COOLDOWN_TIMEGC:
@@ -2035,14 +2021,9 @@ r18やグロ関連のものを貼らない
         if not check:
             return
 
-        block = await self.user_block(message)
+        block = await is_ban.is_blockd_by_message(message)
 
-        if block:
-            current_time = time.time()
-            last_message_time = user_last_message_time_mute.get(message.guild.id, 0)
-            if current_time - last_message_time < 30:
-                return
-            user_last_message_time_mute[message.guild.id] = current_time
+        if not block:
             return
 
         current_time = time.time()
