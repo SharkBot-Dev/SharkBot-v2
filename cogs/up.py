@@ -4,7 +4,7 @@ import time
 from unbelievaboat import Client
 import asyncio
 from discord import app_commands
-from models import command_disable
+from models import command_disable, make_embed
 
 
 class UpCog(commands.Cog):
@@ -496,28 +496,23 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def up_dicoall(self, interaction: discord.Interaction, onか: bool):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].Dicoall
         if onか:
-            await db.replace_one(
+            await db.update_one(
                 {"Channel": interaction.channel.id},
-                {"Channel": interaction.channel.id},
+                {'$set': {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Dicoallの通知をONにしました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="Dicoallの通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Dicoallの通知をOFFにしました。", color=discord.Color.red()
+                embed=make_embed.success_embed(
+                    title="Dicoallの通知をOFFにしました。"
                 )
             )
 
@@ -526,28 +521,23 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def up_distopia(self, interaction: discord.Interaction, onか: bool):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].Distopia
         if onか:
-            await db.replace_one(
+            await db.update_one(
                 {"Channel": interaction.channel.id},
-                {"Channel": interaction.channel.id},
+                {'$set': {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Distopiaの通知をONにしました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="Distopiaの通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Distopiaの通知をOFFにしました。", color=discord.Color.red()
+                embed=make_embed.success_embed(
+                    title="Distopiaの通知をOFFにしました。"
                 )
             )
 
@@ -556,30 +546,23 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def sabachannel_vote(self, interaction: discord.Interaction, onか: bool):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].SabaChannel
         if onか:
-            await db.replace_one(
+            await db.update_one(
                 {"Channel": interaction.channel.id},
-                {"Channel": interaction.channel.id},
+                {'$set': {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="鯖チャンネルの通知をONにしました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="鯖チャンネルの通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="鯖チャンネルの通知をOFFにしました。",
-                    color=discord.Color.red(),
+                embed=make_embed.success_embed(
+                    title="鯖チャンネルの通知をOFFにしました。"
                 )
             )
 
@@ -588,28 +571,23 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def dissoku_up(self, interaction: discord.Interaction, onか: bool):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].DissokuChannel
         if onか:
-            await db.replace_one(
+            await db.update_one(
                 {"Channel": interaction.channel.id},
-                {"Channel": interaction.channel.id},
+                {'$set': {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="ディス速の通知をONにしました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="ディス速の通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="ディス速の通知をOFFにしました。", color=discord.Color.red()
+                embed=make_embed.success_embed(
+                    title="ディス速の通知をOFFにしました。"
                 )
             )
 
@@ -618,28 +596,23 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def disboard_bump(self, interaction: discord.Interaction, onか: bool):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].DisboardChannel
         if onか:
-            await db.replace_one(
+            await db.update_one(
                 {"Channel": interaction.channel.id},
-                {"Channel": interaction.channel.id},
+                {'$set': {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Disboardの通知をONにしました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="Disboardの通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Disboardの通知をOFFにしました。", color=discord.Color.red()
+                embed=make_embed.success_embed(
+                    title="Disboardの通知をOFFにしました。"
                 )
             )
 
@@ -648,28 +621,23 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def dcafe_up(self, interaction: discord.Interaction, onか: bool):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].DiscafeChannel
         if onか:
-            await db.replace_one(
+            await db.update_one(
                 {"Channel": interaction.channel.id},
-                {"Channel": interaction.channel.id},
+                {'$set': {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="DCafeの通知をONにしました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="DCafeの通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="DCafeの通知をOFFにしました。", color=discord.Color.red()
+                embed=make_embed.success_embed(
+                    title="DCafeの通知をOFFにしました。"
                 )
             )
 
@@ -678,61 +646,49 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def discadia_bump(self, interaction: discord.Interaction, onか: bool):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].DisCadiaChannel
         if onか:
-            await db.replace_one(
+            await db.update_one(
                 {"Channel": interaction.channel.id},
-                {"Channel": interaction.channel.id},
+                {'$set': {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Discadiaの通知をONにしました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="Discadiaの通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Discadiaの通知をOFFにしました。", color=discord.Color.red()
+                embed=make_embed.success_embed(
+                    title="Discadiaの通知をOFFにしました。"
                 )
             )
 
-    @bump.command(name="mention", description="Disboardの通知をします。")
+    @bump.command(name="mention", description="Bump・Up通知時にメンションをします。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def mention_up(
         self, interaction: discord.Interaction, ロール: discord.Role = None
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].BumpUpMention
         if not ロール:
             await db.delete_one({"Channel": interaction.channel.id})
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Up・Bump通知時にロールを\n通知しないようにしました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="Up・Bump通知時にロールを\n通知しないようにしました。"
                 )
             )
-        await db.replace_one(
+        await db.update_one(
             {"Channel": interaction.channel.id},
-            {"Channel": interaction.channel.id, "Role": ロール.id},
+            {'$set': {"Channel": interaction.channel.id, "Role": ロール.id}},
             upsert=True,
         )
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title="Up・Bump通知時にロールを\n通知するようにしました。",
-                color=discord.Color.green(),
+            embed=make_embed.success_embed(
+                title="Up・Bump通知時にロールを\n通知するようにしました。"
             )
         )
 
