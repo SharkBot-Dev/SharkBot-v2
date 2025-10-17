@@ -18,31 +18,48 @@ class AutoDownCog(commands.Cog):
         name="vc-kick",
         description="オフラインになるとVCからキックするように設定します。"
     )
+    @app_commands.describe(
+        キックするか="Trueで有効化、Falseで無効化します。",
+        対象ロール="このロールを持つメンバーのみキック対象にします（省略可）"
+    )
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_messages=True)
     async def autodown_vckick(
         self,
         interaction: discord.Interaction,
-        キックするか: bool
+        キックするか: bool,
+        対象ロール: discord.Role | None = None
     ):
         db = self.bot.async_db["MainTwo"].AutoDown
 
         if キックするか:
+            update_data = {"$addToSet": {"Execution": "VCKICK"}}
+            if 対象ロール:
+                update_data["$set"] = {"TargetRole": 対象ロール.id}
+
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"$addToSet": {"Execution": "VCKICK"}},
+                update_data,
                 upsert=True,
             )
+
+            desc = "VCからキックします。"
+            if 対象ロール:
+                desc += f"\n対象ロール: {対象ロール.mention}"
+
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="オフラインになると実行する行動を追加しました。",
-                    description="VCからキックします。"
+                    description=desc
                 )
             )
         else:
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"$pull": {"Execution": "VCKICK"}},
+                {
+                    "$pull": {"Execution": "VCKICK"},
+                    "$unset": {"TargetRole": ""},
+                },
                 upsert=True,
             )
             await interaction.response.send_message(
@@ -53,11 +70,20 @@ class AutoDownCog(commands.Cog):
             )
 
     async def procces_event(self, before: discord.Member, after: discord.Member):
+        if after.bot:
+            return
+
         db = self.bot.async_db["MainTwo"].AutoDown
         settings = await db.find_one({"Guild": after.guild.id})
 
         if not settings or "Execution" not in settings or "VCKICK" not in settings["Execution"]:
             return
+        
+        target_role_id = settings.get("TargetRole")
+        if target_role_id:
+            role = after.guild.get_role(target_role_id)
+            if not role or role not in after.roles:
+                return
 
         if after.status == discord.Status.offline:
             voice_state = after.voice
