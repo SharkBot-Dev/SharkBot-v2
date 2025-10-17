@@ -217,8 +217,9 @@ class EmbedBuilder(discord.ui.View):
     @discord.ui.button(label="送信", style=discord.ButtonStyle.green)
     async def embed_send_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer(ephemeral=True)
+        ol_m = await interaction.original_response()
         try:
-            await interaction.channel.send(embed=interaction.message.embeds[0].copy())
+            await interaction.channel.send(embed=ol_m.embeds[0].copy())
         except Exception as e:
             await interaction.followup.send(ephemeral=True, embed=make_embed.error_embed(title="埋め込み送信時にエラーが発生しました。", description=f"```{e}```"))
             return    
