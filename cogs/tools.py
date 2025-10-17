@@ -110,6 +110,118 @@ async def fetch_whois(target_domain):
     res = await loop.run_in_executor(None, partial(whois_query, target_domain))
     return io.StringIO(res)
 
+class EmbedBuilder(discord.ui.View):
+    def __init__(self, *, timeout = 180):
+        super().__init__(timeout=timeout)
+
+    @discord.ui.button(label="タイトル", style=discord.ButtonStyle.gray)
+    async def title_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        class EditTitleModal(discord.ui.Modal, title="タイトル編集"):
+            text = discord.ui.Label(
+                text="タイトルを入力",
+                description="タイトルを入力してください。",
+                component=discord.ui.TextInput(
+                style=discord.TextStyle.short, max_length=30, required=True
+                ),
+            )
+
+            async def on_submit(self, interaction_: discord.Interaction):
+                await interaction_.response.defer(ephemeral=True)
+
+                assert isinstance(self.text.component, discord.ui.TextInput)
+
+                ol_m = await interaction.original_response()
+
+                em = ol_m.embeds[0].copy()
+
+                em.title = self.text.component.value
+                await ol_m.edit(embed=em)
+        await interaction.response.send_modal(EditTitleModal())
+
+    @discord.ui.button(label="説明", style=discord.ButtonStyle.gray)
+    async def desc_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        class EditTitleModal(discord.ui.Modal, title="タイトル編集"):
+            text = discord.ui.Label(
+                text="説明を入力",
+                description="説明を入力してください。",
+                component=discord.ui.TextInput(
+                style=discord.TextStyle.long, required=True
+                ),
+            )
+
+            async def on_submit(self, interaction_: discord.Interaction):
+                await interaction_.response.defer(ephemeral=True)
+
+                assert isinstance(self.text.component, discord.ui.TextInput)
+
+                ol_m = await interaction.original_response()
+
+                em = ol_m.embeds[0].copy()
+                
+                em.description = self.text.component.value
+                await ol_m.edit(embed=em)
+        await interaction.response.send_modal(EditTitleModal())
+
+    @discord.ui.button(label="画像", style=discord.ButtonStyle.gray)
+    async def image_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        class EditTitleModal(discord.ui.Modal, title="画像URLを追加"):
+            text = discord.ui.Label(
+                text="画像URL",
+                description="画像URLを入力してください。",
+                component=discord.ui.TextInput(
+                    style=discord.TextStyle.short, required=True
+                ),
+            )
+
+            async def on_submit(self, interaction_: discord.Interaction):
+                await interaction_.response.defer(ephemeral=True)
+
+                assert isinstance(self.text.component, discord.ui.TextInput)
+
+                ol_m = await interaction.original_response()
+
+                em = ol_m.embeds[0].copy()
+                try:
+                    em.set_image(url=self.text.component.value)
+                    await ol_m.edit(embed=em)
+                except:
+                    return
+        await interaction.response.send_modal(EditTitleModal())
+
+    @discord.ui.button(label="色", style=discord.ButtonStyle.blurple)
+    async def footer_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        class EditTitleModal(discord.ui.Modal, title="色を入力"):
+            text = discord.ui.Label(
+                text="色",
+                description="色を入力してください。",
+                component=discord.ui.TextInput(
+                    style=discord.TextStyle.short, required=True, default="#000000"
+                ),
+            )
+
+            async def on_submit(self, interaction_: discord.Interaction):
+                await interaction_.response.defer(ephemeral=True)
+
+                assert isinstance(self.text.component, discord.ui.TextInput)
+
+                ol_m = await interaction.original_response()
+
+                em = ol_m.embeds[0].copy()
+                try:
+                    em.color = discord.Color.from_str(self.text.component.value)
+                    await ol_m.edit(embed=em)
+                except:
+                    return await interaction.followup.send(ephemeral=True, embed=make_embed.error_embed(title="適切な色を入力してください。", description="例: `#000000`"))
+        await interaction.response.send_modal(EditTitleModal())
+
+    @discord.ui.button(label="送信", style=discord.ButtonStyle.green)
+    async def embed_send_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            await interaction.channel.send(embed=interaction.message.embeds[0].copy())
+        except Exception as e:
+            await interaction.followup.send(ephemeral=True, embed=make_embed.error_embed(title="埋め込み送信時にエラーが発生しました。", description=f"```{e}```"))
+            return    
 
 class EmbedMake(discord.ui.Modal, title="埋め込みを作成"):
     title_ = discord.ui.TextInput(
@@ -869,7 +981,17 @@ class ToolsCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tools_embed(self, interaction: discord.Interaction):
-        await interaction.response.send_modal(EmbedMake())
+        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="埋め込みタイトル", description="埋め込み説明です", color=discord.Color.green()).set_author(
+                name=f"{interaction.user.name}",
+                icon_url=interaction.user.avatar.url
+                if interaction.user.avatar
+                else interaction.user.default_avatar.url,
+            ).set_footer(
+                    text=f"{interaction.guild.name} | {interaction.guild.id}",
+                    icon_url=interaction.guild.icon.url
+                    if interaction.guild.icon
+                    else interaction.user.default_avatar.url,
+                ), view=EmbedBuilder())
 
     @tools.command(name="button", description="ボタンを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)
