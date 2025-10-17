@@ -489,6 +489,37 @@ class LoggingCog(commands.Cog):
         except:
             return
 
+    @commands.Cog.listener(name="on_audit_log_entry_create")
+    async def on_on_audit_log_entry_create_log_bot_join(
+        self,
+        entry: discord.AuditLogEntry
+    ):
+        try:
+            wh = await self.get_logging_webhook(entry.guild, "bot_join")
+            if not wh:
+                return
+            
+            if entry.action == discord.AuditLogAction.bot_add:
+                async with aiohttp.ClientSession() as session:
+                    webhook_ = Webhook.from_url(wh, session=session)
+                    await webhook_.send(
+                        avatar_url=self.bot.user.avatar.url,
+                        embed=discord.Embed(
+                            title="<:Plus:1367039505865113670> Botが追加されました。",
+                            description=f"Bot名: {entry.target.name}\nBotID: {entry.target.id}\n参加させた人{entry.user.mention} ({entry.user.id})\n参加した時間: {datetime.datetime.now()}",
+                            color=discord.Color.green(),
+                        )
+                        .set_footer(text=f"mid:{entry.target.id}")
+                        .set_author(
+                            name=f"{entry.target.name}",
+                            icon_url=entry.target.avatar.url
+                            if entry.target.avatar
+                            else entry.target.default_avatar.url,
+                        ),
+                    )
+        except:
+            return
+
     log = app_commands.Group(name="logging", description="ログ系のコマンドです。")
 
     @log.command(name="setup", description="イベントごとにログを設定します。")
@@ -508,6 +539,7 @@ class LoggingCog(commands.Cog):
         app_commands.Choice(name="AutoModアクション", value="automod_action"),
         app_commands.Choice(name="VC参加", value="vc_join"),
         app_commands.Choice(name="VC退出", value="vc_leave"),
+        app_commands.Choice(name="Bot導入", value="bot_join"),
     ])
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(administrator=True)
@@ -523,15 +555,17 @@ class LoggingCog(commands.Cog):
         if event:
             query["Event"] = event.value
 
-        data = {
-            "Guild": interaction.guild.id,
-            "Channel": interaction.channel.id,
-            "Webhook": web.url,
+        update_data = {
+            "$set": {
+                "Guild": interaction.guild.id,
+                "Channel": interaction.channel.id,
+                "Webhook": web.url,
+            }
         }
         if event:
-            data["Event"] = event.value
+            update_data["$set"]["Event"] = event.value
 
-        await db.replace_one(query, data, upsert=True)
+        await db.update_one(query, update_data, upsert=True)
 
         await interaction.response.send_message(
             embed=discord.Embed(
@@ -554,7 +588,7 @@ class LoggingCog(commands.Cog):
         await db.delete_one({"Guild": interaction.guild.id})
         await interaction.response.send_message(
             embed=discord.Embed(
-                title="ログをセットアップしました。", color=discord.Color.green()
+                title="ログを無効化しました。", color=discord.Color.green()
             )
         )
 
