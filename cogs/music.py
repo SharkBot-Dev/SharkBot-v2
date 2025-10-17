@@ -43,14 +43,21 @@ class YTDLSource:
         }
 
     @classmethod
-    def create_ffmpeg_player(cls, url: str, boost: bool = False):
-        if boost:
-            filter_opt = ' -b:a 128k -filter:a "equalizer=f=80:width_type=h:width=200:g=8"'
-        else:
-            filter_opt = ' -b:a 64k'
+    def create_ffmpeg_player(cls, url: str, boost: bool = False, volume: int = 70):
+        vol = max(0, min(volume, 100)) / 100
 
-        options = f"{cls.BASE_OPTIONS}{filter_opt}"
-        return discord.FFmpegPCMAudio(url, before_options=cls.BASE_FFMPEG, options=options)
+        if boost:
+            audio_filter = f"volume={vol},equalizer=f=80:width_type=h:width=200:g=8"
+        else:
+            audio_filter = f"volume={vol}"
+
+        options = f"-vn -af \"{audio_filter}\""
+
+        return discord.FFmpegPCMAudio(
+            url,
+            before_options=cls.BASE_FFMPEG,
+            options=options
+        )
 
 class ShuugiinSource:
     YTDL_OPTIONS = {
@@ -145,9 +152,10 @@ class MusicCog(commands.Cog):
 
         guild_conf = await self.music_queue_collection.find_one({"guild_id": guild_id})
         boost_enabled = guild_conf and guild_conf.get("boost") == "true"
+        vol_setting = guild_conf.get("volume", 70)
 
         await self.now_play_set(interaction.guild.id, queue_item["title"])
-        audio = YTDLSource.create_ffmpeg_player(queue_item['url'], boost=boost_enabled)
+        audio = YTDLSource.create_ffmpeg_player(queue_item['url'], boost=boost_enabled, volume=vol_setting)
         voice.play(audio, after=after_playing)
         await interaction.channel.send(f"再生中の曲: **{queue_item['title']}**")
 
@@ -208,6 +216,7 @@ class MusicCog(commands.Cog):
 
                             guild_conf = await self.music_queue_collection.find_one({"guild_id": interaction.guild.id})
                             boost_enabled = guild_conf and guild_conf.get("boost") == "true"
+                            vol_setting = guild_conf.get("volume", 70)
 
                             source_info = await YTDLSource.create_source(self_.musicurl.component.value)
 
@@ -221,7 +230,7 @@ class MusicCog(commands.Cog):
                                 )
 
                             if not voice.is_playing():
-                                audio = YTDLSource.create_ffmpeg_player(source_info['url'], boost=boost_enabled)
+                                audio = YTDLSource.create_ffmpeg_player(source_info['url'], boost=boost_enabled, volume=vol_setting)
                                 voice.play(audio, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(interaction, interaction.guild.id), interaction.client.loop))
                                 await interaction.channel.send(f"再生中の曲: **{source_info['title']}**")
                             else:
@@ -270,7 +279,11 @@ class MusicCog(commands.Cog):
             }
 
             if not voice.is_playing():
-                audio = YTDLSource.create_ffmpeg_player(item["url"])
+                guild_conf = await self.music_queue_collection.find_one({"guild_id": interaction.guild.id})
+                boost_enabled = guild_conf and guild_conf.get("boost") == "true"
+                vol_setting = guild_conf.get("volume", 70)
+
+                audio = YTDLSource.create_ffmpeg_player(item["url"], boost=boost_enabled, volume=vol_setting)
                 voice.play(audio, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(interaction, interaction.guild.id), self.bot.loop))
                 await self.now_play_set(interaction.guild.id, item["title"])
                 await interaction.channel.send(f"再生中の曲: **{item['title']}**")
@@ -288,11 +301,12 @@ class MusicCog(commands.Cog):
 
                 guild_conf = await self.music_queue_collection.find_one({"guild_id": interaction.guild.id})
                 boost_enabled = guild_conf and guild_conf.get("boost") == "true"
+                vol_setting = guild_conf.get("volume", 70)
 
                 source_info = await YTDLSource.create_source(url)
 
                 if not voice.is_playing():
-                    audio = YTDLSource.create_ffmpeg_player(source_info['url'], boost=boost_enabled)
+                    audio = YTDLSource.create_ffmpeg_player(source_info['url'], boost=boost_enabled, volume=vol_setting)
                     voice.play(audio, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(interaction, interaction.guild.id), self.bot.loop))
                     await self.now_play_set(interaction.guild.id, source_info["title"])
                     await interaction.channel.send(f"再生中の曲: **{source_info['title']}**")
@@ -307,7 +321,7 @@ class MusicCog(commands.Cog):
                 source_info = await ShuugiinSource.create_source(url)
 
                 if not voice.is_playing():
-                    audio = ShuugiinSource.create_ffmpeg_player(source_info['url'], boost=boost_enabled)
+                    audio = ShuugiinSource.create_ffmpeg_player(source_info['url'])
                     voice.play(audio, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(interaction, interaction.guild.id), self.bot.loop))
                     await self.now_play_set(interaction.guild.id, source_info["title"])
                     await interaction.channel.send(f"再生中の曲: **{source_info['title']}**")
@@ -361,7 +375,7 @@ class MusicCog(commands.Cog):
             desc = '\n'.join([f"{i+1}. {info['title']}" for i, info in enumerate(q_list)])
             await interaction.response.send_message(embed=discord.Embed(title="現在のキュー", description=desc, color=discord.Color.green()))
 
-    @music.command(name="boost", description="低温ブーストをします。")
+    @music.command(name="boost", description="低音ブーストをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def music_boost(
@@ -373,6 +387,27 @@ class MusicCog(commands.Cog):
             upsert=True
         )
         await interaction.response.send_message(embed=discord.Embed(title=f"低音ブーストを {'有効化' if 有効化するか else '無効化'} しました。", description="SoundCloudとファイルのみ適用されます。", color=discord.Color.green()))
+
+    @music.command(name="volume", description="音量を設定します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        音量=[
+            app_commands.Choice(name="30%", value="30"),
+            app_commands.Choice(name="50%", value="50"),
+            app_commands.Choice(name="70%", value="70"),
+            app_commands.Choice(name="100%", value="100"),
+        ]
+    )
+    async def music_volume(
+        self, interaction: discord.Interaction, 音量: app_commands.Choice[str]
+    ):
+        await self.music_queue_collection.update_one(
+            {"guild_id": interaction.guild.id},
+            {"$set": {"volume": int(音量.value)}},
+            upsert=True
+        )
+        await interaction.response.send_message(embed=discord.Embed(title=f"音量を {音量.value} にしました。", description="SoundCloudとファイルのみ適用されます。", color=discord.Color.green()))
 
     @music.command(name="source", description="対応ソースを表示します")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
