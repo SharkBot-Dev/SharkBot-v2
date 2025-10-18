@@ -981,18 +981,37 @@ class ToolsCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def tools_embed(self, interaction: discord.Interaction):
-        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="埋め込みタイトル", description="埋め込み説明です", color=discord.Color.green()).set_author(
-                name=f"{interaction.user.name}",
-                icon_url=interaction.user.avatar.url
-                if interaction.user.avatar
-                else interaction.user.default_avatar.url,
-            ).set_footer(
-                    text=f"{interaction.guild.name} | {interaction.guild.id}",
-                    icon_url=interaction.guild.icon.url
-                    if interaction.guild.icon
+    @app_commands.choices(
+        操作モード=[
+            app_commands.Choice(name="PC・Web", value="pc"),
+            app_commands.Choice(name="スマホ・タブレット", value="phone")
+        ]
+    )
+    async def tools_embed(self, interaction: discord.Interaction, 操作モード: app_commands.Choice[str] = None):
+        async def send_pc_embed_builder():
+            await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="埋め込みタイトル", description="埋め込み説明です", color=discord.Color.green()).set_author(
+                    name=f"{interaction.user.name}",
+                    icon_url=interaction.user.avatar.url
+                    if interaction.user.avatar
                     else interaction.user.default_avatar.url,
-                ), view=EmbedBuilder())
+                ).set_footer(
+                        text=f"{interaction.guild.name} | {interaction.guild.id}",
+                        icon_url=interaction.guild.icon.url
+                        if interaction.guild.icon
+                        else interaction.user.default_avatar.url,
+                    ), view=EmbedBuilder())
+        if not 操作モード:
+            is_pc = interaction.user.client_status.is_on_mobile()
+            if not is_pc:
+                await send_pc_embed_builder()
+            else:
+                await interaction.response.send_modal(EmbedMake())
+            return
+
+        if 操作モード.value == "pc":
+            await send_pc_embed_builder()
+        else:
+            await interaction.response.send_modal(EmbedMake())
 
     @tools.command(name="button", description="ボタンを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)
