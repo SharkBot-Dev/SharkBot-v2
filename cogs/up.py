@@ -419,24 +419,6 @@ class UpCog(commands.Cog):
                         7200,
                     )
                     # await after.channel.send(embed=discord.Embed(title="ディス速をUpしてね！", description="</up:1363739182672904354> でアップ。", color=discord.Color.green()), content=ment)
-                elif "失敗しました" in after.embeds[0].fields[0].name:
-                    db = self.bot.async_db["Main"].DissokuChannel
-                    try:
-                        dbfind = await db.find_one(
-                            {"Channel": after.channel.id}, {"_id": False}
-                        )
-                    except:
-                        return
-                    if dbfind is None:
-                        return
-                    nokori = await self.get_nokori_time(after)
-                    await after.reply(
-                        embed=discord.Embed(
-                            title="Upに失敗しました。",
-                            description="しばらく待ってから</up:1363739182672904354>を実行してください。",
-                            color=discord.Color.red(),
-                        ).add_field(name="次Upできるまでの時間", value=f"{nokori}")
-                    )
             except:
                 return
 
@@ -474,18 +456,6 @@ class UpCog(commands.Cog):
                         "</bump:1225075208394768496> でBump。\n注意！オーナーか管理者しかBumpできません！",
                         86400,
                     )
-                elif "Already bumped recently, please try again" in after.content:
-                    db = self.bot.async_db["Main"].DisCadiaChannel
-                    try:
-                        dbfind = await db.find_one(
-                            {"Channel": after.channel.id}, {"_id": False}
-                        )
-                    except:
-                        return
-                    if dbfind is None:
-                        return
-                    
-                    await after.reply(embed=discord.Embed(title="Bumpに失敗しました。", description="しばらく待ってから</bump:1225075208394768496>を実行してください。", color=discord.Color.red()))
             except:
                 return
 
