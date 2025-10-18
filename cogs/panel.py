@@ -147,11 +147,7 @@ class AuthGroup(app_commands.Group):
         ロール: discord.Role,
         外すロール: discord.Role,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
+        await interaction.response.defer(ephemeral=True)
         await interaction.channel.send(
             embed=discord.Embed(
                 title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
@@ -324,10 +320,10 @@ class AuthGroup(app_commands.Group):
                 ephemeral=True,
             )
         if 必要なロール:
-            db = self.bot.async_db["Main"].AuthReqRole
-            await db.replace_one(
+            db = interaction.client.async_db["Main"].AuthReqRole
+            await db.update_one(
                 {"Message": 認証パネルのid_.id},
-                {"Message": 認証パネルのid_.id, "Role": 必要なロール.id},
+                {'$set': {"Message": 認証パネルのid_.id, "Role": 必要なロール.id}},
                 upsert=True,
             )
             return await interaction.followup.send(
@@ -336,7 +332,7 @@ class AuthGroup(app_commands.Group):
                 )
             )
         else:
-            db = self.bot.async_db["Main"].AuthReqRole
+            db = interaction.client.async_db["Main"].AuthReqRole
             await db.delete_one({"Message": 認証パネルのid_.id})
             return await interaction.followup.send(
                 embed=discord.Embed(
