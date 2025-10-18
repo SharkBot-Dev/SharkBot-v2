@@ -6,7 +6,7 @@ import aiohttp
 from discord import Webhook
 from discord import app_commands
 
-from models import command_disable
+from models import command_disable, make_embed
 
 cooldown_python_shell = {}
 
@@ -77,10 +77,9 @@ class RunPython(discord.ui.Modal, title="Pythonを実行"):
             ) as response:
                 data = await response.json()
                 await interaction.followup.send(
-                    embed=discord.Embed(
+                    embed=make_embed.success_embed(
                         title="Pythonの実行結果",
                         description=f"```{data.get('stdout', '')}```",
-                        color=discord.Color.blue(),
                     )
                 )
 
@@ -160,10 +159,9 @@ class RunNodeJS(discord.ui.Modal, title="NodoJSを実行"):
             ) as response:
                 data = await response.json()
                 await interaction.followup.send(
-                    embed=discord.Embed(
+                    embed=make_embed.success_embed(
                         title="Nodejsの実行結果",
-                        description=f"```{data.get('stdout', '')}```",
-                        color=discord.Color.blue(),
+                        description=f"```{data.get('stdout', '')}```"
                     )
                 )
 
@@ -243,10 +241,9 @@ class RunCPlapla(discord.ui.Modal, title="C++を実行"):
             ) as response:
                 data = await response.json()
                 await interaction.followup.send(
-                    embed=discord.Embed(
+                    embed=make_embed.success_embed(
                         title="C++の実行結果",
-                        description=f"```{data.get('stdout', '')}```",
-                        color=discord.Color.blue(),
+                        description=f"```{data.get('stdout', '')}```"
                     )
                 )
 
@@ -319,10 +316,9 @@ class RunCSharp(discord.ui.Modal, title="C#を実行"):
             ) as response:
                 data = await response.json()
                 await interaction.followup.send(
-                    embed=discord.Embed(
+                    embed=make_embed.success_embed(
                         title="C#の実行結果",
-                        description=f"```{data.get('stdout', '')}```",
-                        color=discord.Color.blue(),
+                        description=f"```{data.get('stdout', '')}```"
                     )
                 )
 
@@ -517,18 +513,18 @@ class ShellCog(commands.Cog):
         db = self.bot.async_db["Main"].PythonShell
         if 有効化するか:
             web = await interaction.channel.create_webhook(name="PythonShell")
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-                {
+                {'$set': {
                     "Guild": interaction.guild.id,
                     "Channel": interaction.channel.id,
                     "WebHook": web.url,
-                },
+                }},
                 upsert=True,
             )
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Pythonシェルを有効化しました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="Pythonシェルを有効化しました。"
                 )
             )
         else:
@@ -537,14 +533,13 @@ class ShellCog(commands.Cog):
             )
             if result.deleted_count == 0:
                 return await interaction.response.send_message(
-                    embed=discord.Embed(
-                        title="Pythonシェルは有効ではありません。",
-                        color=discord.Color.red(),
+                    embed=make_embed.error_embed(
+                        title="Pythonシェルは有効ではありません。"
                     )
                 )
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Pythonシェルを無効化しました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="Pythonシェルを無効化しました。"
                 )
             )
 
@@ -610,7 +605,7 @@ class ShellCog(commands.Cog):
                 data = await response.json()
                 ans = data.get("stdout", "出力なし")
                 await interaction.followup.send(
-                    embed=discord.Embed(title="計算結果", color=discord.Color.green())
+                    embed=make_embed.success_embed(title="計算結果")
                     .add_field(name="計算式", value=f"```{計算式}```", inline=False)
                     .add_field(name="計算結果", value=f"```{ans}```", inline=False)
                 )
@@ -632,8 +627,8 @@ class ShellCog(commands.Cog):
             if not コマンド名 is None:
                 if コマンド名 in k:
                     return await interaction.followup.send(
-                        embed=discord.Embed(
-                            title="Linuxコマンド検索結果", color=discord.Color.green()
+                        embed=make_embed.success_embed(
+                            title="Linuxコマンド検索結果"
                         )
                         .add_field(name="コマンド名", value=k, inline=False)
                         .add_field(name="説明", value=v, inline=False)
@@ -641,16 +636,16 @@ class ShellCog(commands.Cog):
             if not 説明 is None:
                 if 説明 in v:
                     return await interaction.followup.send(
-                        embed=discord.Embed(
-                            title="Linuxコマンド検索結果", color=discord.Color.green()
+                        embed=make_embed.success_embed(
+                            title="Linuxコマンド検索結果"
                         )
                         .add_field(name="コマンド名", value=k, inline=False)
                         .add_field(name="説明", value=v, inline=False)
                     )
 
         return await interaction.followup.send(
-            embed=discord.Embed(
-                title="検索結果が見つかりません。", color=discord.Color.red()
+            embed=make_embed.error_embed(
+                title="検索結果が見つかりません。"
             )
         )
 
@@ -667,11 +662,6 @@ class ShellCog(commands.Cog):
     async def compile_(
         self, interaction: discord.Interaction, 言語: app_commands.Choice[str]
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         if 言語.name == "python":
             await interaction.response.send_modal(RunPython())
         elif 言語.name == "nodejs":
