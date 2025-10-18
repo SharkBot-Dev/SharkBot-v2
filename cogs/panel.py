@@ -57,11 +57,11 @@ class PlusAuthModal_keisan(discord.ui.Modal, title="認証をする"):
                 await interaction.user.remove_roles(self.dr)
                 await interaction.user.add_roles(self.r)
                 await interaction.followup.send("認証に成功しました。", ephemeral=True)
-            except:
-                await interaction.followup.send("認証に失敗しました。", ephemeral=True)
+            except Exception as e:
+                await interaction.followup.send(f"認証に失敗しました。\n\nエラーコード: {e}", ephemeral=True)
         else:
             await interaction.response.send_message(
-                "認証に失敗しました。", ephemeral=True
+                "認証に失敗しました。\n計算結果が間違っています。", ephemeral=True
             )
 
 
