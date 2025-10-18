@@ -208,12 +208,40 @@ class Money:
             )
         return True
 
+    async def add_server_money_bank(
+        self, guild: discord.Guild, author: discord.User, coin: int
+    ):
+        db = self.bot.async_db["Main"].ServerMoney
+        user_data = await db.find_one({"_id": f"{guild.id}-{author.id}"})
+        if user_data:
+            await db.update_one(
+                {"_id": f"{guild.id}-{author.id}"}, {"$inc": {"bank": coin}}
+            )
+        else:
+            await db.insert_one(
+                {
+                    "_id": f"{guild.id}-{author.id}",
+                    "count": 0,
+                    "bank": coin,
+                    "Guild": guild.id,
+                    "User": author.id,
+                }
+            )
+        return True
+
     async def get_server_money(self, guild: discord.Guild, author: discord.User):
         db = self.bot.async_db["Main"].ServerMoney
         dbfind = await db.find_one({"_id": f"{guild.id}-{author.id}"}, {"_id": False})
         if not dbfind:
             return 0
         return dbfind.get("count", 0)
+    
+    async def get_server_money_bank(self, guild: discord.Guild, author: discord.User):
+        db = self.bot.async_db["Main"].ServerMoney
+        dbfind = await db.find_one({"_id": f"{guild.id}-{author.id}"}, {"_id": False})
+        if not dbfind:
+            return 0
+        return dbfind.get("bank", 0)
 
     async def get_server_ranking(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].ServerMoney
@@ -1195,11 +1223,57 @@ class ServerMoneyCog(commands.Cog):
     ):
         await interaction.response.defer()
         target = メンバー or interaction.user
-        sm = await Money(interaction.client).get_server_money(interaction.guild, target)
+        m = Money(interaction.client)
+        sm = await m.get_server_money(interaction.guild, target)
+        sb_m = await m.get_server_money_bank(interaction.guild, target)
         await interaction.followup.send(
             embed=make_embed.success_embed(
-                title=f"{target.name}の残高です。",
-                description=f"{sm}コイン"
+                title=f"{target.name}の残高です。"
+            ).add_field(name="手持ち", value=f"{sm}コイン")
+            .add_field(name="預金", value=f"{sb_m}コイン")
+        )
+
+    @server_economy.command(
+        name="deposit", description="銀行にお金を預けます。"
+    )
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    async def economy_deposit_server(
+        self, interaction: discord.Interaction, 金額: int
+    ):
+        await interaction.response.defer()
+        m = Money(interaction.client)
+        sm = await m.get_server_money(interaction.guild, interaction.user)
+        if sm < 金額:
+            return await interaction.followup.send(embed=make_embed.error_embed(title=f"{sm} コインより大きい金額は預けられません。"))
+        await m.add_server_money(interaction.guild, interaction.user, -金額)
+        await m.add_server_money_bank(interaction.guild, interaction.user, 金額)
+        b_m = await m.get_server_money_bank(interaction.guild, interaction.user)
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title=f"銀行にお金を預けました。",
+                description=f"預けたコイン: {金額}\n現在のコイン: {b_m}"
+            )
+        )
+
+    @server_economy.command(
+        name="withdraw", description="銀行からお金を引き出します。"
+    )
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    async def economy_withdraw_server(
+        self, interaction: discord.Interaction, 金額: int
+    ):
+        await interaction.response.defer()
+        m = Money(interaction.client)
+        bm = await m.get_server_money_bank(interaction.guild, interaction.user)
+        if bm < 金額:
+            return await interaction.followup.send(embed=make_embed.error_embed(title=f"{bm} コインより大きい金額は引き出せません。"))
+        await m.add_server_money_bank(interaction.guild, interaction.user, -金額)
+        await m.add_server_money(interaction.guild, interaction.user, 金額)
+        _m = await m.get_server_money(interaction.guild, interaction.user)
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title=f"銀行からお金を引き出しました。",
+                description=f"引き出したコイン: {金額}\n現在の手持ち: {_m}"
             )
         )
 
