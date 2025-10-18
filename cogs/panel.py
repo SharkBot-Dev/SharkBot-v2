@@ -280,12 +280,15 @@ class AuthGroup(app_commands.Group):
             for message in messages:
                 if not message.embeds:
                     continue
-                if current.lower() in message.embeds[0].title.lower():
-                    choices.append(
-                        discord.app_commands.Choice(
-                            name=message.embeds[0].title[:100], value=str(message.id)
+                try:
+                    if current.lower() in message.embeds[0].title.lower():
+                        choices.append(
+                            discord.app_commands.Choice(
+                                name=message.embeds[0].title[:100], value=str(message.id)
+                            )
                         )
-                    )
+                except:
+                    continue
 
                 if len(choices) >= 25:
                     break
