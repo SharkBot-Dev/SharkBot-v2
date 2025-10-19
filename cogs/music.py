@@ -256,7 +256,7 @@ class MusicCog(commands.Cog):
             return await interaction.response.send_message("ボイスチャンネルに参加してください。")
 
         if interaction.guild.voice_client is None:
-            await interaction.user.voice.channel.connect()
+            await interaction.user.voice.channel.connect(self_deaf=True)
 
         voice = discord.utils.get(self.bot.voice_clients, guild=interaction.guild)
 

@@ -103,7 +103,7 @@ class TTSCog(commands.Cog):
                 ephemeral=True,
             )
         try:
-            await interaction.user.voice.channel.connect()
+            await interaction.user.voice.channel.connect(self_deaf=True)
         except Exception as e:
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -335,7 +335,7 @@ ID | 説明
                             return
                         cooldown_autojoin[member.guild.id] = current_time
 
-                        await channel.connect()
+                        await channel.connect(self_deaf=True)
                         await self.autojoin_channel(channel)
         except:
             return
