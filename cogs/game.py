@@ -249,10 +249,10 @@ class MinecraftGroup(app_commands.Group):
 
                     else:
                         await interaction.followup.send(
-                            f"サーバー情報を取得できませんでした。ステータスコード: {response.status}"
+                            f"サーバー情報を取得できませんでした。\nサーバーがオフラインである可能性があります。"
                         )
             except Exception:
-                await interaction.followup.send("予期せぬエラーが発生しました。")
+                await interaction.followup.send("サーバー情報を取得できませんでした。\nサーバーがオフラインである可能性があります。")
 
     @app_commands.command(
         name="seedmap", description="シード値からマップを取得します"

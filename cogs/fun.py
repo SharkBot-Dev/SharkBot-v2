@@ -660,52 +660,45 @@ class TextGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def text_to_emoji(self, interaction: discord.Interaction, テキスト: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
 
-        async def text_emoji(text):
-            kakasi = pykakasi.kakasi()
-            result = kakasi.convert(text)
+        try:
 
-            def text_to_discord_emoji(text):
-                emoji_map = {chr(97 + i): chr(0x1F1E6 + i) for i in range(26)}
-                num_emoji_map = {str(i): f"{i}️⃣" for i in range(10)}
-                return [
-                    emoji_map[char.lower()]
-                    if char.isalpha()
-                    else num_emoji_map[char]
-                    if char.isdigit()
-                    else None
-                    for char in text
-                    if char.isalnum()
-                ]
+            async def text_emoji(text):
+                kakasi = pykakasi.kakasi()
+                result = kakasi.convert(text)
 
-            romaji_text = "".join(item["kunrei"] for item in result if "kunrei" in item)
-            emojis = text_to_discord_emoji(romaji_text)
+                def text_to_discord_emoji(text):
+                    emoji_map = {chr(97 + i): chr(0x1F1E6 + i) for i in range(26)}
+                    num_emoji_map = {str(i): f"{i}️⃣" for i in range(10)}
+                    return [
+                        emoji_map[char.lower()]
+                        if char.isalpha()
+                        else num_emoji_map[char]
+                        if char.isdigit()
+                        else None
+                        for char in text
+                        if char.isalnum()
+                    ]
 
-            return emojis
+                romaji_text = "".join(item["kunrei"] for item in result if "kunrei" in item)
+                emojis = text_to_discord_emoji(romaji_text)
 
-        ems = await text_emoji(テキスト[:20])
-        await interaction.followup.send(content=" ".join(ems))
+                return emojis
+
+            ems = await text_emoji(テキスト[:20])
+            await interaction.followup.send(content=" ".join(ems))
+        except KeyError:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="特殊文字や絵文字、記号などは使用できません。"))
 
     @app_commands.command(name="reencode", description="文字化けを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def reencode(self, interaction: discord.Interaction, テキスト: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.send_message(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title="文字化け",
-                description=encode(テキスト).decode("sjis", errors="ignore"),
-                color=discord.Color.green(),
+                description=encode(テキスト).decode("sjis", errors="ignore")
             )
         )
 
@@ -719,11 +712,6 @@ class TextGroup(app_commands.Group):
         暗号: str = None,
         暗号化キー: str = None,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         if テキスト and not 暗号 and not 暗号化キー:
             key = Fernet.generate_key()
             f = Fernet(key)
