@@ -35,7 +35,8 @@
       }
 
       input[type="text"],
-      textarea {
+      textarea,
+      select {
         width: 100%;
         padding: 0.8rem;
         border: none;
@@ -67,7 +68,6 @@
       }
 
       .actions {
-        text-align: right;
         margin-top: 2rem;
       }
 
@@ -159,6 +159,11 @@
           <div class="reply-text">
             <p><strong>トリガー:</strong> {{ ch.Word }}</p>
             <p><strong>返信:</strong> {{ ch.ReplyWord }}</p>
+            {% if ch.TextChannel %}
+              <p><strong>チャンネル:</strong> {{ ch.TextChannel }}</p>
+            {% else %}
+              <p><strong>チャンネル:</strong> なし</p>
+            {% endif %}
           </div>
           <div class="reply-actions">
             <form
@@ -200,6 +205,20 @@
             name="reply"
             placeholder="例: こんにちは！"
           ></textarea>
+        </div>
+
+        <div class="form-group">
+
+          <label for="channel">特定のテキストチャンネルのみ反応させる</label>
+          <select
+            id="channel"
+            name="channel"
+          >
+            <option value="none" selected>指定しない</option>
+            {% for ch in channels %}
+            <option value="{{ ch.id }}">{{ ch.name }}</option>
+            {% endfor %}
+          </select>
         </div>
 
         <div class="actions">
