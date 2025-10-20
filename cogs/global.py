@@ -393,10 +393,8 @@ class GlobalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_join(self, interaction: discord.Interaction, 部屋名: str = None):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
+        if interaction.channel.type != discord.ChannelType.text:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このチャンネルでは実行できません。", description="テキストチャンネルでのみグローバルチャットに参加できます。"))
 
         await interaction.response.defer()
         if not 部屋名:
@@ -468,11 +466,6 @@ class GlobalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_leave(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         await self.globalchat_leave_channel(interaction)
         await self.globalchat_room_leave(interaction)
@@ -498,11 +491,6 @@ class GlobalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_emoji(self, interaction: discord.Interaction, 絵文字: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         if len(絵文字) > 3:
             return await interaction.followup.send("絵文字は3文字まででお願いします。")
@@ -647,10 +635,8 @@ class GlobalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_private(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
+        if interaction.channel.type != discord.ChannelType.text:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このチャンネルでは実行できません。", description="テキストチャンネルでのみグローバルチャットに参加できます。"))
 
         class PrivateGlobalCreate(
             discord.ui.Modal, title="プライベートグローバルチャットを作成する"
@@ -714,10 +700,8 @@ class GlobalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_private_join(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
+        if interaction.channel.type != discord.ChannelType.text:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このチャンネルでは実行できません。", description="テキストチャンネルでのみグローバルチャットに参加できます。"))
 
         class PrivateGlobalJoin(
             discord.ui.Modal, title="プライベートグローバルチャットに参加する"
@@ -784,11 +768,6 @@ class GlobalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_private_leave(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].PrivateGlobal
         await db.delete_one(
             {"Guild": interaction.guild.id, "Channel": interaction.channel.id}
@@ -806,11 +785,6 @@ class GlobalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_private_leave(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].PrivateGlobal
         dbfind = await db.find_one(
             {"Channel": interaction.channel.id, "Owner": interaction.user.id},
@@ -1219,11 +1193,9 @@ class GlobalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_sgc(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
+        if interaction.channel.type != discord.ChannelType.text:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このチャンネルでは実行できません。", description="テキストチャンネルでのみグローバルチャットに参加できます。"))
+        
         await interaction.response.defer()
         if interaction.guild.member_count < 20:
             return await interaction.followup.send(
@@ -1257,11 +1229,6 @@ class GlobalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_sgc_info(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
 
         STATUS_EMOJIS = {
@@ -1293,10 +1260,9 @@ class GlobalCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def global_shiritori(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
+        if interaction.channel.type != discord.ChannelType.text:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このチャンネルでは実行できません。", description="テキストチャンネルでのみグローバルチャットに参加できます。"))
+        
         await interaction.response.defer()
         if interaction.guild.member_count < 20:
             return await interaction.followup.send(
@@ -1450,6 +1416,9 @@ class GlobalCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def global_ads(self, interaction: discord.Interaction):
+        if interaction.channel.type != discord.ChannelType.text:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このチャンネルでは実行できません。", description="テキストチャンネルでのみグローバルチャットに参加できます。"))
+
         await interaction.response.defer()
         if interaction.guild.member_count < 20:
             return await interaction.followup.send(
