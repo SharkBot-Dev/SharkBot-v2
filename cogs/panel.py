@@ -6,7 +6,7 @@ from discord.ext import commands
 import discord
 from discord import app_commands
 
-from models import command_disable
+from models import command_disable, make_embed
 import sys
 from PIL import Image, ImageDraw, ImageFont
 import io
@@ -2224,10 +2224,9 @@ class PanelCog(commands.Cog):
         await interaction.response.defer()
         async for top in interaction.channel.history(limit=1, oldest_first=True):
             await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.success_embed(
                     title="最初のコメント (一コメ)",
-                    color=discord.Color.green(),
-                    description=top.content,
+                    description="下のボタンから飛べます。",
                 ),
                 view=discord.ui.View().add_item(
                     discord.ui.Button(label="アクセスする", url=top.jump_url)
