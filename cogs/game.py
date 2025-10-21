@@ -5,6 +5,7 @@ import discord
 import random
 from discord import app_commands
 import urllib
+from urllib.parse import quote
 
 import re
 from consts import settings
@@ -20,6 +21,36 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from ossapi import OssapiAsync
 
+class ScratchGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="scratch", description="スクラッチ関連のコマンドです。")
+
+    @app_commands.command(name="user", description="ユーザーを検索します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def scratch_user(self, interaction: discord.Interaction, ユーザーid: str):
+        await interaction.response.defer()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://api.scratch.mit.edu/users/" + quote(ユーザーid)
+            ) as resp:
+                if resp.status != 200:
+                    await interaction.followup.send(
+                        "スクラッチユーザーが見つかりません。", ephemeral=True
+                    )
+                    return
+                
+                embed = make_embed.success_embed(title=f"{ユーザーid} の情報")
+                response = await resp.json()
+                profile = response['profile']
+                if profile.get('images', None):
+                    img = profile.get('images', {}).get("90x90", None)
+                    if img:
+                        embed.set_thumbnail(url=img)
+                embed.add_field(name="自己紹介", value=profile.get('bio', 'なし'), inline=False)
+                embed.add_field(name="ステータス", value=profile.get('status', 'なし'), inline=False)
+                embed.add_field(name="国", value=profile.get('country', 'なし'), inline=False)
+                await interaction.followup.send(embed=embed)
 
 class OsuGroup(app_commands.Group):
     def __init__(self):
@@ -289,6 +320,7 @@ class GameCog(commands.Cog):
     game.add_command(FortniteGroup())
     game.add_command(PokemonGroup())
     game.add_command(OsuGroup())
+    game.add_command(ScratchGroup())
 
     @game.command(name="8ball", description="占ってもらいます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
