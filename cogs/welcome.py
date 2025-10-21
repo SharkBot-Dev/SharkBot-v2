@@ -139,14 +139,21 @@ class WelcomeCog(commands.Cog):
             )
 
         try:
-            wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
-            webhooks = discord.utils.get(wb, name="SharkBot")
-            if webhooks is None:
-                webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
-                    name="SharkBot"
-                )
+            if not dbfind.get('Webhook'):
+                wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
+                webhooks = discord.utils.get(wb, name="SharkBot")
+                if webhooks is None:
+                    webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
+                        name="SharkBot"
+                    )
+
+                webhooks = webhooks.url
+
+                await db.update_one({"Guild": g.id}, {"$set": {"Webhook": webhooks}})
+            else:
+                webhooks = dbfind.get('Webhook')
             async with aiohttp.ClientSession() as session:
-                webhook = Webhook.from_url(webhooks.url, session=session)
+                webhook = Webhook.from_url(webhooks, session=session)
                 try:
                     await webhook.send(
                         embed=discord.Embed(
@@ -182,16 +189,22 @@ class WelcomeCog(commands.Cog):
             )
 
         try:
-            wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
-            webhooks = discord.utils.get(wb, name="SharkBot")
-            if webhooks is None:
-                webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
-                    name="SharkBot"
-                )
+            if not dbfind.get('Webhook'):
+                wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
+                webhooks = discord.utils.get(wb, name="SharkBot")
+                if webhooks is None:
+                    webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
+                        name="SharkBot"
+                    )
+
+                webhooks = webhooks.url
+
+                await db.update_one({"Guild": g.id}, {"$set": {"Webhook": webhooks}})
+            else:
+                webhooks = dbfind.get('Webhook')
             async with aiohttp.ClientSession() as session:
-                webhook = Webhook.from_url(webhooks.url, session=session)
+                webhook = Webhook.from_url(webhooks, session=session)
                 try:
-                    col = await self.get_user_color_welcome(member)
                     await webhook.send(
                         embed=discord.Embed(
                             title=f"{await rep_name(dbfind['Title'], member=member)}",
@@ -224,21 +237,27 @@ class WelcomeCog(commands.Cog):
             return m
 
         try:
-            wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
-            webhooks = discord.utils.get(wb, name="SharkBot")
-            if webhooks is None:
-                webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
-                    name="SharkBot"
-                )
+            if not dbfind.get('Webhook'):
+                wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
+                webhooks = discord.utils.get(wb, name="SharkBot")
+                if webhooks is None:
+                    webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
+                        name="SharkBot"
+                    )
+
+                webhooks = webhooks.url
+
+                await db.update_one({"Guild": guild.id}, {"$set": {"Webhook": webhooks}})
+            else:
+                webhooks = dbfind.get('Webhook')
             async with aiohttp.ClientSession() as session:
-                webhook = Webhook.from_url(webhooks.url, session=session)
+                webhook = Webhook.from_url(webhooks, session=session)
                 try:
-                    col = await self.get_user_color_welcome(member)
                     await webhook.send(
                         embed=discord.Embed(
                             title=f"{await rep_name(dbfind['Title'], member=member)}",
                             description=f"{await rep_name(dbfind['Description'], member=member)}",
-                            color=discord.Color.green(),
+                            color=discord.Color.yellow(),
                         ),
                         username="SharkBot Ban",
                         avatar_url=self.bot.user.avatar.url,
