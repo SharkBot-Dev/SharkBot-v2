@@ -2,7 +2,7 @@ import time
 import discord
 from discord.ext import commands
 from discord import app_commands
-import TagScriptEngine as tse
+# import TagScriptEngine as tse
 from consts import badword
 import io
 
@@ -14,27 +14,10 @@ cooldown_tags = {}
 class TagsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.engine = tse.Interpreter(
-            [
-                tse.MathBlock(),
-                tse.RandomBlock(),
-                tse.RangeBlock(),
-                tse.AnyBlock(),
-                tse.IfBlock(),
-                tse.AllBlock(),
-                tse.BreakBlock(),
-                tse.StrfBlock(),
-                tse.StopBlock(),
-                tse.AssignmentBlock(),
-                tse.FiftyFiftyBlock(),
-                tse.SubstringBlock(),
-                tse.ReplaceBlock(),
-                tse.URLEncodeBlock(),
-                tse.ShortCutRedirectBlock("args"),
-                tse.LooseVariableGetterBlock(),
-            ]
-        )
         print("init -> TagsCog")
+
+    def replace_tag(self, text: str, args: str, author: discord.Member):
+        return text.replace('{args}', args).replace('{author}', author.name).replace('{author_id}', str(author.id))
 
     tag = app_commands.Group(
         name="tag", description="タグスクリプトを設定します。"
@@ -154,16 +137,7 @@ class TagsCog(commands.Cog):
         if doc:
             try:
                 ts_script = doc["tagscript"]
-                response = self.engine.process(ts_script,     {
-                    "args": tse.StringAdapter(引数),        # ユーザーが入力した引数
-                    "author": tse.StringAdapter(str(interaction.user)),  # 実行者の名前
-                    "author_id": tse.StringAdapter(str(interaction.user.id)),  # 実行者の名前
-                    "guild": tse.StringAdapter(str(interaction.guild.name)), # サーバーの名前
-                    "channel": tse.StringAdapter(str(interaction.channel.name)),  # チャンネルの名前
-                    "guild_id": tse.StringAdapter(str(interaction.guild.id)),  # サーバーの名前
-                    "channel_id": tse.StringAdapter(str(interaction.channel.id)),  # サーバーの名前
-                })
-                await interaction.followup.send(response.body + "\n-# これはタグスクリプトからのメッセージです。")
+                await interaction.followup.send(self.replace_tag(ts_script, 引数, interaction.user) + "\n-# これはタグスクリプトからのメッセージです。")
             except Exception as e:
                 return await interaction.followup.send("エラーが発生しました。")
         else:
@@ -220,16 +194,7 @@ class TagsCog(commands.Cog):
                 cooldown_tags[message.guild.id] = current_time
 
                 ts_script = doc["tagscript"]
-                response = self.engine.process(ts_script,     {
-                    "args": tse.StringAdapter(args),        # ユーザーが入力した引数
-                    "author": tse.StringAdapter(str(message.author)),  # 実行者の名前
-                    "author_id": tse.StringAdapter(str(message.author.id)),  # 実行者の名前
-                    "guild": tse.StringAdapter(str(message.guild.name)), # サーバーの名前
-                    "channel": tse.StringAdapter(str(message.channel.name)),  # チャンネルの名前
-                    "guild_id": tse.StringAdapter(str(message.guild.id)),  # サーバーの名前
-                    "channel_id": tse.StringAdapter(str(message.channel.id)),  # サーバーの名前
-                })
-                await message.channel.send(response.body + "\n-# これはタグスクリプトからのメッセージです。")
+                await message.channel.send(self.replace_tag(ts_script, args, message.author) + "\n-# これはタグスクリプトからのメッセージです。")
             except Exception as e:
                 return await message.channel.send("エラーが発生しました。")
 
