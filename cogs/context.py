@@ -256,6 +256,14 @@ async def setup(bot: commands.Bot):
             )
         )
 
+        view.add_item(
+            discord.ui.Button(
+                style=discord.ButtonStyle.blurple,
+                label="編集",
+                custom_id="lockmessage_edit+",
+            )
+        )
+
         if not message.content:
             if not message.embeds:
                 return await interaction.response.send_message(
