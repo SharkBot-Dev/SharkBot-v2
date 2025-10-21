@@ -4,25 +4,27 @@ import time
 import asyncio
 
 class LockMessageEditModal(discord.ui.Modal):
-    def __init__(self, msgid: int):
+    def __init__(self, msgid: discord.Message):
         super().__init__(title="固定メッセージの修正")
         self.msgid = msgid
 
-    title_ = discord.ui.Label(
-        text="タイトルを入力",
-        description="タイトルを入力してください。",
-        component=discord.ui.TextInput(
-            style=discord.TextStyle.long, required=True
-        ),
-    )
+        self.title_ = discord.ui.Label(
+            text="タイトルを入力",
+            description="タイトルを入力してください。",
+            component=discord.ui.TextInput(
+                style=discord.TextStyle.long, required=True, default=self.msgid.embeds[0].title
+            ),
+        )
+        self.add_item(self.title_)
 
-    desc = discord.ui.Label(
-        text="説明を入力",
-        description="説明を入力してください。",
-        component=discord.ui.TextInput(
-            style=discord.TextStyle.long, required=True
-        ),
-    )
+        self.desc = discord.ui.Label(
+            text="説明を入力",
+            description="説明を入力してください。",
+            component=discord.ui.TextInput(
+                style=discord.TextStyle.long, required=True, default=self.msgid.embeds[0].description
+            ),
+        )
+        self.add_item(self.desc)
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
@@ -46,7 +48,7 @@ class LockMessageEditModal(discord.ui.Modal):
                     "Guild": interaction.guild.id,
                     "Title": self.title_.component.value,
                     "Desc": self.desc.component.value,
-                    "MessageID": self.msgid,
+                    "MessageID": self.msgid.id,
                 }},
                 upsert=True,
             )
@@ -57,8 +59,7 @@ class LockMessageEditModal(discord.ui.Modal):
             color=discord.Color.random(),
         )
         
-        msg = await interaction.channel.fetch_message(self.msgid)
-        await msg.edit(embed=embed)
+        await self.msgid.edit(embed=embed)
 
 class LockMessageCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -91,7 +92,7 @@ class LockMessageCog(commands.Cog):
                 elif "lockmessage_edit+" == custom_id:
                     if not interaction.user.guild_permissions.manage_channels:
                         return await interaction.response.send_message(ephemeral=True, content="固定メッセージを編集するにはチャンネルの管理権限が必要です。")
-                    await interaction.response.send_modal(LockMessageEditModal(interaction.message.id))
+                    await interaction.response.send_modal(LockMessageEditModal(interaction.message))
         except:
             return
 
