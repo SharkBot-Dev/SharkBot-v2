@@ -25,7 +25,7 @@ class ScratchGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="scratch", description="スクラッチ関連のコマンドです。")
 
-    @app_commands.command(name="user", description="ユーザーを検索します。")
+    @app_commands.command(name="user", description="スクラッチのユーザーを検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def scratch_user(self, interaction: discord.Interaction, ユーザーid: str):
@@ -50,6 +50,55 @@ class ScratchGroup(app_commands.Group):
                 embed.add_field(name="自己紹介", value=profile.get('bio', 'なし'), inline=False)
                 embed.add_field(name="ステータス", value=profile.get('status', 'なし'), inline=False)
                 embed.add_field(name="国", value=profile.get('country', 'なし'), inline=False)
+                await interaction.followup.send(embed=embed)
+
+    @app_commands.command(name="project", description="スクラッチのプロジェクトを検索します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def scratch_project(self, interaction: discord.Interaction, プロジェクトid: str):
+        await interaction.response.defer()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://api.scratch.mit.edu/projects/" + quote(プロジェクトid)
+            ) as resp:
+                if resp.status != 200:
+                    await interaction.followup.send(
+                        "スクラッチ作品が見つかりません。", ephemeral=True
+                    )
+                    return
+
+                embed = make_embed.success_embed(title=f"{プロジェクトid} の情報")
+                response = await resp.json()
+
+                title = response.get('title', 'なし')
+                description = response.get('description', 'なし')
+                image = response.get('image', 'なし')
+
+                history = response.get('history', {})
+                created = history.get('created', 'なし')
+                modified = history.get('modified', 'なし')
+                shared = history.get('shared', 'なし')
+
+                stats = response.get('stats', {})
+                views = stats.get('views', "0")
+                loves = stats.get('loves', "0")
+                favorites = stats.get('favorites', '0')
+                remixes = stats.get('remixes', '0')
+
+                embed.add_field(name="タイトル", value=title, inline=False)
+                embed.add_field(name="説明", value=description, inline=False)
+
+                embed.add_field(name="作成日", value=created, inline=True)
+                embed.add_field(name="変更日", value=modified, inline=True)
+                embed.add_field(name="シェアされた日", value=shared, inline=True)
+
+                embed.add_field(name="表示された感じ", value=str(views) + "回", inline=True)
+                embed.add_field(name="いいねされた回数", value=str(loves) + "回", inline=True)
+                embed.add_field(name="お気に入りされた回数", value=str(favorites) + "回", inline=True)
+                embed.add_field(name="リミックス回数", value=str(remixes) + "回", inline=True)
+
+                embed.set_image(url=image)
+
                 await interaction.followup.send(embed=embed)
 
 class OsuGroup(app_commands.Group):
