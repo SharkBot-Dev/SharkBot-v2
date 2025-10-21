@@ -1501,6 +1501,13 @@ class SettingCog(commands.Cog):
                             custom_id="lockmessage_delete+",
                         )
                     )
+                    view.add_item(
+                        discord.ui.Button(
+                            style=discord.ButtonStyle.blurple,
+                            label="編集",
+                            custom_id="lockmessage_edit+",
+                        )
+                    )
                     msg = await interaction.channel.send(
                         embed=discord.Embed(
                             title=self.etitle.value,
