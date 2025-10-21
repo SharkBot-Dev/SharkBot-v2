@@ -10,6 +10,28 @@ from models import make_embed
 
 cooldown_tags = {}
 
+class Paginator(discord.ui.View):
+    def __init__(self, embeds: list[discord.Embed]):
+        super().__init__(timeout=60)
+        self.embeds = embeds
+        self.current = 0
+
+    async def update_message(self, interaction: discord.Interaction):
+        await interaction.response.edit_message(
+            embed=self.embeds[self.current], view=self
+        )
+
+    @discord.ui.button(label="⬅️", style=discord.ButtonStyle.primary)
+    async def previous(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        self.current = (self.current - 1) % len(self.embeds)
+        await self.update_message(interaction)
+
+    @discord.ui.button(label="➡️", style=discord.ButtonStyle.primary)
+    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.current = (self.current + 1) % len(self.embeds)
+        await self.update_message(interaction)
 
 class TagsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -46,8 +68,17 @@ class TagsCog(commands.Cog):
                 ),
             )
 
+            desc = discord.ui.Label(
+                text="説明を入力",
+                description="説明を入力してください。",
+                component=discord.ui.TextInput(
+                    style=discord.TextStyle.short, required=True, default="なし"
+                ),
+            )
+
             async def on_submit(self, interaction_: discord.Interaction):
                 assert isinstance(self.code.component, discord.ui.TextInput)
+                assert isinstance(self.desc.component, discord.ui.TextInput)
                 lower_script = self.code.component.value.lower()
                 for word in badword.badwords:
                     if word.lower() in lower_script:
@@ -57,7 +88,7 @@ class TagsCog(commands.Cog):
                 db = interaction.client.async_db["Main"].Tags
                 await db.update_one(
                     {"command": 名前, "guild_id": interaction_.guild.id},
-                    {"$set": {"tagscript": self.code.component.value}},
+                    {"$set": {"tagscript": self.code.component.value, "text": self.desc.component.value}},
                     upsert=True
                 )
                 embed = make_embed.success_embed(title="Tagを作成しました。")
@@ -103,6 +134,7 @@ class TagsCog(commands.Cog):
         self,
         interaction: discord.Interaction
     ):
+        await interaction.response.defer()
 
         db_prefix = self.bot.async_db["DashboardBot"].CustomPrefixBot
         doc = await db_prefix.find_one({"Guild": interaction.guild.id})
@@ -110,17 +142,28 @@ class TagsCog(commands.Cog):
 
         db_tags = self.bot.async_db["Main"].Tags
         cursor = db_tags.find({"guild_id": interaction.guild.id})
-        tags = [PREFIX + doc["command"] async for doc in cursor]
+        tags = [doc async for doc in cursor]
 
         if not tags:
             return await interaction.response.send_message("このサーバーにはタグが登録されていません。")
+        
+        em_s = []
+        c = 1
+        
+        for start in range(0, len(tags), 10):
+            embed = discord.Embed(
+                title=f"{interaction.guild.name} のタグ一覧",
+                color=discord.Color.blue()
+            )
+            for cmd in tags[start : start + 10]:
+                embed.add_field(name=cmd['command'], value=cmd.get('text', '説明なし'), inline=False)
 
-        embed = discord.Embed(
-            title=f"{interaction.guild.name} のタグ一覧",
-            description="\n".join(tags),
-            color=discord.Color.blue()
-        )
-        await interaction.response.send_message(embed=embed)
+            embed.set_footer(text=f"{c} ページ目 / Prefix: {PREFIX}")
+            c += 1
+
+            em_s.append(embed)
+
+        await interaction.followup.send(embed=em_s[0], view=Paginator(em_s))
 
     @tag.command(name="use", description="tagを使用します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
