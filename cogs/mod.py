@@ -611,7 +611,7 @@ class ModCog(commands.Cog):
         await ch.edit(position=interaction.channel.position + 1)
         await interaction.channel.delete()
         await asyncio.sleep(1)
-        await ch.send("<:Success:1362271281302601749> 再生成しました。")
+        await ch.send(embed=make_embed.success_embed(title="チャンネルを再生成しました。", description=f"実行者: <@{interaction.user.id}>"))
 
     @moderation.command(name="lock", description="チャンネルをロックします。")
     @app_commands.checks.has_permissions(manage_channels=True)
