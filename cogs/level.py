@@ -16,6 +16,26 @@ class LevelCog(commands.Cog):
         self.bot = bot
         print("init -> LevelCog")
 
+    async def get_message(self, guild_id: int):
+        db = self.bot.async_db["Main"].LevelingSetting
+        try:
+            dbfind = await db.find_one({"Guild": guild_id}, {"_id": False})
+        except:
+            return False
+        if dbfind is None:
+            return
+        return dbfind.get('Message', "`{user}`さんの\nレベルが「{newlevel}」になったよ！")
+
+    async def set_message(self, guild: discord.Guild, msg: str = None):
+        try:
+            db = self.bot.async_db["Main"].LevelingSetting
+            await db.update_one(
+                {"Guild": guild.id},
+                {"$set": {"Message": msg}}
+            )
+        except:
+            return
+        
     async def check_level_enabled(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].LevelingSetting
         try:
@@ -218,18 +238,17 @@ class LevelCog(commands.Cog):
                         if grole:
                             await user.add_roles(grole)
                     try:
+                        msg = await self.get_message(user.guild.id)
+                        rpd_msg = msg.replace('{user}', user.name).replace('{newlevel}', str(lvg))
                         if cha:
                             ch = user.guild.get_channel(cha)
                             if ch:
                                 await ch.send(
-                                    embed=discord.Embed(
-                                        title=f"`{user.name}`さんの\nレベルが{lvg}になったよ！",
-                                        color=discord.Color.gold(),
-                                    )
+                                    embed=discord.Embed(description=rpd_msg, color=discord.Color.yellow())
                                 )
                         else:
                             return await reaction.message.channel.send(
-                                f"レベルが「{lvg}レベル」になったよ！"
+                                embed=discord.Embed(description=rpd_msg, color=discord.Color.yellow())
                             )
                     except:
                         return
@@ -278,18 +297,17 @@ class LevelCog(commands.Cog):
                         if grole:
                             await message.author.add_roles(grole)
                     try:
+                        msg = await self.get_message(message.guild.id)
+                        rpd_msg = msg.replace('{user}', message.author.name).replace('{newlevel}', str(lvg))
                         if cha:
                             ch = message.guild.get_channel(cha)
                             if ch:
                                 await ch.send(
-                                    embed=discord.Embed(
-                                        title=f"`{message.author.name}`さんの\nレベルが{lvg}になったよ！",
-                                        color=discord.Color.gold(),
-                                    )
+                                    embed=discord.Embed(description=rpd_msg, color=discord.Color.yellow())
                                 )
                         else:
-                            return await message.reply(
-                                f"レベルが「{lvg}レベル」になったよ！"
+                            return await message.channel.send(
+                                embed=discord.Embed(description=rpd_msg, color=discord.Color.yellow())
                             )
                     except:
                         return
@@ -568,6 +586,26 @@ class LevelCog(commands.Cog):
                 )
             )
 
+    @level.command(
+        name="message", description="レベルアップ時のメッセージを変更します。"
+    )
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    async def level_message(
+        self, interaction: discord.Interaction, message: str = None
+    ):
+        if message:
+            await self.set_message(interaction.guild, message)
+            await interaction.response.send_message(embed=make_embed.success_embed(title="レベルアップ時のメッセージを変更しました。", description=f"例\n\n{message.replace('{user}', interaction.user.name).replace('{newlevel}', str(13))}\n\n" + "{user}はユーザー名に、\n{newlevel}はレベルにレベルアップ後の置き換えられます。"))
+        else:
+            db = self.bot.async_db["Main"].LevelingSetting
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$set": {"Message": "`{user}`さんの\nレベルが「{newlevel}」になったよ！"}}
+            )
+            await interaction.response.send_message(embed=make_embed.success_embed(title="レベルアップ時のメッセージをリセットしました。", description=f"例\n\n`{interaction.user.name}`さんの\nレベルが「13」になったよ！"))
+        
     @level.command(name="edit", description="レベルを編集します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -579,11 +617,6 @@ class LevelCog(commands.Cog):
         レベル: int,
         xp: int,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         try:
             enabled = await self.check_level_enabled(interaction.guild)
@@ -654,11 +687,6 @@ class LevelCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def level_rewards(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         try:
             enabled = await self.check_level_enabled(interaction.guild)
@@ -695,11 +723,6 @@ class LevelCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def level_ranking(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         try:
             enabled = await self.check_level_enabled(interaction.guild)
@@ -719,12 +742,12 @@ class LevelCog(commands.Cog):
         top_users = (
             await db.find({"Guild": interaction.guild.id})
             .sort("Level", -1)
-            .limit(5)
-            .to_list(length=5)
+            .limit(10)
+            .to_list(length=10)
         )
         msg = ""
         for index, user_data in enumerate(top_users, start=1):
-            member = self.bot.get_user(user_data["User"])
+            member = interaction.guild.get_member(user_data["User"])
             username = (
                 f"{member.display_name}" if member else f"Unknown ({user_data['User']})"
             )
