@@ -182,15 +182,36 @@ class SearchCog(commands.Cog):
         except:
             return "**ロール一覧**: このサーバーにいません。"
 
-    search = app_commands.Group(name="search", description="検索系コマンドです。")
+    search = app_commands.Group(name="search", description="検索系コマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True))
 
     @search.command(name="user", description="ユーザーを検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def user_search(self, interaction: discord.Interaction, user: discord.User):
         await interaction.response.defer()
+        JST = datetime.timezone(datetime.timedelta(hours=9))
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            embed = make_embed.success_embed(
+                title=f"{user.display_name}の情報"
+            )
+
+            if user.bot:
+                isbot = "はい"
+            else:
+                isbot = "いいえ"
+
+            embed.add_field(
+                name="基本情報",
+                value=f"ID: **{user.id}**\nユーザーネーム: **{user.name}#{user.discriminator}**\n作成日: **{user.created_at.astimezone(JST)}**\nBot？: **{isbot}**\n認証Bot？: **{'はい' if user.public_flags.verified_bot else 'いいえ'}**",
+            )
+
+            embed.set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url)
+
+            await interaction.followup.send(embed=embed)
+
+            return
+
         try:
-            JST = datetime.timezone(datetime.timedelta(hours=9))
             isguild = None
             isbot = None
             if interaction.guild.get_member(user.id):
@@ -343,6 +364,9 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def server_info(self, interaction: discord.Interaction):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         await interaction.response.defer()
         embed = make_embed.success_embed(title=f"{interaction.guild.name}の情報")
         embed.add_field(name="サーバー名", value=interaction.guild.name)
@@ -426,6 +450,9 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(ban_members=True)
     async def ban_info(self, interaction: discord.Interaction, ユーザー: discord.User):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         await interaction.response.defer()
         try:
             ban_user = await interaction.guild.fetch_ban(ユーザー)
@@ -486,6 +513,9 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_guild=True)
     async def bot_info(self, interaction: discord.Interaction, bot: discord.User):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         await interaction.response.defer()
         embed = make_embed.success_embed(title="Botの情報")
         embed.add_field(name="Bot名", value=bot.display_name, inline=False)
@@ -619,6 +649,9 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def emoji(self, interaction: discord.Interaction, 絵文字: str):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         await interaction.response.defer()
         for e in interaction.guild.emojis:
             if 絵文字 == e.__str__():
@@ -645,6 +678,9 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def spotify_info(self, interaction: discord.Interaction, メンバー: discord.User = None):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         user = メンバー.id if メンバー else interaction.user.id
 
         if not interaction.guild.get_member(user):
