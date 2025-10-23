@@ -76,7 +76,7 @@ class LoggingCog(commands.Cog):
                     avatar_url=self.bot.user.avatar.url,
                     embed=discord.Embed(
                         title="<:Minus:1367039494322262096> メンバーがBANされました",
-                        description=f"{member.mention}\nメンバーがBANされました: {datetime.datetime.now()}",
+                        description=f"{member.mention}\nBanされた時刻: {datetime.datetime.now()}",
                         color=discord.Color.red(),
                     )
                     .set_footer(text=f"uid:{member.id}")
@@ -595,12 +595,7 @@ class LoggingCog(commands.Cog):
         app_commands.Choice(name="VC退出", value="vc_leave"),
         app_commands.Choice(name="Bot導入", value="bot_join"),
     ])
-    async def log_disable(self, interaction: discord.Interaction, event: app_commands.Choice[str] = None):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-        
+    async def log_disable(self, interaction: discord.Interaction, event: app_commands.Choice[str] = None):       
         if event:
             db = self.bot.async_db["Main"].EventLoggingChannel
             await db.delete_one({"Guild": interaction.guild.id, "Event": event.value})
