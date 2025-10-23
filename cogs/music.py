@@ -7,6 +7,8 @@ import asyncio
 
 from urllib.parse import urlparse
 
+from models import make_embed
+
 class MusicView(discord.ui.LayoutView):
     container = discord.ui.Container(
         discord.ui.TextDisplay("### 操作パネル"),
@@ -184,7 +186,7 @@ class MusicCog(commands.Cog):
                         await interaction.response.send_message("キューは空です。", ephemeral=True)
                     else:
                         desc = '\n'.join([f"{i+1}. {info['title']}" for i, info in enumerate(q_list)])
-                        await interaction.response.send_message(embed=discord.Embed(title="現在のキュー", description=desc, color=discord.Color.green()), ephemeral=True)
+                        await interaction.response.send_message(embed=make_embed.success_embed(title="現在のキュー", description=desc), ephemeral=True)
                 elif custom_id.startswith("music_add+"):
                     class MusicAddModal(discord.ui.Modal):
                         def __init__(self_):
@@ -360,7 +362,7 @@ class MusicCog(commands.Cog):
             await interaction.guild.voice_client.disconnect()
         await self.db["NowPLay"].delete_one(
             {"Guild": interaction.guild.id})
-        await interaction.followup.send("再生を停止し、キューをクリアしました。")
+        await interaction.followup.send(embed=make_embed.success_embed(title="再生を停止し、キューをクリアしました。"))
 
     @music.command(name="queue", description="キューを表示します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -373,7 +375,7 @@ class MusicCog(commands.Cog):
             await interaction.response.send_message("キューは空です。", ephemeral=True)
         else:
             desc = '\n'.join([f"{i+1}. {info['title']}" for i, info in enumerate(q_list)])
-            await interaction.response.send_message(embed=discord.Embed(title="現在のキュー", description=desc, color=discord.Color.green()))
+            await interaction.response.send_message(embed=make_embed.success_embed(title="現在のキュー", description=desc))
 
     @music.command(name="boost", description="低音ブーストをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -386,7 +388,7 @@ class MusicCog(commands.Cog):
             {"$set": {"boost": 'true' if 有効化するか else 'false'}},
             upsert=True
         )
-        await interaction.response.send_message(embed=discord.Embed(title=f"低音ブーストを {'有効化' if 有効化するか else '無効化'} しました。", description="SoundCloudとファイルのみ適用されます。", color=discord.Color.green()))
+        await interaction.response.send_message(embed=make_embed.success_embed(title=f"低音ブーストを {'有効化' if 有効化するか else '無効化'} しました。", description="SoundCloudとファイルのみ適用されます。"))
 
     @music.command(name="volume", description="音量を設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -407,7 +409,7 @@ class MusicCog(commands.Cog):
             {"$set": {"volume": int(音量.value)}},
             upsert=True
         )
-        await interaction.response.send_message(embed=discord.Embed(title=f"音量を {音量.value} にしました。", description="SoundCloudとファイルのみ適用されます。", color=discord.Color.green()))
+        await interaction.response.send_message(embed=make_embed.success_embed(title=f"音量を {音量.value} にしました。", description="SoundCloudとファイルのみ適用されます。"))
 
     @music.command(name="source", description="対応ソースを表示します")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -415,7 +417,7 @@ class MusicCog(commands.Cog):
     async def music_source(
         self, interaction: discord.Interaction
     ):
-        await interaction.response.send_message(embed=discord.Embed(title="対応ソース", color=discord.Color.green())
+        await interaction.response.send_message(embed=make_embed.success_embed(title="対応ソース")
                                                 .add_field(name="SoundCloud", value="音楽再生する用です。", inline=False)
                                                 .add_field(name="衆議院配信", value="説明を忘れました。", inline=False)
                                                 .add_field(name="ファイル", value=".mp3などが対応しています。", inline=False))
