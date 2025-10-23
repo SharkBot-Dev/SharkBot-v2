@@ -8,6 +8,8 @@ import aiohttp
 from bs4 import BeautifulSoup
 import ssl
 
+from models import make_embed
+
 cooldown_eventalert = {}
 
 ssl_context = ssl.create_default_context()
@@ -126,24 +128,23 @@ class AlertCog(commands.Cog):
     ):
         db = self.bot.async_db["Main"].EventAlert
         if チャンネル:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"Guild": interaction.guild.id, "Channel": チャンネル.id},
+                {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
+                embed=make_embed.success_embed(
                     title="イベント作成時に通知するチャンネルを設定しました。",
-                    color=discord.Color.green(),
+                    description="`/alert event`で、チャンネルを指定しなければ無効化できます。"
                 ),
                 ephemeral=True,
             )
         else:
             await db.delete_one({"Guild": interaction.guild.id})
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="イベント作成時に通知するチャンネルを削除しました。",
-                    color=discord.Color.red(),
+                embed=make_embed.success_embed(
+                    title="イベント作成時に通知するチャンネルを削除しました。"
                 ),
                 ephemeral=True,
             )
@@ -159,24 +160,23 @@ class AlertCog(commands.Cog):
     ):
         db = self.bot.async_db["Main"].NewsAlert
         if チャンネル:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"Guild": interaction.guild.id, "Channel": チャンネル.id},
+                {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
+                embed=make_embed.success_embed(
                     title="ニュースを通知するチャンネルを設定しました。",
-                    color=discord.Color.green(),
+                    description="`/alert news`で、チャンネルを指定しなければ無効化できます。"
                 ),
                 ephemeral=True,
             )
         else:
             await db.delete_one({"Guild": interaction.guild.id})
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="ニュースを通知するチャンネルを削除しました。",
-                    color=discord.Color.red(),
+                embed=make_embed.success_embed(
+                    title="ニュースを通知するチャンネルを削除しました。"
                 ),
                 ephemeral=True,
             )
@@ -186,31 +186,29 @@ class AlertCog(commands.Cog):
     )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
     async def alert_mention(
         self, interaction: discord.Interaction, ロール: discord.Role = None
     ):
         db = self.bot.async_db["Main"].AlertMention
         if ロール:
-            await db.replace_one(
-                {"Channel": interaction.channel.id},
+            await db.update_one(
+                {"Guild": interaction.guild.id},
                 {"Channel": interaction.channel.id, "Role": ロール.id},
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
+                embed=make_embed.success_embed(
                     title="アラート時にメンションするようにしました。",
-                    description=f"{ロール.mention}",
-                    color=discord.Color.green(),
+                    description=f"{ロール.mention}"
                 ),
                 ephemeral=True,
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="アラート時にメンションしなくしました。",
-                    color=discord.Color.red(),
+                embed=make_embed.success_embed(
+                    title="アラート時にメンションしなくしました。"
                 ),
                 ephemeral=True,
             )
