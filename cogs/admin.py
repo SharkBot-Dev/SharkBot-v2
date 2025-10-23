@@ -304,6 +304,9 @@ class AdminCog(commands.Cog):
                 ),
             )
 
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         await interaction.response.defer()
 
         if 操作.value == "embedget":
