@@ -595,16 +595,32 @@ class LevelCog(commands.Cog):
     async def level_message(
         self, interaction: discord.Interaction, message: str = None
     ):
+        await interaction.response.defer()
+        try:
+            enabled = await self.check_level_enabled(interaction.guild)
+        except:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="レベルは無効です。"
+                )
+            )
+        if not enabled:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="レベルは無効です。"
+                )
+            )
+
         if message:
             await self.set_message(interaction.guild, message)
-            await interaction.response.send_message(embed=make_embed.success_embed(title="レベルアップ時のメッセージを変更しました。", description=f"例\n\n{message.replace('{user}', interaction.user.name).replace('{newlevel}', str(13))}\n\n" + "{user}はユーザー名に、\n{newlevel}はレベルにレベルアップ後の置き換えられます。"))
+            await interaction.followup.send(embed=make_embed.success_embed(title="レベルアップ時のメッセージを変更しました。", description=f"例\n\n{message.replace('{user}', interaction.user.name).replace('{newlevel}', str(13))}\n\n" + "{user}はユーザー名に、\n{newlevel}はレベルにレベルアップ後の置き換えられます。"))
         else:
             db = self.bot.async_db["Main"].LevelingSetting
             await db.update_one(
                 {"Guild": interaction.guild.id},
                 {"$set": {"Message": "`{user}`さんの\nレベルが「{newlevel}」になったよ！"}}
             )
-            await interaction.response.send_message(embed=make_embed.success_embed(title="レベルアップ時のメッセージをリセットしました。", description=f"例\n\n`{interaction.user.name}`さんの\nレベルが「13」になったよ！"))
+            await interaction.followup.send(embed=make_embed.success_embed(title="レベルアップ時のメッセージをリセットしました。", description=f"例\n\n`{interaction.user.name}`さんの\nレベルが「13」になったよ！"))
         
     @level.command(name="edit", description="レベルを編集します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
