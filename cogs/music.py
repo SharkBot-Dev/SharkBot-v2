@@ -153,8 +153,12 @@ class MusicCog(commands.Cog):
             asyncio.run_coroutine_threadsafe(fut, self.bot.loop)
 
         guild_conf = await self.music_queue_collection.find_one({"guild_id": guild_id})
-        boost_enabled = guild_conf and guild_conf.get("boost") == "true"
-        vol_setting = guild_conf.get("volume", 70)
+        if guild_conf:
+            boost_enabled = guild_conf and guild_conf.get("boost") == "true"
+            vol_setting = guild_conf.get("volume", 70)
+        else:
+            boost_enabled = False
+            vol_setting = 70
 
         await self.now_play_set(interaction.guild.id, queue_item["title"])
         audio = YTDLSource.create_ffmpeg_player(queue_item['url'], boost=boost_enabled, volume=vol_setting)
@@ -217,8 +221,12 @@ class MusicCog(commands.Cog):
                                 await interaction.user.voice.channel.connect()
 
                             guild_conf = await self.music_queue_collection.find_one({"guild_id": interaction.guild.id})
-                            boost_enabled = guild_conf and guild_conf.get("boost") == "true"
-                            vol_setting = guild_conf.get("volume", 70)
+                            if guild_conf:
+                                boost_enabled = guild_conf and guild_conf.get("boost") == "true"
+                                vol_setting = guild_conf.get("volume", 70)
+                            else:
+                                boost_enabled = False
+                                vol_setting = 70
 
                             source_info = await YTDLSource.create_source(self_.musicurl.component.value)
 
@@ -282,8 +290,12 @@ class MusicCog(commands.Cog):
 
             if not voice.is_playing():
                 guild_conf = await self.music_queue_collection.find_one({"guild_id": interaction.guild.id})
-                boost_enabled = guild_conf and guild_conf.get("boost") == "true"
-                vol_setting = guild_conf.get("volume", 70)
+                if guild_conf:
+                    boost_enabled = guild_conf and guild_conf.get("boost") == "true"
+                    vol_setting = guild_conf.get("volume", 70)
+                else:
+                    boost_enabled = False
+                    vol_setting = 70
 
                 audio = YTDLSource.create_ffmpeg_player(item["url"], boost=boost_enabled, volume=vol_setting)
                 voice.play(audio, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(interaction, interaction.guild.id), self.bot.loop))
@@ -302,8 +314,12 @@ class MusicCog(commands.Cog):
                 await interaction.response.defer()
 
                 guild_conf = await self.music_queue_collection.find_one({"guild_id": interaction.guild.id})
-                boost_enabled = guild_conf and guild_conf.get("boost") == "true"
-                vol_setting = guild_conf.get("volume", 70)
+                if guild_conf:
+                    boost_enabled = guild_conf and guild_conf.get("boost") == "true"
+                    vol_setting = guild_conf.get("volume", 70)
+                else:
+                    boost_enabled = False
+                    vol_setting = 70
 
                 source_info = await YTDLSource.create_source(url)
 
