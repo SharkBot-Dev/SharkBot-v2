@@ -27,7 +27,7 @@ class AdminCog(commands.Cog):
             return True
 
     admin = app_commands.Group(
-        name="admin", description="SharkBot管理者向けのコマンドです。"
+        name="admin", description="SharkBot管理者向けのコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True)
     )
 
     @admin.command(name="cogs", description="cogの操作をします。")
