@@ -272,6 +272,9 @@ class BirthdayGroup(app_commands.Group):
         月: int,
         日: int
     ):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         if 月 < 1 or 月 > 12:
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(title="月の値が不正です。", description="1～12の間で指定してください。"),
@@ -313,6 +316,9 @@ class BirthdayGroup(app_commands.Group):
         interaction: discord.Interaction,
         メンバー: discord.User = None
     ):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         if interaction.guild.get_member(interaction.user.id) is None:
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(title="サーバーに参加していません。", description="このコマンドではサーバーに参加している人の誕生日のみ取得できます。"),
@@ -343,6 +349,9 @@ class BirthdayGroup(app_commands.Group):
         interaction: discord.Interaction,
         月: int = None
     ):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         db = interaction.client.async_db["Main"].Birthdays
         data = db.find({"guild_id": interaction.guild_id, "month": 月 if 月 else interaction.created_at.month})
 
@@ -593,11 +602,6 @@ class TextGroup(app_commands.Group):
     async def suddendeath(
         self, interaction: discord.Interaction, テキスト: str = "突然の死"
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.send_message(
             embed=discord.Embed(
                 description=f"```{sudden_generator(テキスト)}```",
@@ -610,11 +614,6 @@ class TextGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def retranslate(self, interaction: discord.Interaction, テキスト: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
 
         loop = asyncio.get_event_loop()
@@ -637,7 +636,7 @@ class TextGroup(app_commands.Group):
             word = await loop.run_in_executor(None, partial(word_.translate, word))
 
             desc += f"\n{lang} -> {word}"
-            await msg.edit(
+            await interaction.edit_original_response(
                 embed=discord.Embed(
                     title=f"何回も翻訳 ({lang})",
                     description=desc,
@@ -646,7 +645,7 @@ class TextGroup(app_commands.Group):
             )
 
         await asyncio.sleep(3)
-        await msg.edit(
+        await interaction.edit_original_response(
             embed=discord.Embed(
                 title="何回も翻訳",
                 description=f"{desc}\n完了しました。",
@@ -1002,22 +1001,22 @@ class ImageGroup(app_commands.Group):
         if noアルファ:
             if noアルファ == False:
                 msg = await interaction.response.send_message(
-                    embed=discord.Embed(
-                        title="5000兆円ほしい！", color=discord.Color.green()
+                    embed=make_embed.success_embed(
+                        title="5000兆円ほしい！"
                     ).set_image(url=f"https://gsapi.cbrx.io/image?top={上}&bottom={下}")
                 )
             else:
                 msg = await interaction.response.send_message(
-                    embed=discord.Embed(
-                        title="5000兆円ほしい！", color=discord.Color.green()
+                    embed=make_embed.success_embed(
+                        title="5000兆円ほしい！"
                     ).set_image(
                         url=f"https://gsapi.cbrx.io/image?top={上}&bottom={下}&noalpha=true"
                     )
                 )
         else:
             msg = await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="5000兆円ほしい！", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="5000兆円ほしい！"
                 ).set_image(url=f"https://gsapi.cbrx.io/image?top={上}&bottom={下}")
             )
 
@@ -1080,21 +1079,21 @@ class ImageGroup(app_commands.Group):
                 
         image = await asyncio.to_thread(make_text, テキスト, 色.value, 正方形にするか, フォント.value)
 
-        await interaction.followup.send(
-            file=discord.File(image, "emoji.png"),
-            view=EditImageView(interaction.user),
-        )
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            await interaction.followup.send(
+                file=discord.File(image, "emoji.png")
+            )
+        else:
+            await interaction.followup.send(
+                file=discord.File(image, "emoji.png"),
+                view=EditImageView(interaction.user),
+            )
         image.close()
 
     @app_commands.command(name="httpcat", description="httpキャットを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def httpcat(self, interaction: discord.Interaction, ステータスコード: int):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         embed = (
             discord.Embed(title="HTTPCat", color=discord.Color.blue())
             .set_image(url=f"https://http.cat/{ステータスコード}")
@@ -1369,7 +1368,7 @@ class FunCog(commands.Cog):
         self.bot = bot
         print("init -> FunCog")
 
-    fun = app_commands.Group(name="fun", description="面白いコマンドです。")
+    fun = app_commands.Group(name="fun", description="面白いコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True))
 
     fun.add_command(TextGroup())
     fun.add_command(ImageGroup())
@@ -1384,10 +1383,8 @@ class FunCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def janken(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
 
         bot = random.choice(["ぐー", "ちょき", "ぱー"])
 
