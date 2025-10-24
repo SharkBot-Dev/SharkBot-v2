@@ -603,10 +603,9 @@ class TextGroup(app_commands.Group):
         self, interaction: discord.Interaction, テキスト: str = "突然の死"
     ):
         await interaction.response.send_message(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 description=f"```{sudden_generator(テキスト)}```",
-                title="突然の死",
-                color=discord.Color.green(),
+                title="突然の死"
             )
         )
 
@@ -620,8 +619,8 @@ class TextGroup(app_commands.Group):
 
         desc = f"ja -> {テキスト}"
         msg = await interaction.followup.send(
-            embed=discord.Embed(
-                title="何回も翻訳 (ja)", description=desc, color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="何回も翻訳 (ja)", description=desc
             )
         )
 
@@ -629,7 +628,7 @@ class TextGroup(app_commands.Group):
         langs = ["en", "zh-CN", "ko", "ru", "ja"]
 
         for lang in langs:
-            await asyncio.sleep(3)
+            await asyncio.sleep(1)
             word_ = await loop.run_in_executor(
                 None, partial(GoogleTranslator, source="auto", target=lang)
             )
@@ -637,19 +636,17 @@ class TextGroup(app_commands.Group):
 
             desc += f"\n{lang} -> {word}"
             await interaction.edit_original_response(
-                embed=discord.Embed(
+                embed=make_embed.success_embed(
                     title=f"何回も翻訳 ({lang})",
-                    description=desc,
-                    color=discord.Color.green(),
+                    description=desc
                 )
             )
 
-        await asyncio.sleep(3)
+        await asyncio.sleep(1)
         await interaction.edit_original_response(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title="何回も翻訳",
-                description=f"{desc}\n完了しました。",
-                color=discord.Color.green(),
+                description=f"{desc}\n完了しました。"
             )
         )
 
@@ -715,7 +712,7 @@ class TextGroup(app_commands.Group):
             key = Fernet.generate_key()
             f = Fernet(key)
             token = f.encrypt(テキスト.encode())
-            embed = discord.Embed(title="暗号化完了", color=discord.Color.green())
+            embed = make_embed.success_embed(title="暗号化完了")
             embed.add_field(name="暗号", value=token.decode(), inline=False)
             embed.add_field(name="暗号化キー", value=key.decode(), inline=False)
             await interaction.response.send_message(embed=embed)
@@ -724,29 +721,27 @@ class TextGroup(app_commands.Group):
             try:
                 f = Fernet(暗号化キー.encode())
                 decrypted = f.decrypt(暗号.encode())
-                embed = discord.Embed(title="復号化完了", color=discord.Color.green())
+                embed = make_embed.success_embed(title="復号化完了")
                 embed.add_field(name="復元結果", value=decrypted.decode(), inline=False)
                 await interaction.response.send_message(embed=embed)
             except InvalidToken:
                 await interaction.response.send_message(
-                    embed=discord.Embed(
+                    embed=make_embed.error_embed(
                         title="復号エラー",
-                        description="無効な暗号またはキーです。",
-                        color=discord.Color.red(),
+                        description="無効な暗号またはキーです。"
                     )
                 )
             except Exception as e:
                 await interaction.response.send_message(
-                    embed=discord.Embed(
-                        title="エラー", description=str(e), color=discord.Color.red()
+                    embed=make_embed.error_embed(
+                        title="エラー", description=str(e)
                     )
                 )
         else:
             await interaction.response.send_message(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="使用方法エラー",
-                    description="暗号化には `テキスト` を、復号には `暗号` と `暗号化キー` を指定してください。",
-                    color=discord.Color.orange(),
+                    description="暗号化には `テキスト` を、復号には `暗号` と `暗号化キー` を指定してください。"
                 )
             )
 
@@ -756,10 +751,9 @@ class TextGroup(app_commands.Group):
     async def number(self, interaction: discord.Interaction, 進数: int, 数字: str):
         if 進数 < 2 or 進数 > 16:
             return await interaction.response.send_message(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="対応していない進数です。",
-                    description="2～16進数まで対応しています。",
-                    color=discord.Color.red(),
+                    description="2～16進数まで対応しています。"
                 )
             )
 
@@ -767,18 +761,16 @@ class TextGroup(app_commands.Group):
             result = int(数字, 進数)
         except ValueError:
             return await interaction.response.send_message(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="変換エラー",
-                    description=f"入力 `{数字}` は {進数} 進数として無効です。",
-                    color=discord.Color.red(),
+                    description=f"入力 `{数字}` は {進数} 進数として無効です。"
                 )
             )
 
         await interaction.response.send_message(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title="進数を変換しました。",
-                description=f"`{数字}` ({進数}進数) → `{result}` (10進数)",
-                color=discord.Color.green(),
+                description=f"`{数字}` ({進数}進数) → `{result}` (10進数)"
             )
         )
 
@@ -827,10 +819,9 @@ class TextGroup(app_commands.Group):
                                 else "取得できませんでした"
                             )
                             await interaction_.followup.send(
-                                embed=discord.Embed(
+                                embed=make_embed.success_embed(
                                     title="ARMのバイナリ",
-                                    description=f"```{hex_result}```",
-                                    color=discord.Color.green(),
+                                    description=f"```{hex_result}```"
                                 )
                             )
                 except Exception as e:
