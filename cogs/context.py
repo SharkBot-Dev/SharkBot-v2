@@ -6,6 +6,7 @@ import discord
 from discord import app_commands
 from PIL import Image, ImageDraw, ImageFont
 import datetime
+from models import make_embed
 from models.permissions_text import PERMISSION_TRANSLATIONS
 import asyncio
 
@@ -137,6 +138,7 @@ async def setup(bot: commands.Bot):
     @app_commands.context_menu(name="Make it a quote")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     async def make_it_a_quote(
         interaction: discord.Interaction, message: discord.Message
     ):
@@ -472,9 +474,32 @@ async def setup(bot: commands.Bot):
     @app_commands.context_menu(name="ユーザー情報")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     async def user_info(interaction: discord.Interaction, member: discord.Member):
         await interaction.response.defer()
         JST = datetime.timezone(datetime.timedelta(hours=9))
+
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            embed = make_embed.success_embed(
+                title=f"{member.display_name}の情報"
+            )
+
+            if member.bot:
+                isbot = "はい"
+            else:
+                isbot = "いいえ"
+
+            embed.add_field(
+                name="基本情報",
+                value=f"ID: **{member.id}**\nユーザーネーム: **{member.name}#{member.discriminator}**\n作成日: **{member.created_at.astimezone(JST)}**\nBot？: **{isbot}**\n認証Bot？: **{'はい' if member.public_flags.verified_bot else 'いいえ'}**",
+            )
+
+            embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
+
+            await interaction.followup.send(embed=embed)
+
+            return
+
         if interaction.guild.get_member(member.id):
             isguild = "います。"
         else:
@@ -502,6 +527,7 @@ async def setup(bot: commands.Bot):
     @app_commands.context_menu(name="アバター表示")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
     async def avatar_show(interaction: discord.Interaction, member: discord.Member):
         await interaction.response.defer()
         if member.avatar == None:
