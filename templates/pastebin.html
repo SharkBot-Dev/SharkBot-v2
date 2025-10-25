@@ -1,73 +1,92 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PasteBin</title>
     <style>
+        body {
+            background-color: rgb(120, 129, 146);
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
         .form_text {
             background-color: rgba(0, 0, 0, 0.5);
             border-radius: 20px;
             padding: 20px;
-            margin: 20px;
-        }
-
-        .form_text .save_button {
-            background-color: aqua;
-            border-radius: 10px;
-            color: black;
-            margin: 20px;
-            height: 60px;
-            width: 100px;
-        }
-
-        .form_text .save_button:hover {
-            background-color: rgb(21, 41, 58);
-            color: white;
-            transition: all 300ms 0s ease;
-        }
-
-        .form_text .delete_button {
-            background-color: aqua;
-            border-radius: 10px;
-            color: black;
-            margin-left: 20px;
-        }
-
-        .form_text textarea {
-            margin: 10px;
-            border-radius: 10px;
+            margin: 30px auto;
+            max-width: 900px;
+            text-align: center;
         }
 
         .form_text h2 {
-            margin: 20px;
             color: wheat;
-            transition: all 300ms 0s ease;
+            margin: 20px 0;
+            transition: all 300ms ease;
         }
 
         .form_text h2:hover {
             color: gray;
         }
 
-        a {
-            text-decoration:none; 
+        .form_text textarea {
+            margin: 10px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 850px;
+            resize: vertical;
+            font-size: 14px;
+            padding: 10px;
+            line-height: 1.4em;
         }
 
-        body {
-            background-color: rgb(120, 129, 146);
+        .save_button,
+        .delete_button {
+            background-color: aqua;
+            border-radius: 10px;
+            border: none;
+            color: black;
+            margin: 10px;
+            height: 50px;
+            width: 100px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 300ms ease;
+        }
+
+        .save_button:hover,
+        .delete_button:hover {
+            background-color: rgb(21, 41, 58);
+            color: white;
+        }
+
+        a {
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
     <div class="form_text">
-        <a href="https://www.sharkbot.xyz/"><h2>PasteBin (SharkBot)</h2></a>
+        <a href="https://www.sharkbot.xyz/">
+            <h2>PasteBin (SharkBot)</h2>
+        </a>
 
         <form action="/pastebin/save" method="post">
-            <input name="id", value="{{textid}}" hidden>
-            <textarea id="text" name="text" cols="80" rows="25" tabindex="1">{{text}}</textarea><br>
-            <button type="submit" class="save_button">💾保存</button>
+            <input type="hidden" name="id" value="{{ textid }}">
+            <textarea id="text" name="text" cols="80" rows="25" tabindex="1">{{ text | e }}</textarea><br>
+            <button type="submit" class="save_button">💾 保存</button>
+            <button type="button" class="delete_button" onclick="confirmDelete('{{ textid }}')">🗑️ 削除</button>
         </form>
-        <button onclick="location.href = '/pastebin/delete?id={{textid}}'" class="delete_button">🗑️削除</button>
     </div>
+
+    <script>
+        function confirmDelete(id) {
+            if (confirm("本当に削除しますか？")) {
+                location.href = `/pastebin/delete?id=${encodeURIComponent(id)}`;
+            }
+        }
+    </script>
 </body>
 </html>

@@ -32,42 +32,58 @@ async def omikuji(request: Request):
 
 @router.get("/pastebin", dependencies=[Depends(rate_limiter)])
 async def paste_bin(request: Request, id: str = None):
+    db = mongodb.mongo["DashboardBot"].PasteBin
+
     if not id:
-        return templates.templates.TemplateResponse("pastebin.html", {"request": request, 'text': 'まだ何もありません。', 'textid': string_id.string_id(20)})
-    text = await mongodb.mongo["DashboardBot"].PasteBin.find_one(
-        {'TextID': id}
+        return templates.templates.TemplateResponse(
+            "pastebin.html",
+            {"request": request, 'text': 'まだ何もありません。', 'textid': string_id.string_id(20)}
+        )
+
+    text_doc = await db.find_one({'TextID': id})
+    if not text_doc:
+        return templates.templates.TemplateResponse(
+            "pastebin.html",
+            {"request": request, 'text': 'まだ何もありません。', 'textid': string_id.string_id(20)}
+        )
+
+    return templates.templates.TemplateResponse(
+        "pastebin.html",
+        {"request": request, 'text': html.escape(text_doc.get('Text', 'エラー')), 'textid': id}
     )
-    if not text:
-        return templates.templates.TemplateResponse("pastebin.html", {"request": request, 'text': 'まだ何もありません。', 'textid': string_id.string_id(20)})
-    return templates.templates.TemplateResponse("pastebin.html", {"request": request, 'text': text.get('Text', 'エラー'), 'textid': id})
+
 
 @router.post("/pastebin/save", dependencies=[Depends(rate_limiter)])
 async def paste_bin_save(request: Request, text: str = Form(...), id: str = Form(...)):
-    if len(text) > 301:
-        return PlainTextResponse('テキストが大きすぎます。\n300以下にしてください。')
+    if len(text) > 300:
+        return PlainTextResponse('テキストが大きすぎます。\n300文字以下にしてください。')
+
     db = mongodb.mongo["DashboardBot"].PasteBin
-    i = html.escape(id)
-    check = db.find_one(
-        {'TextID': i}
-    )
-    if not check:
+    i = html.escape(id.strip())
+
+    check = await db.find_one({'TextID': i})
+    if check:
         return PlainTextResponse('そのIDは既に使われています。')
+
     await db.update_one(
         {'TextID': i},
-        {'$set': {'TextID': i, 'Text': html.escape(text)}},
+        {'$set': {'TextID': i, 'Text': text}},
         upsert=True,
     )
 
     return RedirectResponse(f'/pastebin?id={i}', status_code=303)
 
+
 @router.get("/pastebin/delete", dependencies=[Depends(rate_limiter)])
 async def paste_bin_delete(request: Request, id: str = None):
     if not id:
-        return RedirectResponse(f'/pastebin')
+        return RedirectResponse('/pastebin')
+
     db = mongodb.mongo["DashboardBot"].PasteBin
-    i = html.escape(id)
+    i = html.escape(id.strip())
+
     await db.delete_one({'TextID': i})
-    return RedirectResponse(f'/pastebin')
+    return RedirectResponse('/pastebin')
 
 @router.get("/rankcard", dependencies=[Depends(rate_limiter)])
 async def rankcard(request: Request):
