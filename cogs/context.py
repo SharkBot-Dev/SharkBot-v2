@@ -1,4 +1,5 @@
 import io
+import re
 import aiohttp
 from deep_translator import GoogleTranslator
 from discord.ext import commands
@@ -149,6 +150,27 @@ async def setup(bot: commands.Bot):
         back = (0, 0, 0)
         text = (255, 255, 255)
         c = 0
+        content = message.content
+
+        pattern = r"<(@!?|#|@&)(\d+)>"
+
+        def replacer(match):
+            type_, id_ = match.groups()
+            obj_id = int(id_)
+
+            if type_.startswith("@"):
+                user = bot.get_user(obj_id)
+                return f"@{user.display_name}" if user else "@不明ユーザー"
+            elif type_ == "@&":
+                role = message.guild.get_role(obj_id)
+                return f"@{role.name}" if role else "@不明ロール"
+            elif type_ == "#":
+                channel = bot.get_channel(obj_id)
+                return f"#{channel.name}" if channel else "#不明チャンネル"
+            return match.group(0)
+        
+        content = re.sub(pattern, replacer, content)
+
         while True:
             if c > 8:
                 return await interaction.followup.send(
@@ -160,7 +182,7 @@ async def setup(bot: commands.Bot):
             miq = await asyncio.to_thread(
                 create_quote_image,
                 message.author.display_name,
-                message.content,
+                content,
                 av,
                 back,
                 text,

@@ -3,6 +3,7 @@ from functools import partial
 import io
 import json
 import random
+import re
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import unicodedata
 import aiohttp
@@ -1139,6 +1140,26 @@ class ImageGroup(app_commands.Group):
             back = (255, 255, 255)
             text = (0, 0, 0)
         c = 0
+
+        pattern = r"<(@!?|#|@&)(\d+)>"
+
+        def replacer(match):
+            type_, id_ = match.groups()
+            obj_id = int(id_)
+
+            if type_.startswith("@"):
+                user = interaction.client.get_user(obj_id)
+                return f"@{user.display_name}" if user else "@不明ユーザー"
+            elif type_ == "@&":
+                role = interaction.guild.get_role(obj_id)
+                return f"@{role.name}" if role else "@不明ロール"
+            elif type_ == "#":
+                channel = interaction.client.get_channel(obj_id)
+                return f"#{channel.name}" if channel else "#不明チャンネル"
+            return match.group(0)
+        
+        content = re.sub(pattern, replacer, 発言)
+
         while True:
             if c > 8:
                 return await interaction.followup.send(
@@ -1150,7 +1171,7 @@ class ImageGroup(app_commands.Group):
             miq = await asyncio.to_thread(
                 create_quote_image,
                 ユーザー.display_name,
-                発言,
+                content,
                 av,
                 back,
                 text,
