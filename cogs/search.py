@@ -745,9 +745,17 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             if interaction.is_user_integration() and not interaction.is_guild_integration():
                 return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
 
+            if not interaction.user.guild_permissions.manage_channels:
+                return await interaction.response.send_message(ephemeral=True,
+                                                               embed=make_embed.error_embed(title="コマンドを実行する権限がありません！", description=f"不足している権限: チャンネルの管理"))
+
             await interaction.response.defer()
 
-            channel = await interaction.guild.fetch_channel(int(チャンネルid))
+            try:
+
+                channel = await interaction.guild.fetch_channel(int(チャンネルid))
+            except discord.InvalidData:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="チャンネルが存在しません。", description="別サーバーにある場合も取得できません。"))
 
             embed = make_embed.success_embed(title="チャンネルの情報")
             embed.add_field(name="名前", value=channel.name, inline=False)
