@@ -61,13 +61,9 @@ async def paste_bin_save(request: Request, text: str = Form(...), id: str = Form
     db = mongodb.mongo["DashboardBot"].PasteBin
     i = html.escape(id.strip())
 
-    check = await db.find_one({'TextID': i})
-    if check:
-        return PlainTextResponse('そのIDは既に使われています。')
-
     await db.update_one(
         {'TextID': i},
-        {'$set': {'TextID': i, 'Text': text}},
+        {'$set': {'TextID': i, 'Text': html.escape(text)}},
         upsert=True,
     )
 
