@@ -1391,6 +1391,33 @@ class FunCog(commands.Cog):
     fun.add_command(SayGroup())
     fun.add_command(BirthdayGroup())
 
+    @fun.command(name="ranking", description="様々なランキングを表示します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        ランキングの種類=[
+            app_commands.Choice(name="Top.ggのVoteランキング", value="vote")
+        ]
+    )
+    async def ranking(self, interaction: discord.Interaction, ランキングの種類: app_commands.Choice[str]):
+        await interaction.response.defer()
+
+        if ランキングの種類.value == "vote":
+            db = interaction.client.async_db['Main']['TOPGGVote']
+            top_users = await db.find().sort("count", -1).limit(15).to_list(length=15)
+            if len(top_users) == 0:
+                await interaction.followup.send(embed=make_embed.success_embed(title="TOPGGVote回数", description="まだTopggでVoteされていません。"))
+                return
+            ranking_message = ""
+            for index, user_data in enumerate(top_users, start=1):
+                user_id = user_data["_id"]
+                delete_count = user_data["count"]
+                member = self.bot.get_user(user_id)
+                username = f"{member.display_name} ({user_id})" if member else f"Unknown ({user_id})"
+                ranking_message += f"{index}. **{username}** - {delete_count} 回\n"
+
+            await interaction.followup.send(embed=make_embed.success_embed(title="TOPGGVote回数", description=ranking_message))
+
     @fun.command(name="janken", description="じゃんけんをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
