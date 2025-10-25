@@ -128,8 +128,9 @@ class WebGroup(app_commands.Group):
                         return
 
             try:
-                translator = GoogleTranslator(source="auto", target=翻訳先.value)
-                translated_text = translator.translate(テキスト)
+                loop = asyncio.get_running_loop()
+                translator = await loop.run_in_executor(None, partial(GoogleTranslator, source="auto", target=翻訳先.value))
+                translated_text = await loop.run_in_executor(translator.translate, テキスト)
 
                 embed = discord.Embed(
                     title=f"翻訳 ({翻訳先.value} へ)",
@@ -191,8 +192,9 @@ class WebGroup(app_commands.Group):
                         return
                     
             try:
-                translator = GoogleTranslator(source="auto", target=翻訳先.value)
-                translated_text = translator.translate(text_ocrd)
+                loop = asyncio.get_running_loop()
+                translator = await loop.run_in_executor(None, partial(GoogleTranslator, source="auto", target=翻訳先.value))
+                translated_text = await loop.run_in_executor(translator.translate, text_ocrd)
 
                 embed = discord.Embed(
                     title=f"翻訳 ({翻訳先.value} へ)",
