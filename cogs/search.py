@@ -107,10 +107,9 @@ class WebGroup(app_commands.Group):
                     None, partial(nom.translare, テキスト)
                 )
 
-                embed = discord.Embed(
+                embed = make_embed.success_embed(
                     title="翻訳 (ノムリッシュ語へ)",
-                    description=f"```{text}```",
-                    color=discord.Color.green(),
+                    description=f"```{text}```"
                 )
                 await interaction.followup.send(embed=embed)
                 return
@@ -119,10 +118,9 @@ class WebGroup(app_commands.Group):
                 async with aiohttp.ClientSession() as session:
                     async with session.get(f"https://api-ryo001339.onrender.com/rune/{urllib.parse.quote(テキスト)}", ssl=ssl_context) as response:
                         js = await response.json()
-                        embed = discord.Embed(
+                        embed = make_embed.success_embed(
                             title="ルーン文字へ",
-                            description=f"```{js.get('transformatedText', '？？？')}```",
-                            color=discord.Color.green(),
+                            description=f"```{js.get('transformatedText', '？？？')}```"
                         )
                         await interaction.followup.send(embed=embed)
                         return
@@ -130,20 +128,18 @@ class WebGroup(app_commands.Group):
             try:
                 loop = asyncio.get_running_loop()
                 translator = await loop.run_in_executor(None, partial(GoogleTranslator, source="auto", target=翻訳先.value))
-                translated_text = await loop.run_in_executor(translator.translate, テキスト)
+                translated_text = await loop.run_in_executor(None, partial(translator.translate, テキスト))
 
-                embed = discord.Embed(
+                embed = make_embed.success_embed(
                     title=f"翻訳 ({翻訳先.value} へ)",
-                    description=f"```{translated_text}```",
-                    color=discord.Color.green(),
+                    description=f"```{translated_text}```"
                 )
                 await interaction.followup.send(embed=embed)
 
             except Exception:
-                embed = discord.Embed(
+                embed = make_embed.error_embed(
                     title="翻訳に失敗しました",
-                    description="指定された言語コードが正しいか確認してください。",
-                    color=discord.Color.red(),
+                    description="指定された言語コードが正しいか確認してください。"
                 )
                 await interaction.followup.send(embed=embed)
         else:
@@ -171,10 +167,9 @@ class WebGroup(app_commands.Group):
                     None, partial(nom.translare, text_ocrd)
                 )
 
-                embed = discord.Embed(
+                embed = make_embed.success_embed(
                     title="翻訳 (ノムリッシュ語へ)",
-                    description=f"```{text}```",
-                    color=discord.Color.green(),
+                    description=f"```{text}```"
                 )
                 await interaction.followup.send(embed=embed)
                 return
@@ -183,10 +178,9 @@ class WebGroup(app_commands.Group):
                 async with aiohttp.ClientSession() as session:
                     async with session.get(f"https://api-ryo001339.onrender.com/rune/{urllib.parse.quote(text_ocrd)}", ssl=ssl_context) as response:
                         js = await response.json()
-                        embed = discord.Embed(
+                        embed = make_embed.success_embed(
                             title="ルーン文字へ",
-                            description=f"```{js.get('transformatedText', '？？？')}```",
-                            color=discord.Color.green(),
+                            description=f"```{js.get('transformatedText', '？？？')}```"
                         )
                         await interaction.followup.send(embed=embed)
                         return
@@ -194,20 +188,18 @@ class WebGroup(app_commands.Group):
             try:
                 loop = asyncio.get_running_loop()
                 translator = await loop.run_in_executor(None, partial(GoogleTranslator, source="auto", target=翻訳先.value))
-                translated_text = await loop.run_in_executor(translator.translate, text_ocrd)
+                translated_text = await loop.run_in_executor(None, partial(translator.translate, text_ocrd))
 
-                embed = discord.Embed(
+                embed = make_embed.success_embed(
                     title=f"翻訳 ({翻訳先.value} へ)",
-                    description=f"```{translated_text}```",
-                    color=discord.Color.green(),
+                    description=f"```{translated_text}```"
                 )
                 await interaction.followup.send(embed=embed)
 
             except Exception as e:
-                embed = discord.Embed(
+                embed = make_embed.error_embed(
                     title="翻訳に失敗しました",
-                    description=f"エラーコード: {e}",
-                    color=discord.Color.red(),
+                    description=f"エラーコード: {e}"
                 )
                 await interaction.followup.send(embed=embed)
 
