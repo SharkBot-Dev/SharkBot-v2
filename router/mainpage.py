@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Form, Request
 from consts import templates
 from consts import mongodb
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, PlainTextResponse
 import html
+from models import string_id
 
 from fastapi import Depends
 
@@ -29,6 +30,44 @@ async def omikuji(request: Request):
         "omikuji.html", {"request": request, "user": u}
     )
 
+@router.get("/pastebin", dependencies=[Depends(rate_limiter)])
+async def paste_bin(request: Request, id: str = None):
+    if not id:
+        return templates.templates.TemplateResponse("pastebin.html", {"request": request, 'text': 'まだ何もありません。', 'textid': string_id.string_id(20)})
+    text = await mongodb.mongo["DashboardBot"].PasteBin.find_one(
+        {'TextID': id}
+    )
+    if not text:
+        return templates.templates.TemplateResponse("pastebin.html", {"request": request, 'text': 'まだ何もありません。', 'textid': string_id.string_id(20)})
+    return templates.templates.TemplateResponse("pastebin.html", {"request": request, 'text': text.get('Text', 'エラー'), 'textid': id})
+
+@router.post("/pastebin/save", dependencies=[Depends(rate_limiter)])
+async def paste_bin_save(request: Request, text: str = Form(...), id: str = Form(...)):
+    if len(text) > 301:
+        return PlainTextResponse('テキストが大きすぎます。\n300以下にしてください。')
+    db = mongodb.mongo["DashboardBot"].PasteBin
+    i = html.escape(id)
+    check = db.find_one(
+        {'TextID': i}
+    )
+    if not check:
+        return PlainTextResponse('そのIDは既に使われています。')
+    await db.update_one(
+        {'TextID': i},
+        {'$set': {'TextID': i, 'Text': html.escape(text)}},
+        upsert=True,
+    )
+
+    return RedirectResponse(f'/pastebin?id={i}', status_code=303)
+
+@router.get("/pastebin/delete", dependencies=[Depends(rate_limiter)])
+async def paste_bin_delete(request: Request, id: str = None):
+    if not id:
+        return RedirectResponse(f'/pastebin')
+    db = mongodb.mongo["DashboardBot"].PasteBin
+    i = html.escape(id)
+    await db.delete_one({'TextID': i})
+    return RedirectResponse(f'/pastebin')
 
 @router.get("/rankcard", dependencies=[Depends(rate_limiter)])
 async def rankcard(request: Request):
@@ -50,9 +89,9 @@ async def rankcard_set(request: Request, color: str = Form(...)):
     safe_color = html.escape(color)
 
     db = mongodb.mongo["Main"].RankColor
-    await db.replace_one(
+    await db.update_one(
         {"User": int(u.get("id", "0"))},
-        {"User": int(u.get("id", "0")), "Color": safe_color},
+        {'$set': {"User": int(u.get("id", "0")), "Color": safe_color}},
         upsert=True,
     )
 
