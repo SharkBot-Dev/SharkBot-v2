@@ -549,23 +549,28 @@ class LoggingCog(commands.Cog):
         event: app_commands.Choice[str] = None
     ):
         db = self.bot.async_db["Main"].EventLoggingChannel
-        web = await interaction.channel.create_webhook(name=f"SharkBot-Log-{event.value if event else 'all'}")
 
-        query = {"Guild": interaction.guild.id}
-        if event:
-            query["Event"] = event.value
+        query = {"Guild": interaction.guild.id, "Channel": interaction.channel.id}
+
+        dbfind = await db.find_one(query, {"_id": False})
+
+        if dbfind and dbfind.get("Webhook"):
+            webhook_url = dbfind["Webhook"]
+        else:
+            webhook = await interaction.channel.create_webhook(name="SharkBot-Log")
+            webhook_url = webhook.url
 
         update_data = {
             "$set": {
                 "Guild": interaction.guild.id,
                 "Channel": interaction.channel.id,
-                "Webhook": web.url,
+                "Webhook": webhook_url,
             }
         }
         if event:
             update_data["$set"]["Event"] = event.value
 
-        await db.update_one(query, update_data, upsert=True)
+        await db.update_one({"Guild": interaction.guild.id, "Channel": interaction.channel.id, 'Event': event.value}, update_data, upsert=True)
 
         await interaction.response.send_message(
             embed=discord.Embed(
