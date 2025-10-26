@@ -13,77 +13,158 @@ class RoleCog(commands.Cog):
 
     role = app_commands.Group(name="role", description="ロール系のコマンドです。")
 
-    @role.command(name="add", description="ロールを追加します。")
-    @app_commands.checks.has_permissions(administrator=True)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+
+    @role.command(name="add", description="メンバーにロールを追加します。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=False)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def role_add(
         self,
         interaction: discord.Interaction,
-        メンバー: discord.User,
+        メンバー: discord.Member,
         ロール: discord.Role,
     ):
-        if interaction.guild.get_member(メンバー.id) is None:
+        guild = interaction.guild
+        executor = interaction.user
+        bot_member = guild.me
+
+        if not bot_member.guild_permissions.manage_roles:
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="このサーバーにいないメンバーにはロールを追加できません。",
-                    color=discord.Color.red(),
-                )
+                embed=make_embed.error_embed(
+                    title="ロール追加失敗",
+                    description="Botにロール管理権限がありません。"
+                ),
+                ephemeral=True,
             )
 
-        await interaction.response.defer()
+        if ロール.position >= bot_member.top_role.position:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="ロール追加失敗",
+                    description="指定されたロールはBotより上位のため、操作できません。"
+                ),
+                ephemeral=True,
+            )
+
+        if ロール.position >= executor.top_role.position and not executor.guild_permissions.administrator:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="ロール追加失敗",
+                    description="あなたより上位のロールは追加できません。"
+                ),
+                ephemeral=True,
+            )
+
+        if メンバー.id == executor.id:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="自分自身にはロールを付与できません。"
+                ),
+                ephemeral=True,
+            )
+
+        await interaction.response.defer(thinking=True)
 
         try:
-            await interaction.guild.get_member(メンバー.id).add_roles(ロール)
-        except:
+            await メンバー.add_roles(ロール, reason=f"実行者: {executor}")
+        except discord.Forbidden:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="ロールを追加できませんでした。",
-                    color=discord.Color.red(),
-                    description="権限エラーです。",
-                )
+                embed=make_embed.error_embed(
+                    title="ロール追加失敗",
+                    description="権限不足により、ロールを追加できませんでした。"
+                ),
+                ephemeral=True,
+            )
+        except discord.HTTPException as e:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="エラーが発生しました。",
+                    description=f"詳細: {e}"
+                ),
+                ephemeral=True,
             )
 
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="ロールを追加しました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="ロールを追加しました。",
+                description=f"{メンバー.mention} に {ロール.mention} を追加しました。"
             )
         )
 
-    @role.command(name="remove", description="ロールを剥奪します。")
-    @app_commands.checks.has_permissions(administrator=True)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @role.command(name="remove", description="メンバーからロールを剥奪します。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=False)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def role_remove(
         self,
         interaction: discord.Interaction,
-        メンバー: discord.User,
+        メンバー: discord.Member,
         ロール: discord.Role,
     ):
-        if interaction.guild.get_member(メンバー.id) is None:
+        guild = interaction.guild
+        executor = interaction.user
+        bot_member = guild.me
+
+        if not bot_member.guild_permissions.manage_roles:
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="このサーバーにいないメンバーにはロールを追加できません。",
-                    color=discord.Color.red(),
-                )
+                embed=make_embed.error_embed(
+                    title="ロール剥奪失敗",
+                    description="Botにロール管理権限がありません。"
+                ),
+                ephemeral=True,
             )
 
-        await interaction.response.defer()
+        if ロール.position >= bot_member.top_role.position:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="ロール剥奪失敗",
+                    description="指定されたロールはBotより上位のため、操作できません。"
+                ),
+                ephemeral=True,
+            )
+
+        if ロール.position >= executor.top_role.position and not executor.guild_permissions.administrator:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="ロール剥奪失敗",
+                    description="あなたより上位のロールは剥奪できません。"
+                ),
+                ephemeral=True,
+            )
+
+        if メンバー.id == executor.id:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="自分自身からロールを剥奪することはできません。"
+                ),
+                ephemeral=True,
+            )
+
+        await interaction.response.defer(thinking=True)
 
         try:
-            await interaction.guild.get_member(メンバー.id).remove_roles(ロール)
-        except:
+            await メンバー.remove_roles(ロール, reason=f"実行者: {executor}")
+        except discord.Forbidden:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="ロールを剥奪できませんでした。",
-                    color=discord.Color.red(),
-                    description="権限エラーです。",
-                )
+                embed=make_embed.error_embed(
+                    title="ロール剥奪失敗",
+                    description="権限不足により、ロールを剥奪できませんでした。"
+                ),
+                ephemeral=True,
+            )
+        except discord.HTTPException as e:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="エラーが発生しました。",
+                    description=f"詳細: {e}"
+                ),
+                ephemeral=True,
             )
 
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="ロールを剥奪しました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="ロールを剥奪しました。",
+                description=f"{メンバー.mention} から {ロール.mention} を剥奪しました。"
             )
         )
 

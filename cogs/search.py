@@ -750,6 +750,8 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
                 channel = await interaction.guild.fetch_channel(int(チャンネルid))
             except discord.InvalidData:
                 return await interaction.followup.send(embed=make_embed.error_embed(title="チャンネルが存在しません。", description="別サーバーにある場合も取得できません。"))
+            except ValueError:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="無効なチャンネルidです。", description="チャンネルidは数字である必要があります。"))
 
             embed = make_embed.success_embed(title="チャンネルの情報")
             embed.add_field(name="名前", value=channel.name, inline=False)
