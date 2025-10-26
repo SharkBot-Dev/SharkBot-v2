@@ -602,7 +602,9 @@ class LoggingCog(commands.Cog):
         if event:
             update_data["$set"]["Event"] = event.value
 
-        await db.update_one({"Guild": interaction.guild.id, "Channel": interaction.channel.id, 'Event': event.value}, update_data, upsert=True)
+            await db.update_one({"Guild": interaction.guild.id, "Channel": interaction.channel.id, 'Event': event.value}, update_data, upsert=True)
+        else:
+            await db.update_one({"Guild": interaction.guild.id, "Channel": interaction.channel.id}, update_data, upsert=True)
 
         await interaction.response.send_message(
             embed=discord.Embed(
