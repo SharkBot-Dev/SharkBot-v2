@@ -663,7 +663,7 @@ class LoggingCog(commands.Cog):
         else:
             await db.update_one({"Guild": interaction.guild.id}, {'$pull': {"Channel": チャンネル.id}}, upsert=True)
 
-        await interaction.response.send_message(embed=make_embed.success_embed(title="ログを送信しないチャンネルを設定しました。", description=f"次から {チャンネル.mention} に送信し {'ます' if 無視するか else 'ません'}。"))
+        await interaction.response.send_message(embed=make_embed.success_embed(title="ログを送信しないチャンネルを設定しました。", description=f"次から {チャンネル.mention} のログを送信し {'ます' if not 無視するか else 'ません'}。"))
         return
 
 async def setup(bot):
