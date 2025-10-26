@@ -5,7 +5,7 @@ import datetime
 from discord import Webhook
 import aiohttp
 
-from models import command_disable
+from models import command_disable, make_embed
 
 
 class LoggingCog(commands.Cog):
@@ -28,6 +28,19 @@ class LoggingCog(commands.Cog):
             return None
         return dbfind.get("Webhook", None)
 
+    async def is_ignore_channel(self, guild: discord.Guild, channel: discord.abc.GuildChannel):
+        db = self.bot.async_db["MainTwo"].LoggingIgnore
+        try:
+            dbfind = await db.find_one({"Guild": guild.id}, {"_id": False})
+        except:
+            return False
+        if dbfind is None:
+            return False
+        if channel.id in dbfind.get('Channel', []):
+            return True
+        else:
+            return False
+
     async def get_logging_channel(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].EventLoggingChannel
         try:
@@ -43,6 +56,9 @@ class LoggingCog(commands.Cog):
         try:
             wh = await self.get_logging_webhook(message.guild, "message_delete")
             if not wh:
+                return
+            ignore = await self.is_ignore_channel(message.guild, message.channel)
+            if ignore:
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
@@ -222,6 +238,9 @@ class LoggingCog(commands.Cog):
                 return
             wh = await self.get_logging_webhook(after.guild, "message_edit")
             if not wh:
+                return
+            ignore = await self.is_ignore_channel(after.guild, after.channel)
+            if ignore:
                 return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
@@ -403,6 +422,9 @@ class LoggingCog(commands.Cog):
             wh = await self.get_logging_webhook(execution.guild, "automod_action")
             if not wh:
                 return
+            ignore = await self.is_ignore_channel(execution.guild, execution.channel)
+            if ignore:
+                return
             async with aiohttp.ClientSession() as session:
                 webhook_ = Webhook.from_url(wh, session=session)
                 await webhook_.send(
@@ -434,8 +456,13 @@ class LoggingCog(commands.Cog):
             wh = await self.get_logging_webhook(member.guild, "vc_join")
             if not wh:
                 return
-            
+
             if before.channel is None and after.channel is not None:
+
+                ignore = await self.is_ignore_channel(member.guild, after.channel)
+                if ignore:
+                    return
+
                 async with aiohttp.ClientSession() as session:
                     webhook_ = Webhook.from_url(wh, session=session)
                     await webhook_.send(
@@ -469,6 +496,11 @@ class LoggingCog(commands.Cog):
                 return
             
             if before.channel is not None and after.channel is None:
+
+                ignore = await self.is_ignore_channel(member.guild, before.channel)
+                if ignore:
+                    return
+
                 async with aiohttp.ClientSession() as session:
                     webhook_ = Webhook.from_url(wh, session=session)
                     await webhook_.send(
@@ -613,6 +645,26 @@ class LoggingCog(commands.Cog):
             )
         )
 
+    @log.command(name="ignore", description="ログに送信しないチャンネルを設定します。")
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def log_ignore(self, interaction: discord.Interaction, チャンネル: discord.abc.GuildChannel, 無視するか: bool):
+        if チャンネル.type == discord.ChannelType.category:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="カテゴリチャンネルは指定できません。", description="指定できるのはテキストチャンネル、ボイスチャンネル、スレッドのみです。"))
+
+        if チャンネル.type == discord.ChannelType.forum:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="フォーラムチャンネルも指定できません。", description="指定できるのはテキストチャンネル、ボイスチャンネル、スレッドのみです。"))
+
+        db = self.bot.async_db["MainTwo"].LoggingIgnore
+
+        if 無視するか:
+            await db.update_one({"Guild": interaction.guild.id}, {'$addToSet': {"Channel": チャンネル.id}}, upsert=True)
+        else:
+            await db.update_one({"Guild": interaction.guild.id}, {'$pull': {"Channel": チャンネル.id}}, upsert=True)
+
+        await interaction.response.send_message(embed=make_embed.success_embed(title="ログを送信しないチャンネルを設定しました。", description=f"次から {チャンネル.mention} に送信し {'ます' if 無視するか else 'ません'}。"))
+        return
 
 async def setup(bot):
     await bot.add_cog(LoggingCog(bot))
