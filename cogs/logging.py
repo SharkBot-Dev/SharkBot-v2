@@ -609,7 +609,7 @@ class LoggingCog(commands.Cog):
             await db.delete_many({"Guild": interaction.guild.id})
         await interaction.response.send_message(
             embed=discord.Embed(
-                title="ログを無効化しました。", color=discord.Color.green()
+                title=f"{event.name if event else 'すべてのイベント'} のログを無効化しました。", color=discord.Color.green()
             )
         )
 
