@@ -714,15 +714,14 @@ class ModCog(commands.Cog):
             )
 
         db = self.bot.async_db["Main"].GuildBAN
-        await db.replace_one(
+        await db.update_one(
             {"Guild": str(interaction.guild.id), "BANGuild": サーバーid},
-            {"Guild": str(interaction.guild.id), "BANGuild": サーバーid},
+            {'$set': {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}},
             upsert=True,
         )
         return await interaction.response.send_message(
-            embed=discord.Embed(
-                title="<:Success:1362271281302601749> サーバーをBANしました。",
-                color=discord.Color.green(),
+            embed=make_embed.success_embed(
+                title="サーバーをBANしました。", description="次からそのサーバーに入っているユーザーを認証できなくします。"
             )
         )
 
@@ -744,9 +743,8 @@ class ModCog(commands.Cog):
             {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}
         )
         return await interaction.response.send_message(
-            embed=discord.Embed(
-                title="<:Success:1362271281302601749> サーバーをunBANしました。",
-                color=discord.Color.green(),
+            embed=make_embed.success_embed(
+                title="サーバーのBANを解除しました。"
             )
         )
 
