@@ -58,28 +58,6 @@ class EditImageView(discord.ui.View):
         await interaction.response.defer(ephemeral=True)
         await interaction.message.edit(view=None)
 
-    @discord.ui.select(
-        options=[
-            discord.SelectOption(label="90°", value="90"),
-            discord.SelectOption(label="180°", value="180"),
-            discord.SelectOption(label="270°", value="270"),
-        ],
-        max_values=1,
-        min_values=1,
-        placeholder="回転する",
-    )
-    async def kaiten(self, interaction: discord.Interaction, select: discord.ui.Select):
-        await interaction.response.defer(ephemeral=True)
-        file = io.BytesIO(await interaction.message.attachments[0].read())
-        image = await asyncio.to_thread(Image.open, file)
-        imv = await asyncio.to_thread(image.rotate, int(select.values[0]))
-        i = io.BytesIO()
-        await asyncio.to_thread(imv.save, i, format="png")
-        i.seek(0)
-        await interaction.message.edit(attachments=[discord.File(i, "emoji.png")])
-        file.close()
-        i.close()
-
 
 ASCII_CHARS = "@%#*+=-:. "
 
