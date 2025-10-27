@@ -111,17 +111,6 @@ def sudden_generator(msg):
     generating += "^Y￣"
     return generating
 
-
-async def fetch_avatar(user: discord.User):
-    if user.avatar:
-        url_a = f"https://cdn.discordapp.com/avatars/{user.id}/{user.avatar.key}"
-    else:
-        url_a = user.default_avatar.url
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url_a, timeout=10) as resp:
-            return await resp.read()
-
-
 def wrap_text_with_ellipsis(text, font, draw, max_width, max_height, line_height):
     lines = []
     for raw_line in text.split("\n"):
@@ -1101,8 +1090,8 @@ class ImageGroup(app_commands.Group):
             )
 
         await interaction.response.defer()
-        avatar = ユーザー
-        av = await fetch_avatar(avatar)
+        av = ユーザー.avatar if ユーザー.avatar else ユーザー.default_avatar
+        av = await av.read()
         negapoji = False
         if 色.value == "color":
             color = True

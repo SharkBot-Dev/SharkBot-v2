@@ -144,8 +144,8 @@ async def setup(bot: commands.Bot):
         interaction: discord.Interaction, message: discord.Message
     ):
         await interaction.response.defer()
-        avatar = message.author
-        av = await fetch_avatar(avatar)
+        av = message.author.avatar if message.author.avatar else message.author.default_avatar
+        av = await av.read()
         color = True
         back = (0, 0, 0)
         text = (255, 255, 255)
