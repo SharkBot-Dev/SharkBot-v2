@@ -175,11 +175,6 @@ class AuthGroup(app_commands.Group):
         説明: str,
         ロール: discord.Role,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.channel.send(
             embed=discord.Embed(
                 title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
@@ -188,7 +183,7 @@ class AuthGroup(app_commands.Group):
                 discord.ui.Button(label="認証", custom_id=f"boostauth+{ロール.id}")
             ),
         )
-        await interaction.followup.send(
+        await interaction.response.send_message(
             embed=discord.Embed(title="作成しました。", color=discord.Color.green()),
             ephemeral=True,
         )
