@@ -192,7 +192,7 @@ async def setup(bot: commands.Bot):
             await asyncio.to_thread(miq.save, image_binary, "PNG")
             image_binary.seek(0)
             try:
-                file = discord.File(fp=image_binary, filename="quote.png")
+                file = discord.File(fp=image_binary, filename=f"{message.id}_quote.png")
                 await interaction.followup.send(
                     file=file, content=f"-# {c}回再試行しました。"
                 )
