@@ -1966,13 +1966,13 @@ class SettingCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_messages=True)
     async def setting_message_expand(
-        self, interaction: discord.Interaction, 有効化するか: bool
+        self, interaction: discord.Interaction, 有効化するか: bool, 外部からの展開を許可するか: bool
     ):
         db = self.bot.async_db["Main"].ExpandSettings
         if 有効化するか:
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"$set": {"Guild": interaction.guild.id}},
+                {"$set": {"Guild": interaction.guild.id, 'Outside': 外部からの展開を許可するか}},
                 upsert=True,
             )
             await interaction.response.send_message(

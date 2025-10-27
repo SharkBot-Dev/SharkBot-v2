@@ -14,6 +14,16 @@ class ExpandCog(commands.Cog):
         self.bot = bot
         print("init -> ExpandCog")
 
+    async def is_outside_enbaled(self, guild_id: int):
+        db = self.bot.async_db["Main"].ExpandSettings
+        try:
+            dbfind = await db.find_one({"Guild": guild_id}, {"_id": False})
+        except:
+            return False
+        if dbfind is None:
+            return False
+        return dbfind.get('Outside', False)
+
     @commands.Cog.listener("on_message")
     async def on_message_expand(self, message: discord.Message):
         if message.author.bot:
@@ -39,9 +49,20 @@ class ExpandCog(commands.Cog):
             return
 
         for guild_id, channel_id, message_id in urls:
-            guild = self.bot.get_guild(int(guild_id))
+            try:
+                guild = self.bot.get_guild(int(guild_id))
+            except:
+                return
             if not guild:
                 continue
+
+            if message.guild.id == int(guild_id):
+                pass
+            else:
+                check = await self.is_outside_enbaled(int(guild_id))
+                if not check:
+                    await message.add_reaction('❌')
+                    return
 
             channel = await guild.fetch_channel(int(channel_id))
             if not channel:
