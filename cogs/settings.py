@@ -1969,29 +1969,42 @@ class SettingCog(commands.Cog):
         self, interaction: discord.Interaction, 有効化するか: bool, 外部からの展開を許可するか: bool
     ):
         db = self.bot.async_db["Main"].ExpandSettings
+
         if 有効化するか:
+            # 有効化する場合
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"$set": {"Guild": interaction.guild.id, 'Outside': 外部からの展開を許可するか}},
-                upsert=True,
+                {"$set": {
+                    "Guild": interaction.guild.id,
+                    "Enabled": True,
+                    "Outside": 外部からの展開を許可するか
+                }},
+                upsert=True
             )
+
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="メッセージ展開を有効化しました。",
-                    description="メッセージURLを送信すると自動的に展開します。"
+                    description=(
+                        "メッセージURLを送信すると自動的に展開されます。\n"
+                        f"外部からの展開: {'許可' if 外部からの展開を許可するか else '不許可'}"
+                    )
                 )
             )
         else:
-            result = await db.delete_one({"Guild": interaction.guild.id})
-            if result.deleted_count == 0:
-                return await interaction.response.send_message(
-                    embed=make_embed.error_embed(
-                        title="メッセージ展開は無効です。"
-                    )
-                )
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$set": {
+                    "Enabled": False,
+                    "Outside": 外部からの展開を許可するか
+                }},
+                upsert=True
+            )
+
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
-                    title="メッセージ展開を無効化しました。"
+                    title="メッセージ展開を無効化しました。",
+                    description=f"外部からの展開: {'許可' if 外部からの展開を許可するか else '不許可'}"
                 )
             )
 

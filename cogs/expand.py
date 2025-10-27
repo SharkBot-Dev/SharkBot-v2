@@ -39,6 +39,10 @@ class ExpandCog(commands.Cog):
             return
         if dbfind is None:
             return
+        if not dbfind:
+            return
+        if not dbfind.get("Enabled", True):
+            return
         current_time = time.time()
         last_message_time = cooldown_expand_time.get(message.guild.id, 0)
         if current_time - last_message_time < COOLDOWN_TIME_EXPAND:
@@ -49,96 +53,54 @@ class ExpandCog(commands.Cog):
             return
 
         for guild_id, channel_id, message_id in urls:
-            try:
-                guild = self.bot.get_guild(int(guild_id))
-            except:
-                return
+            guild_id, channel_id, message_id = int(guild_id), int(channel_id), int(message_id)
+            guild = self.bot.get_guild(guild_id)
             if not guild:
                 continue
 
-            if message.guild.id == int(guild_id):
-                pass
-            else:
-                check = await self.is_outside_enbaled(int(guild_id))
-                if not check:
-                    await message.add_reaction('❌')
+            if guild_id != message.guild.id:
+                if not await self.is_outside_enbaled(guild_id):
                     return
 
-            channel = await guild.fetch_channel(int(channel_id))
-            if not channel:
-                continue
+            try:
+                channel = await guild.fetch_channel(channel_id)
+            except discord.NotFound:
+                return await message.add_reaction("❌")
 
-            if not type(channel) == discord.Thread:
-                if channel.nsfw:
-                    if message.channel.nsfw:
-                        msg = await channel.fetch_message(int(message_id))
-                        embed = discord.Embed(
-                            description=msg.content[:1500]
-                            if msg.content
-                            else "[メッセージなし]",
-                            color=discord.Color.green(),
-                            timestamp=msg.created_at,
-                        )
-                        embed.set_author(
-                            name=msg.author.display_name,
-                            icon_url=msg.author.avatar.url
-                            if msg.author.avatar
-                            else msg.author.default_avatar.url,
-                            url=f"https://discord.com/users/{msg.author.id}",
-                        )
-                        embed.add_field(
-                            name="元のメッセージ",
-                            value=f"[リンクを開く]({msg.jump_url})",
-                            inline=False,
-                        )
-                        embed.set_footer(
-                            text=f"{msg.guild.name} | {msg.channel.name}",
-                            icon_url=msg.guild.icon if msg.guild.icon else None,
-                        )
-
-                        await message.channel.send(embed=embed)
-
-                        return
-                    else:
-                        return await message.add_reaction("❌")
+            if getattr(channel, "nsfw", False) and not getattr(message.channel, "nsfw", False):
+                return await message.add_reaction("❌")
 
             try:
-                msg = await channel.fetch_message(int(message_id))
-                embed = discord.Embed(
-                    description=msg.content[:1500]
-                    if msg.content
-                    else "[メッセージなし]",
-                    color=discord.Color.green(),
-                    timestamp=msg.created_at,
-                )
-                embed.set_author(
-                    name=msg.author.display_name,
-                    icon_url=msg.author.avatar.url
-                    if msg.author.avatar
-                    else msg.author.default_avatar.url,
-                    url=f"https://discord.com/users/{msg.author.id}",
-                )
-                embed.add_field(
-                    name="元のメッセージ",
-                    value=f"[リンクを開く]({msg.jump_url})",
-                    inline=False,
-                )
-                embed.set_footer(
-                    text=f"{msg.guild.name} | {msg.channel.name}",
-                    icon_url=msg.guild.icon if msg.guild.icon else None,
-                )
-
-                embeds = []
-                embeds.append(embed)
-
-                if msg.embeds:
-                    embeds.append(msg.embeds[0])
-
-                await message.channel.send(embeds=embeds)
-
-                return
-            except Exception:
+                msg = await channel.fetch_message(message_id)
+            except discord.NotFound:
                 return await message.add_reaction("❌")
+
+            embed = discord.Embed(
+                description=msg.content[:1500] if msg.content else "[メッセージなし]",
+                color=discord.Color.green(),
+                timestamp=msg.created_at,
+            )
+            embed.set_author(
+                name=msg.author.display_name,
+                icon_url=msg.author.display_avatar.url,
+                url=f"https://discord.com/users/{msg.author.id}",
+            )
+            embed.add_field(
+                name="元のメッセージ",
+                value=f"[リンクを開く]({msg.jump_url})",
+                inline=False,
+            )
+            embed.set_footer(
+                text=f"{msg.guild.name} | {msg.channel.name}",
+                icon_url=msg.guild.icon.url if msg.guild.icon else None,
+            )
+
+            embeds = [embed]
+            if msg.embeds:
+                embeds.append(msg.embeds[0])
+
+            await message.channel.send(embeds=embeds)
+            return
 
 
 async def setup(bot):
