@@ -409,6 +409,28 @@ class LevelCog(commands.Cog):
             )
         return (100, 100, 100)
 
+    @level.command(name="card-custom", description="レベルカードをカスタマイズします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        色=[
+            app_commands.Choice(name="赤", value="red"),
+            app_commands.Choice(name="黄", value="yellow"),
+            app_commands.Choice(name="青", value="blue"),
+            app_commands.Choice(name="緑", value="green"),
+            app_commands.Choice(name="ランダム", value="random"),
+            app_commands.Choice(name="灰", value="gray"),
+        ]
+    )
+    async def level_card_custom(self, interaction: discord.Interaction, 色: app_commands.Choice[str]):
+        db = self.bot.async_db["Main"].RankColor
+        await db.update_one(
+            {"User": interaction.user.id},
+            {'$set': {"User": interaction.user.id, "Color": 色.value}},
+            upsert=True,
+        )
+        await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="レベルカードをカスタマイズしました。", description=f"色: {色.name}").set_footer(text=f"ID: {色.value}"))
+
     @level.command(name="card", description="レベルカードを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
