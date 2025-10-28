@@ -500,14 +500,7 @@ class LevelCog(commands.Cog):
         )
 
         await interaction.followup.send(
-            file=discord.File(rank_card_file, "rank_card.png"),
-            view=discord.ui.View().add_item(
-                discord.ui.Button(
-                    label="ランクカードを編集",
-                    url=f"{settings.DASHBOARD_DOMEIN}/rankcard",
-                    emoji="✨",
-                )
-            ),
+            file=discord.File(rank_card_file, "rank_card.png")
         )
         rank_card_file.close()
 
