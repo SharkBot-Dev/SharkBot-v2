@@ -607,9 +607,8 @@ class LoggingCog(commands.Cog):
             await db.update_one({"Guild": interaction.guild.id, "Channel": interaction.channel.id}, update_data, upsert=True)
 
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title=f"{event.name if event else 'すべてのイベント'} のログをセットしました。",
-                color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title=f"{event.name if event else 'すべてのイベント'} のログをセットしました。"
             )
         )
 
@@ -637,13 +636,18 @@ class LoggingCog(commands.Cog):
     async def log_disable(self, interaction: discord.Interaction, event: app_commands.Choice[str] = None):       
         if event:
             db = self.bot.async_db["Main"].EventLoggingChannel
+            dbfind = await db.find_one({"Guild": interaction.guild.id, "Event": event.value}, {"_id": False})
+
+            if not dbfind:
+                return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="そのログは有効ではありません。", description="一括ですべてのログを有効化した際は、\nいったんすべてのログを無効化してから\n再度ログをセットアップしてください。"))
+
             await db.delete_one({"Guild": interaction.guild.id, "Event": event.value})
         else:
             db = self.bot.async_db["Main"].EventLoggingChannel
             await db.delete_many({"Guild": interaction.guild.id})
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title=f"{event.name if event else 'すべてのイベント'} のログを無効化しました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title=f"{event.name if event else 'すべてのイベント'} のログを無効化しました。"
             )
         )
 
