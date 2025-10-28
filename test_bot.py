@@ -28,10 +28,10 @@ class NewSharkBot(commands.AutoShardedBot):
         try:
             dbfind = pdb.find_one({"Guild": message.guild.id}, {"_id": False})
         except:
-            return ["!.", "?."]
+            return ["!/", "?/"]
         if dbfind is None:
-            return ["!.", "?."]
-        return [dbfind["Prefix"], "!.", "?."]
+            return ["!/", "?/"]
+        return [dbfind["Prefix"], "!/", "?/"]
 
 
 bot = NewSharkBot()
