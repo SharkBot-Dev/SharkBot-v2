@@ -1,2 +1,1 @@
-start py api.py
-start py bot.py
+start test_bot.py

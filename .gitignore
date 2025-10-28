@@ -207,6 +207,7 @@ marimo/_lsp/
 __marimo__/
 
 /consts/settings.py
+/consts/test_settings.py
 /data
 /static
 /consts/badword.py
