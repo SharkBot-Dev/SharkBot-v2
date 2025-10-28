@@ -245,7 +245,7 @@ class HelpCog(commands.Cog):
             )
 
         await interaction.response.send_message(
-            f"以下のリンクからアクセスできます。\n{settings.DASHBOARD_URL}",
+            f"現在はダッシュボードにアクセスできません。",
             ephemeral=True,
         )
 

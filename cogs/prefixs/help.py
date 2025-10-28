@@ -79,7 +79,7 @@ class Prefixs_HelpCog(commands.Cog):
         if not await command_disable.command_enabled_check_by_cmdname("dashboard", ctx.guild):
             return
         
-        await ctx.reply(f"以下のリンクからアクセスできます。\n{settings.DASHBOARD_URL}\n\n-# ダッシュボードは開発中です。メイン設定はスラッシュコマンドでお願いします。")
+        await ctx.reply(f"現在はダッシュボードにアクセスできません。")
 
     @commands.command(name="source", aliases=["so"], description="Botのソースコードを表示します。")
     @commands.cooldown(2, 5, type=commands.BucketType.guild)
