@@ -515,6 +515,9 @@ class SearchCog(commands.Cog):
             if 名前かid in m.name:
                 members_searched.append(f'{m.name} ({m.id})')
                 continue
+            if 名前かid in m.display_name:
+                members_searched.append(f'{m.name} ({m.id})')
+                continue
             if 名前かid == str(m.id):
                 members_searched.append(f'{m.name} ({m.id})')
                 continue
