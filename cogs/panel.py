@@ -754,17 +754,17 @@ class PanelCog(commands.Cog):
                                     else f"{interaction.user.mention}",
                                 )
                                 if ch:
-                                    await db_progress.replace_one(
+                                    await db_progress.update_one(
                                         {
                                             "Channel": ch.id,
                                             "Message": msg.id,
                                             "Author": interaction.user.id,
                                         },
-                                        {
+                                        {"$set": {
                                             "Channel": ch.id,
                                             "Message": msg.id,
                                             "Author": interaction.user.id,
-                                        },
+                                        }},
                                         upsert=True,
                                     )
                                 await interaction.followup.send(
@@ -802,17 +802,17 @@ class PanelCog(commands.Cog):
                                     else f"{interaction.user.mention}",
                                 )
                                 if ch:
-                                    await db_progress.replace_one(
+                                    await db_progress.update_one(
                                         {
                                             "Channel": ch.id,
                                             "Message": msg.id,
                                             "Author": interaction.user.id,
                                         },
-                                        {
+                                        {'$set': {
                                             "Channel": ch.id,
                                             "Message": msg.id,
                                             "Author": interaction.user.id,
-                                        },
+                                        }},
                                         upsert=True,
                                     )
                                 await interaction.followup.send(
@@ -853,17 +853,17 @@ class PanelCog(commands.Cog):
                                     else f"{interaction.user.mention}",
                                 )
                                 if ch:
-                                    await db_progress.replace_one(
+                                    await db_progress.update_one(
                                         {
                                             "Channel": ch.id,
                                             "Message": msg.id,
                                             "Author": interaction.user.id,
                                         },
-                                        {
+                                        {'$set': {
                                             "Channel": ch.id,
                                             "Message": msg.id,
                                             "Author": interaction.user.id,
-                                        },
+                                        }},
                                         upsert=True,
                                     )
                                 await interaction.followup.send(
@@ -1045,13 +1045,13 @@ class PanelCog(commands.Cog):
                         role = custom_id.split("+")[1]
                         code = self.randstring(30)
                         db = self.bot.async_db["Main"].MemberAddAuthRole
-                        await db.replace_one(
+                        await db.update_one(
                             {"Guild": str(interaction.guild.id), "Code": code},
-                            {
+                            {"$set": {
                                 "Guild": str(interaction.guild.id),
                                 "Code": code,
                                 "Role": role,
-                            },
+                            }},
                             upsert=True,
                         )
                         await interaction.followup.send(
@@ -1070,6 +1070,7 @@ class PanelCog(commands.Cog):
                             ephemeral=True,
                         )
                 elif "postauth+" in custom_id:
+                    return
                     try:
                         await interaction.response.defer(ephemeral=True)
                         role = custom_id.split("+")[1]
@@ -1145,16 +1146,16 @@ class PanelCog(commands.Cog):
                                 int(interaction.message.embeds[0].footer.text)
                             )
                             db = self.bot.async_db["Main"].BlockUser
-                            await db.replace_one(
-                                {"User": target.id}, {"User": target.id}, upsert=True
+                            await db.update_one(
+                                {"User": target.id}, {'$set': {"User": target.id}}, upsert=True
                             )
                         elif type_ == "サーバー":
                             target = self.bot.get_guild(
                                 int(interaction.message.embeds[0].footer.text)
                             )
                             db = self.bot.async_db["Main"].BlockGuild
-                            await db.replace_one(
-                                {"Guild": target.id}, {"Guild": target.id}, upsert=True
+                            await db.update_one(
+                                {"Guild": target.id}, {'$set': {"Guild": target.id}}, upsert=True
                             )
                         await interaction.message.reply("BotからBANしました。")
                         await interaction.followup.send(
@@ -1458,12 +1459,12 @@ class PanelCog(commands.Cog):
 
                 elif "globalchat_agree+" in custom_id:
                     db = self.bot.async_db["Main"].GlobalChatRuleAgreeUser
-                    await db.replace_one(
+                    await db.update_one(
                         {"User": interaction.user.id},
-                        {
+                        {'$set': {
                             "User": interaction.user.id,
                             "UserName": interaction.user.name
-                        },
+                        }},
                         upsert=True,
                     )
                     await interaction.response.send_message(ephemeral=True, content="グローバルチャットのルールに同意しました。")
@@ -2089,23 +2090,23 @@ class PanelCog(commands.Cog):
         )
         if カテゴリ:
             db = self.bot.async_db["Main"].TicketCategory
-            await db.replace_one(
+            await db.update_one(
                 {"Channel": カテゴリ.id, "Message": msg.id},
-                {"Channel": カテゴリ.id, "Message": msg.id},
+                {'$set': {"Channel": カテゴリ.id, "Message": msg.id}},
                 upsert=True,
             )
         if 実績チャンネル:
             db = self.bot.async_db["Main"].TicketProgress
-            await db.replace_one(
+            await db.update_one(
                 {"Channel": 実績チャンネル.id, "Message": msg.id},
-                {"Channel": 実績チャンネル.id, "Message": msg.id},
+                {'$set': {"Channel": 実績チャンネル.id, "Message": msg.id}},
                 upsert=True,
             )
         if メンションするロール:
             db = self.bot.async_db["Main"].TicketRole
-            await db.replace_one(
+            await db.update_one(
                 {"Role": メンションするロール.id, "Message": msg.id},
-                {"Role": メンションするロール.id, "Message": msg.id},
+                {'$set': {"Role": メンションするロール.id, "Message": msg.id}},
                 upsert=True,
             )
         await interaction.response.send_message(
@@ -2254,9 +2255,9 @@ class PanelCog(commands.Cog):
         )
         if カテゴリ:
             db = self.bot.async_db["Main"].FreeChannelCategory
-            await db.replace_one(
+            await db.update_one(
                 {"Channel": カテゴリ.id, "Message": msg.id},
-                {"Channel": カテゴリ.id, "Message": msg.id},
+                {'$set': {"Channel": カテゴリ.id, "Message": msg.id}},
                 upsert=True,
             )
         await interaction.response.send_message(
