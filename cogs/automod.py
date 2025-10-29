@@ -33,9 +33,9 @@ class AutoModCog(commands.Cog):
         self, interaction: discord.Interaction, タイプ: app_commands.Choice[str]
     ):
         db_automod = self.bot.async_db["Main"].AutoModDetecter
-        await db_automod.replace_one(
+        await db_automod.update_one(
             {"Guild": interaction.guild.id}, 
-            {"Guild": interaction.guild.id}, 
+            {'$set': {"Guild": interaction.guild.id}}, 
             upsert=True
         )
 
@@ -183,27 +183,55 @@ class AutoModCog(commands.Cog):
     async def automod_customword(
         self, interaction: discord.Interaction
     ):
+        db_automod = self.bot.async_db["Main"].AutoModDetecter
+        await db_automod.update_one(
+            {"Guild": interaction.guild.id}, 
+            {'$set': {"Guild": interaction.guild.id}}, 
+            upsert=True
+        )
+
         class AddCustomWordModal(discord.ui.Modal, title='カスタムワード追加'): 
             wordinput = discord.ui.TextInput(
                 label='カスタムワードの入力',
                 placeholder='test, hello, world',
                 style=discord.TextStyle.long,
+                required=False
+            )
+
+            regixinput = discord.ui.TextInput(
+                label='正規表現の入力',
+                placeholder='discord.gg',
+                style=discord.TextStyle.long,
+                required=False
             )
 
             async def on_submit(self, interaction_modal: discord.Interaction):
                 try:
                     await interaction_modal.response.defer(ephemeral=True)
-                    await interaction_modal.guild.create_automod_rule(
-                        name="カスタムワード対策",
-                        event_type=discord.AutoModRuleEventType.message_send,
-                        trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, keyword_filter=self.wordinput.value.split(", ")),
-                        actions=[
-                            discord.AutoModRuleAction(
-                                type=discord.AutoModRuleActionType.block_message
-                            )
-                        ],
-                        enabled=True
-                    )
+                    if self.regixinput.value:
+                        await interaction_modal.guild.create_automod_rule(
+                            name="カスタム正規表現対策",
+                            event_type=discord.AutoModRuleEventType.message_send,
+                            trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, regex_patterns=self.regixinput.value.split(", ")),
+                            actions=[
+                                discord.AutoModRuleAction(
+                                    type=discord.AutoModRuleActionType.block_message
+                                )
+                            ],
+                            enabled=True
+                        )
+                    if self.wordinput.value:
+                        await interaction_modal.guild.create_automod_rule(
+                            name="カスタムワード対策",
+                            event_type=discord.AutoModRuleEventType.message_send,
+                            trigger=discord.AutoModTrigger(type=discord.AutoModRuleTriggerType.keyword, keyword_filter=self.wordinput.value.split(", ")),
+                            actions=[
+                                discord.AutoModRuleAction(
+                                    type=discord.AutoModRuleActionType.block_message
+                                )
+                            ],
+                            enabled=True
+                        )
                     await interaction_modal.followup.send(ephemeral=True, content="カスタムワードを追加しました。")
                 except:
                     return await interaction_modal.followup.send(ephemeral=True, content="追加に失敗しました。")
