@@ -485,6 +485,88 @@ class SearchCog(commands.Cog):
 
     search.add_command(WebGroup())
 
+    @search.command(name="multi", description="様々な情報を一括で検索します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def multi_search(self, interaction: discord.Interaction, 名前かid: str):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
+        await interaction.response.send_message(embed=make_embed.success_embed(title="検索中です..", description="しばらくお待ちください。"), ephemeral=True)
+
+        await asyncio.sleep(1)
+
+        guild = interaction.guild
+        members = guild.members
+        emojis = guild.emojis
+        if interaction.user.guild_permissions.administrator:
+            channels = guild.channels
+            roles = guild.roles
+        else:
+            channels = []
+            roles = []
+
+        members_searched = []
+        emojis_searched = []
+        channels_searched = []
+        roles_searched = []
+
+        for m in members:
+            if 名前かid in m.name:
+                members_searched.append(f'{m.name} ({m.id})')
+                continue
+            if 名前かid == str(m.id):
+                members_searched.append(f'{m.name} ({m.id})')
+                continue
+
+        for em in emojis:
+            if 名前かid in em.name:
+                emojis_searched.append(em.__str__())
+                continue
+            if 名前かid in str(em.id):
+                emojis_searched.append(em.__str__())
+                continue
+
+        if interaction.user.guild_permissions.administrator:
+
+            for ch in channels:
+                if 名前かid in ch.name:
+                    channels_searched.append(f'{ch.name} ({ch.id})')
+                    continue
+                if 名前かid in str(ch.id):
+                    channels_searched.append(f'{ch.name} ({ch.id})')
+                    continue
+
+            for r in roles:
+                if 名前かid in r.name:
+                    roles_searched.append(f'{r.name} ({r.id})')
+                    continue
+                if 名前かid in str(r.id):
+                    roles_searched.append(f'{r.name} ({r.id})')
+                    continue
+
+        text_member = '\n'.join(members_searched)
+        text_member = text_member if text_member else 'なし'
+
+        text_emoji = '\n'.join(emojis_searched)
+        text_emoji = text_emoji if text_emoji else 'なし'
+        if interaction.user.guild_permissions.administrator:
+            text_channels = '\n'.join(channels_searched)
+            text_channels = text_channels if text_channels else 'なし'
+
+            text_roles = '\n'.join(roles_searched)
+            text_roles = text_roles if text_roles else 'なし'
+        
+        embed = make_embed.success_embed(title="検索結果です。")
+        embed.add_field(name="メンバー", value=text_member, inline=False)
+
+        if interaction.user.guild_permissions.administrator:
+            embed.add_field(name="チャンネル", value=text_channels, inline=False)
+            embed.add_field(name="ロール", value=text_roles, inline=False)
+
+        embed.add_field(name="絵文字", value=text_emoji, inline=False)
+        await interaction.edit_original_response(embed=embed)
+
     @search.command(name="user", description="ユーザーを検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)

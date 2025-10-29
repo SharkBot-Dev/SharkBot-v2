@@ -28,7 +28,7 @@ class Paginator(discord.ui.View):
     async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.current = (self.current + 1) % len(self.embeds)
         await self.update_message(interaction)
-
+        
 class Prefixs_HelpCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
