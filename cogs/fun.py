@@ -13,6 +13,7 @@ import discord
 from cryptography.fernet import Fernet, InvalidToken
 import pykakasi
 from discord import app_commands
+import requests
 from consts import settings
 from models import command_disable, make_embed
 import asyncio
@@ -112,35 +113,69 @@ def sudden_generator(msg):
     return generating
 
 def wrap_text_with_ellipsis(text, font, draw, max_width, max_height, line_height):
+    words = text.split(" ")
     lines = []
-    for raw_line in text.split("\n"):
-        current_line = ""
-        for char in raw_line:
-            test_line = current_line + char
-            bbox = draw.textbbox((0, 0), test_line, font=font)
-            w = bbox[2] - bbox[0]
-            if w <= max_width:
-                current_line = test_line
+    current_line = ""
+
+    for word in words:
+        test_line = current_line + (" " if current_line else "") + word
+        bbox = draw.textbbox((0, 0), test_line, font=font)
+        if bbox[2] > max_width:
+            if current_line == "":
+                while draw.textbbox((0, 0), test_line, font=font)[2] > max_width and len(test_line) > 1:
+                    test_line = test_line[:-1]
+                lines.append(test_line + "…")
+                current_line = ""
             else:
                 lines.append(current_line)
-                current_line = char
+                current_line = word
+        else:
+            current_line = test_line
 
-            if len(lines) * line_height >= max_height - line_height * 2:
-                ellipsis = "…"
-                while True:
-                    bbox = draw.textbbox((0, 0), current_line + ellipsis, font=font)
-                    if bbox[2] - bbox[0] <= max_width:
-                        break
-                    if len(current_line) == 0:
-                        break
-                    current_line = current_line[:-1]
-                lines.append(current_line + ellipsis)
-                return lines
+        if len(lines) * line_height > max_height:
+            if lines:
+                lines[-1] = lines[-1][:-1] + "…"
+            break
 
-        if current_line:
-            lines.append(current_line)
+    if current_line and len(lines) * line_height <= max_height:
+        lines.append(current_line)
 
     return lines
+
+
+def draw_text_with_emojis(img, draw, position, text, font, fill):
+    x, y = position
+    emoji_pattern = re.compile(
+        "[\U0001F000-\U0001FFFF]",
+        flags=re.UNICODE,
+    )
+
+    cursor_x = x
+    for part in re.split(f"({emoji_pattern.pattern})", text):
+        if not part:
+            continue
+
+        if emoji_pattern.fullmatch(part):
+            try:
+                url = f"https://emojicdn.elk.sh/{part}"
+                response = requests.get(url, timeout=3)
+                b_i = io.BytesIO(response.content)
+                emoji_img = Image.open(b_i).convert("RGBA")
+                b_i.close()
+
+                emoji_size = font.size
+                emoji_img = emoji_img.resize((emoji_size, emoji_size), Image.Resampling.LANCZOS)
+
+                img.paste(emoji_img, (int(cursor_x), int(y - emoji_size * 0.1)), emoji_img)
+                cursor_x += emoji_size + 2
+            except Exception:
+                draw.text((cursor_x, y), part, font=font, fill=fill)
+                bbox = draw.textbbox((0, 0), part, font=font)
+                cursor_x += bbox[2] - bbox[0]
+        else:
+            draw.text((cursor_x, y), part, font=font, fill=fill)
+            bbox = draw.textbbox((0, 0), part, font=font)
+            cursor_x += bbox[2] - bbox[0]
 
 
 def create_quote_image(
@@ -173,7 +208,6 @@ def create_quote_image(
         for y in range(avatar_size[1]):
             mask.putpixel((x, y), alpha)
     avatar.putalpha(mask)
-
     img.paste(avatar, (0, height - avatar_size[1]), avatar)
 
     try:
@@ -185,7 +219,6 @@ def create_quote_image(
 
     text_x = 420
     max_text_width = width - text_x - 50
-
     max_text_height = height - 80
     line_height = font.size + 10
 
@@ -194,26 +227,20 @@ def create_quote_image(
     )
 
     total_lines = len(lines)
-    line_height = font.size + 10
     text_block_height = total_lines * line_height
     text_y = (height - text_block_height) // 2
 
     for i, line in enumerate(lines):
         bbox = draw.textbbox((0, 0), line, font=font)
         line_width = bbox[2] - bbox[0]
-        draw.text(
-            ((width + text_x - 50 - line_width) // 2, text_y + i * line_height),
-            line,
-            fill=text_color,
-            font=font,
-        )
+        line_x = (width + text_x - 50 - line_width) // 2
+        draw_text_with_emojis(img, draw, (line_x, text_y + i * line_height), line, font, text_color)
 
     author_text = f"- {author}"
     bbox = draw.textbbox((0, 0), author_text, font=name_font)
     author_width = bbox[2] - bbox[0]
     author_x = (width + text_x - 50 - author_width) // 2
     author_y = text_y + len(lines) * line_height + 10
-
     draw.text((author_x, author_y), author_text, font=name_font, fill=text_color)
 
     draw.text((580, 0), "FakeQuote - SharkBot", font=name_font, fill=text_color)
@@ -978,6 +1005,55 @@ class ImageGroup(app_commands.Group):
                     title="5000兆円ほしい！"
                 ).set_image(url=f"https://gsapi.cbrx.io/image?top={上}&bottom={下}")
             )
+
+    @app_commands.command(name="emoji-kitchen", description="絵文字を合体させます。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        調理方法=[
+            app_commands.Choice(name="合成させる", value="mix"),
+            app_commands.Choice(name="重ねる", value="layer")
+        ]
+    )
+    async def emoji_kitchen(
+        self,
+        interaction: discord.Interaction,
+        unicode絵文字: str,
+        unicode絵文字2: str,
+        調理方法: app_commands.Choice[str]
+    ):
+        await interaction.response.defer()
+        if 調理方法.value == 'layer':
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"https://emojik.vercel.app/s/{urllib.parse.quote(unicode絵文字)}_{urllib.parse.quote(unicode絵文字2)}"
+                ) as response:
+                    image = await response.read()
+                    i = io.BytesIO(image)
+                    await interaction.followup.send(embed=make_embed.success_embed(title="絵文字を合成させました。")
+                                                            .set_image(url='attachment://emoji.png'), file=discord.File(i, filename='emoji.png'))
+                    i.close()
+        elif 調理方法.value == 'mix':
+            def make_emoji_mix():
+                img = Image.new(mode='RGBA', size=(500, 500))
+                emojI_1 = io.BytesIO(requests.get(f'https://emojicdn.elk.sh/{urllib.parse.quote(unicode絵文字)}').content)
+                emojI_2 = io.BytesIO(requests.get(f'https://emojicdn.elk.sh/{urllib.parse.quote(unicode絵文字2)}').content)
+                img_emoji_1 = Image.open(emojI_1).resize((500, 500))
+                img_emoji_2 = Image.open(emojI_2).resize((500, 500))
+                img.paste(img_emoji_1)
+                img.paste(img_emoji_2, (0, 0, 500, 500), img_emoji_2)
+                img_emoji_1.close()
+                img_emoji_2.close()
+                emojI_1.close()
+                emojI_2.close()
+                i_ = io.BytesIO()
+                img.save(i_, format="png")
+                i_.seek(0)
+                return i_
+            e = await asyncio.to_thread(make_emoji_mix)
+            await interaction.followup.send(embed=make_embed.success_embed(title="絵文字を合成させました。")
+                                                    .set_image(url='attachment://emoji.png'), file=discord.File(e, filename='emoji.png'))
+            e.close()
 
     @app_commands.command(name="textmoji", description="テキストを絵文字にします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
