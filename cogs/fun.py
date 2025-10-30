@@ -112,17 +112,29 @@ def sudden_generator(msg):
     generating += "^Y￣"
     return generating
 
+# --- 絵文字用正規表現 ---
+DISCORD_EMOJI_RE = re.compile(r"<(a?):([a-zA-Z0-9_]{1,32}):([0-9]{17,22})>")
+UNICODE_EMOJI_RE = re.compile(r"[\U0001F000-\U0001FFFF]", flags=re.UNICODE)
+COMBINED_EMOJI_RE = re.compile(
+    r"<a?:[a-zA-Z0-9_]{1,32}:[0-9]{17,22}>|[\U0001F000-\U0001FFFF]",
+    flags=re.UNICODE | re.DOTALL,
+)
+
+# --- 行分割 ---
 def wrap_text_with_scroll_cut(text, font, draw, max_width, max_height, line_height):
     if not isinstance(text, str):
         text = str(text) if text is not None else ""
 
-    tokens = re.findall(r'\S+|\s', text)
+    tokens = re.findall(r"\S+|\s", text)
     lines = []
     current_line = ""
 
     for token in tokens:
         test_line = current_line + token
-        bbox = draw.textbbox((0, 0), test_line, font=font)
+
+        replaced_line = DISCORD_EMOJI_RE.sub("🫧", test_line)
+
+        bbox = draw.textbbox((0, 0), replaced_line, font=font)
 
         if bbox[2] <= max_width:
             current_line = test_line
@@ -132,7 +144,8 @@ def wrap_text_with_scroll_cut(text, font, draw, max_width, max_height, line_heig
             else:
                 part = ""
                 for ch in token:
-                    if draw.textbbox((0, 0), part + ch, font=font)[2] > max_width:
+                    replaced_ch = DISCORD_EMOJI_RE.sub("🫧", ch)
+                    if draw.textbbox((0, 0), part + replaced_ch, font=font)[2] > max_width:
                         lines.append(part)
                         part = ch
                     else:
@@ -153,40 +166,85 @@ def wrap_text_with_scroll_cut(text, font, draw, max_width, max_height, line_heig
 
     return lines
 
+
+# --- 絵文字描画付きテキスト描画 ---
 def draw_text_with_emojis(img, draw, position, text, font, fill):
     x, y = position
-    emoji_pattern = re.compile(
-        "[\U0001F000-\U0001FFFF]",
-        flags=re.UNICODE,
-    )
-
     cursor_x = x
-    for part in re.split(f"({emoji_pattern.pattern})", text):
-        if not part:
-            continue
+    last_end = 0
 
-        if emoji_pattern.fullmatch(part):
-            try:
-                url = f"https://emojicdn.elk.sh/{part}"
-                response = requests.get(url, timeout=3)
-                b_i = io.BytesIO(response.content)
-                emoji_img = Image.open(b_i).convert("RGBA")
-                b_i.close()
-
-                emoji_size = font.size
-                emoji_img = emoji_img.resize((emoji_size, emoji_size), Image.Resampling.LANCZOS)
-
-                img.paste(emoji_img, (int(cursor_x), int(y - emoji_size * 0.1)), emoji_img)
-                cursor_x += emoji_size + 2
-            except Exception:
+    for m in COMBINED_EMOJI_RE.finditer(text):
+        if m.start() > last_end:
+            part = text[last_end:m.start()]
+            if part:
                 draw.text((cursor_x, y), part, font=font, fill=fill)
                 bbox = draw.textbbox((0, 0), part, font=font)
                 cursor_x += bbox[2] - bbox[0]
-        else:
-            draw.text((cursor_x, y), part, font=font, fill=fill)
-            bbox = draw.textbbox((0, 0), part, font=font)
-            cursor_x += bbox[2] - bbox[0]
 
+        token = m.group(0)
+        token_clean = token.strip()
+
+        # --- Discord絵文字処理 ---
+        d = DISCORD_EMOJI_RE.fullmatch(token_clean)
+        if d:
+            is_animated, name, emoji_id = d.groups()
+            ext = "gif" if is_animated else "png"
+            url = f"https://cdn.discordapp.com/emojis/{emoji_id}.{ext}?size=64"
+
+            try:
+                resp = requests.get(url, timeout=3)
+                if resp.status_code == 200:
+                    with io.BytesIO(resp.content) as i:
+                        emoji_img = Image.open(i).convert("RGBA")
+
+                    ascent, descent = font.getmetrics()
+                    font_height = ascent + descent
+                    emoji_size = int(font_height * 0.9)
+                    emoji_img = emoji_img.resize((emoji_size, emoji_size), Image.Resampling.LANCZOS)
+
+                    y_offset = y + (font_height - emoji_size) // 2
+                    img.paste(emoji_img, (int(cursor_x), int(y_offset)), emoji_img)
+
+                    cursor_x += draw.textlength("あ", font=font)
+                    last_end = m.end()
+                    continue
+            except Exception:
+                pass
+
+        # --- Unicode絵文字処理 ---
+        if UNICODE_EMOJI_RE.fullmatch(token_clean):
+            try:
+                url = f"https://emojicdn.elk.sh/{token_clean}"
+                resp = requests.get(url, timeout=3)
+                if resp.status_code == 200:
+                    with io.BytesIO(resp.content) as i:
+                        emoji_img = Image.open(i).convert("RGBA")
+
+                    ascent, descent = font.getmetrics()
+                    font_height = ascent + descent
+                    emoji_size = int(font_height * 0.9)
+                    emoji_img = emoji_img.resize((emoji_size, emoji_size), Image.Resampling.LANCZOS)
+
+                    y_offset = y + (font_height - emoji_size) // 2
+                    img.paste(emoji_img, (int(cursor_x), int(y_offset)), emoji_img)
+
+                    cursor_x += draw.textlength("M", font=font)
+                    last_end = m.end()
+                    continue
+            except Exception:
+                pass
+
+        # --- 通常文字 ---
+        draw.text((cursor_x, y), token, font=font, fill=fill)
+        bbox = draw.textbbox((0, 0), token, font=font)
+        cursor_x += bbox[2] - bbox[0]
+        last_end = m.end()
+
+    # --- 残りテキスト ---
+    if last_end < len(text):
+        tail = text[last_end:]
+        if tail:
+            draw.text((cursor_x, y), tail, font=font, fill=fill)
 
 def create_quote_image(
     author,
@@ -240,7 +298,7 @@ def create_quote_image(
     text_y = (height - text_block_height) // 2
 
     for i, line in enumerate(lines):
-        bbox = draw.textbbox((0, 0), line, font=font)
+        bbox = draw.textbbox((0, 0), re.sub(r"<(a?):([a-zA-Z0-9_]{1,32}):([0-9]{17,22})>", 'あ', line), font=font)
         line_width = bbox[2] - bbox[0]
         line_x = (width + text_x - 50 - line_width) // 2
         draw_text_with_emojis(
@@ -1199,7 +1257,7 @@ class ImageGroup(app_commands.Group):
             text = (0, 0, 0)
         c = 0
 
-        pattern = r"<(@!?|#|@&)(\d+)>"
+        pattern = r"<(?:(@!?|#|@&)(\d+))>"
 
         def replacer(match):
             type_, id_ = match.groups()
