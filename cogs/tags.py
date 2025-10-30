@@ -117,6 +117,12 @@ class TagsCog(commands.Cog):
             return await interaction.response.send_message(
                 embed=embed
             )
+        
+        if doc.get('slash'):
+            embed = make_embed.error_embed(title="そのTagは削除できません。", description="スラッシュコマンドから削除してからでお願いします。")
+            return await interaction.response.send_message(
+                embed=embed
+            )
 
         await db.delete_one({"guild_id": interaction.guild.id, "command": 名前})
 
@@ -145,7 +151,7 @@ class TagsCog(commands.Cog):
         tags = [doc async for doc in cursor]
 
         if not tags:
-            return await interaction.response.send_message("このサーバーにはタグが登録されていません。")
+            return await interaction.followup.send("このサーバーにはタグが登録されていません。")
         
         em_s = []
         c = 1
@@ -203,6 +209,80 @@ class TagsCog(commands.Cog):
             i.close()
         else:
             await interaction.response.send_message(content="そのタグが見つかりません。", ephemeral=True)
+
+    @tag.command(name="to-slash", description="タグからスラッシュコマンドを作成します。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def tags_to_slash(
+        self,
+        interaction: discord.Interaction,
+        名前: str
+    ):
+        for word in badword.badwords:
+            if word.lower() in 名前:
+                embed = make_embed.error_embed(title="スラッシュコマンド化に失敗しました。")
+                return await interaction.response.send_message(embed=embed)
+        
+        await interaction.response.defer()
+        db_tags = self.bot.async_db["Main"].Tags
+        doc = await db_tags.find_one({"guild_id": interaction.guild.id, "command": 名前})
+        if not doc:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="Tagが見つかりません。", description=f"`/tag create`で作成できます。"))
+        cmd = await self.bot.http.upsert_guild_command(self.bot.user.id, interaction.guild.id, payload={
+            'name': doc.get("command"), 'description': 'これはタグ機能で作成されたコマンドです: ' + doc.get('text'), 'options': [{
+                'name': '引数',
+                'required': False,
+                'type': 3,
+                'description': 'スラッシュコマンドに渡されます。'
+            }]
+        })
+
+        cmd_id = app_commands.AppCommand(data=cmd, state=self.bot.tree._state)
+
+        await db_tags.update_one(
+            {"command": 名前, "guild_id": interaction.guild.id},
+            {"$set": {'slash': cmd_id.id}}
+        )
+        await interaction.followup.send(embed=make_embed.success_embed(title="スラッシュコマンドを追加しました。", description=f"名前: {名前}\n削除する際は、/tag remove-slashでお願いします。"))
+
+    @tag.command(name="remove-slash", description="タグからスラッシュコマンドを削除します。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def tags_remove_slash(
+        self,
+        interaction: discord.Interaction,
+        名前: str
+    ):
+        await interaction.response.defer()
+        db_tags = self.bot.async_db["Main"].Tags
+        doc = await db_tags.find_one({"guild_id": interaction.guild.id, "command": 名前})
+        if not doc:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="Tagが見つかりません。", description=f"`/tag create`で作成できます。"))
+        if doc.get('slash') is None:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="そのTagはスラッシュコマンド化されていません。"))
+        await self.bot.http.delete_guild_command(self.bot.user.id, interaction.guild.id, command_id=doc.get('slash'))
+        await db_tags.update_one(
+            {"command": 名前, "guild_id": interaction.guild.id},
+            {"$set": {'slash': None}}
+        )
+        await interaction.followup.send(embed=make_embed.success_embed(title="スラッシュコマンドを削除しました。", description=f"名前: {名前}"))
+
+    @commands.Cog.listener(name="on_interaction")
+    async def on_interaction_slash(self, interaction: discord.Interaction):
+        try:
+            if interaction.type == discord.InteractionType.application_command:
+                db_tags = self.bot.async_db["Main"].Tags
+                data = interaction.data
+                doc = await db_tags.find_one({"guild_id": interaction.guild.id, "slash": int(data['id'])})
+                if not doc:
+                    return
+                if interaction.data.get('options'):
+                    return await interaction.response.send_message(self.replace_tag(doc.get('tagscript'), interaction.data['options'][0]['value'], interaction.user) + '\n-# これはタグからのメッセージです。')
+                await interaction.response.send_message(self.replace_tag(doc.get('tagscript'), 'No Args.', interaction.user) + '\n-# これはタグからのメッセージです。')
+        except:
+            return
 
     # ---------- メッセージ監視でカスタムタグ実行 ----------
     @commands.Cog.listener()
