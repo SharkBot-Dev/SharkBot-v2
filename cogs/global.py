@@ -26,6 +26,19 @@ invite_only_check = re.compile(
     r"^(https?://)?(www\.)?(discord\.gg/|discord\.com/invite/)[a-zA-Z0-9]+$"
 )
 
+class SitesModal(discord.ui.Modal, title='サイトの作成'):
+    text = discord.ui.TextInput(
+        label="説明",
+        placeholder="とても人気なサーバーです！",
+        style=discord.TextStyle.long,
+        required=True
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
+        inv = await interaction.channel.create_invite()
+        await interaction.client.async_db['MainTwo'].ServerPage.update_one({'Guild': interaction.guild.id}, {'$set': {'Guild': interaction.guild.id, 'Text': self.text.value, 'Name': interaction.guild.name, 'Invite': inv.url, 'Icon': interaction.guild.icon.url}}, upsert=True)
+        await interaction.followup.send(embed=make_embed.success_embed(title="サイトを作成しました。", description=f'https://sharkbot.xyz/server/{interaction.guild.id}'))
 
 class GlobalCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -625,6 +638,15 @@ class GlobalCog(commands.Cog):
         await interaction.response.send_message(
             embed=embed
         )
+
+    @globalchat.command(name="sites", description="このサーバーを紹介するサイトを作成します。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def global_sites(self, interaction: discord.Interaction):
+        if not interaction.guild.icon:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="アイコンが設定されていません。", description="サイトを作成するには、\nサーバーアイコンを設定してください。"))
+        await interaction.response.send_modal(SitesModal())
 
     @globalchat.command(
         name="private-create",
