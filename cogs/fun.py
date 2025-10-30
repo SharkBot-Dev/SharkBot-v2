@@ -114,9 +114,23 @@ def sudden_generator(msg):
 
 # --- 絵文字用正規表現 ---
 DISCORD_EMOJI_RE = re.compile(r"<(a?):([a-zA-Z0-9_]{1,32}):([0-9]{17,22})>")
-UNICODE_EMOJI_RE = re.compile(r"[\U0001F000-\U0001FFFF]", flags=re.UNICODE)
+UNICODE_EMOJI_RE = re.compile(
+    r"["
+    r"\U0001F600-\U0001F64F"  # Emoticons
+    r"\U0001F300-\U0001F5FF"  # Miscellaneous Symbols and Pictographs
+    r"\U0001F680-\U0001F6FF"  # Transport and Map Symbols
+    r"\U0001F700-\U0001F77F"  # Alchemical Symbols (less common for emojis)
+    r"\U0001F780-\U0001F7FF"  # Geometric Shapes Extended
+    r"\U0001F800-\U0001F82F"  # Supplemental Arrows-C
+    r"\U0001F830-\U0001F8FF"  # Supplemental Symbols and Pictographs (continued)
+    r"\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs (more modern emojis)
+    r"\U00002600-\U000027BF"  # Miscellaneous Symbols
+    r"\U00002B50"             # Star symbol
+    r"]+",
+    flags=re.UNICODE
+)
 COMBINED_EMOJI_RE = re.compile(
-    r"<a?:[a-zA-Z0-9_]{1,32}:[0-9]{17,22}>|[\U0001F000-\U0001FFFF]",
+    r"<a?:[a-zA-Z0-9_]{1,32}:[0-9]{17,22}>|" + UNICODE_EMOJI_RE.pattern,
     flags=re.UNICODE | re.DOTALL,
 )
 
