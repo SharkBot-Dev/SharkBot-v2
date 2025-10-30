@@ -13,47 +13,46 @@ from models import make_embed
 from models.permissions_text import PERMISSION_TRANSLATIONS
 import asyncio
 
+def wrap_text_with_scroll_cut(text, font, draw, max_width, max_height, line_height):
+    if not isinstance(text, str):
+        text = str(text) if text is not None else ""
 
-async def fetch_avatar(user: discord.User):
-    if user.avatar:
-        url_a = f"https://cdn.discordapp.com/avatars/{user.id}/{user.avatar.key}"
-    else:
-        url_a = user.default_avatar.url
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url_a, timeout=10) as resp:
-            return await resp.read()
-
-
-def wrap_text_with_ellipsis(text, font, draw, max_width, max_height, line_height):
-    words = text.split(" ")
+    tokens = re.findall(r'\S+|\s', text)
     lines = []
     current_line = ""
 
-    for word in words:
-        test_line = current_line + (" " if current_line else "") + word
+    for token in tokens:
+        test_line = current_line + token
         bbox = draw.textbbox((0, 0), test_line, font=font)
-        if bbox[2] > max_width:
-            if current_line == "":
-                while draw.textbbox((0, 0), test_line, font=font)[2] > max_width and len(test_line) > 1:
-                    test_line = test_line[:-1]
-                lines.append(test_line + "…")
-                current_line = ""
-            else:
-                lines.append(current_line)
-                current_line = word
-        else:
-            current_line = test_line
 
-        if len(lines) * line_height > max_height:
-            if lines:
-                lines[-1] = lines[-1][:-1] + "…"
+        if bbox[2] <= max_width:
+            current_line = test_line
+        else:
+            if current_line.strip():
+                lines.append(current_line.strip())
+            else:
+                part = ""
+                for ch in token:
+                    if draw.textbbox((0, 0), part + ch, font=font)[2] > max_width:
+                        lines.append(part)
+                        part = ch
+                    else:
+                        part += ch
+                current_line = part
+                continue
+
+            current_line = token.strip()
+
+        if (len(lines) + 1) * line_height > max_height:
             break
 
-    if current_line and len(lines) * line_height <= max_height:
-        lines.append(current_line)
+    if current_line.strip() and (len(lines) + 1) * line_height <= max_height:
+        lines.append(current_line.strip())
+
+    max_lines = max_height // line_height
+    lines = lines[:max_lines]
 
     return lines
-
 
 def draw_text_with_emojis(img, draw, position, text, font, fill):
     x, y = position
@@ -134,19 +133,24 @@ def create_quote_image(
     max_text_height = height - 80
     line_height = font.size + 10
 
-    lines = wrap_text_with_ellipsis(
+    lines = wrap_text_with_scroll_cut(
         text, font, draw, max_text_width, max_text_height, line_height
     )
 
-    total_lines = len(lines)
-    text_block_height = total_lines * line_height
+    text_block_height = len(lines) * line_height
     text_y = (height - text_block_height) // 2
 
     for i, line in enumerate(lines):
         bbox = draw.textbbox((0, 0), line, font=font)
         line_width = bbox[2] - bbox[0]
         line_x = (width + text_x - 50 - line_width) // 2
-        draw_text_with_emojis(img, draw, (line_x, text_y + i * line_height), line, font, text_color)
+        draw_text_with_emojis(
+            img, draw,
+            (line_x, text_y + i * line_height),
+            line,
+            font,
+            text_color
+        )
 
     author_text = f"- {author}"
     bbox = draw.textbbox((0, 0), author_text, font=name_font)
@@ -155,7 +159,7 @@ def create_quote_image(
     author_y = text_y + len(lines) * line_height + 10
     draw.text((author_x, author_y), author_text, font=name_font, fill=text_color)
 
-    draw.text((580, 0), "FakeQuote - SharkBot", font=name_font, fill=text_color)
+    draw.text((700, 0), "SharkBot", font=name_font, fill=text_color)
 
     if negapoji:
         inverted_img = ImageOps.invert(img.convert("RGB"))
@@ -165,7 +169,6 @@ def create_quote_image(
         return img
     else:
         return img.convert("L")
-
 
 class ContextCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
