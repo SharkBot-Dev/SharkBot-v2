@@ -17,7 +17,7 @@ class BotCog(commands.Cog):
         self.bot = bot
         print("init -> BotCog")
 
-    bot = app_commands.Group(name="bot", description="Bot系のコマンドです。")
+    bot = app_commands.Group(name="bot", description="Bot系のコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True))
 
     @bot.command(name="about", description="Botの情報を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -154,10 +154,15 @@ Sharkアカウント: {sharkaccount_count}人
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def invite_bot(self, interaction: discord.Interaction, botのid: discord.User):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            await interaction.response.defer()
+
+            embed = make_embed.success_embed(title=f"{botのid}の招待リンクを作成しました。", description=f"""# [☢️管理者権限で招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=8&integration_type=0&scope=bot+applications.commands)
+# [🖊️権限を選んで招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=1759218604441591&integration_type=0&scope=bot+applications.commands)
+# [😆権限なしで招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=0&integration_type=0&scope=bot+applications.commands)""")
+
+            await interaction.followup.send(embed=embed)
+            return
 
         await interaction.response.defer()
 
@@ -202,6 +207,9 @@ Sharkアカウント: {sharkaccount_count}人
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(administrator=True)
     async def bot_customize(self, interaction: discord.Interaction, アバター: discord.Attachment = None, バナー: discord.Attachment = None, 名前: str = None):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         await interaction.response.defer()
 
         async def check_nsfw(image_bytes):
