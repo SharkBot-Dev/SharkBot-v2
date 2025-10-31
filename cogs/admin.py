@@ -1,6 +1,8 @@
 import ast
 import datetime
 from pathlib import Path
+import sys
+import traceback
 from discord.ext import commands
 import discord
 
@@ -69,20 +71,32 @@ class AdminCog(commands.Cog):
                 )
             )
         elif 操作の種類.value == "modulereload":
+            if cog名 == 'bot':
+                return await interaction.followup.send(embed=make_embed.error_embed(title="Bot本体をリロードできません。"))
+            if cog名 == 'api':
+                return await interaction.followup.send(embed=make_embed.error_embed(title="API本体をリロードできません。"))
+            
             try:
-                mod = importlib.import_module(cog名)
-                importlib.reload(mod)
-            except Exception as e:
+                if cog名 in sys.modules:
+                    importlib.reload(sys.modules[cog名])
+                else:
+                    importlib.import_module(cog名)
+
                 return await interaction.followup.send(
-                    embed=make_embed.error_embed(
-                        title="モジュールリロードに失敗しました。", description=f"```{e}```"
+                    embed=make_embed.success_embed(
+                        title="モジュールをリロードしました。",
+                        description=f"`{cog名}` を再読み込みしました。"
                     )
                 )
-            return await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="モジュールをリロードしました。"
+
+            except Exception as e:
+                tb = traceback.format_exc()
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="モジュールリロードに失敗しました。",
+                        description=f"```{tb}```"
+                    )
                 )
-            )
 
     @admin.command(
         name="ban", description="Botからbanをします。サーバーからはbanされません。"
