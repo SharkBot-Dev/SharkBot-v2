@@ -733,6 +733,7 @@ class NetworkGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def webshot(self, interaction: discord.Interaction, url: str):
+        return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="現在は一時封鎖中です。"))
         if not is_url.search(url):
             return await interaction.response.send_message(
                 ephemeral=True, content="URLを入力してください。"
