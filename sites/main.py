@@ -150,7 +150,7 @@ def invite_auth_backend():
         db.delete_one({"Code": state})
         che = get_serverban(guilds, usermoney["Guild"])
         if che:
-            return jsonify({"status": "error", "reason": "オーナーが禁止しているサーバーに参加しています。"}), 400
+            return jsonify({"status": "error", "reason": "サーバーオーナーが禁止しているサーバーに参加しています。"}), 400
 
         add_role(settings.TOKEN, user_info["id"], usermoney["Guild"], usermoney["Role"])
 

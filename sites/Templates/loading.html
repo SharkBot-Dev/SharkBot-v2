@@ -44,7 +44,7 @@
       if (data.status === "success") {
         document.body.innerHTML = `<h1>✅ 認証が完了しました。<br>五秒後に転送します。</h1>`;
         window.setTimeout(function(){
-            window.location.href = data.redirect;
+          window.location.href = data.redirect;
         }, 5000);
       } else {
         document.body.innerHTML = `<h1>❌ ${data.reason}</h1>`;
