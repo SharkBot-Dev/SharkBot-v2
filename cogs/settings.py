@@ -22,6 +22,7 @@ COOLDOWN_TIME_EXPAND = 5
 cooldown_expand_time = {}
 cooldown_auto_protect_time = {}
 cooldown_auto_translate = {}
+cooldown_auto_thread = {}
 
 ratelimit_search = {}
 
@@ -2185,6 +2186,82 @@ class SettingCog(commands.Cog):
                     title="おはよう挨拶を無効化しました。"
                 )
             )
+
+    @commands.Cog.listener("on_message")
+    async def on_message_auto_thread(self, message: discord.Message):
+        if message.author.bot:
+            return
+        if not message.guild:
+            return
+
+        db = self.bot.async_db['MainTwo'].AutoThread
+
+        dbfind = await db.find_one({"Guild": message.guild.id})
+        if not dbfind or "Channels" not in dbfind:
+            return
+
+        channels = dbfind["Channels"]
+
+        channel_data = channels.get(str(message.channel.id))
+        if not channel_data:
+            return
+
+        current_time = time.time()
+        last_message_time = cooldown_auto_thread.get(message.channel.id, 0)
+        if current_time - last_message_time < 3:
+            return
+        cooldown_auto_thread[message.channel.id] = current_time
+
+        thread_name = channel_data.get("ThreadName", "{Name}のスレッド").format(
+            Name=message.author.display_name,
+            Channel=message.channel.name
+        )
+
+        try:
+            await message.create_thread(name=thread_name)
+        except discord.HTTPException as e:
+            print(f"スレッド作成エラー: {e}")
+
+    @settings.command(name="auto-thread", description="自動スレッド作成を設定します。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def auto_thread(
+        self,
+        interaction: discord.Interaction,
+        チャンネル: discord.TextChannel,
+        有効にするか: bool,
+        スレッド名: str = '{Name}のスレッド'
+    ):
+        db = interaction.client.async_db['MainTwo'].AutoThread
+        guild_id = interaction.guild.id
+
+        dbfind = await db.find_one({"Guild": guild_id}) or {"Guild": guild_id, "Channels": {}}
+        channels = dbfind.get("Channels", {})
+
+        if 有効にするか:
+            channels[str(チャンネル.id)] = {
+                "ThreadName": スレッド名
+            }
+            await db.update_one(
+                {"Guild": guild_id},
+                {"$set": {"Channels": channels}},
+                upsert=True
+            )
+            status_text = "有効化"
+        else:
+            channels.pop(str(チャンネル.id), None)
+            await db.update_one(
+                {"Guild": guild_id},
+                {"$set": {"Channels": channels}},
+                upsert=True
+            )
+            status_text = "無効化"
+
+        embed = make_embed.success_embed(
+            title=f"自動スレッド作成を{status_text}しました",
+            description=f"チャンネル: {チャンネル.mention}\nスレッド名テンプレート: `{スレッド名}`"
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @settings.command(name="lang", description="Change the bot's language. (Beta)")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
