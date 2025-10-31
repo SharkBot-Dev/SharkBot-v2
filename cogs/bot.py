@@ -20,7 +20,7 @@ class BotCog(commands.Cog):
     bot = app_commands.Group(name="bot", description="Bot系のコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True))
 
     @bot.command(name="about", description="Botの情報を取得します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def about_bot(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -66,7 +66,7 @@ class BotCog(commands.Cog):
         await interaction.followup.send(embeds=[em], view=view)
 
     @bot.command(name="ping", description="Pingを見ます。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def ping_bot(self, interaction: discord.Interaction):
         embed = make_embed.success_embed(title=translate.get(interaction.extras["lang"], 'bot', 'Pingを測定しました。'), description=f"DiscordAPI: {round(self.bot.latency * 1000)}ms")
@@ -101,7 +101,7 @@ class BotCog(commands.Cog):
         return await db.count_documents({})
 
     @bot.command(name="debug", description="システム情報を確認します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def debug_bot(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -151,7 +151,7 @@ Sharkアカウント: {sharkaccount_count}人
         await interaction.followup.send(embed=embed)
 
     @bot.command(name="invite", description="Botの招待リンクを取得します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def invite_bot(self, interaction: discord.Interaction, botのid: discord.User):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
@@ -177,7 +177,7 @@ Sharkアカウント: {sharkaccount_count}人
         await interaction.followup.send(embed=embed)
 
     @bot.command(name="faq", description="よくある質問を閲覧します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def bot_faq(self, interaction: discord.Interaction):
         class FaqLayout(discord.ui.LayoutView):

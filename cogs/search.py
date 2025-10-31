@@ -77,7 +77,7 @@ class WebGroup(app_commands.Group):
         super().__init__(name="web", description="Webから検索します。")
 
     @app_commands.command(name="translate", description="翻訳をします。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
         翻訳先=[
@@ -204,7 +204,7 @@ class WebGroup(app_commands.Group):
                 await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="news", description="ニュースを取得します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def news(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -216,7 +216,7 @@ class WebGroup(app_commands.Group):
                 await interaction.followup.send(f"https:{url['href']}")
 
     @app_commands.command(name="wikipedia", description="ウィキペディアから取得します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def wikipedia(self, interaction: discord.Interaction, 検索ワード: str):
         await interaction.response.defer()
@@ -258,7 +258,7 @@ class WebGroup(app_commands.Group):
             await interaction.followup.send(f"エラーが発生しました: {e}")
 
     @app_commands.command(name="safeweb", description="サイトの安全性を調べます。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def safeweb(self, interaction: discord.Interaction, url: str):
         await interaction.response.defer()
@@ -571,7 +571,7 @@ class SearchCog(commands.Cog):
         await interaction.edit_original_response(embed=embed)
 
     @search.command(name="user", description="ユーザーを検索します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def user_search(self, interaction: discord.Interaction, user: discord.User):
         await interaction.response.defer()
@@ -817,7 +817,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             await interaction.followup.send(embed=embed)
 
     @search.command(name="channel", description="チャンネルを検索します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def channel_search(self, interaction: discord.Interaction, チャンネルid: str = None):
         if チャンネルid:
@@ -966,7 +966,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
         await interaction.followup.send(embed=embed)
 
     @search.command(name="invite", description="招待リンク情報を取得します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_guild=True)
     async def invite_info(self, interaction: discord.Interaction, 招待リンク: str):
@@ -1019,7 +1019,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
         await interaction.followup.send(embed=embed)
 
     @search.command(name="avatar", description="アバターを取得します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def avatar(self, interaction: discord.Interaction, ユーザー: discord.User):
         await interaction.response.defer()
@@ -1071,7 +1071,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
         return
 
     @search.command(name="banner", description="バナーを取得します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def banner(self, interaction: discord.Interaction, ユーザー: discord.User):
         ユーザー = await self.bot.fetch_user(ユーザー.id)

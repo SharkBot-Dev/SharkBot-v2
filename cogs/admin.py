@@ -38,6 +38,7 @@ class AdminCog(commands.Cog):
             app_commands.Choice(name="ロード", value="load"),
         ]
     )
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def cogs_setting(
         self,
         interaction: discord.Interaction,
@@ -99,6 +100,7 @@ class AdminCog(commands.Cog):
             app_commands.Choice(name="削除", value="remove"),
         ]
     )
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def ban_bot(
         self,
         interaction: discord.Interaction,
@@ -176,6 +178,7 @@ class AdminCog(commands.Cog):
             app_commands.Choice(name="情報取得", value="getinfo"),
         ]
     )
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def manage_server(
         self,
         interaction: discord.Interaction,
@@ -295,6 +298,7 @@ class AdminCog(commands.Cog):
             app_commands.Choice(name="デバッグメッセージ", value="debugmsg"),
         ]
     )
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def debug_admin(
         self,
         interaction: discord.Interaction,
@@ -353,6 +357,7 @@ class AdminCog(commands.Cog):
             app_commands.Choice(name="削除", value="remove"),
         ]
     )
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def admins_member(
         self,
         interaction: discord.Interaction,
@@ -391,6 +396,7 @@ class AdminCog(commands.Cog):
             app_commands.Choice(name="シャットダウン", value="shutdown"),
         ]
     )
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def admin_shutdown(
         self,
         interaction: discord.Interaction,
@@ -426,6 +432,7 @@ class AdminCog(commands.Cog):
             app_commands.Choice(name="削除", value="remove"),
         ]
     )
+    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def admin_premium(
         self,
         interaction: discord.Interaction,
