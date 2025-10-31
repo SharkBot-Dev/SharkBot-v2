@@ -868,9 +868,9 @@ class SettingCog(commands.Cog):
         except:
             return
         if dbfind is None:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": message.guild.id, "User": message.author.id},
-                {"Guild": message.guild.id, "User": message.author.id, "Score": 1},
+                {'$set': {"Guild": message.guild.id, "User": message.author.id, "Score": 1}},
                 upsert=True,
             )
             try:
@@ -879,20 +879,20 @@ class SettingCog(commands.Cog):
             except:
                 return
         else:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": message.guild.id, "User": message.author.id},
-                {
+                {'$set': {
                     "Guild": message.guild.id,
                     "User": message.author.id,
                     "Score": dbfind["Score"] + 1,
-                },
+                }},
                 upsert=True,
             )
             nowscore = dbfind["Score"] + 1
             if nowscore == 10:
-                await db.replace_one(
+                await db.update_one(
                     {"Guild": message.guild.id, "User": message.author.id},
-                    {"Guild": message.guild.id, "User": message.author.id, "Score": 0},
+                    {'$set': {"Guild": message.guild.id, "User": message.author.id, "Score": 0}},
                     upsert=True,
                 )
                 return await self.run_warn(10, message)
@@ -916,9 +916,9 @@ class SettingCog(commands.Cog):
         except:
             return
         if dbfind is None:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": guild.id, "User": user.id},
-                {"Guild": guild.id, "User": user.id, "Score": 1},
+                {'$set': {"Guild": guild.id, "User": user.id, "Score": 1}},
                 upsert=True,
             )
             try:
@@ -927,16 +927,16 @@ class SettingCog(commands.Cog):
             except:
                 return
         else:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": guild.id, "User": user.id},
-                {"Guild": guild.id, "User": user.id, "Score": dbfind["Score"] + 1},
+                {'$set': {"Guild": guild.id, "User": user.id, "Score": dbfind["Score"] + 1}},
                 upsert=True,
             )
             nowscore = dbfind["Score"] + 1
             if nowscore == 10:
-                await db.replace_one(
+                await db.update_one(
                     {"Guild": guild.id, "User": user.id},
-                    {"Guild": guild.id, "User": user.id, "Score": 0},
+                    {'$set': {"Guild": guild.id, "User": user.id, "Score": 0}},
                     upsert=True,
                 )
                 return await self.run_warn_automod(10, guild, user)
@@ -958,9 +958,9 @@ class SettingCog(commands.Cog):
         except:
             return print(f"{sys.exc_info()}")
         if dbfind is None:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": message.guild.id, "User": int_.user.id},
-                {"Guild": message.guild.id, "User": int_.user.id, "Score": 1},
+                {'$set': {"Guild": message.guild.id, "User": int_.user.id, "Score": 1}},
                 upsert=True,
             )
             try:
@@ -969,20 +969,20 @@ class SettingCog(commands.Cog):
             except Exception:
                 return
         else:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": message.guild.id, "User": int_.user.id},
-                {
+                {'$set': {
                     "Guild": message.guild.id,
                     "User": int_.user.id,
                     "Score": dbfind["Score"] + 1,
-                },
+                }},
                 upsert=True,
             )
             nowscore = dbfind["Score"] + 1
             if nowscore == 10:
-                await db.replace_one(
+                await db.update_one(
                     {"Guild": message.guild.id, "User": int_.user.id},
-                    {"Guild": message.guild.id, "User": int_.user.id, "Score": 0},
+                    {'$set': {"Guild": message.guild.id, "User": int_.user.id, "Score": 0}},
                     upsert=True,
                 )
                 return await self.run_warn_int_author(10, message, int_)
@@ -1517,18 +1517,18 @@ class SettingCog(commands.Cog):
                         view=view,
                     )
                     db = self.db["Main"].LockMessage
-                    await db.replace_one(
+                    await db.update_one(
                         {
                             "Channel": interaction.channel.id,
                             "Guild": interaction.guild.id,
                         },
-                        {
+                        {'$set': {
                             "Channel": interaction.channel.id,
                             "Guild": interaction.guild.id,
                             "Title": self.etitle.value,
                             "Desc": self.desc.value,
                             "MessageID": msg.id,
-                        },
+                        }},
                         upsert=True,
                     )
                     await interaction.response.send_message(
@@ -1572,9 +1572,9 @@ class SettingCog(commands.Cog):
 
         await interaction.response.defer()
         db = self.bot.async_db["DashboardBot"].CustomPrefixBot
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id},
-            {"Guild": interaction.guild.id, "Prefix": prefix},
+            {'$set': {"Guild": interaction.guild.id, "Prefix": prefix}},
             upsert=True,
         )
         await interaction.followup.send(
@@ -1631,29 +1631,29 @@ class SettingCog(commands.Cog):
                         except:
                             return
                         if dbfind is None:
-                            await db.replace_one(
+                            await db.update_one(
                                 {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {
+                                {'$set': {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                     "Score": 8,
-                                },
+                                }},
                                 upsert=True,
                             )
                         else:
-                            await db.replace_one(
+                            await db.update_one(
                                 {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {
+                                {'$set': {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                     "Score": 8,
-                                },
+                                }},
                                 upsert=True,
                             )
                         await interaction.response.send_message(
@@ -1672,29 +1672,29 @@ class SettingCog(commands.Cog):
                         except:
                             return
                         if dbfind is None:
-                            await db.replace_one(
+                            await db.update_one(
                                 {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {
+                                {'$set': {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                     "Score": 5,
-                                },
+                                }},
                                 upsert=True,
                             )
                         else:
-                            await db.replace_one(
+                            await db.update_one(
                                 {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {
+                                {'$set': {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                     "Score": 5,
-                                },
+                                }},
                                 upsert=True,
                             )
                         await interaction.response.send_message(
@@ -1713,29 +1713,29 @@ class SettingCog(commands.Cog):
                         except:
                             return
                         if dbfind is None:
-                            await db.replace_one(
+                            await db.update_one(
                                 {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {
+                                {'$set': {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                     "Score": 3,
-                                },
+                                }},
                                 upsert=True,
                             )
                         else:
-                            await db.replace_one(
+                            await db.update_one(
                                 {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {
+                                {'$set': {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                     "Score": 3,
-                                },
+                                }},
                                 upsert=True,
                             )
                         await interaction.response.send_message(
@@ -1754,29 +1754,29 @@ class SettingCog(commands.Cog):
                         except:
                             return
                         if dbfind is None:
-                            await db.replace_one(
+                            await db.update_one(
                                 {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {
+                                {'$set': {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                     "Score": 9,
-                                },
+                                }},
                                 upsert=True,
                             )
                         else:
-                            await db.replace_one(
+                            await db.update_one(
                                 {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {
+                                {'$set': {
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                     "Score": 9,
-                                },
+                                }},
                                 upsert=True,
                             )
                         await interaction.response.send_message(
@@ -1839,68 +1839,68 @@ class SettingCog(commands.Cog):
                 if interaction.user.id == interaction_.user.id:
                     if "タイムアウト3分" == select.values[0]:
                         dbs = self.db.WarnScoreSetting
-                        await dbs.replace_one(
+                        await dbs.update_one(
                             {"Guild": interaction_.guild.id, "Score": self.sc},
-                            {
+                            {'$set': {
                                 "Guild": interaction_.guild.id,
                                 "Score": self.sc,
                                 "Setting": 0,
-                            },
+                            }},
                             upsert=True,
                         )
                     elif "タイムアウト5分" == select.values[0]:
                         dbs = self.db.WarnScoreSetting
-                        await dbs.replace_one(
+                        await dbs.update_one(
                             {"Guild": interaction_.guild.id, "Score": self.sc},
-                            {
+                            {'$set': {
                                 "Guild": interaction_.guild.id,
                                 "Score": self.sc,
                                 "Setting": 1,
-                            },
+                            }},
                             upsert=True,
                         )
                     elif "タイムアウト10分" == select.values[0]:
                         dbs = self.db.WarnScoreSetting
-                        await dbs.replace_one(
+                        await dbs.update_one(
                             {"Guild": interaction_.guild.id, "Score": self.sc},
-                            {
+                            {'$set': {
                                 "Guild": interaction_.guild.id,
                                 "Score": self.sc,
                                 "Setting": 2,
-                            },
+                            }},
                             upsert=True,
                         )
                     elif "Kick" == select.values[0]:
                         dbs = self.db.WarnScoreSetting
-                        await dbs.replace_one(
+                        await dbs.update_one(
                             {"Guild": interaction_.guild.id, "Score": self.sc},
-                            {
+                            {'$set': {
                                 "Guild": interaction_.guild.id,
                                 "Score": self.sc,
                                 "Setting": 3,
-                            },
+                            }},
                             upsert=True,
                         )
                     elif "BAN" == select.values[0]:
                         dbs = self.db.WarnScoreSetting
-                        await dbs.replace_one(
+                        await dbs.update_one(
                             {"Guild": interaction_.guild.id, "Score": self.sc},
-                            {
+                            {'$set': {
                                 "Guild": interaction_.guild.id,
                                 "Score": self.sc,
                                 "Setting": 4,
-                            },
+                            }},
                             upsert=True,
                         )
                     elif "なし" == select.values[0]:
                         dbs = self.db.WarnScoreSetting
-                        await dbs.replace_one(
+                        await dbs.update_one(
                             {"Guild": interaction_.guild.id, "Score": self.sc},
-                            {
+                            {'$set': {
                                 "Guild": interaction_.guild.id,
                                 "Score": self.sc,
                                 "Setting": 5,
-                            },
+                            }},
                             upsert=True,
                         )
                     await interaction.response.send_message(
