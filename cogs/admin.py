@@ -105,6 +105,7 @@ class AdminCog(commands.Cog):
         操作の種類: app_commands.Choice[str],
         操作: app_commands.Choice[str],
         内容: str,
+        理由: str
     ):
         isadmin = await self.get_admins(interaction.user)
 
@@ -124,12 +125,18 @@ class AdminCog(commands.Cog):
                     return
                 user = await self.bot.fetch_user(int(内容))
                 db = self.bot.async_db["Main"].BlockUser
-                await db.update_one({"User": user.id}, {'$set': {"User": user.id}}, upsert=True)
+                await db.update_one({"User": user.id}, {'$set': {"User": user.id, 'Reason': 理由, 'Runner': interaction.user.id}}, upsert=True)
                 await interaction.followup.send(
                     embed=make_embed.success_embed(
                         title=f"{user.name}をBotからBANしました。"
                     )
                 )
+
+                await self.bot.get_channel(1359793645842206912).send(embed=make_embed.success_embed(title="ブロックしているユーザーを追加しました。")
+                                                                     .add_field(name="ユーザー名", value=user.name, inline=False)
+                                                                     .add_field(name="ユーザーID", value=str(user.id), inline=False)
+                                                                     .add_field(name="理由", value=理由, inline=False)
+                                                                     .set_footer(text=f'実行者: {interaction.user.name}', icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url))
             elif 操作.value == "remove":
                 user = await self.bot.fetch_user(int(内容))
                 db = self.bot.async_db["Main"].BlockUser
@@ -143,7 +150,7 @@ class AdminCog(commands.Cog):
             if 操作.value == "add":
                 db = self.bot.async_db["Main"].BlockGuild
                 await db.update_one(
-                    {"Guild": int(内容)}, {'$set': {"Guild": int(内容)}}, upsert=True
+                    {"Guild": int(内容)}, {'$set': {"Guild": int(内容), 'Reason': 理由, 'Runner': interaction.user.id}}, upsert=True
                 )
                 await interaction.followup.send(
                     embed=make_embed.success_embed(
@@ -456,11 +463,20 @@ class AdminCog(commands.Cog):
         # await guild.leave()
         db = self.bot.async_db["Main"].BlockUser
         try:
-            profile = await db.find_one({"User": guild.owner.id}, {"_id": False})
+            profile = await db.find_one({"User": guild.owner_id}, {"_id": False})
             if profile is None:
                 return
             else:
                 await guild.leave()
+                await asyncio.sleep(1)
+                await self.bot.get_channel(1359793645842206912).send(
+                    embed=make_embed.success_embed(
+                        title=f"ブロックされているサーバーから退出しました。"
+                    ).set_thumbnail(url=guild.icon.url if guild.icon else None)
+                    .add_field(name=f"サーバー名", value=guild.name, inline=False)
+                    .add_field(name=f"サーバーID", value=str(guild.id), inline=False)
+                    .add_field(name=f"理由", value=profile.get('Reason', 'なし'), inline=False)
+                )
                 return
         except:
             return
@@ -469,20 +485,43 @@ class AdminCog(commands.Cog):
     async def on_guild_join_log(self, guild: discord.Guild):
         await self.bot.get_channel(1359793645842206912).send(
             embed=discord.Embed(
-                title=f"{guild.name}に参加しました。",
-                description=f"{guild.id}",
+                title=f"サーバーに参加しました。",
                 color=discord.Color.green(),
             ).set_thumbnail(url=guild.icon.url if guild.icon else None)
+            .add_field(name=f"サーバー名", value=guild.name, inline=False)
+            .add_field(name=f"サーバーID", value=str(guild.id), inline=False)
         )
+
+        db = self.bot.async_db["Main"].BlockGuild
+
+        try:
+            profile = await db.find_one({"Guild": guild.id}, {"_id": False})
+            if profile is None:
+                return
+            else:
+                await guild.leave()
+                await asyncio.sleep(1)
+                await self.bot.get_channel(1359793645842206912).send(
+                    embed=make_embed.success_embed(
+                        title=f"ブロックされているサーバーから退出しました。"
+                    ).set_thumbnail(url=guild.icon.url if guild.icon else None)
+                    .add_field(name=f"サーバー名", value=guild.name, inline=False)
+                    .add_field(name=f"サーバーID", value=str(guild.id), inline=False)
+                    .add_field(name=f"理由", value=profile.get('Reason', 'なし'), inline=False)
+                )
+                return
+        except:
+            return
 
     @commands.Cog.listener("on_guild_remove")
     async def on_guild_remove_log(self, guild: discord.Guild):
         await self.bot.get_channel(1359793645842206912).send(
             embed=discord.Embed(
-                title=f"{guild.name}から退出しました。", color=discord.Color.red()
+                title=f"サーバーから退出しました。", color=discord.Color.red()
             ).set_thumbnail(url=guild.icon.url if guild.icon else None)
+            .add_field(name=f"サーバー名", value=guild.name, inline=False)
+            .add_field(name=f"サーバーID", value=str(guild.id), inline=False)
         )
-
 
 async def setup(bot):
     await bot.add_cog(AdminCog(bot))
