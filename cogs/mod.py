@@ -281,39 +281,32 @@ class ModCog(commands.Cog):
     async def kick(
         self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str = None
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="自分自身はキックできません。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="自分自身はキックできません。"
                 ),
                 ephemeral=True,
             )
         if interaction.guild.get_member(ユーザー.id) is None:
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="このサーバーにいないメンバーはキックできません。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="このサーバーにいないメンバーはキックできません。"
                 )
             )
         await interaction.response.defer()
         try:
-            await interaction.guild.kick(ユーザー, reason=理由)
+            await interaction.guild.kick(ユーザー, reason=理由 if 理由 else "なし" + f"\n{interaction.user.id} によってKick")
         except:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="キックに失敗しました。",
-                    description="権限が足りないかも！？",
-                    color=discord.Color.red(),
+                    description="権限が足りないかも！？"
                 )
             )
         return await interaction.followup.send(
-            embed=discord.Embed(
-                title=f"{ユーザー.name}をKickしました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title=f"{ユーザー.name}をKickしました。", description=f'理由: {理由 if 理由 else "なし"}' + f"\n{interaction.user.id} によってKick"
             )
         )
 
