@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <title>サーバー掲示板</title>
+        <style>
+            .left{
+                float: left;
+                width:280px;
+                height:300px;
+            }
+
+            .box {
+                border-radius: 10px;
+                border: solid 2px #000;     /* 枠線指定 */
+                background-color: #eee;     /* 背景色指定 */
+                margin: 10;
+                padding: 10;
+            }
+
+            .bimg {
+                border-radius: 10px;
+            }
+
+            .bp {
+                margin: 20;
+                padding: 20;
+            }
+
+            nav {
+                width: 100%;
+                height: 45px;
+                background-color: #eee;
+                border-radius: 10px;
+                box-sizing: border-box;
+            }
+        </style>
+        <meta name="twitter:title" content="SharkBot Servers" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:description" content="SharkBotのサーバー掲示板">
+        <meta name="twitter:image" content="{{ url_for('static', filename='/Server.png')}}" />
+    </head>
+    <body>
+        <nav>
+            <h2>SharkBot Servers ({{ct}}サーバー)</h2>
+        </nav>
+        <div class="bp">
+            {% for key in server %}
+            <a href="{{ key.Invite }}"><div class="box left">
+                <center><h2>{{key.Name}}</h2>{{ key.Description[:40] }}<br><br><img src="{{ key.Icon }}" width="100" height="100" class="bimg"></center><br>
+            </div></a>
+            {% endfor %}
+        </div>
+    </body>
+</html>

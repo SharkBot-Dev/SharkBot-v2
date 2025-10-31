@@ -1,0 +1,145 @@
+<html>
+    <head>
+        <title>SharkBot ホームページ</title>
+        <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+        <style>
+            .main {
+                border-radius: 20px;
+                background-color: rgba(255, 255, 255, 0.747);
+                color: rgb(0, 0, 0);
+                padding: 20px;
+                margin: 40px;
+                margin-left: 300px;
+            }
+
+            .main button {
+                border-radius: 10px;
+                background-color: black;
+                color: white;
+            }
+
+            body {
+                margin: 0;
+                background: rgb(68, 68, 68);
+                color: white;
+                font-family: Arial, sans-serif;
+            }
+            
+            #particles-js {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: -1;
+            }
+
+            .sidebar {
+                border-radius: 20px;
+                width: 250px;
+                background-color: rgba(255, 255, 255, 0.747);
+                color: rgb(0, 0, 0);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding-top: 20px;
+                transition: width 0.3s;
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                margin: 40px;
+            }
+
+            .nav-links {
+                list-style: none;
+                width: 100%;
+                padding: 0;
+            }
+            .nav-links li {
+                width: 100%;
+            }
+            .nav-links a {
+                display: block;
+                padding: 15px;
+                color: rgb(0, 0, 0);
+                text-decoration: none;
+                text-align: center;
+                transition: background 0.3s;
+            }
+
+            .box {
+                background: rgba(65, 62, 62, 0.466);
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                margin-top: 20px;
+            }
+
+            .box img {
+                border-radius: 29px;
+            }
+        </style>
+    </head>
+    <body>
+
+        <div id="particles-js"></div>
+
+        <div class="sidebar">
+            <h2>SharkBot🦈</h2>
+
+            <ul class="nav-links">
+                <li><a href="#">ホーム</a></li>
+                <li><a href="/server">サーバー掲示板</a></li>
+                <li><a href="/login">Sharkアカウント</a></li>
+                <li><a href="https://api.sharkbot.xyz/global/rule">グローバルチャットのルール</a></li>
+                <li><a href="https://discord.gg/mUyByHYMGk">サポートサーバー</a></li>
+                <li><a href="https://discord.com/oauth2/authorize?client_id=1322100616369147924">サーバーに導入する</a></li>
+                <li><a href="https://discord.com/oauth2/authorize?client_id=1354603879807062066">ユーザーに導入する</a></li>
+            </ul>
+        </div>
+
+        <div class="main" id="page">
+            <h1>なぜSharkBotを使うべきなのか？</h1>
+            <div class="box">
+                <h2>とても簡単に、サーバーにあわせた荒らし対策を実装。</h2>
+                <p>・荒らした回数に合わせて簡単に処罰。<br>・招待リンクやTokenを簡単に抹消。<br><img src="{{ url_for('static', filename='warnsetting.png')}}"></p>
+            </div>
+            <div class="box">
+                <h2>クリックロール</h2>
+                <p>・ボタン式ロールパネルでセルボから簡単にロールを守る。<br>・簡単にロールパネルにロールを追加、削除ができます。<br>・ロールパネル数の上限はありません。<br><img src="{{ url_for('static', filename='role.png')}}"></p>
+            </div>
+            <div class="box">
+                <h2>高度な認証システム</h2>
+                <p>・絶対値の計算で、小学生をはじく。<br>・認証後に未認証ロールを削除できます。<br>・Web認証などもあります。<br><img src="{{ url_for('static', filename='auth.png')}}"></p>
+            </div>
+            <div class="box">
+                <h2>強力なモデレーション</h2>
+                <p>・ここから下・上のメッセージを簡単に削除。<br>・VCを解散、一つのVCに集合、などのVC系のコマンドも。<br>・ロールの付与・剥奪も簡単に。<br>・その他KickやBan、TOなどもあります。<br><img src="{{ url_for('static', filename='vc.png')}}"></p>
+            </div>
+            <div class="box">
+                <h2>ほとんどのBotに対応したUp通知</h2>
+                <p>・定番の掲示板サービスのDisboard、Dissokuの通知。<br>・マイナーな掲示板のDicoallや鯖チャンネルの通知。<br>・出てきたばかりのDistopiaの通知。<br><img src="{{ url_for('static', filename='vote.png')}}"></p>
+            </div>
+            <div class="box">
+                <h2>メンバーも使えるコマンドたち</h2>
+                <p>・かわいい猫と犬たち<br>・ワンコマンドで最近の地震を取得<br>・簡単にユーザーの情報を取得<br>・様々なDiscord上のランキングたち<br><img src="{{ url_for('static', filename='dog.png')}}"></p>
+            </div>
+            <div class="box">
+                <h2>気に入ってくれたかな？</h2>
+                <p><h3><a href="https://discord.com/oauth2/authorize?client_id=1322100616369147924">導入する！</a></h3></p>
+            </div>
+        </div>
+
+        <script>
+            particlesJS("particles-js", {
+                particles: {
+                    number: { value: 100 },
+                    size: { value: 3 },
+                    move: { speed: 2 },
+                    line_linked: { enable: true, distance: 150 }
+                }
+            });
+        </script>
+    </body>
+</html>

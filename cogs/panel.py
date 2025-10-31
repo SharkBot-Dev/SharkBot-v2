@@ -1055,7 +1055,7 @@ class PanelCog(commands.Cog):
                             upsert=True,
                         )
                         await interaction.followup.send(
-                            "この認証パネルは、Webにアクセスする必要があります。\n以下のボタンからアクセスして認証してください。\n\n追記: あなたの参加しているサーバーが取得されます。\nそれらの情報は、Botの動作向上のために使用されます。",
+                            embed=discord.Embed(color=discord.Color.green(), title='Web認証をする', description="この認証パネルは、Webにアクセスする必要があります。\n以下のボタンからアクセスして認証してください。\n\n追記: あなたの参加しているサーバーが取得されます。\nそれらの情報は、\nサーバーオーナーの禁止したサーバーに参加しているか確認するために使用されます。"),
                             ephemeral=True,
                             view=discord.ui.View().add_item(
                                 discord.ui.Button(

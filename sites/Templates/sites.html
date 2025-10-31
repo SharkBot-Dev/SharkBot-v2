@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サーバー紹介 - {{name}}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #2c2f33;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #7289da;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .server-card {
+            background-color: #36393f;
+            border-radius: 10px;
+            width: 500px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+
+        .server-card:hover {
+            transform: scale(1.05);
+        }
+
+        .server-card img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+        }
+
+        .server-card h2 {
+            margin: 10px 0;
+            font-size: 1.8rem;
+        }
+
+        .server-card p {
+            font-size: 1rem;
+            color: #b9bbbe;
+            margin-bottom: 20px;
+        }
+
+        .join-button {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #7289da;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .join-button:hover {
+            background-color: #5b6eae;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #23272a;
+            color: #b9bbbe;
+        }
+
+        @media (max-width: 480px) {
+            .server-card {
+                width: 90%;
+                padding: 20px;
+            }
+
+            .server-card img {
+                width: 100px;
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SharkBot Sites</h1>
+    </header>
+
+    <main>
+        <div class="server-card">
+            <img src="{{icon}}" alt="サーバーアイコン">
+            <h2>{{name}}</h2>
+            <p>{{text}}</p>
+            <a class="join-button" href="https://discord.gg/{{invite}}" target="_blank">サーバーに参加する</a>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2025 SharkBot
+    </footer>
+</body>
+</html>

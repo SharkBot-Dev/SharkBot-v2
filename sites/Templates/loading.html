@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>認証処理中...</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background-color: #1e1e2f;
+      color: #fff;
+    }
+    .loader {
+      margin: 100px auto;
+      border: 6px solid #ccc;
+      border-top: 6px solid #7289da;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Discord認証を確認しています...</h1>
+  <div class="loader"></div>
+  <p>少々お待ちください。</p>
+
+  <script>
+    const code = "{{ code }}";
+    const state = "{{ state }}";
+
+    fetch("/invite_auth_backend", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ code, state })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "success") {
+        document.body.innerHTML = `<h1>✅ 認証が完了しました。<br>五秒後に転送します。</h1>`;
+        window.setTimeout(function(){
+            window.location.href = data.redirect;
+        }, 5000);
+      } else {
+        document.body.innerHTML = `<h1>❌ ${data.reason}</h1>`;
+      }
+    })
+    .catch(err => {
+      document.body.innerHTML = `<h1>❌ エラーが発生しました</h1><p>${err}</p>`;
+    });
+  </script>
+</body>
+</html>

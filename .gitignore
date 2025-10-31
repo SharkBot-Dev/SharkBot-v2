@@ -214,4 +214,5 @@ __marimo__/
 /Graph/test.py
 /htsvoice/*
 
-/sites
+/sites/settings.py
+/sites/static/
