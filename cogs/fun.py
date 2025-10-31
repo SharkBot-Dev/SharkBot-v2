@@ -445,7 +445,7 @@ class SayGroup(app_commands.Group):
         super().__init__(name="say", description="いろいろなキャラクターに発言させます。")
 
     @app_commands.command(name="caw", description="牛にしゃべらせます。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def say_cow(
         self,
@@ -457,7 +457,7 @@ class SayGroup(app_commands.Group):
                                                 .set_footer(text="コピーして貼り付けると会話中にしようできます。"))
 
     @app_commands.command(name="dragon", description="ドラゴンにしゃべらせます。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def say_dragon(
         self,
@@ -469,7 +469,7 @@ class SayGroup(app_commands.Group):
                                                 .set_footer(text="コピーして貼り付けると会話中にしようできます。"))
 
     @app_commands.command(name="penguin", description="ペンギンにしゃべらせます。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def say_tux(
         self,
@@ -485,7 +485,7 @@ class AudioGroup(app_commands.Group):
         super().__init__(name="audio", description="音声系のコマンドです。")
 
     @app_commands.command(name="tts", description="テキストを音声にします。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
         声の種類=[
@@ -543,7 +543,7 @@ class AudioGroup(app_commands.Group):
                         io_.close()
 
     @app_commands.command(name="distortion", description="音声を音割れさせます。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def distortion(
         self, interaction: discord.Interaction, 音声: discord.Attachment
@@ -594,7 +594,7 @@ class MovieGroup(app_commands.Group):
     @app_commands.command(
         name="sea", description="海の背景の動画に画像を組み合わせます。"
     )
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def sea(self, interaction: discord.Interaction, 画像: discord.Attachment):
         MAX_IMAGE_SIZE = 5 * 1024 * 1024
@@ -665,7 +665,7 @@ class TextGroup(app_commands.Group):
         super().__init__(name="text", description="テキスト系の面白いコマンド")
 
     @app_commands.command(name="suddendeath", description="突然の死を生成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def suddendeath(
         self, interaction: discord.Interaction, テキスト: str = "突然の死"
@@ -678,7 +678,7 @@ class TextGroup(app_commands.Group):
         )
 
     @app_commands.command(name="retranslate", description="再翻訳します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def retranslate(self, interaction: discord.Interaction, テキスト: str):
         await interaction.response.defer()
@@ -721,7 +721,7 @@ class TextGroup(app_commands.Group):
     @app_commands.command(
         name="text-to-emoji", description="テキストを絵文字化します。"
     )
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def text_to_emoji(self, interaction: discord.Interaction, テキスト: str):
         await interaction.response.defer()
@@ -756,7 +756,7 @@ class TextGroup(app_commands.Group):
             return await interaction.followup.send(embed=make_embed.error_embed(title="特殊文字や絵文字、記号などは使用できません。"))
 
     @app_commands.command(name="reencode", description="文字化けを作成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def reencode(self, interaction: discord.Interaction, テキスト: str):
         await interaction.response.send_message(
@@ -767,7 +767,7 @@ class TextGroup(app_commands.Group):
         )
 
     @app_commands.command(name="crypt", description="文字列を暗号化します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def crypt_text(
         self,
@@ -814,7 +814,7 @@ class TextGroup(app_commands.Group):
             )
 
     @app_commands.command(name="number", description="進数を変更します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def number(self, interaction: discord.Interaction, 進数: int, 数字: str):
         if 進数 < 2 or 進数 > 16:
@@ -843,7 +843,7 @@ class TextGroup(app_commands.Group):
         )
 
     @app_commands.command(name="unicode", description="テキストをUnicodeに変換します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def unicode_python(self, interaction: discord.Interaction, テキスト: str):
         raw_text = ""
@@ -855,7 +855,7 @@ class TextGroup(app_commands.Group):
         await interaction.response.send_message(f"```{raw_text}\n{text}```", ephemeral=True)
 
     @app_commands.command(name="arm", description="armのasmを、バイナリに変換します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def arm_byte(self, interaction: discord.Interaction):
         class send(discord.ui.Modal):
@@ -900,7 +900,7 @@ class TextGroup(app_commands.Group):
         await interaction.response.send_modal(send())
 
     @app_commands.command(name="morse", description="モールス信号に変換します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def morse_convert(self, interaction: discord.Interaction, テキスト: str):
         words = {"A": "・－","B": "－・・・","C": "－・－・","D": "－・・","E": "・","F": "・・－・",
@@ -925,7 +925,7 @@ class NounaiGroup(app_commands.Group):
         super().__init__(name="nounai", description="脳内メーカー系の面白いコマンド")
 
     @app_commands.command(name="nounai", description="脳内メーカーで遊びます")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def nounai(self, interaction: discord.Interaction, 名前: str):
         await interaction.response.send_message(
@@ -937,7 +937,7 @@ class NounaiGroup(app_commands.Group):
         )
 
     @app_commands.command(name="kakeizu", description="家系図メーカーで遊びます")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def kakeizu(self, interaction: discord.Interaction, 名前: str):
         await interaction.response.send_message(
@@ -949,7 +949,7 @@ class NounaiGroup(app_commands.Group):
         )
 
     @app_commands.command(name="busyo", description="武将メーカーで遊びます")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def busyo(self, interaction: discord.Interaction, 名前: str):
         await interaction.response.send_message(
@@ -961,7 +961,7 @@ class NounaiGroup(app_commands.Group):
         )
 
     @app_commands.command(name="kabuto", description="兜メーカーで遊びます")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def kabuto(self, interaction: discord.Interaction, 名前: str):
         await interaction.response.send_message(
@@ -973,7 +973,7 @@ class NounaiGroup(app_commands.Group):
         )
 
     @app_commands.command(name="tenshoku", description="転職メーカーで遊びます")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tenshoku(self, interaction: discord.Interaction, 名前: str):
         await interaction.response.send_message(
@@ -989,7 +989,7 @@ class AnimalGroup(app_commands.Group):
         super().__init__(name="animal", description="動物系の面白いコマンド")
 
     @app_commands.command(name="cat", description="ネコの画像を生成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def cat(self, interaction: discord.Interaction):
         async with aiohttp.ClientSession() as session:
@@ -1003,7 +1003,7 @@ class AnimalGroup(app_commands.Group):
                 )
 
     @app_commands.command(name="dog", description="犬の画像を生成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def dog(self, interaction: discord.Interaction):
         async with aiohttp.ClientSession() as session:
@@ -1015,7 +1015,7 @@ class AnimalGroup(app_commands.Group):
                 )
 
     @app_commands.command(name="fox", description="キツネの画像を生成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def fox(self, interaction: discord.Interaction):
         async with aiohttp.ClientSession() as session:
@@ -1027,7 +1027,7 @@ class AnimalGroup(app_commands.Group):
                 )
 
     @app_commands.command(name="duck", description="アヒルの画像を生成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def duck(self, interaction: discord.Interaction):
         async with aiohttp.ClientSession() as session:
@@ -1043,7 +1043,7 @@ class ImageGroup(app_commands.Group):
         super().__init__(name="image", description="画像系の面白いコマンド")
 
     @app_commands.command(name="5000", description="5000兆円ほしい！")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def _5000(
         self,
@@ -1080,7 +1080,7 @@ class ImageGroup(app_commands.Group):
             )
 
     @app_commands.command(name="emoji-kitchen", description="絵文字を合体させます。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
         調理方法=[
@@ -1129,7 +1129,7 @@ class ImageGroup(app_commands.Group):
             e.close()
 
     @app_commands.command(name="textmoji", description="テキストを絵文字にします。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
         色=[
@@ -1199,7 +1199,7 @@ class ImageGroup(app_commands.Group):
         image.close()
 
     @app_commands.command(name="httpcat", description="httpキャットを取得します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def httpcat(self, interaction: discord.Interaction, ステータスコード: int):
         embed = (
@@ -1210,7 +1210,7 @@ class ImageGroup(app_commands.Group):
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="miq", description="Make it a quoteを作成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
         色=[
@@ -1312,7 +1312,7 @@ class ImageGroup(app_commands.Group):
             return
 
     @app_commands.command(name="ascii", description="アスキーアートを作成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def ascii(self, interaction: discord.Interaction, 画像: discord.Attachment):
         await interaction.response.defer()
@@ -1326,7 +1326,7 @@ class ImageGroup(app_commands.Group):
         io_.close()
 
     @app_commands.command(name="imgur", description="Imgurで画像を取得します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def imgur(self, interaction: discord.Interaction, 検索ワード: str):
         await interaction.response.defer()
@@ -1350,7 +1350,7 @@ class ImageGroup(app_commands.Group):
             return await interaction.followup.send(f"検索に失敗しました。")
 
     @app_commands.command(name="game", description="ゲームのコラ画像を作成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
         タイプ=[
@@ -1400,7 +1400,7 @@ class ImageGroup(app_commands.Group):
             return
 
     @app_commands.command(name="profile", description="自己紹介カードを作成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def profile_card(self, interaction: discord.Interaction):
         class CardModal(discord.ui.Modal):
@@ -1508,7 +1508,7 @@ class FunCog(commands.Cog):
     fun.add_command(BirthdayGroup())
 
     @fun.command(name="ranking", description="様々なランキングを表示します。")
-    @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
         ランキングの種類=[
