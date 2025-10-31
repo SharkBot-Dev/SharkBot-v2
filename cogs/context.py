@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import datetime
 
 import requests
-from models import make_embed
+from models import make_embed, miq
 from models.permissions_text import PERMISSION_TRANSLATIONS
 import asyncio
 
@@ -279,8 +279,7 @@ async def setup(bot: commands.Bot):
                         color=discord.Color.red(),
                     )
                 )
-            miq = await asyncio.to_thread(
-                create_quote_image,
+            miq_ = await miq.make_quote_async(
                 message.author.display_name,
                 content,
                 av,
@@ -290,7 +289,7 @@ async def setup(bot: commands.Bot):
                 False
             )
             image_binary = io.BytesIO()
-            await asyncio.to_thread(miq.save, image_binary, "PNG")
+            await asyncio.to_thread(miq_.save, image_binary, "PNG")
             image_binary.seek(0)
             try:
                 file = discord.File(fp=image_binary, filename=f"{message.id}_quote.png")
