@@ -91,7 +91,6 @@ def cookie():
         ).json()
 
         resp = make_response(redirect('/login'))
-        resp.set_cookie('access_token', access_token)
         resp.set_cookie('user_info', json.dumps(user_info))
 
         return resp
@@ -155,7 +154,6 @@ def invite_auth_backend():
         add_role(settings.TOKEN, user_info["id"], usermoney["Guild"], usermoney["Role"])
 
         resp = make_response(jsonify({"status": "success", "redirect": "/login"}))
-        resp.set_cookie('access_token', access_token)
         resp.set_cookie('user_info', json.dumps(user_info))
         return resp
 
@@ -171,7 +169,7 @@ def auth_error_page():
 def login():
     try:
         try:
-            access_token = request.cookies.get('access_token')
+            access_token = request.cookies.get('user_info')
         except:
             return render_template("login.html", name=f"未ログイン", icon="https://www.sharkbot.xyz/static/LoginUser.png")
         user = request.cookies.get('user_info')
