@@ -968,17 +968,17 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @search.command(name="invite", description="招待リンク情報を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.checks.has_permissions(manage_guild=True)
     async def invite_info(self, interaction: discord.Interaction, 招待リンク: str):
+        if interaction.is_guild_integration():
+            if not interaction.user.guild_permissions.manage_guild:
+                return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="コマンドを実行する権限がありません！", description="不足している権限: サーバーの管理"))
+
         await interaction.response.defer()
         JST = datetime.timezone(datetime.timedelta(hours=9))
-        invite = await self.bot.fetch_invite(招待リンク)
-        if not invite:
-            return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="招待リンクが見つかりません。", color=discord.Color.green()
-                )
-            )
+        try:
+            invite = await self.bot.fetch_invite(招待リンク)
+        except ValueError:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="招待リンクが見つかりません。"))
         embed = (
             make_embed.success_embed(title="招待リンクの情報")
             .add_field(name="サーバー名", value=f"{invite.guild.name}", inline=False)
