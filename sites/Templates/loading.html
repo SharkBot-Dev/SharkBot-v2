@@ -42,7 +42,7 @@
     .then(res => res.json())
     .then(data => {
       if (data.status === "success") {
-        document.body.innerHTML = `<h1>✅ 認証が完了しました。<br>${data.message}</h1>`;
+        document.body.innerHTML = `<h1>✅ 認証が完了しました。</h1><h3>サーバー管理者からの伝言<br>${data.message}</h3>`;
       } else {
         document.body.innerHTML = `<h1>❌ ${data.reason}</h1>`;
       }
@@ -50,6 +50,10 @@
     .catch(err => {
       document.body.innerHTML = `<h1>❌ エラーが発生しました</h1><p>${err}</p>`;
     });
+
+    function test_show_message() {
+      document.body.innerHTML = `<h1>✅ 認証が完了しました。</h1><h3>サーバー管理者からの伝言<br>これはテストです</h3>`;
+    }
   </script>
 </body>
 </html>
