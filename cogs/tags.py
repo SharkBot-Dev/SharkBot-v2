@@ -186,7 +186,7 @@ class TagsCog(commands.Cog):
         if doc:
             try:
                 ts_script = doc["tagscript"]
-                await interaction.followup.send(self.replace_tag(ts_script, 引数, interaction.user) + "\n-# これはタグスクリプトからのメッセージです。")
+                await interaction.followup.send(self.replace_tag(ts_script, 引数, interaction.user) + "\n-# これはタグからのメッセージです。")
             except Exception as e:
                 return await interaction.followup.send("エラーが発生しました。")
         else:
@@ -317,7 +317,7 @@ class TagsCog(commands.Cog):
                 cooldown_tags[message.guild.id] = current_time
 
                 ts_script = doc["tagscript"]
-                await message.channel.send(self.replace_tag(ts_script, args, message.author) + "\n-# これはタグスクリプトからのメッセージです。")
+                await message.channel.send(self.replace_tag(ts_script, args, message.author) + "\n-# これはタグからのメッセージです。")
             except Exception as e:
                 return await message.channel.send("エラーが発生しました。")
 
