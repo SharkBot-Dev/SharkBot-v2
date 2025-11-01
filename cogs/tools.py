@@ -110,6 +110,23 @@ async def fetch_whois(target_domain):
     res = await loop.run_in_executor(None, partial(whois_query, target_domain))
     return io.StringIO(res)
 
+COLOR_MAP = {
+    'red': discord.Color.red(),
+    '赤': discord.Color.red(),
+    'blue': discord.Color.blue(),
+    '青': discord.Color.red(),
+    'green': discord.Color.green(),
+    '緑': discord.Color.green(),
+    'yellow': discord.Color.yellow(),
+    '黄': discord.Color.yellow(),
+    'pink': discord.Color.pink(),
+    'ピンク': discord.Color.pink(),
+    'white': discord.Color.from_str('#FFFFFF'),
+    '白': discord.Color.from_str('#FFFFFF'),
+    'black': discord.Color.from_str('#000000'),
+    '黒': discord.Color.from_str("#000000"),
+}
+
 class EmbedBuilder(discord.ui.View):
     def __init__(self, *, timeout = 180):
         super().__init__(timeout=timeout)
@@ -208,7 +225,10 @@ class EmbedBuilder(discord.ui.View):
 
                 em = ol_m.embeds[0].copy()
                 try:
-                    em.color = discord.Color.from_str(self.text.component.value)
+                    if not self.text.component.value.lower() in COLOR_MAP:
+                        em.color = discord.Color.from_str(self.text.component.value)
+                    else:
+                        em.color = COLOR_MAP[self.text.component.value.lower()]
                     await ol_m.edit(embed=em)
                 except:
                     return await interaction.followup.send(ephemeral=True, embed=make_embed.error_embed(title="適切な色を入力してください。", description="例: `#000000`"))
