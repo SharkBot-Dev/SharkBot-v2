@@ -70,6 +70,7 @@ class LoggingCog(commands.Cog):
                         color=discord.Color.red(),
                     )
                     .set_footer(text=f"mid:{message.id}")
+                    .add_field(name="削除したメッセージのあったチャンネル", value=message.channel.mention)
                     .set_author(
                         name=f"{message.author.name}",
                         icon_url=message.author.avatar.url
@@ -252,6 +253,7 @@ class LoggingCog(commands.Cog):
                         color=discord.Color.yellow(),
                     )
                     .set_footer(text=f"mid:{after.id}")
+                    .add_field(name="削除したメッセージのあったチャンネル", value=before.channel.mention)
                     .set_author(
                         name=f"{after.author.name}",
                         icon_url=after.author.avatar.url
