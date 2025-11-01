@@ -153,7 +153,7 @@ def invite_auth_backend():
 
         add_role(settings.TOKEN, user_info["id"], usermoney["Guild"], usermoney["Role"])
 
-        resp = make_response(jsonify({"status": "success", "redirect": "/login"}))
+        resp = make_response(jsonify({"status": "success", "redirect": "/login", 'message': usermoney.get('Message', 'このままページを閉じてもらって構いません。')}))
         resp.set_cookie('user_info', json.dumps(user_info))
         return resp
 

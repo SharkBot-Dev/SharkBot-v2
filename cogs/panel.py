@@ -85,11 +85,6 @@ class AuthGroup(app_commands.Group):
         説明: str,
         ロール: discord.Role,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.channel.send(
             embed=discord.Embed(
                 title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
@@ -114,11 +109,6 @@ class AuthGroup(app_commands.Group):
         説明: str,
         ロール: discord.Role,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.channel.send(
             embed=discord.Embed(
                 title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
@@ -174,8 +164,10 @@ class AuthGroup(app_commands.Group):
         タイトル: str,
         説明: str,
         ロール: discord.Role,
+        web認証成功時に表示するメッセージ: str = 'このままページを閉じてもらって構いません。'
     ):
-        await interaction.channel.send(
+        await interaction.response.defer(ephemeral=True)
+        msg = await interaction.channel.send(
             embed=discord.Embed(
                 title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
             ),
@@ -183,8 +175,16 @@ class AuthGroup(app_commands.Group):
                 discord.ui.Button(label="認証", custom_id=f"boostauth+{ロール.id}")
             ),
         )
-        await interaction.response.send_message(
-            embed=discord.Embed(title="作成しました。", color=discord.Color.green()),
+
+        db = interaction.client.async_db["MainTwo"].WebAuthMessage
+        await db.update_one(
+            {"Channel": interaction.channel.id, "Message": msg.id},
+            {'$set': {"Channel": interaction.channel.id, "Message": msg.id, 'Text': web認証成功時に表示するメッセージ}},
+            upsert=True,
+        )
+
+        await interaction.followup.send(
+            embed=make_embed.success_embed(title="作成しました。", description=f'以下をWeb認証成功時に表示します。\n```{web認証成功時に表示するメッセージ}```'),
             ephemeral=True,
         )
 
@@ -1042,18 +1042,38 @@ class PanelCog(commands.Cog):
                                     "あなたは指定されたロールを持っていないため、認証できません。",
                                     ephemeral=True,
                                 )
+                            
+                        message_db = interaction.client.async_db["MainTwo"].WebAuthMessage
+                        msg_ = await message_db.find_one(
+                            {"Channel": interaction.channel.id, "Message": interaction.message.id}
+                        )
+
                         role = custom_id.split("+")[1]
                         code = self.randstring(30)
                         db = self.bot.async_db["Main"].MemberAddAuthRole
-                        await db.update_one(
-                            {"Guild": str(interaction.guild.id), "Code": code},
-                            {"$set": {
-                                "Guild": str(interaction.guild.id),
-                                "Code": code,
-                                "Role": role,
-                            }},
-                            upsert=True,
-                        )
+
+                        if not msg_:
+                            await db.update_one(
+                                {"Guild": str(interaction.guild.id), "Code": code},
+                                {"$set": {
+                                    "Guild": str(interaction.guild.id),
+                                    "Code": code,
+                                    "Role": role
+                                }},
+                                upsert=True,
+                            )
+                        else:
+                            await db.update_one(
+                                {"Guild": str(interaction.guild.id), "Code": code},
+                                {"$set": {
+                                    "Guild": str(interaction.guild.id),
+                                    "Code": code,
+                                    "Role": role,
+                                    'Message': msg_.get('Text', 'このままページを閉じてもらって構いません。')
+                                }},
+                                upsert=True,
+                            )
+                            
                         await interaction.followup.send(
                             embed=discord.Embed(color=discord.Color.green(), title='Web認証をする', description="この認証パネルは、Webにアクセスする必要があります。\n以下のボタンからアクセスして認証してください。\n\n追記: あなたの参加しているサーバーが取得されます。\nそれらの情報は、\nサーバーオーナーの禁止したサーバーに参加しているか確認するために使用されます。"),
                             ephemeral=True,
@@ -2241,10 +2261,6 @@ class PanelCog(commands.Cog):
         説明: str,
         カテゴリ: discord.CategoryChannel = None,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
         msg = await interaction.channel.send(
             embed=discord.Embed(
                 title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
