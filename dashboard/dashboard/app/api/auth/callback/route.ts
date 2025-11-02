@@ -1,14 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { randomUUID } from "crypto";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
+export async function GET(request: NextRequest) {
+  const { searchParams } = request.nextUrl;
   const code = searchParams.get("code");
 
   if (!code) return NextResponse.redirect(new URL("/", request.url));
 
-  // アクセストークン取得
+  const redirect_url_base = "https://dashboard.sharkbot.xyz";
+
   const tokenData = new URLSearchParams({
     client_id: process.env.DISCORD_CLIENT_ID!,
     client_secret: process.env.DISCORD_CLIENT_SECRET!,
@@ -39,20 +40,20 @@ export async function GET(request: Request) {
   const db = await connectDB();
   const sessionId = randomUUID();
 
-  await db.db('Dashboard').collection("Sessions").insertOne({
+  await db.db("Dashboard").collection("Sessions").insertOne({
     session_id: sessionId,
     user,
     guilds,
     createdAt: new Date(),
   });
 
-  const response = NextResponse.redirect(new URL("/dashboard", request.url));
+  const origin = request.nextUrl.origin;
+  const response = NextResponse.redirect(`${redirect_url_base}/dashboard`);
   response.cookies.set("session_id", sessionId, {
     path: "/",
     httpOnly: true,
-    // secure: true,    // ✅ HTTPSのみ
     sameSite: "lax",
-    maxAge: 60 * 60 * 24, // 1日
+    maxAge: 60 * 60 * 24,
   });
 
   return response;
