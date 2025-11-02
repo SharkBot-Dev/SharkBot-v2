@@ -46,14 +46,14 @@ export default async function EconomyPage({ params }: { params: { guildid: strin
     }
 
     const db = await connectDB();
-    const c_name_findone = await db.db("Main").collection("ServerMoneyCurrency").findOne({ Guild: Long.fromString(guildid) });
+    const c_name_findone = await db.db("Main").collection("ServerMoneyCurrency").findOne({ _id: guildid as any });
 
     let c_name: string | undefined = undefined;
 
     if (c_name_findone != null) {
-        c_name = c_name_findone.Title;
+        c_name = c_name_findone.Name;
     } else {
-        c_name = "🪙"
+        c_name = "コイン"
     }
 
     return (
