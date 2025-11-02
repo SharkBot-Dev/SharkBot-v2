@@ -21,7 +21,7 @@ export default async function GuildLayout({
   return (
     <div className="flex min-h-screen bg-gray-100">
       <aside className="w-64 bg-black border-r border-gray-200 p-4">
-        <h1 className="text-2xl mt-3">{guild.name}の設定</h1>
+        <h1 className="text-2xl mt-3">SharkBot</h1>
         <nav className="space-y-2">
           <a
             href={`/dashboard/`}

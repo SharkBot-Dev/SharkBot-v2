@@ -131,10 +131,10 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
                                     <strong>{info.ThreadName}</strong>
                                     <span className="text-gray-400 text-sm ml-2">
                                         <form action={deleteData}>
-                                            <input name="channel" defaultValue={channelId} hidden></input>
-                                            {channelsData.map((ch: any) => ch.id === channelId ? `${ch.name}` : '')}　
                                             <button type="submit"
-                                            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 rounded">削除</button>
+                                            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 rounded">❌</button>　
+                                            <input name="channel" defaultValue={channelId} hidden></input>
+                                            {channelsData.map((ch: any) => ch.id === channelId ? `${ch.name}` : '')}
                                         </form>
                                     </span>
                                 </span>
