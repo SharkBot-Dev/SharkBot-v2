@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import { redirect } from "next/navigation";
 
-export default async function JoinMessagePage({ params }: { params: { guildid: string } }) {
+export default async function AutoTheradPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
         "use server";
 

@@ -70,6 +70,14 @@ export default async function GuildLayout({
             レベル
           </a>
         </nav>
+        <nav className="space-y-2">
+          <a
+            href={`/dashboard/settings/${guildid}/economy`}
+            className="block p-2 rounded hover:bg-gray-100"
+          >
+            サーバー内経済
+          </a>
+        </nav>
       </aside>
 
       {/* メインコンテンツ */}

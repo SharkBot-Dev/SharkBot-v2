@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
 
-export default async function JoinMessagePage({ params }: { params: { guildid: string } }) {
+export default async function LevelPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
         "use server";
 
