@@ -62,6 +62,14 @@ export default async function GuildLayout({
             自動スレッド作成
           </a>
         </nav>
+        <nav className="space-y-2">
+          <a
+            href={`/dashboard/settings/${guildid}/level`}
+            className="block p-2 rounded hover:bg-gray-100"
+          >
+            レベル
+          </a>
+        </nav>
       </aside>
 
       {/* メインコンテンツ */}

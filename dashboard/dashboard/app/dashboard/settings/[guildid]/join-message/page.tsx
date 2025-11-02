@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
+import ToggleButton from "@/app/components/ToggleButton";
 
 export default async function JoinMessagePage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -16,13 +17,21 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
         const guild = await getGuild(sessionId, guildid);
         if (!guild) return;
 
+        const checkenable = formData.get("checkenable") === "true" || formData.get("checkenable") === "on";
+
+        const db = await connectDB();
+
+        if (!checkenable) {
+            await db.db("Main").collection("WelcomeMessage").deleteOne({ Guild: Long.fromString(guildid) });
+            return;
+        }
+
         const title = (formData.get("title") as string)?.slice(0, 100);
         const desc = (formData.get("desc") as string)?.slice(0, 500);
         const channel = formData.get("channel") as string;
 
         if (!title || !desc || !channel) return;
 
-        const db = await connectDB();
         await db.db("Main").collection("WelcomeMessage").updateOne(
             { Guild: new Long(guildid), Channel: new Long(channel) },
             {
@@ -68,6 +77,8 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
     let title: string | undefined = undefined;
     let desc: string | undefined = undefined;
 
+    const enabled = !!find_setting;
+
     if (find_setting != null) {
 
         title = find_setting.Title;
@@ -87,22 +98,26 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
         <h1 className="text-2xl font-bold mb-4">{guild.name} の挨拶メッセージ設定</h1>
 
         <form action={sendData} className="flex flex-col gap-2">
+            <span className="font-semibold mb-1">機能を有効にする</span>
+            <ToggleButton name="checkenable" defaultValue={enabled} />
+
+            <span className="font-semibold mb-1">タイトル</span>
             <input
             type="text"
             name="title"
             className="border p-2"
             placeholder="タイトル"
             defaultValue={title}
-            required
             />
+            <span className="font-semibold mb-1">説明</span>
             <textarea
             name="desc"
             className="border p-2"
             placeholder="説明"
             defaultValue={desc}
-            required
             />
 
+            <span className="font-semibold mb-1">送信先チャンネル</span>
             <select name="channel" className="border p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-black-500">
             {channelsData.map((ch: any) => (
                 <option key={ch.id} value={ch.id}>
