@@ -6,7 +6,7 @@ export default async function GuildLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { guildid: string };
+  params: any;
 }) {
   const { guildid } = await params;
 
