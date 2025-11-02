@@ -40,6 +40,14 @@ export default async function GuildLayout({
         </nav>
         <nav className="space-y-2">
           <a
+            href={`/dashboard/settings/${guildid}/commands`}
+            className="block p-2 rounded hover:bg-gray-100"
+          >
+            コマンド一覧
+          </a>
+        </nav>
+        <nav className="space-y-2">
+          <a
             href={`/dashboard/settings/${guildid}/join-message`}
             className="block p-2 rounded hover:bg-gray-100"
           >
