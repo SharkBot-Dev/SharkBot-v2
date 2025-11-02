@@ -24,10 +24,42 @@ export default async function GuildLayout({
         <h1 className="text-2xl mt-3">{guild.name}の設定</h1>
         <nav className="space-y-2">
           <a
+            href={`/dashboard/`}
+            className="block p-2 rounded hover:bg-gray-100"
+          >
+            サーバー選択
+          </a>
+        </nav>
+        <nav className="space-y-2">
+          <a
             href={`/dashboard/settings/${guildid}`}
             className="block p-2 rounded hover:bg-gray-100"
           >
             ホーム
+          </a>
+        </nav>
+        <nav className="space-y-2">
+          <a
+            href={`/dashboard/settings/${guildid}/join-message`}
+            className="block p-2 rounded hover:bg-gray-100"
+          >
+            よろしくメッセージ
+          </a>
+        </nav>
+        <nav className="space-y-2">
+          <a
+            href={`/dashboard/settings/${guildid}/leave-message`}
+            className="block p-2 rounded hover:bg-gray-100"
+          >
+            さようならメッセージ
+          </a>
+        </nav>
+        <nav className="space-y-2">
+          <a
+            href={`/dashboard/settings/${guildid}/auto-thread`}
+            className="block p-2 rounded hover:bg-gray-100"
+          >
+            自動スレッド作成
           </a>
         </nav>
       </aside>
