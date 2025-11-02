@@ -72,6 +72,14 @@ export default async function GuildLayout({
         </nav>
         <nav className="space-y-2">
           <a
+            href={`/dashboard/settings/${guildid}/expand`}
+            className="block p-2 rounded hover:bg-gray-100"
+          >
+            メッセージ展開
+          </a>
+        </nav>
+        <nav className="space-y-2">
+          <a
             href={`/dashboard/settings/${guildid}/level`}
             className="block p-2 rounded hover:bg-gray-100"
           >
