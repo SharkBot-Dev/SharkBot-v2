@@ -19,14 +19,36 @@ class LoggingCog(commands.Cog):
             if event:
                 dbfind = await db.find_one({"Guild": guild.id, "Event": event}, {"_id": False})
                 if dbfind:
-                    return dbfind.get("Webhook", None)
+                    try:
+                        wh = dbfind.get("Webhook", None)
+
+                        if not wh:
+                            wh = await guild.get_channel(dbfind.get('Channel')).create_webhook(name='SharkBot-Log')
+                            wh = wh.url
+                        else:
+                            pass
+                        await db.update_one({"Guild": guild.id, "Channel": dbfind.get('Channel'), 'Event': event}, {"$set": {"Webhook": wh}}, upsert=True)
+                        return wh
+                    except:
+                        return None
 
             dbfind = await db.find_one({"Guild": guild.id, "Event": {"$exists": False}}, {"_id": False})
         except:
             return None
         if dbfind is None:
             return None
-        return dbfind.get("Webhook", None)
+        try:
+            wh = dbfind.get("Webhook", None)
+
+            if not wh:
+                wh = await guild.get_channel(dbfind.get('Channel')).create_webhook(name='SharkBot-Log')
+                wh = wh.url
+            else:
+                pass
+            await db.update_one({"Guild": guild.id, "Channel": dbfind.get('Channel')}, {"$set": {"Webhook": wh}}, upsert=True)
+            return wh
+        except:
+            return None
 
     async def is_ignore_channel(self, guild: discord.Guild, channel: discord.abc.GuildChannel):
         db = self.bot.async_db["MainTwo"].LoggingIgnore
