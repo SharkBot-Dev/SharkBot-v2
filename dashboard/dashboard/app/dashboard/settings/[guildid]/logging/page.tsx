@@ -136,7 +136,7 @@ export default async function LoggingPage({ params }: { params: { guildid: strin
                     defaultValue={eventChannelMap[event.value] ?? ""}
                   >
                     <option value="">未選択</option>
-                    {channelsData?.map((ch: any) => (
+                    {channelsData?.filter((ch: any) => ch.type === 0).map((ch: any) => (
                       <option key={ch.id} value={ch.id}>
                         {ch.name}
                       </option>
