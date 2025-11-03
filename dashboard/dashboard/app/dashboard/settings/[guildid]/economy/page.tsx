@@ -61,7 +61,7 @@ export default async function EconomyPage({ params }: { params: { guildid: strin
             ItemName: item,
             Role: 0,
             DM: "なし",
-            Money: money
+            Money: new Long(Number(money))
         }}, {
             upsert: true
         })
@@ -128,7 +128,7 @@ export default async function EconomyPage({ params }: { params: { guildid: strin
                     <li key={item.ItemName} className="p-3 flex justify-between items-center">
                         <span>
                         <strong>
-                            {item.ItemName} — {item.Money}
+                            {item.ItemName} — {new String(item.Money)}
                             {c_name}
                         </strong>
                         </span>
