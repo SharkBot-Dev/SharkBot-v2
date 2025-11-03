@@ -255,8 +255,8 @@ Sharkアカウント: {sharkaccount_count}人
         try:
             await raw.modify_current_member(str(interaction.guild.id), avatarUri=avatar, bannerUri=banner, nick=名前)
         except Exception as e:
-            return await interaction.followup.send(embed=discord.Embed(title="レートリミットです。", color=discord.Color.red(), description=f"何分かお待ちください。\n\nエラーコード\n```{e}```"))
-        await interaction.followup.send(embed=discord.Embed(title="Botのアバターなどをカスタマイズしました。", color=discord.Color.green()))
+            return await interaction.followup.send(embed=make_embed.error_embed(title="レートリミットです。", description=f"何分かお待ちください。\n\nエラーコード\n```{e}```"))
+        await interaction.followup.send(embed=make_embed.success_embed(title="Botのアバターなどをカスタマイズしました。"))
 
 async def setup(bot):
     await bot.add_cog(BotCog(bot))
