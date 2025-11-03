@@ -20,84 +20,46 @@ export default async function GuildLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <aside className="w-64 bg-black border-r border-gray-200 p-4">
-        <h1 className="text-2xl mt-3">SharkBot</h1>
-        <nav className="space-y-2">
-          <a
-            href={`/dashboard/`}
-            className="block p-2 rounded hover:bg-gray-100"
-          >
+      <aside className="fixed top-0 left-0 h-screen w-64 bg-black border-r border-gray-200 p-4 overflow-y-auto">
+        <h1 className="text-2xl mt-3 text-white">SharkBot</h1>
+
+        <nav className="space-y-2 mt-6">
+          <a href={`/dashboard/`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             サーバー選択
           </a>
-        </nav>
-        <nav className="space-y-2">
-          <a
-            href={`/dashboard/settings/${guildid}`}
-            className="block p-2 rounded hover:bg-gray-100"
-          >
+          <a href={`/dashboard/settings/${guildid}`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             ホーム
           </a>
-        </nav>
-        <nav className="space-y-2">
-          <a
-            href={`/dashboard/settings/${guildid}/commands`}
-            className="block p-2 rounded hover:bg-gray-100"
-          >
+          <a href={`/dashboard/settings/${guildid}/commands`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             コマンド一覧
           </a>
-        </nav>
-        <nav className="space-y-2">
-          <a
-            href={`/dashboard/settings/${guildid}/join-message`}
-            className="block p-2 rounded hover:bg-gray-100"
-          >
+          <a href={`/dashboard/settings/${guildid}/join-message`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             よろしくメッセージ
           </a>
-        </nav>
-        <nav className="space-y-2">
-          <a
-            href={`/dashboard/settings/${guildid}/leave-message`}
-            className="block p-2 rounded hover:bg-gray-100"
-          >
+          <a href={`/dashboard/settings/${guildid}/leave-message`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             さようならメッセージ
           </a>
-        </nav>
-        <nav className="space-y-2">
-          <a
-            href={`/dashboard/settings/${guildid}/auto-thread`}
-            className="block p-2 rounded hover:bg-gray-100"
-          >
+          <a href={`/dashboard/settings/${guildid}/auto-thread`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             自動スレッド作成
           </a>
-        </nav>
-        <nav className="space-y-2">
-          <a
-            href={`/dashboard/settings/${guildid}/expand`}
-            className="block p-2 rounded hover:bg-gray-100"
-          >
+          <a href={`/dashboard/settings/${guildid}/expand`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             メッセージ展開
           </a>
-        </nav>
-        <nav className="space-y-2">
-          <a
-            href={`/dashboard/settings/${guildid}/level`}
-            className="block p-2 rounded hover:bg-gray-100"
-          >
+          <a href={`/dashboard/settings/${guildid}/poll`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            投票
+          </a>
+          <a href={`/dashboard/settings/${guildid}/level`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             レベル
           </a>
-        </nav>
-        <nav className="space-y-2">
-          <a
-            href={`/dashboard/settings/${guildid}/economy`}
-            className="block p-2 rounded hover:bg-gray-100"
-          >
+          <a href={`/dashboard/settings/${guildid}/economy`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             サーバー内経済
           </a>
         </nav>
       </aside>
 
-      {/* メインコンテンツ */}
-      <main className="flex-1 p-6 bg-black">{children}</main>
+      <main className="flex-1 p-6 bg-black ml-64 text-white overflow-y-auto min-h-screen">
+        {children}
+      </main>
     </div>
   );
 }
