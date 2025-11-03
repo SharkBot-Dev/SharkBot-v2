@@ -131,8 +131,12 @@ export default async function AutoTheradPage({ params }: { params: { guildid: st
                                     <strong>{info.ThreadName}</strong>
                                     <span className="text-gray-400 text-sm ml-2">
                                         <form action={deleteData}>
-                                            <button type="submit"
-                                            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 rounded">❌</button>　
+                                            <button
+                                                type="submit"
+                                                className="bg-red-600 hover:bg-red-500 text-white font-semibold py-1 px-3 rounded"
+                                            >
+                                                ❌
+                                            </button>
                                             <input name="channel" defaultValue={channelId} hidden></input>
                                             {channelsData.map((ch: any) => ch.id === channelId ? `${ch.name}` : '')}
                                         </form>
