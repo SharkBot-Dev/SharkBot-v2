@@ -235,6 +235,7 @@ Sharkアカウント: {sharkaccount_count}人
         if アバター:
             av_io = io.BytesIO(await アバター.read())
             av_check = await check_nsfw(av_io)
+            av_check = av_check.get('safe', False)
             if not av_check:
                 return await interaction.followup.send(content="不適切なアバターなため、設定できません。")
             avatar = await raw.image_to_data_uri(io_=av_io)
@@ -244,6 +245,7 @@ Sharkアカウント: {sharkaccount_count}人
         if バナー:
             bn_io = io.BytesIO(await バナー.read())
             ba_check = await check_nsfw(bn_io)
+            ba_check = ba_check.get('safe', False)
             if not ba_check:
                 return await interaction.followup.send(content="不適切なバナーなため、設定できません。")
             banner = await raw.image_to_data_uri(io_=bn_io)
