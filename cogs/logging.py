@@ -1,3 +1,4 @@
+from typing import Optional
 from discord.ext import commands
 from discord import app_commands
 import discord
@@ -13,41 +14,84 @@ class LoggingCog(commands.Cog):
         self.bot = bot
         print("init -> LoggingCog")
 
-    async def get_logging_webhook(self, guild: discord.Guild, event: str | None = None):
+    async def get_logging_webhook(self, guild: discord.Guild, event: str):
         db = self.bot.async_db["Main"].EventLoggingChannel
-        try:
-            if event:
-                dbfind = await db.find_one({"Guild": guild.id, "Event": event}, {"_id": False})
-                if dbfind:
-                    try:
-                        wh = dbfind.get("Webhook", None)
 
-                        if not wh:
-                            wh = await guild.get_channel(dbfind.get('Channel')).create_webhook(name='SharkBot-Log')
-                            wh = wh.url
-                        else:
-                            pass
-                        await db.update_one({"Guild": guild.id, "Channel": dbfind.get('Channel'), 'Event': event}, {"$set": {"Webhook": wh}}, upsert=True)
-                        return wh
-                    except:
-                        return None
-
-            dbfind = await db.find_one({"Guild": guild.id, "Event": {"$exists": False}}, {"_id": False})
-        except:
-            return None
-        if dbfind is None:
-            return None
         try:
-            wh = dbfind.get("Webhook", None)
+            query = {"Guild": guild.id}
+            query['Event'] = event
+
+            dbfind = await db.find_one(query, {"_id": False})
+            if not dbfind:
+                dbfind = await db.find_one({"Guild": guild.id, "Event": {"$exists": False}}, {"_id": False})
+
+                if not dbfind:
+                    return None
+
+                channel_id = dbfind.get("Channel")
+                wh = dbfind.get("Webhook")
+
+                if not wh:
+                    dbfind_existing = await db.find_one(
+                        {"Guild": guild.id, "Channel": channel_id, "Webhook": {"$exists": True, "$ne": None}},
+                        {"Webhook": 1, "_id": 0},
+                    )
+
+                    if dbfind_existing and dbfind_existing.get("Webhook"):
+                        wh = dbfind_existing["Webhook"]
+                    else:
+                        channel = guild.get_channel(channel_id)
+                        if not channel or not isinstance(channel, discord.TextChannel):
+                            return None
+
+                        webhook = await channel.create_webhook(name="SharkBot-Log")
+                        wh = webhook.url
+
+                    await db.update_one(
+                        {"Guild": guild.id, "Channel": channel_id, "Event": event},
+                        {"$set": {"Webhook": wh}},
+                        upsert=True,
+                    )
+
+                return wh
+
+            channel_id = dbfind.get("Channel")
+            if not channel_id:
+                return None
+
+            wh = dbfind.get("Webhook")
 
             if not wh:
-                wh = await guild.get_channel(dbfind.get('Channel')).create_webhook(name='SharkBot-Log')
-                wh = wh.url
-            else:
-                pass
-            await db.update_one({"Guild": guild.id, "Channel": dbfind.get('Channel')}, {"$set": {"Webhook": wh}}, upsert=True)
+                dbfind_existing = await db.find_one(
+                    {"Guild": guild.id, "Channel": channel_id, "Webhook": {"$exists": True, "$ne": None}},
+                    {"Webhook": 1, "_id": 0},
+                )
+
+                if dbfind_existing and dbfind_existing.get("Webhook"):
+                    wh = dbfind_existing["Webhook"]
+                else:
+                    channel = guild.get_channel(channel_id)
+                    if not channel or not isinstance(channel, discord.TextChannel):
+                        return None
+
+                    webhook = await channel.create_webhook(name="SharkBot-Log")
+                    wh = webhook.url
+
+                await db.update_one(
+                    {"Guild": guild.id, "Channel": channel_id, "Event": event},
+                    {"$set": {"Webhook": wh}},
+                    upsert=True,
+                )
+
             return wh
-        except:
+
+        except discord.Forbidden:
+            await db.delete_many({"Guild": guild.id, "Channel": channel_id})
+            return None
+        except discord.NotFound:
+            await db.delete_one({"Guild": guild.id, "Channel": channel_id})
+            return None
+        except Exception as e:
             return None
 
     async def is_ignore_channel(self, guild: discord.Guild, channel: discord.abc.GuildChannel):
