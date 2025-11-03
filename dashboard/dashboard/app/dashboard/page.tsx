@@ -28,7 +28,7 @@ export default async function DashboardPage() {
         <h1 className="text-2xl mt-3">{user.username}#{user.discriminator}</h1>
       </div>
 
-      <h2 className="text-xl mb-4">あなたが所属しているサーバー</h2>
+      <h2 className="text-xl mb-4">あなたが持っているサーバー</h2>
       <ul className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {guilds.map((g: any) => (
           g.owner ? (

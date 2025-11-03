@@ -129,6 +129,15 @@ export default async function LeaveMessagePage({ params }: { params: { guildid: 
             <button type="submit" className="bg-blue-500 text-white p-2 rounded">
             設定
             </button>
+
+
+            <span className="font-semibold mb-1">使える関数</span>
+            <div className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow">
+                {"<name> .. 名前を埋め込みます。"}<br/>
+                {"<count> .. 現在の人数を埋め込みます。"}<br/>
+                {"<guild> .. サーバーの名前を埋め込みます。"}<br/>
+                {"<createdat> .. アカウント作成日を埋め込みます。"}<br/>
+            </div>
         </form>
         </div>
     );
