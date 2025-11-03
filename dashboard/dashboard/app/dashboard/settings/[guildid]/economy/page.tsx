@@ -49,7 +49,7 @@ export default async function EconomyPage({ params }: { params: { guildid: strin
         const item = formData.get('name');
         const money = formData.get('money');
 
-        if (!item) return;
+        if (!item || !money) return;
 
         const db = await connectDB();
 
