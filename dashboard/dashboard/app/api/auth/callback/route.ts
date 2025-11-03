@@ -6,9 +6,9 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const code = searchParams.get("code");
 
-  if (!code) return NextResponse.redirect(new URL("/", request.url));
-
   const redirect_url_base = "https://dashboard.sharkbot.xyz";
+
+  if (!code) return NextResponse.redirect(`${redirect_url_base}/`);
 
   const tokenData = new URLSearchParams({
     client_id: process.env.DISCORD_CLIENT_ID!,
