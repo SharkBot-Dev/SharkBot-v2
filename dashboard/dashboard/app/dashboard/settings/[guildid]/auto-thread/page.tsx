@@ -169,7 +169,7 @@ export default async function AutoTheradPage({ params }: { params: { guildid: st
                         className="border border-gray-700 bg-gray-800 text-white p-2 rounded"
                         required
                     >
-                        {channelsData.map((ch: any) => (
+                        {channelsData?.filter((ch: any) => ch.type === 0).map((ch: any) => (
                             <option key={ch.id} value={ch.id}>
                                 {ch.name}
                             </option>

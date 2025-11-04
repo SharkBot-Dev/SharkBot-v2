@@ -106,7 +106,7 @@ export default async function LevelPage({ params }: { params: { guildid: string 
                     defaultValue={selectedChannel}
                     className="border p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                    {channelsData.map((ch: any) => (
+                    {channelsData?.filter((ch: any) => ch.type === 0).map((ch: any) => (
                         <option key={ch.id} value={ch.id}>
                             {ch.name}
                         </option>

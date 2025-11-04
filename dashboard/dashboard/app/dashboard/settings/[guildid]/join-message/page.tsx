@@ -119,7 +119,7 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
 
             <span className="font-semibold mb-1">送信先チャンネル</span>
             <select name="channel" className="border p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-black-500">
-            {channelsData.map((ch: any) => (
+            {channelsData?.filter((ch: any) => ch.type === 0).map((ch: any) => (
                 <option key={ch.id} value={ch.id}>
                 {ch.name}
                 </option>
