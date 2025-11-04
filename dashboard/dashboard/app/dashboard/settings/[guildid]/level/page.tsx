@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { getGuild, getChannels } from "@/lib/discord/fetch";
+import { getGuild, getChannels, getRoles } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
@@ -52,6 +52,59 @@ export default async function LevelPage({ params }: { params: { guildid: string 
         }
     }
 
+    async function leveluprole_set(formData: FormData) {
+        "use server";
+
+        const { guildid } = await params;
+        const cookieStore = await cookies();
+        const sessionId = cookieStore.get("session_id")?.value;
+        if (!sessionId) return;
+
+        const guild = await getGuild(sessionId, guildid);
+        if (!guild) return;
+
+        const role = formData.get("role") as string;
+        const level = formData.get("level") as string;
+
+        const db = await connectDB();
+
+        await db.db("Main").collection("LevelingUpRole").updateOne(
+            { Guild: Long.fromString(guildid), Level: Long.fromString(level) },
+            {
+                $set: {
+                    Guild: Long.fromString(guildid),
+                    Level: Long.fromString(level),
+                    Role: Long.fromString(role)
+                },
+            },
+            { upsert: true }
+        );
+    }
+
+    async function deleteLevel(formData: FormData) {
+        "use server";
+
+        const { guildid } = await params;
+        const cookieStore = await cookies();
+        const sessionId = cookieStore.get("session_id")?.value;
+        if (!sessionId) return;
+
+        const guild = await getGuild(sessionId, guildid);
+        if (!guild) return;
+
+        if (!guildid) return;
+
+        const db = await connectDB();
+
+        const find_item = db.db("Main").collection("LevelingUpRole");
+
+        const level = formData.get('level');
+
+        if (!level) return;
+
+        find_item.deleteOne({Guild: new Long(guildid), Level: Long.fromString(level as any)})
+    }
+
     const { guildid } = await params;
     const cookieStore = await cookies();
     const sessionId = cookieStore.get("session_id")?.value;
@@ -75,6 +128,17 @@ export default async function LevelPage({ params }: { params: { guildid: string 
 
     if (!channelsData) return <p>サーバーのチャンネルを取得できませんでした。</p>;
 
+    const guild_roles = await getRoles(guildid);
+
+    const RolesData = (() => {
+        if (!guild_roles) return null;
+        if (Array.isArray((guild_roles as any).data)) return (guild_roles as any).data;
+        if (Array.isArray(guild_roles)) return guild_roles as any;
+        return null;
+    })();
+
+    if (!RolesData) return <p>サーバーのロールを取得できませんでした。</p>;
+
     const db = await connectDB();
     const leveling_setting_findone = await db.db("Main").collection("LevelingSetting").findOne({ Guild: Long.fromString(guildid) });
     const leveling_channel_findone = await db.db("Main").collection("LevelingUpAlertChannel").findOne({ Guild: Long.fromString(guildid) });
@@ -83,9 +147,11 @@ export default async function LevelPage({ params }: { params: { guildid: string 
     const desc = leveling_setting_findone?.Message ?? "`{user}`さんの\nレベルが「{newlevel}」になったよ！";
     const selectedChannel = leveling_channel_findone?.Channel ? String(leveling_channel_findone.Channel) : "";
 
+    const leveling_role_find = await db.db("Main").collection("LevelingUpRole").find({Guild: new Long(guildid)}).toArray();
+
     return (
         <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">{guild.name} のレベルアップメッセージ設定</h1>
+            <h1 className="text-2xl font-bold mb-4">{guild.name} のレベルアップ設定</h1>
 
             <form action={sendData} className="flex flex-col gap-3">
                 <span className="font-semibold mb-1">機能を有効にする</span>
@@ -116,7 +182,81 @@ export default async function LevelPage({ params }: { params: { guildid: string 
                 <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                     設定を保存
                 </button>
-            </form>
+            </form><br/>
+
+            <div className="mb-6">
+                <h2 className="text-lg font-semibold mb-2">
+                    レベルアップ時に追加するロール
+                </h2>
+                {leveling_role_find.length > 0 ? (
+                    <ul className="border rounded divide-y divide-gray-700">
+                        {leveling_role_find.map((item) => {
+                            const role = RolesData.find(
+                                (ro: any) =>
+                                    String(ro.id) === String(item.Role)
+                            );
+                            return (
+                                <li
+                                    key={String(item.Role)}
+                                    className="p-3 flex justify-between items-center"
+                                >
+                                    <span>
+                                        <strong>
+                                            {role
+                                                ? role.name
+                                                : "不明なロール"}{" "}
+                                            - {String(item.Level)}レベル
+                                        </strong>
+                                    </span>
+                                    <form action={deleteLevel}>
+                                        <input
+                                            type="hidden"
+                                            name="level"
+                                            value={String(item.Level)}
+                                        />
+                                        <button
+                                            type="submit"
+                                            className="bg-red-600 hover:bg-red-500 text-white font-semibold py-1 px-3 rounded"
+                                        >
+                                            ❌
+                                        </button>
+                                    </form>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                ) : (
+                    <p className="text-gray-400">設定がまだありません。</p>
+                )}
+            </div>
+
+            <div className="mb-6">
+
+                <form action={leveluprole_set} className="flex flex-col gap-3">
+                    <span className="font-semibold mb-1">ロールを選択</span>
+                    <select
+                        name="role"
+                        className="border p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        {RolesData?.map((ch: any) => (
+                            <option key={ch.id} value={ch.id}>
+                                {ch.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    <span className="font-semibold mb-1">レベルを入力</span>
+                    <input
+                    type="number"
+                    name="level"
+                    className="border p-2"
+                    />
+
+                    <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                        追加
+                    </button>
+                </form>
+            </div>
         </div>
     );
 }
