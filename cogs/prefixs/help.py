@@ -57,9 +57,16 @@ class Prefixs_HelpCog(commands.Cog):
                     continue
                 if "save" == cmd.name:
                     continue
+                if "task" == cmd.name:
+                    continue
+                if "send" == cmd.name:
+                    continue
 
                 al = ', '.join(cmd.aliases)
-                embed.add_field(name=cmd.name, value=cmd.description + f"\n別名: " + al if al else "なし", inline=False)
+
+                al = al if al else "なし"
+
+                embed.add_field(name=cmd.name, value=cmd.description + f"\n別名: " + al, inline=False)
 
             ems.append(embed)
 
