@@ -847,21 +847,21 @@ class ImageGroup(app_commands.Group):
                 msg = await interaction.response.send_message(
                     embed=make_embed.success_embed(
                         title="5000兆円ほしい！"
-                    ).set_image(url=f"https://gsapi.cbrx.io/image?top={上}&bottom={下}")
+                    ).set_image(url=f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(上)}&bottom={urllib.parse.quote(下)}")
                 )
             else:
                 msg = await interaction.response.send_message(
                     embed=make_embed.success_embed(
                         title="5000兆円ほしい！"
                     ).set_image(
-                        url=f"https://gsapi.cbrx.io/image?top={上}&bottom={下}&noalpha=true"
+                        url=f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(上)}&bottom={urllib.parse.quote(下)}&noalpha=true"
                     )
                 )
         else:
             msg = await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="5000兆円ほしい！"
-                ).set_image(url=f"https://gsapi.cbrx.io/image?top={上}&bottom={下}")
+                ).set_image(url=f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(上)}&bottom={urllib.parse.quote(下)}")
             )
 
     @app_commands.command(name="emoji-kitchen", description="絵文字を合体させます。")
