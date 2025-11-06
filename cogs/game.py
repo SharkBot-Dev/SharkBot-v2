@@ -1,5 +1,6 @@
 import base64
 import io
+import time
 from discord.ext import commands
 import discord
 import random
@@ -20,6 +21,8 @@ from models import make_embed, quest
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from ossapi import OssapiAsync
+
+cooldown_shiritori = {}
 
 class ScratchGroup(app_commands.Group):
     def __init__(self):
@@ -772,6 +775,87 @@ class GameCog(commands.Cog):
         await asyncio.sleep(0.8)
             
         await interaction.channel.send(embed=make_embed.error_embed(description=f"残念！正解は {number} でした。", title="ゲームオーバー"))
+
+    @game.command(name="shiritori", description="しりとりをします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def shiritori(self, interaction: discord.Interaction):
+        db = self.bot.async_db["MainTwo"].ShiritoriChannel
+        await db.update_one(
+            {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+            {"$set": {"Guild": interaction.guild.id, "Channel": interaction.channel.id}},
+            upsert=True,
+        )
+
+        await interaction.response.send_message(embed=make_embed.success_embed(title="しりとりを開始しました。", description="ひらがなのみ使用可能です。\nんで終わるか、同じワードを送信すると負けです。"))
+
+    @commands.Cog.listener("on_message")
+    async def shiritori_on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+        if not message.guild:
+            return
+
+        db = self.bot.async_db["MainTwo"].ShiritoriChannel
+        dbfind = await db.find_one({"Guild": message.guild.id, "Channel": message.channel.id})
+
+        if dbfind is None:
+            return
+        
+        word = message.content
+
+        if word == "":
+            return
+
+        current_time = time.time()
+        last_message_time = cooldown_shiritori.get(message.author.id, 0)
+        if current_time - last_message_time < 2:
+            return
+        cooldown_shiritori[message.author.id] = current_time
+
+        if word == "reset":
+            await db.update_one(
+                {"Guild": message.guild.id, "Channel": message.channel.id},
+                {"$set": {"LastWord": None, "Word": []}},
+                upsert=True,
+            )
+            return await message.reply(embed=make_embed.success_embed(title="しりとりをリセットしました。"))
+
+        if not re.fullmatch(r"[ぁ-んー゛゜、。！？]+", word):
+            await message.reply(embed=make_embed.error_embed(title="ひらがなのみ使用可能です。"))
+            return
+
+        if word.endswith("ん"):
+            await message.reply(embed=make_embed.error_embed(title="あなたの負け", description="「ん」で終わったため、負けです。"))
+            return
+            
+        last_word = dbfind.get('LastWord')
+        if last_word:
+            if word[0] != last_word[-1]:
+                await message.reply(embed=make_embed.error_embed(title="始まりの文字が違います。", description=f"前の単語の最後の文字「{last_word[-1]}」から始まっていません！"))
+                return
+
+        used_words = dbfind.get('Word', [])
+        if word in used_words:
+            await message.reply(embed=make_embed.error_embed(title="あなたの負け", description="その言葉はすでに使われています！"))
+            await db.update_one(
+                {"Guild": message.guild.id, "Channel": message.channel.id},
+                {"$set": {"LastWord": None, "Word": []}},
+                upsert=True,
+            )
+            return
+
+        await db.update_one(
+            {"Guild": message.guild.id, "Channel": message.channel.id},
+            {
+                "$set": {"LastWord": word},
+                "$addToSet": {"Word": word}
+            },
+            upsert=True,
+        )
+
+        await message.add_reaction('✅')
 
     @game.command(name="bot-quest", description="Botの出してくるクエストに挑戦するゲームです。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
