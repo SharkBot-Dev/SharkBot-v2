@@ -243,6 +243,9 @@ async def setup(bot: commands.Bot):
     async def make_it_a_quote(
         interaction: discord.Interaction, message: discord.Message
     ):
+        if message.content == "":
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="メッセージ内容が空です。", description="メッセージ内容があるものを選択してください。"))
+
         await interaction.response.defer()
         av = message.author.avatar if message.author.avatar else message.author.default_avatar
         av = await av.read()
