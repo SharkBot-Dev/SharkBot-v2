@@ -6,6 +6,8 @@ import settings
 
 import requests
 
+from uvicorn.middleware.wsgi import WSGIMiddleware
+
 app = Flask(__name__, static_folder="./static/", template_folder="./Templates/")
 
 client = MongoClient('mongodb://localhost:27017/')
@@ -178,5 +180,5 @@ def login():
         return render_template("login.html", name=us["username"], icon=f"https://cdn.discordapp.com/avatars/{us['id']}/{us['avatar']}")
     except:
         return render_template("login.html", name=f"未ログイン", icon="https://www.sharkbot.xyz/static/LoginUser.png")
-
-app.run('0.0.0.0', port=5000, debug=False)
+    
+asgi_app = WSGIMiddleware(app)
