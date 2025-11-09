@@ -1300,6 +1300,62 @@ class FunCog(commands.Cog):
     fun.add_command(SayGroup())
     fun.add_command(BirthdayGroup())
 
+    @commands.Cog.listener("on_message")
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+        
+        if not message.guild:
+            return
+        
+        db = self.bot.async_db['MainTwo'].Hiroyuki
+
+        dbfind = await db.find_one({"Guild": message.guild.id, "Channel": message.channel.id})
+        if dbfind is None:
+            return
+        
+        try:
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"http://localhost:5113/?text={urllib.parse.quote(message.clean_content)}"
+                ) as response:
+                    wh = discord.Webhook.from_url(dbfind.get('WebHook'), session=session)
+                    await wh.send(content=await response.text(), username="ひろゆき", avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg")
+
+        except:
+            await db.delete_one(
+                {"Guild": message.guild.id}
+            )
+            return await message.channel.send(embed=make_embed.error_embed(title="ひろゆきが消滅してしまいました。", description="消滅したため登録を解除しました。"))
+
+    @fun.command(name="hiroyuki", description="ひろゆきを召喚します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def hiroyuki(self, interaction: discord.Interaction):
+        if interaction.channel.type != discord.ChannelType.text:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="テキストチャンネルでのみ召喚できます。"))
+
+        await interaction.response.defer()
+
+        db = interaction.client.async_db['MainTwo'].Hiroyuki
+
+        dbfind = await db.find_one({"Guild": interaction.guild.id})
+        if dbfind is None:
+            wh = await interaction.channel.create_webhook(name="ひろゆき")
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$set": {"Channel": interaction.channel.id, 'WebHook': wh.url}},
+                upsert=True
+            )
+            await interaction.followup.send(embed=make_embed.success_embed(title="ひろゆきを召喚しました。"))
+        else:
+            await db.delete_one(
+                {"Guild": interaction.guild.id}
+            )
+            await interaction.followup.send(embed=make_embed.success_embed(title="ひろゆきを退出させました。"))
+
     @fun.command(name="ranking", description="様々なランキングを表示します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
