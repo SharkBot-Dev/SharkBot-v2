@@ -16,7 +16,8 @@ import pykakasi
 from discord import app_commands
 import requests
 from consts import settings
-from models import command_disable, make_embed, miq
+from models import command_disable, make_embed, miq, markov
+from models.markov import HIROYUKI_TEXT
 import asyncio
 import uuid
 from deep_translator import GoogleTranslator
@@ -1326,11 +1327,8 @@ class FunCog(commands.Cog):
         try:
             
             async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"http://localhost:5113/?text={urllib.parse.quote(message.clean_content)}"
-                ) as response:
-                    wh = discord.Webhook.from_url(dbfind.get('WebHook'), session=session)
-                    await wh.send(content=await response.text(), username="ひろゆき", avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg")
+                wh = discord.Webhook.from_url(dbfind.get('WebHook'), session=session)
+                await wh.send(content=await markov.generate_text(HIROYUKI_TEXT, message.clean_content, 100), username="ひろゆき", avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg")
 
         except:
             await db.delete_one(
