@@ -4,6 +4,7 @@ import io
 import json
 import random
 import re
+import time
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import unicodedata
 import aiohttp
@@ -26,6 +27,8 @@ import urllib.parse
 from models import quest
 
 import cowsay
+
+cooldown_hiroyuki = {}
 
 class EditImageView(discord.ui.View):
     def __init__(self, user: discord.User):
@@ -1314,6 +1317,12 @@ class FunCog(commands.Cog):
         if dbfind is None:
             return
         
+        current_time = time.time()
+        last_message_time = cooldown_hiroyuki.get(message.guild.id, 0)
+        if current_time - last_message_time < 3:
+            return
+        cooldown_hiroyuki[message.guild.id] = current_time
+
         try:
             
             async with aiohttp.ClientSession() as session:
