@@ -570,6 +570,32 @@ class SearchCog(commands.Cog):
         embed.add_field(name="絵文字", value=text_emoji, inline=False)
         await interaction.edit_original_response(embed=embed)
 
+    @search.command(name="tag", description="サーバータグを何人がつけているかを検索します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def tag_search(self, interaction: discord.Interaction, サーバータグ名: str):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
+        await interaction.response.send_message(embed=make_embed.success_embed(title="検索中です..", description="しばらくお待ちください。"))
+
+        await asyncio.sleep(1)
+
+        count = 0
+        tag_member = []
+
+        members = interaction.guild.members
+        for m in members:
+            if m.primary_guild.tag == サーバータグ名:
+                count += 1
+                tag_member.append(m.name + f" ({m.id})")
+        
+        embed = make_embed.success_embed(title="サーバータグを検索しました。")
+        embed.add_field(name="何人がつけているか", value=str(count) + "人", inline=False)
+        embed.add_field(name="誰がつけているか (20人まで)", value="\n".join(tag_member[:20]))
+
+        await interaction.edit_original_response(embed=embed)
+
     @search.command(name="user", description="ユーザーを検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
