@@ -2,7 +2,7 @@ from discord.ext import commands
 import discord
 from discord import app_commands
 
-from models import command_disable
+from models import command_disable, make_embed
 import re
 
 
@@ -25,7 +25,7 @@ class ChannelCog(commands.Cog):
     async def channel_info(self, interaction: discord.Interaction):
         await interaction.response.defer()
         channel = interaction.channel
-        embed = discord.Embed(title="チャンネルの情報", color=discord.Color.green())
+        embed = make_embed.success_embed(title="チャンネルの情報")
         embed.add_field(name="名前", value=channel.name, inline=False)
         embed.add_field(name="ID", value=str(channel.id), inline=False)
         if channel.category:
@@ -56,16 +56,14 @@ class ChannelCog(commands.Cog):
                 interaction.guild.default_role, overwrite=overwrite
             )
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="プライベートチャンネルにしました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="プライベートチャンネルにしました。"
                 )
             )
         except discord.Forbidden as e:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="プライベートチャンネルにできませんでした。",
-                    color=discord.Color.red(),
                     description="権限エラーです。",
                 )
             )
@@ -90,16 +88,14 @@ class ChannelCog(commands.Cog):
                 interaction.guild.default_role, overwrite=overwrite
             )
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="プライベートチャンネルを解除しました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="プライベートチャンネルを解除しました。"
                 )
             )
         except discord.Forbidden as e:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="プライベートチャンネルを解除することに失敗しました。",
-                    color=discord.Color.red(),
                     description="権限エラーです。",
                 )
             )
@@ -118,23 +114,21 @@ class ChannelCog(commands.Cog):
             await interaction.response.defer()
             await interaction.channel.edit(slowmode_delay=何秒か)
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="スローモードを設定しました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="スローモードを設定しました。"
                 )
             )
         except discord.Forbidden:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="スローモードを設定できませんでした。",
-                    color=discord.Color.red(),
                     description="権限エラーです。",
                 )
             )
         except:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="スローモードを設定できませんでした。",
-                    color=discord.Color.red(),
                     description="6時間以上を設定しようとしているなら、\n`/channel long-slowmode`を使用してください。",
                 )
             )
@@ -194,11 +188,6 @@ class ChannelCog(commands.Cog):
     async def command_disable(
         self, interaction: discord.Interaction, コマンドが使えるか: bool
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].CommandDisable
         if not コマンドが使えるか:
             await db.update_one(
@@ -207,9 +196,8 @@ class ChannelCog(commands.Cog):
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="このチャンネルではコマンドを使用できなくしました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="このチャンネルではコマンドを使用できなくしました。"
                 )
             )
         else:
@@ -217,9 +205,8 @@ class ChannelCog(commands.Cog):
                 {"Guild": interaction.guild.id, "Channel": interaction.channel.id}
             )
             await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="このチャンネルではコマンドを使用できるようにしました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="このチャンネルではコマンドを使用できるようにしました。"
                 )
             )
 
