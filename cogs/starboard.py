@@ -3,7 +3,7 @@ from discord.ext import commands
 import discord
 
 from discord import app_commands
-from models import command_disable
+from models import command_disable, make_embed
 
 cooldown_reaction = {}
 
@@ -241,17 +241,15 @@ class StarBoardCog(commands.Cog):
             await interaction.response.defer()
             await self.set_reaction_board(interaction, チャンネル, 絵文字)
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="リアクションボードをセットアップしました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="スターボードをセットアップしました。",
                     description=f"{チャンネル.mention}",
                 )
             )
         except discord.Forbidden:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="リアクションボードをセットアップできませんでした。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="スターボードをセットアップできませんでした。",
                     description="権限エラーです。",
                 )
             )
@@ -270,16 +268,14 @@ class StarBoardCog(commands.Cog):
             await interaction.response.defer()
             await self.delete_reaction_board(interaction)
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="リアクションボードを無効にしました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="スターボードを無効にしました。"
                 )
             )
         except discord.Forbidden:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="リアクションボードを無効にできませんでした。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="スターボードを無効にできませんでした。",
                     description="権限エラーです。",
                 )
             )
