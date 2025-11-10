@@ -1,10 +1,48 @@
+<!DOCTYPE html>
 <html>
-    <head>
-        <title>短縮URLサービス</title>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <title>短縮URLサービス</title>
+</head>
+<body>
+    <h1>shb.redへようこそ！</h1>
+    <h4>/shorten に ?url=URL をつければ短縮できます！</h4>
 
-    <body>
-        <h1>shb.redへようこそ！</h1>
-        <h4>/shorten に ?url=URL をつければ短縮できます！</h4>
-    </body>
+    <h2>以下からも作成できます。</h2>
+    <input type="url" id="url" placeholder="https://example.com">
+    <button onclick="create_url()">作成する</button>
+
+    <div id="result" style="margin-top: 20px;"></div>
+
+    <script>
+        async function create_url() {
+            const url = document.getElementById('url').value.trim();
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+
+            if (!url) {
+                alert('URLを入力してください。');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/shorten?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    resultDiv.innerHTML = `<p style="color:red;">エラー: ${data.error}</p>`;
+                    return;
+                }
+
+                const link = document.createElement('a');
+                link.href = data.short_url;
+                link.textContent = data.short_url;
+                link.target = '_blank';
+                resultDiv.appendChild(link);
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color:red;">エラーが発生しました: ${error}</p>`;
+            }
+        }
+    </script>
+</body>
 </html>
