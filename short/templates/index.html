@@ -25,6 +25,11 @@
                 return;
             }
 
+            if (!URL.canParse(url)) {
+                alert('URLを入力してください。');
+                return;
+            };
+
             try {
                 const response = await fetch(`/shorten?url=${encodeURIComponent(url)}`);
                 const data = await response.json();
