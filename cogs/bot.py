@@ -12,6 +12,22 @@ import psutil
 import io
 import aiohttp
 
+FEEDBACK_CHANNEL = 1437397034213703762
+
+class FeedBackModal(discord.ui.Modal):
+    def __init__(self):
+        super().__init__(title="フィードバックを送信する。")
+        self.text = discord.ui.TextInput(label=f"内容", style=discord.TextStyle.long)
+        self.add_item(self.text)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        await asyncio.sleep(1)
+        await interaction.client.get_channel(FEEDBACK_CHANNEL).send(embed=discord.Embed(title=f"通報: {interaction.user.id}", color=discord.Color.green(), description=self.text.value)
+                                                                    .add_field(name="ユーザー", value=f"{interaction.user.display_name}({interaction.user.id})")
+                                                                    .set_author(name=f"{interaction.user.display_name}({interaction.user.id})", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url))
+        await interaction.followup.send(embed=make_embed.success_embed(title="フィードバックを送信しました！", description="ご意見ありがとうございます。"))
+
 class BotCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -201,6 +217,13 @@ Sharkアカウント: {sharkaccount_count}人
             )
 
         await interaction.response.send_message(view=FaqLayout())
+
+    @bot.command(name="feedback", description="Botに意見を送信します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(administrator=True)
+    async def bot_feedback(self, interaction: discord.Interaction):
+        await interaction.response.send_modal(FeedBackModal())
 
     @bot.command(name="custom", description="Botのアバターなどをカスタマイズします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
