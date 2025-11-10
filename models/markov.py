@@ -24,7 +24,9 @@ Bot相手にイラついて恥ずかしくないの？w
 なんか言いました？
 そうなんですねw
 それっておかしくないですか？
-事故物件っていいですよね。 事故物件でビデオと回しててワンちゃん何か撮れたら YouTubeとかですげー再生数伸びるんで
+事故物件っていいですよね。
+事故物件でビデオと回しててワンちゃん何か撮れたら
+YouTubeとかですげー再生数伸びるんで
 データなんかねえよ
 """
 
@@ -60,4 +62,6 @@ async def generate_text(text: str, started_word: str, max_words: int = 50):
         return "".join(sentence)
 
     gen_text = await loop.run_in_executor(None, partial(generate_sentence, started_word, max_words))
+    if gen_text.startswith(started_word):
+        return gen_text
     return started_word + gen_text
