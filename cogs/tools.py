@@ -1270,6 +1270,7 @@ class ToolsCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
         ドメイン=[
+            app_commands.Choice(name="shb.red", value="shb"),
             app_commands.Choice(name="tinyurl.com", value="tiny"),
             app_commands.Choice(name="urlc.net", value="urlc"),
             app_commands.Choice(name="oooooo.ooo", value="ooo"),
@@ -1320,6 +1321,13 @@ class ToolsCog(commands.Cog):
                     return self.curr_ver + oooified
 
             url_ = "https://ooooooooooooooooooooooo.ooo/" + OOO().encode_url(url)
+        elif ドメイン.value == "shb":
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    "https://shb.red/shorten", params={"url": url}
+                ) as response:
+                    url_ = await response.json()
+                    url_ = url_['short_url'].replace('http', 'https')
         embed = make_embed.success_embed(title="URLを短縮しました。", description=url_)
         await interaction.followup.send(
             embed=embed,
