@@ -57,6 +57,9 @@ def shorten():
 @app.route("/s/<code>")
 def redirect_to_original(code):
     try:
+        if code == "sharkbot":
+            return redirect('https://discord.com/oauth2/authorize?client_id=1322100616369147924&permissions=8&integration_type=0&scope=bot+applications.commands')
+
         conn = sqlite3.connect("database.db")
         cur = conn.cursor()
         cur.execute("SELECT original_url FROM urls WHERE code = ?", (code,))
