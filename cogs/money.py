@@ -259,7 +259,8 @@ class Money:
         for i, user_data in enumerate(top_users, start=1):
             member = guild.get_member(user_data["User"])
             name = member.display_name if member else f"ユーザーID: {user_data['User']}"
-            leaderboard_text += f"{i}. {name} — {user_data['count']}{c_n}\n"
+            # お金をbankからのも含めるように
+            leaderboard_text += f"{i}. {name} — {user_data['count'] + user_data.get('bank', 0)}{c_n}\n"
 
         return leaderboard_text
 
