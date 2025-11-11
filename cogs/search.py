@@ -20,6 +20,22 @@ import pytesseract
 from PIL import Image
 import io
 
+DISCORD_EPOCH = 1420070400000
+
+def decode_snowflake(snowflake: int):
+    timestamp = ((snowflake >> 22) + DISCORD_EPOCH) / 1000
+    dt = datetime.datetime.utcfromtimestamp(timestamp)
+
+    worker_id = (snowflake & 0x3E0000) >> 17
+    process_id = (snowflake & 0x1F000) >> 12
+    increment = snowflake & 0xFFF
+
+    return {
+        "timestamp": dt,
+        "worker_id": worker_id,
+        "process_id": process_id,
+        "increment": increment
+    }
 
 async def ocr_async(image_: io.BytesIO):
     image = await asyncio.to_thread(Image.open, image_)
@@ -1127,6 +1143,8 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
         if interaction.is_user_integration() and not interaction.is_guild_integration():
             return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
 
+        JST = datetime.timezone(datetime.timedelta(hours=9))
+
         await interaction.response.defer()
         for e in interaction.guild.emojis:
             if 絵文字 == e.__str__():
@@ -1136,7 +1154,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
                     .set_image(url=e.url)
                     .add_field(name="名前", value=e.name, inline=False)
                     .add_field(name="id", value=str(e.id), inline=False)
-                    .add_field(name="作成日時", value=str(e.created_at), inline=False)
+                    .add_field(name="作成日時", value=str(e.created_at.astimezone(JST)), inline=False)
                     .add_field(
                         name="絵文字が動くか",
                         value="はい" if e.animated else "いいえ",
@@ -1151,6 +1169,10 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             embed = make_embed.success_embed(title=f"{name} の情報")
             embed.add_field(name="名前", value=name, inline=False)
             embed.add_field(name="id", value=emoji_id, inline=False)
+            sn = decode_snowflake(int(emoji_id))
+            ts = sn.get("timestamp", None)
+            if ts:
+                embed.add_field(name="作成日時", value=str(ts.astimezone(JST)))
             embed.add_field(
                 name="絵文字が動くか",
                 value="はい" if is_animated else "いいえ",
