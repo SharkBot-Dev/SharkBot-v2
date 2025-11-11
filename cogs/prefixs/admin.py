@@ -3,6 +3,7 @@ import datetime
 import io
 import json
 from pathlib import Path
+import random
 from discord.ext import commands
 import discord
 
@@ -13,6 +14,15 @@ from discord import app_commands
 import asyncio
 
 import discord.ext.tasks
+
+from PIL import Image, ImageDraw
+
+DIRECTIONS = [
+    ("⬆️", 0),
+    ("➡️", 270),
+    ("⬇️", 180),
+    ("⬅️", 90),
+]
 
 class Prefix_AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -88,6 +98,54 @@ class Prefix_AdminCog(commands.Cog):
         
         await ctx.channel.send(embed=discord.Embed().from_dict(json.loads(json_data)))
         await ctx.message.add_reaction("✅")
+
+    @test_command.command(name="tt")
+    async def test_command_tt(self, ctx: commands.Context):
+        def generate_arrow_image(angle: int) -> io.BytesIO:
+            size = (200, 200)
+            img = Image.new("RGBA", size, (255, 255, 255, 255))
+            draw = ImageDraw.Draw(img)
+            cx, cy = size[0] // 2, size[1] // 2
+
+            draw.line((cx, cy + 40, cx, cy - 40), fill=(0, 0, 0), width=8)
+            draw.polygon([(cx - 15, cy - 40), (cx + 15, cy - 40), (cx, cy - 70)], fill=(0, 0, 0))
+
+            rotated = img.rotate(angle, expand=True, fillcolor=(255, 255, 255, 255))
+
+            buffer = io.BytesIO()
+            rotated.save(buffer, format="PNG")
+            buffer.seek(0)
+            return buffer
+        
+        correct_emoji, angle = random.choice(DIRECTIONS)
+        img_buffer = await asyncio.to_thread(generate_arrow_image, angle)
+
+        options = ["⬆️", "➡️", "⬇️", "⬅️"]
+
+        view = discord.ui.View()
+
+        for opt in options:
+            async def callback(inter: discord.Interaction, opt=opt):
+                if opt == correct_emoji:
+                    await inter.response.edit_message(
+                        content="✅ 正解！あなたはロボットではありません。",
+                        attachments=[], view=None
+                    )
+                else:
+                    await inter.response.edit_message(
+                        content="❌ 不正解です。もう一度試してください。",
+                        attachments=[], view=None
+                    )
+
+            btn = discord.ui.Button(emoji=opt, style=discord.ButtonStyle.primary)
+            btn.callback = callback
+            view.add_item(btn)
+
+        file = discord.File(img_buffer, filename="arrow.png")
+        embed = discord.Embed(title="この矢印の向きを選んでください。", color=discord.Color.blue())
+        embed.set_image(url="attachment://arrow.png")
+
+        await ctx.reply(embed=embed, file=file, view=view)
 
     @commands.command(name="save", hidden=True)
     async def save(self, ctx):
