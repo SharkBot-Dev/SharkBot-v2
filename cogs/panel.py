@@ -12,6 +12,12 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 from consts import badword
 
+DIRECTIONS = [
+    ("⬆️", 0),
+    ("➡️", 270),
+    ("⬇️", 180),
+    ("⬅️", 90),
+]
 
 class AuthModal_keisan(discord.ui.Modal, title="認証をする"):
     def __init__(self, role: discord.Role):
@@ -91,6 +97,30 @@ class AuthGroup(app_commands.Group):
             ),
             view=discord.ui.View().add_item(
                 discord.ui.Button(label="認証", custom_id=f"authpanel_v1+{ロール.id}")
+            ),
+        )
+        await interaction.response.send_message(
+            embed=discord.Embed(title="作成しました。", color=discord.Color.green()),
+            ephemeral=True,
+        )
+
+    @app_commands.command(name="arrow-auth", description="矢印を回転させる認証パネルを作ります。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def panel_arrow_auth(
+        self,
+        interaction: discord.Interaction,
+        タイトル: str,
+        説明: str,
+        ロール: discord.Role,
+    ):
+        await interaction.channel.send(
+            embed=discord.Embed(
+                title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
+            ),
+            view=discord.ui.View().add_item(
+                discord.ui.Button(label="認証", custom_id=f"arrow_auth_beta+{ロール.id}")
             ),
         )
         await interaction.response.send_message(
@@ -647,6 +677,88 @@ class PanelCog(commands.Cog):
                                 ),
                             )
                         )
+                    except discord.Forbidden:
+                        await interaction.response.send_message(
+                            "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
+                            ephemeral=True,
+                        )
+                    except:
+                        await interaction.response.send_message(
+                            f"認証に失敗しました。\n{sys.exc_info()}", ephemeral=True
+                        )
+                elif custom_id.startswith("arrow_auth_beta+"):
+                    try:
+                        r = await self.get_auth_reqrole(interaction.message)
+                        if r:
+                            if r not in interaction.user.roles:
+                                return await interaction.response.send_message(
+                                    "あなたは指定されたロールを持っていないため、認証できません。",
+                                    ephemeral=True,
+                                )
+                        if (
+                            interaction.guild.get_role(int(custom_id.split("+")[1]))
+                            in interaction.user.roles
+                        ):
+                            return await interaction.response.send_message(
+                                "あなたはすでに認証しています。", ephemeral=True
+                            )
+                        await interaction.response.defer(ephemeral=True)
+                        def generate_arrow_image(angle: int) -> io.BytesIO:
+                            size = (200, 200)
+                            img = Image.new("RGBA", size, (255, 255, 255, 255))
+                            draw = ImageDraw.Draw(img)
+                            cx, cy = size[0] // 2, size[1] // 2
+
+                            draw.line((cx, cy + 40, cx, cy - 40), fill=(0, 0, 0), width=8)
+                            draw.polygon([(cx - 15, cy - 40), (cx + 15, cy - 40), (cx, cy - 70)], fill=(0, 0, 0))
+
+                            rotated = img.rotate(angle, expand=True, fillcolor=(255, 255, 255, 255))
+
+                            buffer = io.BytesIO()
+                            rotated.save(buffer, format="PNG")
+                            buffer.seek(0)
+                            return buffer
+                        
+                        correct_emoji, angle = random.choice(DIRECTIONS)
+                        img_buffer = await asyncio.to_thread(generate_arrow_image, angle)
+
+                        options = ["⬆️", "➡️", "⬇️", "⬅️"]
+
+                        view = discord.ui.View()
+
+                        for opt in options:
+                            async def callback(inter: discord.Interaction, opt=opt):
+                                if opt == correct_emoji:
+                                    await inter.response.defer(ephemeral=True)
+                                    try:
+                                        await inter.user.add_roles(interaction.guild.get_role(
+                                            int(custom_id.split("+")[1])
+                                        ))
+                                    except:
+                                        await inter.followup.send(
+                                            "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
+                                            ephemeral=True,
+                                        )
+                                        return
+                                    await inter.followup.send(
+                                        content="✅ 認証に成功しました。\nロールを付与しました。", ephemeral=True
+                                    )
+                                    await inter.delete_original_response()
+                                else:
+                                    await inter.response.edit_message(
+                                        content="❌ 不正解です。もう一度試してください。",
+                                        attachments=[], view=None
+                                    )
+
+                            btn = discord.ui.Button(emoji=opt, style=discord.ButtonStyle.primary)
+                            btn.callback = callback
+                            view.add_item(btn)
+
+                        file = discord.File(img_buffer, filename="arrow.png")
+                        embed = discord.Embed(title="この矢印の向きを選んでください。", color=discord.Color.blue())
+                        embed.set_image(url="attachment://arrow.png")
+
+                        await interaction.followup.send(embed=embed, file=file, view=view, ephemeral=True)
                     except discord.Forbidden:
                         await interaction.response.send_message(
                             "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
