@@ -1,6 +1,7 @@
 import asyncio
 from functools import partial
 import json
+import re
 import ssl
 from urllib.parse import urlparse
 import urllib.parse
@@ -39,6 +40,18 @@ ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
+EMOJI_RE = re.compile(r"(<a?:(\w+):(\d+?)>)")
+
+def extract_discord_emoji_info(text): 
+    matches = EMOJI_RE.findall(text)
+    
+    results = []
+    for full_emoji, name, emoji_id in matches:
+        is_animated = full_emoji.startswith("<a:")
+        
+        results.append((name, emoji_id, is_animated))
+        
+    return results
 
 class NomTranslater:
     def __init__(self):
@@ -1132,8 +1145,27 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
                     .add_field(name="Botから見た絵文字", value=f"```{e.__str__()}```", inline=False)
                 )
                 return
+        
+        extracted_info = extract_discord_emoji_info(絵文字)
+        for name, emoji_id, is_animated in extracted_info:
+            embed = make_embed.success_embed(title=f"{name} の情報")
+            embed.add_field(name="名前", value=name, inline=False)
+            embed.add_field(name="id", value=emoji_id, inline=False)
+            embed.add_field(
+                name="絵文字が動くか",
+                value="はい" if is_animated else "いいえ",
+                inline=False,
+            )
+            if is_animated:
+                embed.set_image(url=f"https://cdn.discordapp.com/emojis/{emoji_id}.gif")
+            else:
+                embed.set_image(url=f"https://cdn.discordapp.com/emojis/{emoji_id}.png")
+            embed.set_footer(text="この絵文字はこのサーバーには存在しません。")
+            await interaction.followup.send(embed=embed)
+            return
+
         await interaction.followup.send(
-            embed=make_embed.error_embed(title="絵文字が存在しません。", description="別サーバーにある場合も取得できません。")
+            embed=make_embed.error_embed(title="絵文字が存在しません。", description="絵文字が取得できませんでした。")
         )
 
     @search.command(name="spotify", description="メンバーの聞いている曲の情報を表示します。")
