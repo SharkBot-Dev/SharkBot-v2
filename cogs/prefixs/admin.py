@@ -101,6 +101,9 @@ class Prefix_AdminCog(commands.Cog):
 
     @test_command.command(name="tt")
     async def test_command_tt(self, ctx: commands.Context):
+        if ctx.author.id != 1335428061541437531:
+            return
+
         def generate_arrow_image(angle: int) -> io.BytesIO:
             size = (200, 200)
             img = Image.new("RGBA", size, (255, 255, 255, 255))
@@ -146,6 +149,8 @@ class Prefix_AdminCog(commands.Cog):
         embed.set_image(url="attachment://arrow.png")
 
         await ctx.reply(embed=embed, file=file, view=view)
+
+        img_buffer.close()
 
     @commands.command(name="save", hidden=True)
     async def save(self, ctx):
