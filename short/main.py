@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, redirect, render_template
 import sqlite3
 import string
 import random
+from uvicorn.middleware.wsgi import WSGIMiddleware
 
 app = Flask(__name__)
 
@@ -52,7 +53,7 @@ def shorten():
         short_url = request.host_url + "s/" + code
         return jsonify({"short_url": short_url})
     except Exception as e:
-        return jsonify({"error": f"予期しないエラー: {e}"}), 500
+        return jsonify({"error": f"予期しないエラーが発生しました。"}), 500
 
 @app.route("/s/<code>")
 def redirect_to_original(code):
@@ -73,5 +74,4 @@ def redirect_to_original(code):
     except:
         return jsonify({"error": "予期しないエラーが発生しました"}), 500
 
-if __name__ == "__main__":
-    app.run(debug=False, port=3116, host="0.0.0.0")
+asgi_app = WSGIMiddleware(app)

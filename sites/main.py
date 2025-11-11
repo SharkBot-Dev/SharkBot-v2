@@ -161,7 +161,7 @@ def invite_auth_backend():
         return resp
 
     except Exception as e:
-        return jsonify({"status": "error", "reason": str(e)}), 500
+        return jsonify({"status": "error"}), 500
 
 
 @app.route('/autherrorpage', methods=["GET"])

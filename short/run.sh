@@ -1,0 +1,1 @@
+uvicorn main:asgi_app --port 3116
