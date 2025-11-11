@@ -1214,5 +1214,21 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             
         await interaction.response.send_message(ephemeral=True, content="曲を検出できませんでした。")
 
+    @search.command(name="snowflake", description="SnowFlakeを解析します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def snowflake_info(self, interaction: discord.Interaction, snowflake: str):
+        try:
+            sn = int(snowflake)
+            info = decode_snowflake(sn)
+            embed = make_embed.success_embed(title="Snowflake解析結果")
+            embed.add_field(name="作成日時 (UTC)", value=str(info["timestamp"]), inline=False)
+            embed.add_field(name="Worker ID", value=str(info["worker_id"]))
+            embed.add_field(name="Process ID", value=str(info["process_id"]))
+            embed.add_field(name="Increment", value=str(info["increment"]))
+            await interaction.response.send_message(embed=embed)
+        except:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="SnowFlakeが不正です。", description="正常なSnowFlakeを入力してください。"))
+        
 async def setup(bot):
     await bot.add_cog(SearchCog(bot))
