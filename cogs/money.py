@@ -246,21 +246,30 @@ class Money:
     async def get_server_ranking(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].ServerMoney
 
-        cursor = db.find({"Guild": guild.id}).sort("count", -1).limit(10)
-        top_users = await cursor.to_list(length=10)
+        cursor = db.find({"Guild": guild.id})
+        all_users = await cursor.to_list(length=100)
 
-        if not top_users:
+        if not all_users:
             return "このサーバーのランキングはありません。"
+
+        ranked_users = sorted(
+            all_users,
+            key=lambda u: u.get("count", 0) + u.get("bank", 0),
+            reverse=True
+        )[:10]
 
         leaderboard_text = f"**{guild.name} のお金持ちランキング**\n\n"
 
         c_n = await self.get_currency_name(guild)
 
-        for i, user_data in enumerate(top_users, start=1):
-            member = guild.get_member(user_data["User"])
-            name = member.display_name if member else f"ユーザーID: {user_data['User']}"
-            # お金をbankからのも含めるように
-            leaderboard_text += f"{i}. {name} — {user_data['count'] + user_data.get('bank', 0)}{c_n}\n"
+        for i, user_data in enumerate(ranked_users, start=1):
+            user_id = user_data["User"]
+            member = guild.get_member(user_id)
+
+            name = member.display_name if member else f"不明: {user_id}"
+            total_money = user_data.get("count", 0) + user_data.get("bank", 0)
+
+            leaderboard_text += f"{i}. {name} — {total_money:,}{c_n}\n"
 
         return leaderboard_text
 
