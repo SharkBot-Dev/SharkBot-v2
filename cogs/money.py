@@ -1302,6 +1302,74 @@ class ServerMoneyCog(commands.Cog):
         )
 
     @server_economy.command(
+        name="pay",
+        description="指定したメンバーにサーバー内通貨を送金します。"
+    )
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    async def economy_pay_server(
+        self,
+        interaction: discord.Interaction,
+        メンバー: discord.User,
+        金額: int
+    ):
+        await interaction.response.defer()
+        m = Money(interaction.client)
+        guild = interaction.guild
+        user = interaction.user
+
+        c_n = await m.get_currency_name(guild)
+        sender_balance = await m.get_server_money(guild, user)
+
+        if メンバー.id == user.id:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="送金エラー",
+                    description="自分自身には送金できません。"
+                )
+            )
+
+        if メンバー.bot:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="送金エラー",
+                    description="Botには送金できません。"
+                )
+            )
+
+        if 金額 <= 0:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="送金エラー",
+                    description="0以下の金額は送金できません。"
+                )
+            )
+
+        if sender_balance < 金額:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="残高不足",
+                    description=f"あなたの残高（{sender_balance} {c_n}）より多い金額は送金できません。"
+                )
+            )
+
+        await m.add_server_money(guild, user, -金額)
+        await m.add_server_money(guild, メンバー, 金額)
+
+        new_sender_balance = await m.get_server_money(guild, user)
+        receiver_balance = await m.get_server_money(guild, メンバー)
+
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="送金完了",
+                description=(
+                    f"{メンバー.mention} に {金額} {c_n} を送金しました。\n\n"
+                    f"あなたの残高: {new_sender_balance} {c_n}\n"
+                    f"相手の残高: {receiver_balance} {c_n}"
+                )
+            )
+        )
+
+    @server_economy.command(
         name="deposit", description="銀行にお金を預けます。"
     )
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
