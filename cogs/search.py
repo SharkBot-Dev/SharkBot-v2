@@ -1007,6 +1007,9 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
         if interaction.is_user_integration() and not interaction.is_guild_integration():
             return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
 
+        if not bot.bot:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="その人はBotはありません。", description="Botを指定してください。"))
+
         await interaction.response.defer()
         embed = make_embed.success_embed(title="Botの情報")
         embed.add_field(name="Bot名", value=bot.display_name, inline=False)
