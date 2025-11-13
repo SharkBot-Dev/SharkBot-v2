@@ -555,9 +555,6 @@ class GameCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def geo_quiz(self, interaction: discord.Interaction):
-        if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
-
         await interaction.response.defer()
         ans = [random.choice(self.geo_s.split(",")) for _ in range(3)]
         r = random.randint(0, 2)
@@ -581,13 +578,13 @@ class GameCog(commands.Cog):
                             def __init__(self):
                                 super().__init__(timeout=180)
 
-                            async def check_answer(self, interaction_, idx: int):
+                            async def check_answer(self, interaction_: discord.Interaction, idx: int):
                                 await interaction_.response.defer(ephemeral=True)
                                 if interaction.user.id != interaction_.user.id:
                                     return
-                                await interaction_.message.edit(view=None)
+                                await interaction_.edit_original_response(view=None)
                                 if ans[idx] == ans[r]:
-                                    await interaction.channel.send(
+                                    await interaction.followup.send(
                                         embed=discord.Embed(
                                             title="正解です！",
                                             description=f"正解は{ans[r]}です！",
@@ -599,7 +596,7 @@ class GameCog(commands.Cog):
                                     await quest.quest_clear(interaction, "geo")
 
                                     return
-                                return await interaction.channel.send(
+                                return await interaction.followup.send(
                                     embed=discord.Embed(
                                         title="不正解です",
                                         description=f"正解は{ans[r]}です",
@@ -655,9 +652,6 @@ class GameCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def math_quiz(self, interaction: discord.Interaction):
-        if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
-
         await interaction.response.defer()
 
         r_ = random.randint(0, 2)
@@ -699,10 +693,10 @@ class GameCog(commands.Cog):
                     return
 
                 await interaction_.response.defer()
-                await interaction_.message.edit(view=None)
+                await interaction_.edit_original_response(view=None)
 
                 if choice == correct_answer:
-                    return await interaction.channel.send(
+                    return await interaction.followup.send(
                         embed=discord.Embed(
                             title="正解です！",
                             description=f"正解は {correct_answer} でした！",
@@ -710,7 +704,7 @@ class GameCog(commands.Cog):
                         )
                     )
                 else:
-                    return await interaction.channel.send(
+                    return await interaction.followup.send(
                         embed=discord.Embed(
                             title="不正解です",
                             description=f"正解は {correct_answer} でした！",
