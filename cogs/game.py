@@ -366,7 +366,7 @@ class GameCog(commands.Cog):
         ]
         print("init -> GameCog")
 
-    game = app_commands.Group(name="game", description="ゲーム系のコマンドです。")
+    game = app_commands.Group(name="game", description="ゲーム系のコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True))
 
     game.add_command(MinecraftGroup())
     game.add_command(FortniteGroup())
@@ -448,13 +448,7 @@ class GameCog(commands.Cog):
         embed = make_embed.success_embed(title="おみくじを引きました。", description=f"```{omikuzi[random.randrange(len(omikuzi))]}```")
 
         await interaction.response.send_message(
-            embed=embed.set_footer(text="結果は完全にランダムです。"),
-            view=discord.ui.View().add_item(
-                discord.ui.Button(
-                    label="おみくじWebで引く",
-                    url="https://dashboard.sharkbot.xyz/omikuji",
-                )
-            ),
+            embed=embed.set_footer(text="結果は完全にランダムです。")
         )
 
     @game.command(name="lovecalc", description="恋愛度計算機で遊びます。")
@@ -561,6 +555,9 @@ class GameCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def geo_quiz(self, interaction: discord.Interaction):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         await interaction.response.defer()
         ans = [random.choice(self.geo_s.split(",")) for _ in range(3)]
         r = random.randint(0, 2)
@@ -658,6 +655,9 @@ class GameCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def math_quiz(self, interaction: discord.Interaction):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         await interaction.response.defer()
 
         r_ = random.randint(0, 2)
@@ -741,6 +741,9 @@ class GameCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def guess(self, interaction: discord.Interaction):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         await interaction.response.defer()
         number = random.randint(1, 100)
         await interaction.followup.send(embed=make_embed.success_embed(title="数字あてゲーム", description="1から100までの数字を当ててください。10回以内に当ててね！"))
@@ -781,6 +784,9 @@ class GameCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def shiritori(self, interaction: discord.Interaction):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+
         db = self.bot.async_db["MainTwo"].ShiritoriChannel
         await db.update_one(
             {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
