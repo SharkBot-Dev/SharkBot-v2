@@ -887,16 +887,17 @@ class GameCog(commands.Cog):
             return
 
         description = "\n".join(quest.values())
-        embed = (
-            discord.Embed(
-                title="Botのクエスト",
-                description=description,
-                color=discord.Color.green(),
-            )
-            .set_footer(text="クリアすると次のクエストが表示されます。")
-        )
 
-        await interaction.followup.send(embed=embed)
+        class QuestView(discord.ui.LayoutView):
+            container = discord.ui.Container(
+                discord.ui.TextDisplay(content="### Botのクエスト"),
+                discord.ui.Separator(),
+                discord.ui.TextDisplay(content=description),
+                discord.ui.TextDisplay(content="-# クリアすると次のクエストが表示されます。"),
+                accent_color=discord.Color.green()
+            )
+
+        await interaction.followup.send(view=QuestView())
 
 async def setup(bot):
     await bot.add_cog(GameCog(bot))
