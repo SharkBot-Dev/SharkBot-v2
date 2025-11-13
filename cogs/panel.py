@@ -1507,7 +1507,7 @@ class PanelCog(commands.Cog):
                                         placeholder=f"{e.value}について回答してください",
                                         style=discord.TextStyle.short,
                                         required=True,
-                                        max_length=30
+                                        max_length=50
                                     )
                                 )
 
