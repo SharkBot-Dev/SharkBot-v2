@@ -828,12 +828,18 @@ class GameCog(commands.Cog):
 
         if word.endswith("ん"):
             await message.reply(embed=make_embed.error_embed(title="あなたの負け", description="「ん」で終わったため、負けです。"))
+            await db.update_one(
+                {"Guild": message.guild.id, "Channel": message.channel.id},
+                {"$set": {"LastWord": None, "Word": []}},
+                upsert=True,
+            )
             return
             
         last_word = dbfind.get('LastWord')
         if last_word:
             if word[0] != last_word[-1]:
-                await message.reply(embed=make_embed.error_embed(title="始まりの文字が違います。", description=f"前の単語の最後の文字「{last_word[-1]}」から始まっていません！"))
+                if last_word[-1] != "ー" or last_word[-1] != "。" or last_word[-1] != "。":
+                    await message.reply(embed=make_embed.error_embed(title="始まりの文字が違います。", description=f"前の単語の最後の文字「{last_word[-1]}」から始まっていません！"))
                 return
 
         used_words = dbfind.get('Word', [])
