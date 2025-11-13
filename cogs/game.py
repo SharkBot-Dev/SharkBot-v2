@@ -838,7 +838,7 @@ class GameCog(commands.Cog):
         last_word = dbfind.get('LastWord')
         if last_word:
             if word[0] != last_word[-1]:
-                if last_word[-1] != "ー":
+                if not re.search(r"[ー゛゜、。！？]+", last_word[-1]):
                     await message.reply(embed=make_embed.error_embed(title="始まりの文字が違います。", description=f"前の単語の最後の文字「{last_word[-1]}」から始まっていません！"))
                     return
 
