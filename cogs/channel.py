@@ -31,6 +31,12 @@ class ChannelCog(commands.Cog):
         # 基本的な情報
         embed.add_field(name="名前", value=channel.name, inline=False)
         embed.add_field(name="ID", value=str(channel.id), inline=False)
+
+        JST = datetime.timezone(datetime.timedelta(hours=9))
+        embed.add_field(
+            name="作成日", value=str(interaction.channel.created_at.astimezone(JST)), inline=False
+        )
+
         if channel.category:
             embed.add_field(name="カテゴリ", value=channel.category.name, inline=False)
         else:

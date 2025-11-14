@@ -875,6 +875,8 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def channel_search(self, interaction: discord.Interaction, チャンネルid: str = None):
+        JST = datetime.timezone(datetime.timedelta(hours=9))
+
         if チャンネルid:
             if interaction.is_user_integration() and not interaction.is_guild_integration():
                 return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
@@ -896,6 +898,11 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             embed = make_embed.success_embed(title="チャンネルの情報")
             embed.add_field(name="名前", value=channel.name, inline=False)
             embed.add_field(name="ID", value=str(channel.id), inline=False)
+
+            embed.add_field(
+                name="作成日", value=str(channel.created_at.astimezone(JST)), inline=False
+            )
+
             if channel.category:
                 embed.add_field(name="カテゴリ", value=channel.category.name, inline=False)
             else:
@@ -912,6 +919,11 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             embed = make_embed.success_embed(title="チャンネルの情報")
             embed.add_field(name="名前", value=channel.name, inline=False)
             embed.add_field(name="ID", value=str(channel.id), inline=False)
+
+            embed.add_field(
+                name="作成日", value=str(channel.created_at.astimezone(JST)), inline=False
+            )
+
             if channel.category:
                 embed.add_field(name="カテゴリ", value=channel.category.name, inline=False)
             else:
