@@ -1,3 +1,4 @@
+import datetime
 from discord.ext import commands
 import discord
 from discord import app_commands
@@ -25,7 +26,9 @@ class ChannelCog(commands.Cog):
     async def channel_info(self, interaction: discord.Interaction):
         await interaction.response.defer()
         channel = interaction.channel
-        embed = make_embed.success_embed(title="チャンネルの情報")
+        embed = make_embed.success_embed(title="このチャンネルの情報")
+
+        # 基本的な情報
         embed.add_field(name="名前", value=channel.name, inline=False)
         embed.add_field(name="ID", value=str(channel.id), inline=False)
         if channel.category:
@@ -34,6 +37,16 @@ class ChannelCog(commands.Cog):
             embed.add_field(name="カテゴリ", value="なし", inline=False)
         embed.add_field(name="位置", value=str(channel.position), inline=False)
         embed.add_field(name="メンション", value=channel.mention, inline=False)
+
+        # 今日のメッセージをカウント
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        today_start = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+        count = 0
+        async for message in channel.history(limit=None, after=today_start):
+            if message.created_at >= today_start:
+                count += 1
+
+        embed.add_field(name="今日のメッセージ数", value=f"{count}個", inline=False)
         embed.set_footer(text=f"{channel.guild.name} / {channel.guild.id}")
         await interaction.followup.send(embed=embed)
 
