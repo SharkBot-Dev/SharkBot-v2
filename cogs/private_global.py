@@ -196,6 +196,8 @@ class PrivateGlobalCog(commands.Cog):
         await message.remove_reaction("🔄", self.bot.user)
 
         await message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await message.remove_reaction("✅", message.guild.me)
 
 
 async def setup(bot):

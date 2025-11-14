@@ -1189,6 +1189,8 @@ class GlobalCog(commands.Cog):
         await message.remove_reaction("🔄", self.bot.user)
 
         await message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await message.remove_reaction("✅", message.guild.me)
 
     """
         @global_join.command(name="sgc", description="スーパーグローバルチャットに参加・脱退します。")
@@ -1513,6 +1515,8 @@ class GlobalCog(commands.Cog):
 
         await message.remove_reaction("🔄", self.bot.user)
         await message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await message.remove_reaction("✅", message.guild.me)
 
     @commands.Cog.listener("on_message")
     async def on_message_globalroom(self, message: discord.Message):
@@ -1553,6 +1557,8 @@ class GlobalCog(commands.Cog):
 
         await message.remove_reaction("🔄", self.bot.user)
         await message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await message.remove_reaction("✅", message.guild.me)
 
     async def globalchat_users_add(self, user: discord.User, message: discord.Message):
         db = self.bot.async_db["Main"].GlobalChatRuleAgreeUser
@@ -1625,6 +1631,8 @@ r18やグロ関連のものを貼らない
 
         await message.remove_reaction("🔄", self.bot.user)
         await message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await message.remove_reaction("✅", message.guild.me)
 
     async def globalshiritori_check_channel(self, message: discord.Message):
         db = self.bot.async_db["Main"].GlobalShiritori
@@ -1719,6 +1727,8 @@ r18やグロ関連のものを貼らない
 
         await message.remove_reaction("🔄", self.bot.user)
         await message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await message.remove_reaction("✅", message.guild.me)
 
     async def demo_super_globalchat_check(self, interaction: discord.Interaction):
         db = self.bot.async_db["Main"].AlpheSuperGlobalChatDebug
@@ -1976,6 +1986,8 @@ r18やグロ関連のものを貼らない
         await message.remove_reaction("🔄", self.bot.user)
 
         await message.add_reaction("✅")
+        await asyncio.sleep(3)
+        await message.remove_reaction("✅", message.guild.me)
 
     @commands.Cog.listener("on_message")
     async def on_message_superglobal_getjson_debug(self, message: discord.Message):
