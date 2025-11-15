@@ -3,6 +3,7 @@ import discord
 import random
 import time
 from discord import app_commands
+from models import make_embed
 
 cooldown_auto_reaction = {}
 
@@ -103,10 +104,9 @@ class AutoReactionCog(commands.Cog):
             upsert=True,
         )
         await interaction.response.send_message(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title="自動リアクションを設定しました。",
-                description=f"絵文字: {絵文字}\nチャンネル: {interaction.channel.mention}",
-                color=discord.Color.green(),
+                description=f"絵文字: {絵文字}\nチャンネル: {interaction.channel.mention}"
             )
         )
 
@@ -126,10 +126,9 @@ class AutoReactionCog(commands.Cog):
             upsert=True,
         )
         await interaction.response.send_message(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title="自動リアクションを設定しました。",
-                description=f"絵文字: {絵文字}",
-                color=discord.Color.green(),
+                description=f"絵文字: {絵文字}"
             )
         )
 
@@ -148,8 +147,8 @@ class AutoReactionCog(commands.Cog):
             db_word = self.bot.async_db["Main"].AutoReactionWord
             await db_word.delete_one({"Guild": interaction.guild.id, "Word": ワード})
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title="自動リアクションを削除しました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="自動リアクションを削除しました。"
             )
         )
 
@@ -170,8 +169,8 @@ class AutoReactionCog(commands.Cog):
             async for b in db_channel.find({"Guild": interaction.guild.id})
         ]
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="自動リアクションのリスト", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="自動リアクションのリスト"
             )
             .add_field(name="特定のワードに対して", value="\n".join(word_list))
             .add_field(name="チャンネルに対して", value="\n".join(channel_list))
