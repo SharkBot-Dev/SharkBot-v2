@@ -23,7 +23,7 @@ class FeedBackModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True, thinking=True)
         await asyncio.sleep(1)
-        await interaction.client.get_channel(FEEDBACK_CHANNEL).send(embed=discord.Embed(title=f"通報: {interaction.user.id}", color=discord.Color.green(), description=self.text.value)
+        await interaction.client.get_channel(FEEDBACK_CHANNEL).send(embed=discord.Embed(title=f"フィードバック: {interaction.user.id}", color=discord.Color.green(), description=self.text.value)
                                                                     .add_field(name="ユーザー", value=f"{interaction.user.display_name}({interaction.user.id})")
                                                                     .set_author(name=f"{interaction.user.display_name}({interaction.user.id})", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url))
         await interaction.followup.send(embed=make_embed.success_embed(title="フィードバックを送信しました！", description="ご意見ありがとうございます。"))
