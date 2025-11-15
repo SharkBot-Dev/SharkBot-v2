@@ -347,9 +347,9 @@ class AutoReplyCog(commands.Cog):
         for re in res.get("AutoReplys", []):
             if type(re) == dict:
                 for k, v in re.items():
-                    await db.replace_one(
+                    await db.update_one(
                         {"Guild": interaction.guild.id, "Word": k},
-                        {"Guild": interaction.guild.id, "Word": k, "ReplyWord": v},
+                        {"$set": {"Guild": interaction.guild.id, "Word": k, "ReplyWord": v}},
                         upsert=True,
                     )
                     c += 1
