@@ -7,7 +7,7 @@ import time
 
 import json
 import io
-from models import command_disable
+from models import command_disable, make_embed
 import random
 
 COOLDOWN_TIME = 10
@@ -192,9 +192,10 @@ class AutoReplyCog(commands.Cog):
             upsert=True
         )
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title="自動返信を追加しました。", color=discord.Color.green()
-            )
+            embed=make_embed.success_embed(
+                title="自動返信を追加しました。"
+            ).add_field(name="条件", value=条件, inline=False)
+            .add_field(name="結果", value=結果, inline=False)
         )
 
     @autoreply.command(name="delete", description="自動返信を削除します。")
@@ -206,13 +207,13 @@ class AutoReplyCog(commands.Cog):
         result = await db.delete_one({"Guild": interaction.guild.id, "Word": 条件})
         if result.deleted_count == 0:
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="何も削除されませんでした。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="何も削除されませんでした。"
                 )
             )
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title="自動返信を削除しました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="自動返信を削除しました。"
             )
         )
 
@@ -233,8 +234,8 @@ class AutoReplyCog(commands.Cog):
                     "不適切なワードが検出されました。"
                 )
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="自動返信のリスト", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="自動返信のリストです"
             ).add_field(name="特定のワードに対して", value="\n".join(word_list))
         )
 
@@ -300,9 +301,8 @@ class AutoReplyCog(commands.Cog):
                     upsert=True
                 )
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title=f"自動返信を「{テンプレート.name}」から追加しました。",
-                color=discord.Color.green(),
+            embed=make_embed.success_embed(
+                title=f"自動返信を「{テンプレート.name}」から追加しました。"
             )
         )
 
@@ -337,8 +337,8 @@ class AutoReplyCog(commands.Cog):
             res = json.loads(await ファイル.read())
         except:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="Json読み込みに失敗しました。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="Json読み込みに失敗しました。"
                 )
             )
 
@@ -355,10 +355,9 @@ class AutoReplyCog(commands.Cog):
                     c += 1
 
         await interaction.followup.send(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title="自動返信をインポートしました。",
-                description=f"{c}件インポートしました。",
-                color=discord.Color.green(),
+                description=f"{c}件インポートしました。"
             )
         )
 
