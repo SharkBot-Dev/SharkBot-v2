@@ -259,12 +259,18 @@ class GlobalCog(commands.Cog):
                     name=f"[{bag}] {message.author.name}/{message.author.id}",
                     icon_url=message.author.default_avatar.url,
                 )
+            if not message.stickers == []:
+                try:
+                    embed.set_image(url=message.stickers[0].url)
+                except:
+                    pass
             if not message.attachments == []:
-                embed.add_field(name="添付ファイル", value=message.attachments[0].url)
-                for kaku in [".png", ".jpg", ".jpeg", ".gif", ".webm"]:
-                    if message.attachments[0].filename.endswith(kaku):
-                        embed.set_image(url=message.attachments[0].url)
-                        break
+                if message.stickers == []:
+                    embed.add_field(name="添付ファイル", value=message.attachments[0].url)
+                    for kaku in [".png", ".jpg", ".jpeg", ".gif", ".webm"]:
+                        if message.attachments[0].filename.endswith(kaku):
+                            embed.set_image(url=message.attachments[0].url)
+                            break
 
             if ref_msg:
                 wh = ref_msg.webhook_id
