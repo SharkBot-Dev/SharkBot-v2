@@ -221,14 +221,12 @@ Sharkアカウント: {sharkaccount_count}人
     @bot.command(name="feedback", description="Botに意見を送信します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.checks.has_permissions(administrator=True)
     async def bot_feedback(self, interaction: discord.Interaction):
         await interaction.response.send_modal(FeedBackModal())
 
     @bot.command(name="uptime", description="Botの起動した時刻を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.checks.has_permissions(administrator=True)
     async def bot_uptime(self, interaction: discord.Interaction):
         uptime = self.bot.extensions.get('jishaku').Feature.load_time.timestamp()
         await interaction.response.send_message(embed=make_embed.success_embed(title="Botの起動した時刻を取得しました。", description=f"<t:{uptime:.0f}:R>"))
