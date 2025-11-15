@@ -1328,6 +1328,37 @@ class FunCog(commands.Cog):
             
             async with aiohttp.ClientSession() as session:
                 wh = discord.Webhook.from_url(dbfind.get('WebHook'), session=session)
+
+                if message.clean_content.startswith('miq'):
+                    async with message.channel.typing():
+                        content = message.clean_content.removeprefix('miq')
+                        g_text = await markov.generate_text(HIROYUKI_TEXT, content, 30)
+                        async with session.get("https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg") as av:
+                            miq_ = await miq.make_quote_async("ひろゆき", g_text, await av.read(), (0, 0, 0), textcolor=(255, 255, 255), color=True, negapoji=False)
+                            i = io.BytesIO()
+                            await asyncio.to_thread(miq_.save, i, format="png")
+                            i.seek(0)
+
+                            c = 0
+
+                            while True:
+                                if c > 8:
+                                    return await wh.send(content="データなんかねーよ", username="ひろゆき", avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg")
+
+                                try:
+                                    await wh.send(content="画像を生成したの見てもらってもいいですか？", username="ひろゆき", avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg", file=discord.File(i, filename="miq.png"))
+                                except aiohttp.ClientOSError:
+                                    c += 1
+                                    await asyncio.sleep(0.5)
+                                    continue
+                                break
+                            miq_.close()
+                            i.close()
+
+                            await message.channel.send(message.author.mention, delete_after=3)
+                            
+                    return
+
                 await wh.send(content=await markov.generate_text(HIROYUKI_TEXT, message.clean_content, 100), username="ひろゆき", avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg")
 
         except:
