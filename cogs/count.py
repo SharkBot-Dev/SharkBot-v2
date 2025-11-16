@@ -48,13 +48,13 @@ class CountCog(commands.Cog):
                                 color=discord.Color.red(),
                             )
                         )
-                    await db.replace_one(
+                    await db.update_one(
                         {"Guild": message.guild.id, "Channel": message.channel.id},
-                        {
+                        {'$set': {
                             "Guild": message.guild.id,
                             "Channel": message.channel.id,
                             "Now": 0,
-                        },
+                        }},
                         upsert=True,
                     )
                     return
@@ -71,6 +71,8 @@ class CountCog(commands.Cog):
             await db.update_one(
                 {"Channel": message.channel.id}, {"$inc": {"Now": 1}}, upsert=True
             )
+
+            await message.add_reaction("✅")
         except:
             return
 
