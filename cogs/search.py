@@ -866,7 +866,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
 
         embed.add_field(
             name="Botからの情報",
-            value=f"どこのシャード？: {interaction.guild.shard_id}"
+            value=f"Shard番号: {interaction.guild.shard_id}番"
         )
 
         if interaction.guild.icon:
