@@ -24,6 +24,198 @@ from ossapi import OssapiAsync
 
 cooldown_shiritori = {}
 
+villagers = {
+    "無職": "https://minecraft.wiki/images/thumb/Nitwit_refusing.gif/120px-Nitwit_refusing.gif?81c0e",
+    "防具鍛冶": "https://minecraft.wiki/images/thumb/Plains_Armorer.png/120px-Plains_Armorer.png?0dee1",
+    "肉屋": "https://static.wikitide.net/minecraftjapanwiki/thumb/2/22/Plains_Butcher.png/68px-Plains_Butcher.png",
+    "製図家": "https://static.wikitide.net/minecraftjapanwiki/thumb/6/66/Plains_Cartographer.png/68px-Plains_Cartographer.png",
+    "聖職者": "https://static.wikitide.net/minecraftjapanwiki/thumb/7/78/Plains_Cleric.png/68px-Plains_Cleric.png",
+    "農民": "https://static.wikitide.net/minecraftjapanwiki/thumb/4/41/Plains_Farmer.png/68px-Plains_Farmer.png",
+    "釣り人": "https://static.wikitide.net/minecraftjapanwiki/thumb/b/b5/Plains_Fisherman.png/68px-Plains_Fisherman.png",
+    "矢士": "https://static.wikitide.net/minecraftjapanwiki/thumb/9/96/Plains_Fletcher.png/68px-Plains_Fletcher.png",
+    "革細工師": "https://static.wikitide.net/minecraftjapanwiki/thumb/4/45/Plains_Leatherworker.png/68px-Plains_Leatherworker.png",
+    "司書": "https://static.wikitide.net/minecraftjapanwiki/thumb/1/1c/Plains_Librarian.png/68px-Plains_Librarian.png",
+    "石工": "https://static.wikitide.net/minecraftjapanwiki/thumb/3/3e/Plains_Stone_Mason.png/68px-Plains_Stone_Mason.png",
+    "羊飼い": "https://static.wikitide.net/minecraftjapanwiki/thumb/7/7f/Plains_Shepherd.png/68px-Plains_Shepherd.png",
+    "道具鍛冶": "https://static.wikitide.net/minecraftjapanwiki/thumb/c/cb/Plains_Toolsmith.png/68px-Plains_Toolsmith.png",
+    "武器鍛冶": "https://static.wikitide.net/minecraftjapanwiki/thumb/b/b7/Plains_Weaponsmith.png/68px-Plains_Weaponsmith.png"
+}
+
+class EmeraldGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="emerald", description="エメラルドを使ったゲームです。")
+
+    @app_commands.command(name="info", description="エメラルドの個数を取得します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def emerald_info(self, interaction: discord.Interaction, ユーザー: discord.User = None):
+        await interaction.response.defer()
+        user = ユーザー if ユーザー else interaction.user
+
+        db = interaction.client.async_db["MainTwo"].EmeraldGame
+
+        try:
+            dbfind = await db.find_one({"User": user.id}, {"_id": False})
+        except Exception as e:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="取得に失敗しました。", description=f"エラーです。\n\nエラーコード: ```{e}```"))
+        if dbfind is None:
+            return await interaction.followup.send(embed=make_embed.success_embed(title=f"{user.name} の情報")
+                                                   .add_field(name="エメラルド", value="0 <:Emerald:1439453979594723388>", inline=False))
+        
+        tip = dbfind.get('Tip', 0)
+        vs = dbfind.get('Villagers', None)
+    
+        return await interaction.followup.send(embed=make_embed.success_embed(title=f"{user.name} の情報")
+                                               .add_field(name="エメラルド", value=f"{tip} <:Emerald:1439453979594723388>", inline=False)
+                                               .add_field(name="集めた村人の一覧", value="\n".join(vs) if vs else "なし", inline=False))
+
+    @app_commands.command(name="slot", description="エメラルドを使ってスロットを回します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def emerald_slot(self, interaction: discord.Interaction, エメラルドの個数: int):
+        await interaction.response.defer()
+        db = interaction.client.async_db["MainTwo"].EmeraldGame
+
+        try:
+            dbfind = await db.find_one({"User": interaction.user.id}, {"_id": False})
+        except:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="エメラルドが足りません。", description=f"現在はエメラルドを「0個」持っています。"))
+        if dbfind is None:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="エメラルドが足りません。", description=f"現在はエメラルドを「0個」持っています。"))
+        
+        tip = dbfind.get('Tip', 0)
+        
+        if tip < エメラルドの個数:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="エメラルドが足りません。", description=f"現在はエメラルドを「{tip}個」持っています。"))
+
+        await db.update_one(
+            {"User": interaction.user.id},
+            {"$inc": {
+                "Tip": -エメラルドの個数
+            }},
+            upsert=True,
+        )
+
+        symbols = ["🍒", "🍋", "🍇", "⭐", "💎", "<:Emerald:1439453979594723388>"]
+
+        def spin_slot():
+            return [random.choice(symbols) for _ in range(3)]
+
+        def check_win(result):
+            if result[0] == result[1] == result[2]:
+                return True
+            else:
+                return False
+            
+        result = spin_slot()
+
+        win = check_win(result)
+
+        if win:
+            await db.update_one(
+                {"User": interaction.user.id},
+                {"$inc": {
+                    "Tip": エメラルドの個数*2
+                }},
+                upsert=True,
+            )
+
+        await interaction.followup.send(embed=make_embed.success_embed(title="スロットを回しました。", description=" | ".join(result))
+                                        .add_field(name="結果", value="🎉 そろいました！" if win else "ハズレ...", inline=False))
+
+    @app_commands.command(name="mining", description="エメラルドを採掘します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def emerald_mining(self, interaction: discord.Interaction):
+        db = interaction.client.async_db["MainTwo"].EmeraldGame
+        data = await db.find_one({"User": interaction.user.id})
+        now = time.time()
+        cooldown_time = 2 * 60 * 60
+        
+        if data and "LastMining" in data:
+            last_up = float(data["LastMining"])
+            remaining = cooldown_time - (now - last_up)
+            if remaining > 0:
+                m, s = divmod(int(remaining), 60)
+                embed = make_embed.error_embed(title="まだ採掘できません。", description=f"あと **{m}分{s}秒** 待ってから再度お試しください。")
+                return await interaction.response.send_message(
+                    embed=embed
+                )
+            
+        await interaction.response.defer()
+            
+        ems = random.randint(1, 3)
+        await db.update_one(
+            {"User": interaction.user.id},
+            {"$inc": {
+                "Tip": ems
+            }},
+            upsert=True,
+        )
+
+        await db.update_one(
+            {"User": interaction.user.id},
+            {"$set": {
+                "LastMining": str(time.time()),
+            }},
+            upsert=True,
+        )
+
+        embed = make_embed.success_embed(title="エメラルドを採掘しました。", description="2時間後に再度採掘できます。")
+        embed.add_field(name="採掘した個数", value=f"{ems} <:Emerald:1439453979594723388>", inline=False)
+
+        await interaction.followup.send(
+            embed=embed
+        )
+
+    @app_commands.command(name="buy", description="エメラルドをアイテムと交換します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        アイテム名=[
+            app_commands.Choice(name="ランダムな村人 (3エメラルド)", value="villager"),
+        ]
+    )
+    async def emerald_buy(self, interaction: discord.Interaction, アイテム名: app_commands.Choice[str]):
+        await interaction.response.defer()
+        db = interaction.client.async_db["MainTwo"].EmeraldGame
+
+        try:
+            dbfind = await db.find_one({"User": interaction.user.id}, {"_id": False})
+        except:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="エメラルドが足りません。", description=f"現在はエメラルドを「0個」持っています。"))
+        if dbfind is None:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="エメラルドが足りません。", description=f"現在はエメラルドを「0個」持っています。"))
+        
+        tip = dbfind.get('Tip', 0)
+
+        if アイテム名.value == "villager":
+            if tip < 3:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="エメラルドが足りません。", description=f"現在はエメラルドを「{tip}個」持っています。"))
+
+            await db.update_one(
+                {"User": interaction.user.id},
+                {"$inc": {
+                    "Tip": -3
+                }},
+                upsert=True,
+            )
+            keys = []
+            for k in villagers.keys():
+                keys.append(k)
+            r_k = random.choice(keys)
+
+            await db.update_one(
+                {"User": interaction.user.id},
+                {'$addToSet': {"Villagers": r_k}},
+                upsert=True,
+            )
+
+            embed = make_embed.success_embed(title=f"{r_k} が出てきました。")
+            embed.set_image(url=villagers.get(r_k, 'https://static.wikitide.net/minecraftjapanwiki/b/b4/Nitwit_refusing.gif'))
+            await interaction.followup.send(embed=embed)
+            return
+
 class ScratchGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="scratch", description="スクラッチ関連のコマンドです。")
@@ -373,6 +565,7 @@ class GameCog(commands.Cog):
     game.add_command(PokemonGroup())
     game.add_command(OsuGroup())
     game.add_command(ScratchGroup())
+    game.add_command(EmeraldGroup())
 
     @game.command(name="8ball", description="占ってもらいます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
