@@ -864,6 +864,11 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             inline=False,
         )
 
+        embed.add_field(
+            name="Botからの情報",
+            value=f"どこのシャード？: {interaction.guild.shard_id}"
+        )
+
         if interaction.guild.icon:
             await interaction.followup.send(
                 embed=embed.set_thumbnail(url=interaction.guild.icon.url)
