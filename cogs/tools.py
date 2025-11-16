@@ -4,6 +4,7 @@ import datetime
 from functools import partial
 import io
 import json
+import random
 import re
 import socket
 import textwrap
@@ -1055,6 +1056,16 @@ class ToolsCog(commands.Cog):
         await interaction.response.send_message(
             view=discord.ui.View().add_item(discord.ui.Button(label=ラベル, url=url))
         )
+
+    @tools.command(name="choice", description="自分だけが見えるようにBotが選んでくれます。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def tools_choice(
+        self, interaction: discord.Interaction, 選択肢1: str, 選択肢2: str, 選択肢3: str = None, 選択肢4: str = None, 選択肢5: str = None
+    ):
+        choices = [c for c in [選択肢1, 選択肢2, 選択肢3, 選択肢4, 選択肢5] if c != None]
+        choiced = random.choice(choices)
+        await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="Botが選びました。", description=choiced))
 
     @tools.command(name="timestamp", description="タイムスタンプを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)

@@ -1,5 +1,6 @@
 import asyncio
 import random
+import re
 import string
 import time
 from discord.ext import commands
@@ -552,6 +553,57 @@ class PanelCog(commands.Cog):
                             "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
                             ephemeral=True,
                         )
+                    except:
+                        await interaction.followup.send(
+                            "追加に失敗しました。", ephemeral=True
+                        )
+                elif custom_id.startswith("rrp+"):
+                    await interaction.response.defer(ephemeral=True)
+
+                    try:
+                        roles = interaction.message.embeds[0].fields[0].value
+
+                        pattern = r"<@&(\d{15,})>"
+                            
+                        role_id_list = re.findall(pattern, roles)
+
+                        if not role_id_list:
+                            await interaction.followup.send("埋め込みから有効なロールメンションが見つかりませんでした。", ephemeral=True)
+                            return
+
+                        mt = random.choice(role_id_list)
+                        rl = interaction.guild.get_role(int(mt))
+                        if not rl:
+                            await interaction.followup.send(
+                                f"ロールID: {mt} が見つかりません。", ephemeral=True
+                            )
+                            return
+                        
+                        if (
+                            rl
+                            not in interaction.user.roles
+                        ):
+                            await interaction.user.add_roles(rl)
+                            await interaction.followup.send(ephemeral=True, content=f"{rl.mention} を追加しました。")
+                        else:
+                            await interaction.user.remove_roles(
+                                rl
+                            )
+                            await interaction.followup.send(
+                                f"{rl.mention} を剥奪しました。", ephemeral=True
+                            )
+                    except discord.Forbidden:
+                        await interaction.followup.send(
+                            "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
+                            ephemeral=True,
+                        )
+                        return
+                    except IndexError:
+                        await interaction.followup.send(
+                            "メッセージに埋め込みが存在しないか、ロール情報を含むフィールドが見つかりませんでした。", 
+                            ephemeral=True
+                        )
+                        return
                     except:
                         await interaction.followup.send(
                             "追加に失敗しました。", ephemeral=True
@@ -2046,6 +2098,50 @@ class PanelCog(commands.Cog):
             ),
             view=view,
         )
+        await interaction.delete_original_response()
+
+    @panel.command(
+        name="random",
+        description="ランダムなロールを付与するロールパネルを作成します。",
+    )
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def panel_random_role(
+        self,
+        interaction: discord.Interaction,
+        タイトル: str,
+        ロール1: discord.Role,
+        ロール2: discord.Role,
+        ロール3: discord.Role = None,
+        ロール4: discord.Role = None,
+        ロール5: discord.Role = None,
+        説明: str = "ボタンを押してランダムなロールを入手します。",
+    ):
+        await interaction.response.defer()
+
+        roles = [ロール1, ロール2, ロール3, ロール4, ロール5]
+        roles = [r for r in roles if r is not None]
+
+        view = discord.ui.View()
+        view.add_item(
+            discord.ui.Button(style=discord.ButtonStyle.blurple, label="取得する", custom_id="rrp+")
+        )
+
+        embed = discord.Embed(
+            title=タイトル, description=説明, color=discord.Color.green()
+        )
+        
+        embed.add_field(
+            name="もらえるロール一覧",
+            value="\n".join([role.mention for role in roles if role is not None]),
+        )
+
+        await interaction.channel.send(
+            embed=embed,
+            view=view,
+        )
+
         await interaction.delete_original_response()
 
     @commands.Cog.listener(name="on_interaction")
