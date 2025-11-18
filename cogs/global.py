@@ -45,6 +45,24 @@ class GlobalCog(commands.Cog):
         self.bot = bot
         print("init -> GlobalCog")
 
+    async def getColor(self, user: discord.User):
+        db = self.bot.async_db["MainTwo"].GlobalColor
+        try:
+            dbfind = await db.find_one({"User": user.id}, {"_id": False})
+        except:
+            return discord.Color.blue()
+        if dbfind is None:
+            return discord.Color.blue()
+        color = dbfind.get('Color', "blue")
+        if color == "blue":
+            return discord.Color.blue()
+        elif color == "red":
+            return discord.Color.red()
+        elif color == "green":
+            return discord.Color.green()
+        elif color == "random":
+            return discord.Color.random()
+
     async def check_edit_ticket(self, message: discord.Message):
         try:
             db = self.bot.async_db["Main"].SharkPoint
@@ -242,7 +260,7 @@ class GlobalCog(commands.Cog):
         async with aiohttp.ClientSession() as session:
             webhook_ = Webhook.from_url(webhook, session=session)
             embed = discord.Embed(
-                description=message.content, color=discord.Color.blue()
+                description=message.content, color=await self.getColor(message.author)
             )
             em = await self.get_guild_emoji(message.guild)
             embed.set_footer(text=f"[{em}] {message.guild.name}/{message.guild.id}")
@@ -1396,7 +1414,7 @@ class GlobalCog(commands.Cog):
         async with aiohttp.ClientSession() as session:
             webhook_ = Webhook.from_url(webhook, session=session)
             embed = discord.Embed(
-                description=message.content, color=discord.Color.blue()
+                description=message.content, color=await self.getColor(message.author)
             )
             em = await self.get_guild_emoji(message.guild)
             embed.set_footer(text=f"[{em}] {message.guild.name}/{message.guild.id}")
@@ -1657,7 +1675,7 @@ r18やグロ関連のものを貼らない
         async with aiohttp.ClientSession() as session:
             webhook_ = Webhook.from_url(webhook, session=session)
             embed = discord.Embed(
-                description=message.content, color=discord.Color.blue()
+                description=message.content, color=await self.getColor(message.author)
             )
             em = await self.get_guild_emoji(message.guild)
             embed.set_footer(text=f"[{em}] {message.guild.name}/{message.guild.id}")
@@ -1782,10 +1800,6 @@ r18やグロ関連のものを貼らない
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def global_dsgc(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
         await interaction.response.defer()
         if interaction.guild.member_count < 20:
             return await interaction.followup.send(
@@ -2129,6 +2143,30 @@ r18やグロ関連のものを貼らない
                     await asyncio.sleep(1)
         await message.add_reaction("✅")
 
+    @globalchat.command(name="color", description="グローバルチャットでの自分の色を変更します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        色=[
+            app_commands.Choice(name="赤", value="red"),
+            app_commands.Choice(name="緑", value="green"),
+            app_commands.Choice(name="青", value="blue"),
+            app_commands.Choice(name="ランダム", value="random")
+        ]
+    )
+    async def global_color(self, interaction: discord.Interaction, 色: app_commands.Choice[str]):
+        db = self.bot.async_db["MainTwo"].GlobalColor
+        await db.update_one(
+            {"User": interaction.user.id},
+            {"$set": {
+                "User": interaction.user.id,
+                "Color": 色.value
+            }},
+            upsert=True,
+        )
+        await interaction.response.send_message(embed=make_embed.success_embed(title="グローバルチャットでの色を変更しました。", description="通常グローバルでのみ適用されます。")
+                                                .add_field(name="色", value=色.name, inline=False)
+                                                .set_footer(text=色.value))
 
 async def setup(bot):
     await bot.add_cog(GlobalCog(bot))
