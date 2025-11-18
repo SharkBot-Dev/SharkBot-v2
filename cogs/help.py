@@ -137,6 +137,9 @@ HELP_TREE = {
                 {"name": "achievement reset", "description": "実績をリセットします。"}
             ]
         },
+        "Give a way": [
+            {"name": "giveaway create", "description": "サーバー内でのプレゼント企画を実施します。"}
+        ],
         "サーバー掲示板": [
             {"name": "global register", "description": "サーバー掲示板に登録します。"},
             {"name": "global server", "description": "サーバー掲示板のURLを取得します。"},
@@ -227,6 +230,18 @@ HELP_TREE = {
             {"name": "game emerald slot", "description": "スロットを回します。"},
             {"name": "game emerald info", "description": "自分の情報を取得します。"},
             {"name": "game emerald buy", "description": "エメラルドを使ってアイテムを購入します。"},
+        ],
+        "グローバルな木": [
+            {"name": "tree image", "description": "グローバルな木の写真を撮ります。"},
+            {"name": "tree watering", "description": "グローバルな木に水をまきます。"},
+            {"name": "tree status", "description": "グローバルな木の情報を取得します。"},
+            {"name": "tree mystatus", "description": "自分の育てた木の情報を取得します。"},
+        ],
+        "ペット育成": [
+            {"name": "animal status", "description": "動物のステータスを確認します。"},
+            {"name": "animal feed", "description": "動物にエサを与えます。"},
+            {"name": "animal keeping", "description": "ペットを新しく飼います。"},
+            {"name": "animal train", "description": "ペットを鍛えます。"},
         ],
         "スクラッチ": [
             {"name": "game scratch user", "description": "スクラッチでのユーザーを取得します。"},

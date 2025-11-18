@@ -14,9 +14,9 @@ class GiveawayCog(commands.Cog):
     ):
         try:
             db = self.bot.async_db["Main"].Leveling
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": guild.id, "User": user.id},
-                {"Guild": guild.id, "User": user.id, "Level": level, "XP": xp},
+                {'$set': {"Guild": guild.id, "User": user.id, "Level": level, "XP": xp}},
                 upsert=True,
             )
         except:
@@ -137,9 +137,9 @@ class GiveawayCog(commands.Cog):
             ),
         )
         db = self.bot.async_db["Main"].Giveaway
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id, "Message": msg.id},
-            {
+            {'$set': {
                 "Guild": interaction.guild.id,
                 "Message": msg.id,
                 "Item": 景品名,
@@ -148,7 +148,7 @@ class GiveawayCog(commands.Cog):
                 "Coin": coin,
                 "Itemname": itemname,
                 "Count": count,
-            },
+            }},
             upsert=True,
         )
 
