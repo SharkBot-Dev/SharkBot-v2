@@ -1,4 +1,5 @@
 from codecs import encode
+import datetime
 from functools import partial
 import io
 import json
@@ -16,7 +17,7 @@ import pykakasi
 from discord import app_commands
 import requests
 from consts import settings
-from models import command_disable, make_embed, miq, markov
+from models import command_disable, make_embed, miq, markov, miq_china
 from models.markov import HIROYUKI_TEXT
 import asyncio
 import uuid
@@ -1016,6 +1017,12 @@ class ImageGroup(app_commands.Group):
             app_commands.Choice(name="青", value="blue"),
         ]
     )
+    @app_commands.choices(
+        タイプ=[
+            app_commands.Choice(name="通常", value="normal"),
+            app_commands.Choice(name="外交風", value="gaikou")
+        ]
+    )
     async def miq(
         self,
         interaction: discord.Interaction,
@@ -1023,13 +1030,23 @@ class ImageGroup(app_commands.Group):
         発言: str,
         色: app_commands.Choice[str],
         背景色: app_commands.Choice[str],
+        タイプ: app_commands.Choice[str],
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
+        if タイプ.value == "gaikou":
+            i = io.BytesIO()
+            m = await asyncio.to_thread(miq_china.MinistryGenerator)
+            image_binary = io.BytesIO()
+            now = datetime.datetime.now()
+            formatted_date = now.strftime("%Y年%m月%d日")
+            await asyncio.to_thread(m.generate_image, 発言.replace('\\n', "\n"), ユーザー.display_name, formatted_date, is_fake=True, output=image_binary)
+            file = discord.File(fp=image_binary, filename="fake_quote.png")
+            await interaction.followup.send(
+                file=file
+            )
+            image_binary.close()
+            return
+
         av = ユーザー.avatar if ユーザー.avatar else ユーザー.default_avatar
         av = await av.read()
         negapoji = False
