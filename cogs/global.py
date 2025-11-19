@@ -119,10 +119,14 @@ class GlobalCog(commands.Cog):
             if channel["Channel"] == ctx.channel.id:
                 continue
 
-            target_channel = self.bot.get_channel(channel["Channel"])
-            if target_channel:
-                await self.send_one_join_globalchat(channel["Webhook"], ctx)
-            else:
+            try:
+
+                target_channel = self.bot.get_channel(channel["Channel"])
+                if target_channel:
+                    await self.send_one_join_globalchat(channel["Webhook"], ctx)
+                else:
+                    continue
+            except:
                 continue
 
             await asyncio.sleep(1)
