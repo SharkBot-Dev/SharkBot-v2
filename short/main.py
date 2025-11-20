@@ -21,7 +21,7 @@ def init_db():
 
 init_db()
 
-def generate_code(length=6):
+def generate_code(length=8):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
 @app.route("/", methods=["GET"])
