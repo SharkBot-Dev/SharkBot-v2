@@ -38,7 +38,7 @@ class ServerStats(commands.Cog):
             await asyncio.sleep(1)
 
     server_status = app_commands.Group(
-        name="server-status", description="サーバーのステータスを表示する設定をします。"
+        name="server-status", description="サーバーのステータスを表示する設定をします。", allowed_installs=app_commands.AppInstallationType(guild=True, user=False)
     )
 
     @server_status.command(
