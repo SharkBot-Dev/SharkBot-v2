@@ -153,6 +153,8 @@ class AutoTextCog(commands.Cog):
                         upsert=True
                     )
 
+                    await vc_text.send(content=member.mention, embed=make_embed.success_embed(title="聞き専チャンネルが作成されました。", description=f"このチャンネルは{after.channel.mention}に\n誰もいなくなったら自動的に消去されます。"))
+
         if before.channel is not None and after.channel is None:
             if before.channel.id not in target_channels:
                 return
