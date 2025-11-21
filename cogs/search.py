@@ -250,41 +250,55 @@ class WebGroup(app_commands.Group):
     async def wikipedia(self, interaction: discord.Interaction, 検索ワード: str):
         await interaction.response.defer()
 
-        wikipedia_api_url = "https://ja.wikipedia.org/w/api.php"
-
-        params = {
-            "action": "query",
-            "format": "json",
-            "titles": 検索ワード,
-            "prop": "info",
-            "inprop": "url",
-        }
+        encoded = urllib.parse.quote(検索ワード)
+        wikipedia_api_url = f"https://ja.wikipedia.org/api/rest_v1/page/summary/{encoded}"
 
         headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
+            "User-Agent": "DiscordBot/1.0 (https://example.com)"
         }
 
         try:
-            async with aiohttp.ClientSession(headers=headers) as session:
-                async with session.get(wikipedia_api_url, params=params) as resp:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(wikipedia_api_url, headers=headers) as resp:
+                    if resp.status == 404:
+                        await interaction.followup.send("Wikipedia記事が見つかりませんでした。")
+                        return
+
                     resp.raise_for_status()
                     data = await resp.json()
 
-            pages = data.get("query", {}).get("pages", {})
-            if not pages:
+            page_url = data.get("content_urls", {}).get("desktop", {}).get("page")
+            extract = data.get("extract", None)
+            title = data.get("title", 検索ワード)
+
+            if not page_url:
                 await interaction.followup.send("Wikipedia記事が見つかりませんでした。")
                 return
 
-            page_id, page_info = next(iter(pages.items()))
-            if page_id == "-1":
-                await interaction.followup.send("Wikipedia記事が見つかりませんでした。")
+            if data.get("type") == "disambiguation":
+                embed = make_embed.success_embed(
+                    title="曖昧な検索語です。",
+                    description=extract if extract else "以下のボタンのページを確認してください。"
+                )
+
+                view = discord.ui.View()
+                view.add_item(discord.ui.Button(label="アクセスする", url=page_url))
+
+                await interaction.followup.send(embed=embed, view=view)
                 return
 
-            short_url = f"https://ja.wikipedia.org/w/index.php?curid={page_id}"
-            await interaction.followup.send(f"🔗 Wikipedia短縮リンク: {short_url}")
+            embed = make_embed.success_embed(
+                title=title,
+                description=extract if extract else "説明文がありません。"
+            )
+
+            view = discord.ui.View()
+            view.add_item(discord.ui.Button(label="アクセスする", url=page_url))
+
+            await interaction.followup.send(embed=embed, view=view)
 
         except Exception as e:
-            await interaction.followup.send(f"エラーが発生しました: {e}")
+            await interaction.followup.send(f"エラーが発生しました: `{e}`")
 
     @app_commands.command(name="safeweb", description="サイトの安全性を調べます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
