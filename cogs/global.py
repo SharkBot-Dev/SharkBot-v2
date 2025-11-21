@@ -81,27 +81,48 @@ class GlobalThreadGroup(app_commands.Group):
     ):
         await interaction.response.defer()
         db = interaction.client.async_db['MainTwo'].GlobalThread
+
         data = await db.find_one({
             "channels.channel_id": interaction.channel.id
         })
         if not data:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="このチャンネルはグローバルスレッドではありません。"))
-            
-        target = None
-        for ch in data["channels"]:
-            if ch["channel_id"] == interaction.channel.id:
-                target = ch
-                break
-
-        if not target:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="このチャンネルは登録されていません。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="このチャンネルはグローバルスレッドではありません。"
+                )
+            )
         
+        target_channel = next(
+            (ch for ch in data["channels"] if ch["channel_id"] == interaction.channel.id),
+            None
+        )
+        if not target_channel:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(title="このチャンネルは登録されていません。")
+            )
+        
+        existing_groups = data.get("thread_groups", [])
+
+        for group in existing_groups:
+            group["threads"] = [
+                t for t in group.get("threads", [])
+                if t["channel_id"] != interaction.channel.id
+            ]
+
         await db.update_one(
-            {"thread_group": data["thread_group"]},
-            {"$pull": {"channels": {"channel_id": interaction.channel.id}}}
+            {"_id": data["_id"]},
+            {
+                "$pull": {"channels": {"channel_id": interaction.channel.id}},
+                "$set": {"thread_groups": existing_groups}
+            }
         )
 
-        return await interaction.followup.send(embed=make_embed.success_embed(title="グローバルスレッドから退出しました。", description="グローバルスレッドで使用されていたWebHookは各自削除してください。"))
+        return await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="グローバルスレッドから退出しました。",
+                description="グローバルスレッドで使用されていたWebHookは各自削除してください。"
+            )
+        )
 
 class GlobalCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
