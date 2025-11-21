@@ -158,7 +158,7 @@ class EmbedBuilder(discord.ui.View):
 
     @discord.ui.button(label="説明", style=discord.ButtonStyle.gray)
     async def desc_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        class EditTitleModal(discord.ui.Modal, title="タイトル編集"):
+        class EditTitleModal(discord.ui.Modal, title="説明編集"):
             text = discord.ui.Label(
                 text="説明を入力",
                 description="説明を入力してください。",
@@ -206,7 +206,107 @@ class EmbedBuilder(discord.ui.View):
                     return
         await interaction.response.send_modal(EditTitleModal())
 
-    @discord.ui.button(label="色", style=discord.ButtonStyle.blurple)
+    @discord.ui.button(label="サムネイル画像", style=discord.ButtonStyle.gray, emoji="🆕")
+    async def thum_image_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        class EditTitleModal(discord.ui.Modal, title="サムネイル画像編集"):
+            text = discord.ui.Label(
+                text="サムネイル画像URL",
+                description="サムネイル画像URLを入力してください。",
+                component=discord.ui.TextInput(
+                    style=discord.TextStyle.short, required=True
+                ),
+            )
+
+            async def on_submit(self, interaction_: discord.Interaction):
+                await interaction_.response.defer(ephemeral=True)
+
+                assert isinstance(self.text.component, discord.ui.TextInput)
+
+                ol_m = await interaction.original_response()
+
+                em = ol_m.embeds[0].copy()
+                try:
+                    em.set_thumbnail(url=self.text.component.value)
+                    await ol_m.edit(embed=em)
+                except:
+                    return
+        await interaction.response.send_modal(EditTitleModal())
+
+    @discord.ui.button(label="フィールド追加", style=discord.ButtonStyle.gray, emoji="🆕", row=2)
+    async def field_add_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        class EditTitleModal(discord.ui.Modal, title="フィールド追加"):
+            title_ = discord.ui.Label(
+                text="フィールド名",
+                description="フィールド名を入力してください。",
+                component=discord.ui.TextInput(
+                    style=discord.TextStyle.short, required=True
+                ),
+            )
+
+            value = discord.ui.Label(
+                text="フィールドの内容",
+                description="フィールドの内容を入力してください。",
+                component=discord.ui.TextInput(
+                    style=discord.TextStyle.long, required=True
+                ),
+            )
+
+            # inl = discord.ui.Label(
+            #     text="Inlineを有効化するか",
+            #     description="Inlineを有効化するか",
+            #     component=discord.ui.Select(
+            #         options=[discord.SelectOption(label="はい", value="yes"), discord.SelectOption(label="いいえ", value="no")], required=True, max_values=1, min_values=1
+            #     ),
+            # )
+
+            async def on_submit(self, interaction_: discord.Interaction):
+                await interaction_.response.defer(ephemeral=True)
+
+                assert isinstance(self.title_.component, discord.ui.TextInput)
+                assert isinstance(self.value.component, discord.ui.TextInput)
+                # assert isinstance(self.inl.component, discord.ui.Select)
+
+                ol_m = await interaction.original_response()
+
+                em = ol_m.embeds[0].copy()
+                try:
+                    # inline_bool = (self.inl.component.options[0].value == "yes")
+
+                    em.add_field(name=self.title_.component.value, value=self.value.component.value)
+                    await ol_m.edit(embed=em)
+                except:
+                    return
+        await interaction.response.send_modal(EditTitleModal())
+
+    @discord.ui.button(label="フィールド削除", style=discord.ButtonStyle.gray, emoji="🆕", row=2)
+    async def field_remove_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        class EditTitleModal(discord.ui.Modal, title="フィールド削除"):
+            title_ = discord.ui.Label(
+                text="削除するフィールド名",
+                description="削除するフィールド名を入力してください。",
+                component=discord.ui.TextInput(
+                    style=discord.TextStyle.short, required=True
+                ),
+            )
+
+            async def on_submit(self, interaction_: discord.Interaction):
+                await interaction_.response.defer(ephemeral=True)
+
+                assert isinstance(self.title_.component, discord.ui.TextInput)
+
+                ol_m = await interaction.original_response()
+
+                em = ol_m.embeds[0].copy()
+                try:
+                    for _, mf in enumerate(em.fields):
+                        if mf.name == self.title_.component.value:
+                            em.remove_field(_)
+                    await ol_m.edit(embed=em)
+                except:
+                    return
+        await interaction.response.send_modal(EditTitleModal())
+
+    @discord.ui.button(label="色", style=discord.ButtonStyle.blurple, row=3)
     async def footer_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         class EditTitleModal(discord.ui.Modal, title="色を入力"):
             text = discord.ui.Label(
@@ -235,7 +335,7 @@ class EmbedBuilder(discord.ui.View):
                     return await interaction.followup.send(ephemeral=True, embed=make_embed.error_embed(title="適切な色を入力してください。", description="例: `#000000`"))
         await interaction.response.send_modal(EditTitleModal())
 
-    @discord.ui.button(label="送信", style=discord.ButtonStyle.green)
+    @discord.ui.button(label="送信", style=discord.ButtonStyle.green, row=3)
     async def embed_send_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer(ephemeral=True)
         ol_m = await interaction.original_response()
