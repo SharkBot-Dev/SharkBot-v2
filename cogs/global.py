@@ -40,10 +40,249 @@ class SitesModal(discord.ui.Modal, title='サイトの作成'):
         await interaction.client.async_db['MainTwo'].ServerPage.update_one({'Guild': interaction.guild.id}, {'$set': {'Guild': interaction.guild.id, 'Text': self.text.value, 'Name': interaction.guild.name, 'Invite': inv.url, 'Icon': interaction.guild.icon.url}}, upsert=True)
         await interaction.followup.send(embed=make_embed.success_embed(title="サイトを作成しました。", description=f'https://sharkbot.xyz/server/{interaction.guild.id}'))
 
+class GlobalThreadGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="thread", description="グローバルスレッド関連のコマンドです。")
+
+    @app_commands.command(name="join", description="グローバルスレッドに参加します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def global_thread_join(
+        self,
+        interaction: discord.Interaction,
+        板名: str = "総合"
+    ):
+        await interaction.response.defer()
+        if interaction.channel.type != discord.ChannelType.text:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="テキストチャンネルでのみ参加できます。"))
+        wh = await interaction.channel.create_webhook(name=f"グローバルスレッド-{板名}")
+        db = interaction.client.async_db['MainTwo'].GlobalThread
+        await db.update_one(
+            {"name": 板名},
+            {"$push": {
+                "channels": {
+                    "guild_id": interaction.guild.id,
+                    "channel_id": interaction.channel.id,
+                    "webhook_url": wh.url
+                }
+            }},
+            upsert=True
+        )
+        return await interaction.followup.send(embed=make_embed.success_embed(title="グローバルスレッドに参加しました。", description="常識を持った発言してください。"))
+
+    @app_commands.command(name="leave", description="グローバルスレッドから退出します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def global_thread_leave(
+        self,
+        interaction: discord.Interaction
+    ):
+        await interaction.response.defer()
+        db = interaction.client.async_db['MainTwo'].GlobalThread
+        data = await db.find_one({
+            "channels.channel_id": interaction.channel.id
+        })
+        if not data:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="このチャンネルはグローバルスレッドではありません。"))
+            
+        target = None
+        for ch in data["channels"]:
+            if ch["channel_id"] == interaction.channel.id:
+                target = ch
+                break
+
+        if not target:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="このチャンネルは登録されていません。"))
+        
+        await db.update_one(
+            {"thread_group": data["thread_group"]},
+            {"$pull": {"channels": {"channel_id": interaction.channel.id}}}
+        )
+
+        return await interaction.followup.send(embed=make_embed.success_embed(title="グローバルスレッドから退出しました。", description="グローバルスレッドで使用されていたWebHookは各自削除してください。"))
+
 class GlobalCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print("init -> GlobalCog")
+
+    @commands.Cog.listener("on_thread_create")
+    async def on_thread_create_global(self, thread: discord.Thread):
+        if thread.owner_id == self.bot.user.id:
+            return
+
+        db = self.bot.async_db["MainTwo"].GlobalThread
+        parent_channel_id = thread.parent_id
+        guild_id = thread.guild.id
+
+        data = await db.find_one({"channels.channel_id": parent_channel_id})
+        if not data:
+            return
+
+        thread_name = thread.name
+        all_channels = data["channels"]
+
+        thread_group = next(
+            (g for g in data.get("thread_groups", [])
+            if g["thread_id"] == thread.id),
+            None
+        )
+
+        if not thread_group:
+            thread_group = {
+                "parent_channel_id": parent_channel_id,
+                "thread_id": thread.id,
+                "threads": []
+            }
+
+        thread_group["threads"].append({
+            "guild_id": guild_id,
+            "channel_id": parent_channel_id,
+            "thread_id": thread.id
+        })
+
+        async with aiohttp.ClientSession() as session:
+            for ch in all_channels:
+                if ch["channel_id"] == parent_channel_id:
+                    continue
+
+                target_guild = self.bot.get_guild(ch["guild_id"])
+                if not target_guild:
+                    continue
+
+                target_channel = target_guild.get_channel(ch["channel_id"])
+                if not target_channel:
+                    continue
+
+                new_thread = await target_channel.create_thread(
+                    name=thread_name,
+                    type=discord.ChannelType.public_thread
+                )
+
+                webhook = Webhook.from_url(ch["webhook_url"], session=session)
+
+                try:
+                    await webhook.send(
+                        content=thread.starter_message.content,
+                        username=thread.starter_message.author.display_name,
+                        avatar_url=(thread.starter_message.author.avatar.url if thread.starter_message.author.avatar else None),
+                        allowed_mentions=discord.AllowedMentions.none(),
+                        thread=new_thread
+                    )
+                except:
+                    continue
+
+                thread_group["threads"].append({
+                    "guild_id": ch["guild_id"],
+                    "channel_id": ch["channel_id"],
+                    "thread_id": new_thread.id
+                })
+
+                await asyncio.sleep(1)
+
+        existing_groups = data.get("thread_groups", [])
+
+        existing_groups = [
+            g for g in existing_groups if g.get("thread_id") != thread.id
+        ]
+        existing_groups.append(thread_group)
+
+        await db.update_one(
+            {"_id": data["_id"]},
+            {"$set": {"thread_groups": existing_groups}}
+        )
+
+    @commands.Cog.listener("on_message")
+    async def on_message_globalthread(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+        if message.channel.type != discord.ChannelType.public_thread:
+            return
+
+        db = self.bot.async_db['MainTwo'].GlobalThread
+
+        data = await db.find_one({
+            "thread_groups.threads.thread_id": message.channel.id
+        })
+
+        if not data:
+            return
+
+        target_group = next(
+            (group for group in data["thread_groups"]
+            if any(t["thread_id"] == message.channel.id for t in group["threads"])),
+            None
+        )
+
+        if not target_group:
+            return
+
+        async with aiohttp.ClientSession() as session:
+            for t in target_group["threads"]:
+                if t["thread_id"] == message.channel.id:
+                    continue
+
+                webhook_data = next((c for c in data["channels"]
+                                    if c["channel_id"] == t["channel_id"]), None)
+                if not webhook_data:
+                    continue
+
+                webhook = Webhook.from_url(webhook_data["webhook_url"], session=session)
+
+                guild = self.bot.get_guild(t["guild_id"])
+                if not guild:
+                    continue
+                target_channel = guild.get_channel(t["channel_id"])
+                if not target_channel:
+                    continue
+
+                target_thread = target_channel.get_thread(t["thread_id"])
+                if not target_thread:
+                    try:
+                        target_thread = await target_channel.fetch_message(t["thread_id"])
+
+                        await asyncio.sleep(1)
+                    except:
+                        await asyncio.sleep(1)
+                        continue
+
+                try:
+                    if not message.attachments == []:
+                        embed = discord.Embed(title="添付ファイル", color=discord.Color.blue())
+
+                        for kaku in [".png", ".jpg", ".jpeg", ".gif", ".webm"]:
+                            if kaku in message.attachments[0].filename:
+                                embed.set_image(url=message.attachments[0].url)
+                                break
+                        embed.add_field(
+                            name="添付ファイル",
+                            value=message.attachments[0].url,
+                            inline=False,
+                        )
+
+                        await webhook.send(
+                            content=message.content,
+                            username=message.author.display_name,
+                            avatar_url=(message.author.avatar.url if message.author.avatar else None),
+                            thread=target_thread,
+                            allowed_mentions=discord.AllowedMentions.none(),
+                            embed=embed
+                        )
+                    else:
+                        await webhook.send(
+                            content=message.content,
+                            username=message.author.display_name,
+                            avatar_url=(message.author.avatar.url if message.author.avatar else None),
+                            thread=target_thread,
+                            allowed_mentions=discord.AllowedMentions.none()
+                        )
+                except:
+                    continue
+
+                await asyncio.sleep(0.3)
 
     async def getColor(self, user: discord.User):
         db = self.bot.async_db["MainTwo"].GlobalColor
@@ -427,6 +666,8 @@ class GlobalCog(commands.Cog):
     globalchat = app_commands.Group(
         name="global", description="グローバルチャット系のコマンドです。"
     )
+
+    globalchat.add_command(GlobalThreadGroup())
 
     @globalchat.command(name="join", description="グローバルチャットに参加します。")
     @app_commands.checks.has_permissions(manage_channels=True)
