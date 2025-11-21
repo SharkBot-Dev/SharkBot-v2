@@ -17,6 +17,8 @@ COOLDOWN_TIMEGC = 5
 user_last_message_timegc = {}
 user_last_message_time_ad = {}
 
+user_last_message_time_thread = {}
+
 user_last_message_time_mute = {}
 
 cooldown_transfer = {}
@@ -142,6 +144,12 @@ class GlobalCog(commands.Cog):
         if not data:
             return
 
+        current_time = time.time()
+        last_message_time = user_last_message_time_thread.get(thread.guild.id, 0)
+        if current_time - last_message_time < 3:
+            return
+        user_last_message_time_thread[thread.guild.id] = current_time
+
         thread_name = thread.name
         all_channels = data["channels"]
 
@@ -215,6 +223,8 @@ class GlobalCog(commands.Cog):
             {"$set": {"thread_groups": existing_groups}}
         )
 
+        await thread.starter_message.add_reaction("✅")
+
     @commands.Cog.listener("on_message")
     async def on_message_globalthread(self, message: discord.Message):
         if message.author.bot:
@@ -240,6 +250,12 @@ class GlobalCog(commands.Cog):
 
         if not target_group:
             return
+
+        current_time = time.time()
+        last_message_time = user_last_message_time_thread.get(message.guild.id, 0)
+        if current_time - last_message_time < 3:
+            return
+        user_last_message_time_thread[message.guild.id] = current_time
 
         async with aiohttp.ClientSession() as session:
             for t in target_group["threads"]:
