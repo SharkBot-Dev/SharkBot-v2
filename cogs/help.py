@@ -145,6 +145,15 @@ HELP_TREE = {
             {"name": "global server", "description": "サーバー掲示板のURLを取得します。"},
             {"name": "global up", "description": "サーバー掲示板でUPをします。"},
         ],
+        "サーバーステータス": [
+            {"name": "server-status create", "description": "サーバーのステータスをチャンネルに表示します。"},
+            {"name": "server-status disable", "description": "サーバーステータスをすべて無効化します。"}
+        ],
+        "ログ": [
+            {"name": "logging setup", "description": "ログをセットアップします。"},
+            {"name": "logging disable", "description": "ログを無効化します。"},
+            {"name": "logging ignore", "description": "ログを無視するチャンネルを設定します。"}
+        ],
         "様々なアラート": [
             {"name": "alert news", "description": "ニュースを通知するチャンネルをセットアップします。"},
             {"name": "alert event", "description": "イベント作成を通知するチャンネルをセットアップします。"},
@@ -171,6 +180,12 @@ HELP_TREE = {
             {"name": "tools network meta", "description": "サイトのメタデータを取得します。"},
             {"name": "tools network ping", "description": "ドメインにPingを送信します。"},
             {"name": "tools network whois", "description": "Whois検索をします。"},
+        ],
+        "プログラミングツール": [
+            {"name": "shell python", "description": "Pythonシェルを有効化します。"},
+            {"name": "shell math", "description": "計算をします。"},
+            {"name": "shell linux", "description": "Linuxコマンドを検索します。"},
+            {"name": "shell compile", "description": "プログラムを実行します。"}
         ],
         "計算機能": [
             {"name": "tools calc size-converter", "description": "サイズの計算をします。"},
@@ -396,6 +411,20 @@ HELP_TREE = {
                 {"name": "economy shop item", "description": "アイテムショップパネルを作成します。"}
             ]
         }
+    },
+    "Bot関連の機能": {
+        "Botの情報": [
+            {"name": "bot about", "description": "Botの導入サーバーなどを表示します。"},
+            {"name": "bot ping", "description": "BotのPingを送信します。"},
+            {"name": "bot debug", "description": "システム情報を確認します。"},
+            {"name": "bot invite", "description": "Botの招待リンクを作成します。"},
+            {"name": "bot faq", "description": "よくある質問を閲覧します。"},
+            {"name": "bot feedback", "description": "Botにフィードバックを送信します。"},
+            {"name": "bot uptime", "description": "Botの起動した時刻を取得します。"}
+        ],
+        "Botのカスタマイズ": [
+            {"name": "bot custom", "description": "Botのアバターなどをカスタマイズします。"}
+        ]
     }
 }
 
