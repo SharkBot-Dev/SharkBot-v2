@@ -251,6 +251,11 @@ class GlobalCog(commands.Cog):
         if not target_group:
             return
 
+        block = await is_ban.is_blockd_by_message(message)
+
+        if not block:
+            return
+
         current_time = time.time()
         last_message_time = user_last_message_time_thread.get(message.guild.id, 0)
         if current_time - last_message_time < 3:
