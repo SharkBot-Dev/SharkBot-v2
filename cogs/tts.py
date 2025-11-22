@@ -8,6 +8,8 @@ import aiohttp
 import urllib.parse
 from discord import app_commands
 
+from models import tts_dict
+
 cooldown_autojoin = {}
 cooldown_tts = {}
 
@@ -365,6 +367,8 @@ ID | 説明
             return "省略しました。"
         r_w = await self.replace_word(message.content, message.guild)
         em_repd = re.sub(r"<:([a-zA-Z0-9_]+):(\d+)>", r"絵文字", r_w)
+        for k, v in tts_dict.TTSDICTS.items():
+            em_repd = em_repd.replace(k, v)
         return em_repd
 
     async def get_voice_file(self, author: discord.User):
