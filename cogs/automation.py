@@ -75,6 +75,19 @@ class AutoMationCog(commands.Cog):
                 except:
                     pass
 
+            if run == "reply" and "message" in ctx:
+                current_time = time.time()
+                last_message_time = cooldown_automation.get(ctx["channel"].guild.id, 0)
+                if current_time - last_message_time < 3:
+                    return
+                cooldown_automation[ctx["channel"].guild.id] = current_time
+
+                try:
+                    if not ctx["message"] is None:
+                        await ctx["message"].reply(run_value + "\n-# このメッセージは自動化機能によるメッセージです。")
+                except:
+                    pass
+
             if run == "delete" and "message" in ctx:
                 current_time = time.time()
                 last_message_time = cooldown_automation.get(ctx["channel"].guild.id, 0)
@@ -138,6 +151,9 @@ class AutoMationCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message):
+        if message.author.bot:
+            return
+        
         if not message.guild:
             return
 
@@ -171,7 +187,8 @@ class AutoMationCog(commands.Cog):
         await self.run_automation("threadcreate", thread.guild.id, {
             "thread": thread,
             "channel": thread.parent,
-            "name": thread.name
+            "name": thread.name,
+            "message": thread.starter_message
         })
 
     automation = app_commands.Group(
@@ -200,6 +217,7 @@ class AutoMationCog(commands.Cog):
     @app_commands.choices(
         行動=[
             app_commands.Choice(name="を送信する", value="send"),
+            app_commands.Choice(name="を返信する", value="reply"),
             app_commands.Choice(name="メッセージを削除する", value="delete"),
             app_commands.Choice(name="をリアクションする", value="reaction"),
             app_commands.Choice(name="という名前のスレッドを作成する", value="threadcreate")
