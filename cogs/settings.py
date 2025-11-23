@@ -768,6 +768,32 @@ class SettingCog(commands.Cog):
                 n = voice_channel.name
                 await voice_channel.edit(name=f"{n}-{now.strftime('%m_%d_%H_%M_%S')}")
 
+    async def send_modlog(self, guild: discord.Guild, text: str):
+        db = self.bot.async_db["MainTwo"].AutoModLog
+
+        try:
+
+            dbfind = await db.find_one(
+                {"Guild": guild.id}, {"_id": False}
+            )
+    
+
+            if dbfind is None:
+                return
+        except:
+            return
+        
+        channel = dbfind.get('Channel', None)
+        if not channel:
+            return
+        channel = guild.get_channel(channel)
+        if not channel:
+            return
+        try:
+            await channel.send(content=text)
+        except:
+            return
+
     async def get_score_warn(self, guild: discord.Guild, score: int):
         db = self.bot.async_db["Main"].WarnScoreSetting
         try:
@@ -1041,6 +1067,8 @@ class SettingCog(commands.Cog):
                         embed=discord.Embed(description=f"全体メンションを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
                         content=f"{message.author.mention}"
                     )
+
+                    await self.send_modlog(message.guild, f"{message.author.name} は全体メンションを送信しようとしたため、処罰されました。")
                 except:
                     return
             if channel_db_find is None:
@@ -1056,6 +1084,8 @@ class SettingCog(commands.Cog):
                         embed=discord.Embed(description=f"全体メンションを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
                         content=f"{message.author.mention}"
                     )
+
+                    await self.send_modlog(message.guild, f"{message.author.name} は全体メンションを送信しようとしたため、処罰されました。")
                 except:
                     return
 
@@ -1089,6 +1119,8 @@ class SettingCog(commands.Cog):
                         embed=discord.Embed(description=f"招待リンクを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
                         content=f"{message.author.mention}"
                     )
+
+                    await self.send_modlog(message.guild, f"{message.author.name} は招待リンクを送信したため、処罰されました。")
                 except:
                     return
             if channel_db_find is None:
@@ -1100,6 +1132,8 @@ class SettingCog(commands.Cog):
                         embed=discord.Embed(description=f"招待リンクを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
                         content=f"{message.author.mention}"
                     )
+
+                    await self.send_modlog(message.guild, f"{message.author.name} は招待リンクを送信したため、処罰されました。")
                 except:
                     return
 
@@ -1137,6 +1171,8 @@ class SettingCog(commands.Cog):
                         embed=discord.Embed(description=f"Tokenを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
                         content=f"{message.author.mention}"
                     )
+
+                    await self.send_modlog(message.guild, f"{message.author.name} はTokenを送信したため、処罰されました。")
                 except:
                     return
             if channel_db_find is None:
@@ -1151,6 +1187,8 @@ class SettingCog(commands.Cog):
                         embed=discord.Embed(description=f"Tokenを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
                         content=f"{message.author.mention}"
                     )
+
+                    await self.send_modlog(message.guild, f"{message.author.name} はTokenを送信したため、処罰されました。")
                 except:
                     return
 
@@ -1209,6 +1247,7 @@ class SettingCog(commands.Cog):
                     f"SpamDetected: {message.author.id}/{message.author.display_name}"
                 )
                 message_counts[message.author.id] = 0  # リセット
+                await self.send_modlog(message.guild, f"{message.author.name} はスパムをしたため、処罰されました。")
 
             # 指定時間後にカウントを減らす
             await asyncio.sleep(time_window)
@@ -1250,6 +1289,7 @@ class SettingCog(commands.Cog):
                     f"AppSpamDetected: {message.interaction_metadata.user.id}/{message.interaction_metadata.user.display_name}"
                 )
                 message_counts_userapp[message.interaction_metadata.user.id] = 0
+                await self.send_modlog(message.guild, f"{message.author.name} はスラッシュコマンドを連打したため、処罰されました。")
 
             await asyncio.sleep(time_window)
             message_counts_userapp[message.interaction_metadata.user.id] -= 1
@@ -1289,6 +1329,8 @@ class SettingCog(commands.Cog):
                     embed=discord.Embed(description=f"{automod_rule.name.replace('対策', '')} を送信しようとしたため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
                     content=f"{member.mention}"
                 )
+
+                await self.send_modlog(execution.guild, f"{member.name} {automod_rule.name.replace('対策', '')}を送信しようとしたため処罰されました。")
             except:
                 return
         except:

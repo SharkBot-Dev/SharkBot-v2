@@ -5,6 +5,36 @@ import re
 
 from models import command_disable
 
+class ModLogSettingView(discord.ui.View):
+    def __init__(self, *, timeout = 180):
+        super().__init__(timeout=timeout)
+        self.channel = None
+
+    @discord.ui.select(cls=discord.ui.ChannelSelect, channel_types=[discord.ChannelType.text], max_values=1, min_values=1, placeholder="ModLogを送信するチャンネルを選択してください。")
+    async def modlog_setting(self, interaction: discord.Interaction, select: discord.ui.ChannelSelect):
+        self.channel = select.values[0]
+        await interaction.response.send_message(ephemeral=True, content=f"{select.values[0].mention} を選択しました。")
+
+    @discord.ui.button(label="設定する", style=discord.ButtonStyle.green)
+    async def modlog_set(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.channel is None:
+            return await interaction.response.send_message(ephemeral=True, content="先にチャンネルを選択してください。")
+
+        db = interaction.client.async_db["MainTwo"].AutoModLog
+        await db.update_one(
+            {"Guild": interaction.guild.id},
+            {'$set': {"Guild": interaction.guild.id, 'Channel': self.channel.id}},
+            upsert=True,
+        )
+        await interaction.response.send_message(ephemeral=True, content=f"設定しました。\n次からAutoModのログを {self.channel.mention} に送信します。")
+
+    @discord.ui.button(label="無効化する", style=discord.ButtonStyle.red)
+    async def modlog_disable(self, interaction: discord.Interaction, button: discord.ui.Button):
+        db = interaction.client.async_db["MainTwo"].AutoModLog
+        await db.delete_one(
+            {"Guild": interaction.guild.id}
+        )
+        await interaction.response.send_message(ephemeral=True, content="無効化しました。")
 
 class AutoModCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -60,9 +90,9 @@ class AutoModCog(commands.Cog):
             )
         elif タイプ.value == "token":
             dbs = self.bot.async_db["Main"].TokenBlock
-            await dbs.replace_one(
+            await dbs.update_one(
                 {"Guild": interaction.guild.id},
-                {"Guild": interaction.guild.id},
+                {'$set': {"Guild": interaction.guild.id}},
                 upsert=True,
             )
         elif タイプ.value == "everyone":
@@ -99,16 +129,16 @@ class AutoModCog(commands.Cog):
             )
         elif タイプ.value == "spam":
             dbs = self.bot.async_db["Main"].SpamBlock
-            await dbs.replace_one(
+            await dbs.update_one(
                 {"Guild": interaction.guild.id},
-                {"Guild": interaction.guild.id},
+                {'$set': {"Guild": interaction.guild.id}},
                 upsert=True,
             )
         elif タイプ.value == "slashspam":
             dbs = self.bot.async_db["Main"].UserApplicationSpamBlock
-            await dbs.replace_one(
+            await dbs.update_one(
                 {"Guild": interaction.guild.id},
-                {"Guild": interaction.guild.id},
+                {'$set': {"Guild": interaction.guild.id}},
                 upsert=True,
             )
         await interaction.followup.send(
@@ -237,6 +267,15 @@ class AutoModCog(commands.Cog):
                     return await interaction_modal.followup.send(ephemeral=True, content="追加に失敗しました。")
 
         await interaction.response.send_modal(AddCustomWordModal())
+
+    @automod.command(name="modlog", description="AutoModにより処罰された際に発生するログを送信するチャンネルを設定します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_guild=True, manage_channels=True)
+    async def automod_moglog(
+        self, interaction: discord.Interaction
+    ):
+        await interaction.response.send_message(ephemeral=True, content="以下のボタンとチャンネル選択バーを使って設定してください。", view=ModLogSettingView())
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoModCog(bot))
