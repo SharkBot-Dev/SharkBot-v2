@@ -1376,13 +1376,25 @@ class FunCog(commands.Cog):
                             
                     return
 
+                ca = random.randint(0, 12)
+
+                if ca == 11:
+                    await wh.send(content=await markov.generate_text(HIROYUKI_TEXT, message.clean_content, 100), username="パワー系ひろゆき", avatar_url="https://assets.st-note.com/production/uploads/images/152150583/rectangle_large_type_2_8a80ddb83cbc1b260fe6b958986ca4bd.jpeg?width=1280")
+                    return
+
+                if ca == 10:
+                    ishiba_text = random.choice([f"{message.clean_content}とは...何か(ﾈｯﾄﾘ", "恥を知れ"])
+                    await wh.send(content=ishiba_text, username="石破茂", avatar_url="https://ishiba2024.jp/contents/wp-content/uploads/2024/09/profile_77.jpg")
+                    return
+
                 await wh.send(content=await markov.generate_text(HIROYUKI_TEXT, message.clean_content, 100), username="ひろゆき", avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg")
 
-        except:
+        except Exception as e:
             await db.delete_one(
                 {"Guild": message.guild.id}
             )
-            return await message.channel.send(embed=make_embed.error_embed(title="ひろゆきが消滅してしまいました。", description="消滅したため登録を解除しました。"))
+            return await message.channel.send(embed=make_embed.error_embed(title="ひろゆきが消滅してしまいました。", description="消滅したため登録を解除しました。")
+                                              .add_field(name="エラーコード", value=f"```{e}```", inline=False))
 
     @fun.command(name="hiroyuki", description="ひろゆきを召喚します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
