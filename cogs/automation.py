@@ -69,7 +69,11 @@ class AutoMationCog(commands.Cog):
                     return
                 cooldown_automation[ctx["channel"].guild.id] = current_time
 
-                await ctx["channel"].send(run_value + "\n-# このメッセージは自動化機能によるメッセージです。")
+                try:
+
+                    await ctx["channel"].send(run_value + "\n-# このメッセージは自動化機能によるメッセージです。")
+                except:
+                    pass
 
             if run == "delete" and "message" in ctx:
                 current_time = time.time()
