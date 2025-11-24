@@ -9,16 +9,39 @@
     <meta property="og:type" content="website">
 
     <title>短縮URLサービス</title>
+
+    <style>
+        .box {
+            background-color: cornflowerblue;
+            color: rgb(0, 0, 0);
+            border-radius: 30px;
+            text-align: center;
+        }
+
+        .box button {
+            background-color: black;
+            color: white;
+            border-radius: 20px;
+        }
+
+        .box input {
+            background-color: black;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <h1>shb.redへようこそ！</h1>
-    <h4>/shorten に ?url=URL をつければ短縮できます！</h4>
+    <div class="box">
+        <h1>SharkBotの短縮URLサービス<br><img src="/static/images/shark.png" width="100" height="100"></h1>
+        <h1>shb.redへようこそ！</h1>
+        <h4>/shorten に ?url=URL をつければ短縮できます！</h4>
 
-    <h2>以下からも作成できます。</h2>
-    <input type="url" id="url" placeholder="https://example.com">
-    <button onclick="create_url()">作成する</button>
+        <h2>以下からも作成できます。</h2>
+        <input type="url" id="url" placeholder="https://example.com">
+        <button onclick="create_url()">作成する</button>
 
-    <div id="result" style="margin-top: 20px;"></div>
+        <div id="result" style="margin-top: 20px;"></div><br>
+    </div>
 
     <script>
         async function create_url() {

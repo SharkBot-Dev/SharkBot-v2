@@ -4,7 +4,7 @@ import string
 import random
 from uvicorn.middleware.wsgi import WSGIMiddleware
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 def init_db():
     conn = sqlite3.connect("database.db")
