@@ -62,6 +62,13 @@ class AutoMationCog(commands.Cog):
                 if not name or name != if_value:
                     continue
 
+            if not ctx.get("author") is None:
+                ath = ctx.get('author')
+                if isinstance(ath, discord.Member):
+                    run_value = run_value.replace('{user}', ath.name)
+                    run_value = run_value.replace('{user.mention}', ath.mention)
+                    run_value = run_value.replace('{user.id}', str(ath.id))
+
             if run == "send" and "channel" in ctx:
                 current_time = time.time()
                 last_message_time = cooldown_automation.get(ctx["channel"].guild.id, 0)
