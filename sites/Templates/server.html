@@ -1,53 +1,100 @@
 <html>
-    <head>
-        <title>サーバー掲示板</title>
-        <style>
-            .left{
-                float: left;
-                width:280px;
-                height:300px;
-            }
+<head>
+    <title>サーバー掲示板</title>
+    <meta name="twitter:title" content="SharkBot Servers" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:description" content="SharkBotのサーバー掲示板">
+    <meta name="twitter:image" content="{{ url_for('static', filename='/Server.png')}}" />
 
-            .box {
-                border-radius: 10px;
-                border: solid 2px #000;     /* 枠線指定 */
-                background-color: #eee;     /* 背景色指定 */
-                margin: 10;
-                padding: 10;
-            }
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #f0f4ff, #dce7ff);
+        }
 
-            .bimg {
-                border-radius: 10px;
-            }
+        nav {
+            width: 100%;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: solid 1px #ddd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
 
-            .bp {
-                margin: 20;
-                padding: 20;
-            }
+        nav h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+        }
 
-            nav {
-                width: 100%;
-                height: 45px;
-                background-color: #eee;
-                border-radius: 10px;
-                box-sizing: border-box;
-            }
-        </style>
-        <meta name="twitter:title" content="SharkBot Servers" />
-        <meta name="twitter:card" content="summary" />
-        <meta name="twitter:description" content="SharkBotのサーバー掲示板">
-        <meta name="twitter:image" content="{{ url_for('static', filename='/Server.png')}}" />
-    </head>
-    <body>
-        <nav>
-            <h2>SharkBot Servers ({{ct}}サーバー)</h2>
-        </nav>
-        <div class="bp">
-            {% for key in server %}
-            <a href="{{ key.Invite }}"><div class="box left">
-                <center><h2>{{key.Name}}</h2>{{ key.Description[:40] }}<br><br><img src="{{ key.Icon }}" width="100" height="100" class="bimg"></center><br>
-            </div></a>
-            {% endfor %}
-        </div>
-    </body>
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            display: block;
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            text-decoration: none;
+            color: #333;
+            border: solid 1px #ddd;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .icon {
+            margin-top: 10px;
+            width: 110px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 20px;
+        }
+
+        .name {
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .desc {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <center><h2>SharkBot サーバー掲示板 ({{ct}} サーバー)</h2></center>
+    </nav>
+
+    <div class="container">
+        {% for key in server %}
+        <a href="{{ key.Invite }}" class="card">
+            <div class="name">
+                {{ key.Name }}
+                {% if key.Guild|string == '1343124570131009579' %}
+                    [公式]
+                {% endif %}
+            </div>
+            <div class="desc">{{ key.Description[:60] }}{% if key.Description|length > 60 %}…{% endif %}</div>
+            <center><img src="{{ key.Icon }}" class="icon"></center>
+        </a>
+        {% endfor %}
+    </div>
+</body>
 </html>
