@@ -71,7 +71,7 @@ class TimerCog(commands.Cog):
         print("init -> TimerCog")
 
     timer = app_commands.Group(
-        name="timer", description="定期的に投稿するメッセージを設定します。"
+        name="timer", description="定期的に投稿するメッセージを設定します。", allowed_installs=app_commands.AppInstallationType(guild=True, user=False)
     )
 
     @timer.command(name="create", description="タイマーを作成します。")
