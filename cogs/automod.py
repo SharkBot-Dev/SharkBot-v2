@@ -36,6 +36,37 @@ class ModLogSettingView(discord.ui.View):
         )
         await interaction.response.send_message(ephemeral=True, content="無効化しました。")
 
+class ChannelWhiteListSettingView(discord.ui.View):
+    def __init__(self, *, timeout = 180):
+        super().__init__(timeout=timeout)
+        self.channel = None
+
+    @discord.ui.select(cls=discord.ui.ChannelSelect, channel_types=[discord.ChannelType.text, discord.ChannelType.voice], max_values=1, min_values=1, placeholder="ホワイトリストに追加するチャンネルを選択してください。")
+    async def whitelist_select(self, interaction: discord.Interaction, select: discord.ui.ChannelSelect):
+        self.channel = select.values[0]
+        await interaction.response.send_message(ephemeral=True, content=f"{select.values[0].mention} を選択しました。")
+
+    @discord.ui.button(label="設定する", style=discord.ButtonStyle.green)
+    async def whitelist_set(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if self.channel is None:
+            return await interaction.response.send_message(ephemeral=True, content="先にチャンネルを選択してください。")
+
+        db = interaction.client.async_db["Main"].UnBlockChannel
+        await db.update_one(
+            {"Guild": interaction.guild.id, 'Channel': self.channel.id},
+            {'$set': {"Guild": interaction.guild.id, 'Channel': self.channel.id}},
+            upsert=True,
+        )
+        await interaction.response.send_message(ephemeral=True, content=f"設定しました。")
+
+    @discord.ui.button(label="無効化する", style=discord.ButtonStyle.red)
+    async def whitelist_disable(self, interaction: discord.Interaction, button: discord.ui.Button):
+        db = interaction.client.async_db["Main"].UnBlockChannel
+        await db.delete_one(
+            {"Guild": interaction.guild.id, 'Channel': self.channel.id}
+        )
+        await interaction.response.send_message(ephemeral=True, content="無効化しました。")
+
 class AutoModCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -57,6 +88,7 @@ class AutoModCog(commands.Cog):
             app_commands.Choice(name="メールアドレス", value="mail"),
             app_commands.Choice(name="メッセージスパム", value="spam"),
             app_commands.Choice(name="スラッシュコマンドスパム", value="slashspam"),
+            app_commands.Choice(name="10個以上の絵文字", value="emojis")
         ]
     )
     async def automod_create(
@@ -141,6 +173,18 @@ class AutoModCog(commands.Cog):
                 {'$set': {"Guild": interaction.guild.id}},
                 upsert=True,
             )
+        elif タイプ.value == "emojis":
+            dbs = self.bot.async_db["MainTwo"].AutoMods
+            await dbs.update_one(
+                {"Guild": interaction.guild.id},
+                {'$set': {"Guild": interaction.guild.id}},
+                upsert=True,
+            )
+            await dbs.update_one(
+                {"Guild": interaction.guild.id},
+                {'$addToSet': {"AutoMods": "emojis"}},
+                upsert=True,
+            )
         await interaction.followup.send(
             ephemeral=True, content=f"AutoModの「{タイプ.name}」を作成しました。"
         )
@@ -157,6 +201,7 @@ class AutoModCog(commands.Cog):
             app_commands.Choice(name="メールアドレス", value="mail"),
             app_commands.Choice(name="メッセージスパム", value="spam"),
             app_commands.Choice(name="スラッシュコマンドスパム", value="slashspam"),
+            app_commands.Choice(name="10個以上の絵文字", value="emojis"),
             app_commands.Choice(name="カスタムワード", value="customword"),
         ]
     )
@@ -201,7 +246,13 @@ class AutoModCog(commands.Cog):
             for r in rules:
                 if r.name == "カスタムワード対策":
                     await r.delete()
-
+        elif タイプ.value == "emojis":
+            dbs = self.bot.async_db["MainTwo"].AutoMods
+            await dbs.update_one(
+                {"Guild": interaction.guild.id},
+                {'$pull': {"AutoMods": "emojis"}},
+                upsert=True,
+            )
         await interaction.followup.send(
             ephemeral=True, content=f"AutoModの「{タイプ.name}」を削除しました。"
         )
@@ -276,6 +327,20 @@ class AutoModCog(commands.Cog):
         self, interaction: discord.Interaction
     ):
         await interaction.response.send_message(ephemeral=True, content="以下のボタンとチャンネル選択バーを使って設定してください。", view=ModLogSettingView())
+
+    @automod.command(name="whitelist", description="ホワイトリストにチャンネルを追加します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_guild=True, manage_channels=True)
+    async def automod_whitelist(
+        self, interaction: discord.Interaction
+    ):
+        await interaction.response.defer(ephemeral=True)
+        lists = [
+            f"<#{b.get('Channel')}>"
+            async for b in interaction.client.async_db["Main"].UnBlockChannel.find({"Guild": interaction.guild.id})
+        ]
+        await interaction.followup.send(view=ChannelWhiteListSettingView(), content="ホワイトリストに登録されているチャンネル\n{}".format('\n'.join(lists)))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoModCog(bot))

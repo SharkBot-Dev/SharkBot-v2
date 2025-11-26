@@ -52,6 +52,26 @@ class CommandDisableChannel(commands.CommandError):
 class BanBotError(commands.CommandError):
     pass
 
+DISCORD_EMOJI_RE = re.compile(r"<(a?):([a-zA-Z0-9_]{1,32}):([0-9]{17,22})>")
+UNICODE_EMOJI_RE = re.compile(
+    r"["
+    r"\U0001F600-\U0001F64F"  # Emoticons
+    r"\U0001F300-\U0001F5FF"  # Miscellaneous Symbols and Pictographs
+    r"\U0001F680-\U0001F6FF"  # Transport and Map Symbols
+    r"\U0001F700-\U0001F77F"  # Alchemical Symbols (less common for emojis)
+    r"\U0001F780-\U0001F7FF"  # Geometric Shapes Extended
+    r"\U0001F800-\U0001F82F"  # Supplemental Arrows-C
+    r"\U0001F830-\U0001F8FF"  # Supplemental Symbols and Pictographs (continued)
+    r"\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs (more modern emojis)
+    r"\U00002600-\U000027BF"  # Miscellaneous Symbols
+    r"\U00002B50"             # Star symbol
+    r"]+",
+    flags=re.UNICODE
+)
+COMBINED_EMOJI_RE = re.compile(
+    r"<a?:[a-zA-Z0-9_]{1,32}:[0-9]{17,22}>|" + UNICODE_EMOJI_RE.pattern,
+    flags=re.UNICODE | re.DOTALL,
+)
 
 class CommandsManageGroup(app_commands.Group):
     def __init__(self):
@@ -1033,6 +1053,61 @@ class SettingCog(commands.Cog):
         else:
             return dbfind["Score"]
 
+    @commands.Cog.listener("on_message")
+    async def on_message_emojis(self, message: discord.Message):
+        if message.author.bot:
+            return
+        if isinstance(message.channel, discord.DMChannel):
+            return
+        if message.author.guild_permissions.administrator:
+            return
+
+        emojis = COMBINED_EMOJI_RE.findall(message.content)
+        emoji_count = len(emojis)
+
+        if emoji_count < 10:
+            return
+
+        db = self.bot.async_db["MainTwo"].AutoMods
+        try:
+            dbfind = await db.find_one({"Guild": message.guild.id}, {"_id": False})
+        except:
+            return
+
+        if dbfind is None or "emojis" not in dbfind.get("AutoMods", []):
+            return
+
+        channel_db = self.bot.async_db["Main"].UnBlockChannel
+        try:
+            channel_db_find = await channel_db.find_one({"Channel": message.channel.id}, {"_id": False})
+        except:
+            channel_db_find = None
+
+        if channel_db_find is not None:
+            return
+
+        try:
+            await self.warn_user(message)
+            try:
+                await message.delete()
+            except:
+                pass
+
+            sc = await self.score_get(message.guild, message.author)
+            await message.channel.send(
+                embed=discord.Embed(
+                    description=f"10個以上の絵文字を送信したため処罰されました。\n現在のスコア: {sc}",
+                    color=discord.Color.yellow()
+                ),
+                content=f"{message.author.mention}"
+            )
+            await self.send_modlog(
+                message.guild,
+                f"{message.author.name} は10個以上の絵文字を送信したため、処罰されました。"
+            )
+        except Exception as e:
+            return
+        
     @commands.Cog.listener("on_message")
     async def on_message_everyone_block(self, message: discord.Message):
         if message.author.bot:
