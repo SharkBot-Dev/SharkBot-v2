@@ -55,6 +55,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/economy`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🪙サーバー内経済
           </a>
+          <a href={`/dashboard/settings/${guildid}/dice`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🎲ダイス
+          </a>
         </nav>
       </aside>
 
