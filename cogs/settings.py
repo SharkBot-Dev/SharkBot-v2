@@ -207,6 +207,53 @@ class RoleCommands(app_commands.Group):
                 )
             )
 
+    @app_commands.command(
+        name="auto-role", description="参加時にロールを追加する機能を設定・確認します。"
+    )
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def autorole_setting(self, interaction: discord.Interaction, ロール: discord.Role = None):
+        await interaction.response.defer()
+        db = interaction.client.async_db["MainTwo"].AutoRole
+        try:
+            dbfind = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
+        except:
+            return
+        if ロール is None:
+            if not dbfind is None:
+                _ = "\n".join([f"<@&{r}>" for r in dbfind.get('Roles', [])])
+                await interaction.followup.send(embed=make_embed.success_embed('現在のメンバー参加時のロール追加機能の設定', description=_ if _ else 'まだ設定がありません。')
+                                                .set_footer(text="設定を変更するにはこのコマンドにロールを指定してください。"))
+                return
+            else:
+                await interaction.followup.send(embed=make_embed.success_embed('現在のメンバー参加時のロール追加機能の設定', description="まだ設定がありません。")
+                                                .set_footer(text="設定を変更するにはこのコマンドにロールを指定してください。"))
+                return
+        message = ""
+        if dbfind is None:
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$addToSet": {"Roles": ロール.id}},
+                upsert=True,
+            )
+            message = f"{ロール.mention} をメンバー参加時に追加するようにします。"
+        else:
+            if not ロール.id in dbfind.get('Roles', []):
+                await db.update_one(
+                    {"Guild": interaction.guild.id},
+                    {"$addToSet": {"Roles": ロール.id}},
+                    upsert=True,
+                )
+                message = f"{ロール.mention} をメンバー参加時に追加するようにします。"
+            else:
+                await db.update_one(
+                    {"Guild": interaction.guild.id},
+                    {"$pull": {"Roles": ロール.id}},
+                    upsert=True,
+                )
+                message = f"{ロール.mention} をメンバー参加時に追加しないようにします。"
+        await interaction.followup.send(embed=make_embed.success_embed(title="メンバー参加時のロール追加機能の設定を変更しました。", description=message))
 
 class WelcomeCommands(app_commands.Group):
     def __init__(self):
@@ -483,6 +530,37 @@ class SettingCog(commands.Cog):
         self.bot.remove_check(self.ban_user_block)
         self.bot.remove_check(self.ban_guild_block)
         self.bot.remove_check(self.disable_channel)
+
+    @commands.Cog.listener("on_member_join")
+    async def on_member_join_auto_role(self, member: discord.Member):
+        if member.bot:
+            return
+        
+        db = self.bot.async_db["MainTwo"].AutoRole
+        try:
+            dbfind = await db.find_one({"Guild": member.guild.id}, {"_id": False})
+        except:
+            return
+        if dbfind is None:
+            return
+        
+        roles = dbfind.get("Roles")
+        if not roles:
+            return
+
+        role_objs = [
+            member.guild.get_role(role_id)
+            for role_id in roles
+            if member.guild.get_role(role_id) is not None
+        ]
+
+        if not role_objs:
+            return
+
+        try:
+            await member.add_roles(*role_objs, reason="AutoRole機能により追加。")
+        except:
+            pass
 
     @commands.Cog.listener("on_member_remove")
     async def on_member_remove_role_backup(self, member: discord.Member):
