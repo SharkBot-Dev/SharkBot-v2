@@ -179,7 +179,7 @@ class TimerCog(commands.Cog):
 
             async with session.post(
                 webhook_url,
-                json={"content": message, 'username': "SharkBot Timer"}
+                json={"content": message, 'username': "SharkBot Timer", 'avatar_url': self.bot.user.avatar.url}
             ):
                 pass
 
