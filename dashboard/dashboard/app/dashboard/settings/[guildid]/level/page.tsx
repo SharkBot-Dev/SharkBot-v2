@@ -63,22 +63,26 @@ export default async function LevelPage({ params }: { params: { guildid: string 
         const guild = await getGuild(sessionId, guildid);
         if (!guild) return;
 
-        const role = formData.get("role") as string;
-        const level = formData.get("level") as string;
+        try {
+            const role = formData.get("role") as string;
+            const level = formData.get("level") as string;
 
-        const db = await connectDB();
+            const db = await connectDB();
 
-        await db.db("Main").collection("LevelingUpRole").updateOne(
-            { Guild: Long.fromString(guildid), Level: Long.fromString(level) },
-            {
-                $set: {
-                    Guild: Long.fromString(guildid),
-                    Level: Long.fromString(level),
-                    Role: Long.fromString(role)
+            await db.db("Main").collection("LevelingUpRole").updateOne(
+                { Guild: Long.fromString(guildid), Level: Long.fromString(level) },
+                {
+                    $set: {
+                        Guild: Long.fromString(guildid),
+                        Level: Long.fromString(level),
+                        Role: Long.fromString(role)
+                    },
                 },
-            },
-            { upsert: true }
-        );
+                { upsert: true }
+            );
+        } catch {
+            return;
+        }
     }
 
     async function deleteLevel(formData: FormData) {
