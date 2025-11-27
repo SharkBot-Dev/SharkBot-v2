@@ -65,9 +65,12 @@ class AutoMationCog(commands.Cog):
             if not ctx.get("author") is None:
                 ath = ctx.get('author')
                 if isinstance(ath, discord.Member):
-                    run_value = run_value.replace('{user}', ath.name)
-                    run_value = run_value.replace('{user.mention}', ath.mention)
-                    run_value = run_value.replace('{user.id}', str(ath.id))
+                    try:
+                        run_value = run_value.replace('{user}', ath.name)
+                        run_value = run_value.replace('{user.mention}', ath.mention)
+                        run_value = run_value.replace('{user.id}', str(ath.id))
+                    except:
+                        pass
 
             if run == "send" and "channel" in ctx:
                 current_time = time.time()

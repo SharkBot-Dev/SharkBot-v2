@@ -95,7 +95,7 @@ class DiceSettingGroup(app_commands.Group):
             return await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="ダイスを有効化しました。",
-                    description="反応する言葉の例: `3d8`, `9d3`, `ダイス`, `dd`"
+                    description="反応する言葉の例: `3d8`, `9d3`, `ダイス`, `dd`, `🎲`, `チンチロ`"
                 )
             )
         else:
@@ -1639,8 +1639,34 @@ class SettingCog(commands.Cog):
                 if "ダイス" == message.content:
                     await message.reply(f"🎲 {message.author.mention}: {random.randint(1, 6)}")
                     return
+                if "🎲" == message.content:
+                    await message.reply(f"🎲 {message.author.mention}: {random.randint(1, 6)}")
+                    return
                 if "dd" == message.content:
                     await message.reply(f"🎲 {message.author.mention}: {random.randint(1, 100)}")
+                    return
+                if "チンチロ" == message.content:
+                    a = random.randint(1,6)
+                    b = random.randint(1,6)
+                    c = random.randint(1,6)
+                    def check():
+                        if a==b==c==1:
+                            return 'ピンゾロ！'
+                        elif a==b==c!=1:
+                            return 'ゾロ目！'
+                        elif a!=b!=c and a+b+c==15:
+                            return 'シゴロ！'
+                        elif a==b!=c:
+                            return f'結果は{c}！'
+                        elif b==c!=a:
+                            return f'結果は{a}！'
+                        elif c==a!=b:
+                            return f'結果は{b}！'
+                        elif a!=b!=c and a+b+c==6:
+                            return '残念！ヒフミ！'
+                        else:
+                            return '残念！目無し！'
+                    await message.reply(f"🎲 {message.author.mention}: {a}, {b}, {c} ... {check()}")
                     return
 
             current_time = time.time()
