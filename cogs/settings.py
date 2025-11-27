@@ -23,6 +23,7 @@ cooldown_expand_time = {}
 cooldown_auto_protect_time = {}
 cooldown_auto_translate = {}
 cooldown_auto_thread = {}
+cooldown_dice = {}
 
 ratelimit_search = {}
 
@@ -72,6 +73,44 @@ COMBINED_EMOJI_RE = re.compile(
     r"<a?:[a-zA-Z0-9_]{1,32}:[0-9]{17,22}>|" + UNICODE_EMOJI_RE.pattern,
     flags=re.UNICODE | re.DOTALL,
 )
+
+class DiceSettingGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="dice", description="ダイスを設定します。")
+
+    @app_commands.command(
+        name="dice", description="ダイスの設定を変更します。"
+    )
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def dice_setting(self, interaction: discord.Interaction, 有効化するか: bool):
+        db = interaction.client.async_db["MainTwo"].Dice
+        if 有効化するか:
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$set": {"Guild": interaction.guild.id}},
+                upsert=True,
+            )
+            return await interaction.response.send_message(
+                embed=make_embed.success_embed(
+                    title="ダイスを有効化しました。",
+                    description="反応する言葉の例: `3d8`, `9d3`, `ダイス`, `dd`"
+                )
+            )
+        else:
+            result = await db.delete_one({"Guild": interaction.guild.id})
+            if result.deleted_count == 0:
+                return await interaction.response.send_message(
+                    embed=make_embed.error_embed(
+                        title="ダイスは有効化されていません。"
+                    )
+                )
+            await interaction.response.send_message(
+                embed=make_embed.success_embed(
+                    title="ダイスを無効化しました。"
+                )
+            )
 
 class CommandsManageGroup(app_commands.Group):
     def __init__(self):
@@ -564,13 +603,12 @@ class SettingCog(commands.Cog):
             return
         cooldown_auto_translate[message.channel.id] = current_time
 
-        translator = GoogleTranslator(source="auto", target=dbfind.get("Lang", "en"))
-        translated_text = translator.translate(message.content)
+        translator = await asyncio.to_thread(GoogleTranslator, source="auto", target=dbfind.get("Lang", "en"))
+        translated_text = await asyncio.to_thread(translator.translate, message.content)
 
-        embed = discord.Embed(
-            title=f"<:Success:1362271281302601749> 翻訳 ({dbfind.get('Lang', 'en')} へ)",
-            description=f"{translated_text}",
-            color=discord.Color.green(),
+        embed = make_embed.success_embed(
+            title=f"翻訳 ({dbfind.get('Lang', 'en')} へ)",
+            description=f"{translated_text}"
         ).set_footer(text="Google Translate")
 
         await message.reply(embed=embed)
@@ -1573,9 +1611,61 @@ class SettingCog(commands.Cog):
                     except discord.HTTPException:
                         return
 
+    @commands.Cog.listener("on_message")
+    async def on_message_dice(self, message: discord.Message):
+        if message.author.bot:
+            return
+        if type(message.channel) == discord.DMChannel:
+            return
+
+        db = self.bot.async_db["MainTwo"].Dice
+        try:
+            dbfind = await db.find_one({"Guild": message.guild.id}, {"_id": False})
+        except:
+            return
+        if dbfind is None:
+            return
+        
+        try:
+            
+            match = re.fullmatch(r"(\d+)d(\d+)", message.content)
+            if not match:
+                current_time = time.time()
+                last_message_time = cooldown_dice.get(message.channel.id, 0)
+                if current_time - last_message_time < 2:
+                    return
+                cooldown_dice[message.channel.id] = current_time
+
+                if "ダイス" == message.content:
+                    await message.reply(f"🎲 {message.author.mention}: {random.randint(1, 6)}")
+                    return
+                if "dd" == message.content:
+                    await message.reply(f"🎲 {message.author.mention}: {random.randint(1, 100)}")
+                    return
+
+            current_time = time.time()
+            last_message_time = cooldown_dice.get(message.channel.id, 0)
+            if current_time - last_message_time < 2:
+                return
+            cooldown_dice[message.channel.id] = current_time
+
+            num_dice, sides = map(int, match.groups())
+            if num_dice > 100:
+                return
+            if sides > 100:
+                return
+            rolls = [random.randint(1, sides) for _ in range(num_dice)]
+            str_rolls = [str(r) for r in rolls]
+            await message.reply(
+                f"🎲 {message.author.mention}: {', '.join(str_rolls)} → {sum(rolls)}"
+            )
+        except:
+            return
+
     settings = app_commands.Group(name="settings", description="設定系のコマンドです。")
 
     settings.add_command(RoleCommands())
+    settings.add_command(DiceSettingGroup())
     settings.add_command(WelcomeCommands())
     settings.add_command(CommandsManageGroup())
 
