@@ -1,0 +1,1 @@
+npx next start -p 5050
