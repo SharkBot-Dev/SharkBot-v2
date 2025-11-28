@@ -38,8 +38,9 @@ villagers = {
     "石工": "https://static.wikitide.net/minecraftjapanwiki/thumb/3/3e/Plains_Stone_Mason.png/68px-Plains_Stone_Mason.png",
     "羊飼い": "https://static.wikitide.net/minecraftjapanwiki/thumb/7/7f/Plains_Shepherd.png/68px-Plains_Shepherd.png",
     "道具鍛冶": "https://static.wikitide.net/minecraftjapanwiki/thumb/c/cb/Plains_Toolsmith.png/68px-Plains_Toolsmith.png",
-    "武器鍛冶": "https://static.wikitide.net/minecraftjapanwiki/thumb/b/b7/Plains_Weaponsmith.png/68px-Plains_Weaponsmith.png"
+    "武器鍛冶": "https://static.wikitide.net/minecraftjapanwiki/thumb/b/b7/Plains_Weaponsmith.png/68px-Plains_Weaponsmith.png",
 }
+
 
 class EmeraldGroup(app_commands.Group):
     def __init__(self):
@@ -48,7 +49,9 @@ class EmeraldGroup(app_commands.Group):
     @app_commands.command(name="info", description="エメラルドの個数を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def emerald_info(self, interaction: discord.Interaction, ユーザー: discord.User = None):
+    async def emerald_info(
+        self, interaction: discord.Interaction, ユーザー: discord.User = None
+    ):
         await interaction.response.defer()
         user = ユーザー if ユーザー else interaction.user
 
@@ -57,42 +60,79 @@ class EmeraldGroup(app_commands.Group):
         try:
             dbfind = await db.find_one({"User": user.id}, {"_id": False})
         except Exception as e:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="取得に失敗しました。", description=f"エラーです。\n\nエラーコード: ```{e}```"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="取得に失敗しました。",
+                    description=f"エラーです。\n\nエラーコード: ```{e}```",
+                )
+            )
         if dbfind is None:
-            return await interaction.followup.send(embed=make_embed.success_embed(title=f"{user.name} の情報")
-                                                   .add_field(name="エメラルド", value="0 <:Emerald:1439453979594723388>", inline=False))
-        
-        tip = dbfind.get('Tip', 0)
-        vs = dbfind.get('Villagers', None)
-    
-        return await interaction.followup.send(embed=make_embed.success_embed(title=f"{user.name} の情報")
-                                               .add_field(name="エメラルド", value=f"{tip} <:Emerald:1439453979594723388>", inline=False)
-                                               .add_field(name="集めた村人の一覧", value="\n".join(vs) if vs else "なし", inline=False))
+            return await interaction.followup.send(
+                embed=make_embed.success_embed(title=f"{user.name} の情報").add_field(
+                    name="エメラルド",
+                    value="0 <:Emerald:1439453979594723388>",
+                    inline=False,
+                )
+            )
 
-    @app_commands.command(name="slot", description="エメラルドを使ってスロットを回します。")
+        tip = dbfind.get("Tip", 0)
+        vs = dbfind.get("Villagers", None)
+
+        return await interaction.followup.send(
+            embed=make_embed.success_embed(title=f"{user.name} の情報")
+            .add_field(
+                name="エメラルド",
+                value=f"{tip} <:Emerald:1439453979594723388>",
+                inline=False,
+            )
+            .add_field(
+                name="集めた村人の一覧",
+                value="\n".join(vs) if vs else "なし",
+                inline=False,
+            )
+        )
+
+    @app_commands.command(
+        name="slot", description="エメラルドを使ってスロットを回します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def emerald_slot(self, interaction: discord.Interaction, エメラルドの個数: int):
+    async def emerald_slot(
+        self, interaction: discord.Interaction, エメラルドの個数: int
+    ):
         await interaction.response.defer()
         db = interaction.client.async_db["MainTwo"].EmeraldGame
 
         try:
             dbfind = await db.find_one({"User": interaction.user.id}, {"_id": False})
         except:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="エメラルドが足りません。", description=f"現在はエメラルドを「0個」持っています。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="エメラルドが足りません。",
+                    description=f"現在はエメラルドを「0個」持っています。",
+                )
+            )
         if dbfind is None:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="エメラルドが足りません。", description=f"現在はエメラルドを「0個」持っています。"))
-        
-        tip = dbfind.get('Tip', 0)
-        
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="エメラルドが足りません。",
+                    description=f"現在はエメラルドを「0個」持っています。",
+                )
+            )
+
+        tip = dbfind.get("Tip", 0)
+
         if tip < エメラルドの個数:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="エメラルドが足りません。", description=f"現在はエメラルドを「{tip}個」持っています。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="エメラルドが足りません。",
+                    description=f"現在はエメラルドを「{tip}個」持っています。",
+                )
+            )
 
         await db.update_one(
             {"User": interaction.user.id},
-            {"$inc": {
-                "Tip": -エメラルドの個数
-            }},
+            {"$inc": {"Tip": -エメラルドの個数}},
             upsert=True,
         )
 
@@ -106,7 +146,7 @@ class EmeraldGroup(app_commands.Group):
                 return True
             else:
                 return False
-            
+
         result = spin_slot()
 
         win = check_win(result)
@@ -114,14 +154,19 @@ class EmeraldGroup(app_commands.Group):
         if win:
             await db.update_one(
                 {"User": interaction.user.id},
-                {"$inc": {
-                    "Tip": エメラルドの個数*2
-                }},
+                {"$inc": {"Tip": エメラルドの個数 * 2}},
                 upsert=True,
             )
 
-        await interaction.followup.send(embed=make_embed.success_embed(title="スロットを回しました。", description=" | ".join(result))
-                                        .add_field(name="結果", value="🎉 そろいました！" if win else "ハズレ...", inline=False))
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="スロットを回しました。", description=" | ".join(result)
+            ).add_field(
+                name="結果",
+                value="🎉 そろいました！" if win else "ハズレ...",
+                inline=False,
+            )
+        )
 
     @app_commands.command(name="mining", description="エメラルドを採掘します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -131,42 +176,48 @@ class EmeraldGroup(app_commands.Group):
         data = await db.find_one({"User": interaction.user.id})
         now = time.time()
         cooldown_time = 2 * 60 * 60
-        
+
         if data and "LastMining" in data:
             last_up = float(data["LastMining"])
             remaining = cooldown_time - (now - last_up)
             if remaining > 0:
                 m, s = divmod(int(remaining), 60)
-                embed = make_embed.error_embed(title="まだ採掘できません。", description=f"あと **{m}分{s}秒** 待ってから再度お試しください。")
-                return await interaction.response.send_message(
-                    embed=embed
+                embed = make_embed.error_embed(
+                    title="まだ採掘できません。",
+                    description=f"あと **{m}分{s}秒** 待ってから再度お試しください。",
                 )
-            
+                return await interaction.response.send_message(embed=embed)
+
         await interaction.response.defer()
-            
+
         ems = random.randint(1, 3)
         await db.update_one(
             {"User": interaction.user.id},
-            {"$inc": {
-                "Tip": ems
-            }},
+            {"$inc": {"Tip": ems}},
             upsert=True,
         )
 
         await db.update_one(
             {"User": interaction.user.id},
-            {"$set": {
-                "LastMining": str(time.time()),
-            }},
+            {
+                "$set": {
+                    "LastMining": str(time.time()),
+                }
+            },
             upsert=True,
         )
 
-        embed = make_embed.success_embed(title="エメラルドを採掘しました。", description="2時間後に再度採掘できます。")
-        embed.add_field(name="採掘した個数", value=f"{ems} <:Emerald:1439453979594723388>", inline=False)
-
-        await interaction.followup.send(
-            embed=embed
+        embed = make_embed.success_embed(
+            title="エメラルドを採掘しました。",
+            description="2時間後に再度採掘できます。",
         )
+        embed.add_field(
+            name="採掘した個数",
+            value=f"{ems} <:Emerald:1439453979594723388>",
+            inline=False,
+        )
+
+        await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="buy", description="エメラルドをアイテムと交換します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -176,28 +227,43 @@ class EmeraldGroup(app_commands.Group):
             app_commands.Choice(name="ランダムな村人 (3エメラルド)", value="villager"),
         ]
     )
-    async def emerald_buy(self, interaction: discord.Interaction, アイテム名: app_commands.Choice[str]):
+    async def emerald_buy(
+        self, interaction: discord.Interaction, アイテム名: app_commands.Choice[str]
+    ):
         await interaction.response.defer()
         db = interaction.client.async_db["MainTwo"].EmeraldGame
 
         try:
             dbfind = await db.find_one({"User": interaction.user.id}, {"_id": False})
         except:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="エメラルドが足りません。", description=f"現在はエメラルドを「0個」持っています。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="エメラルドが足りません。",
+                    description=f"現在はエメラルドを「0個」持っています。",
+                )
+            )
         if dbfind is None:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="エメラルドが足りません。", description=f"現在はエメラルドを「0個」持っています。"))
-        
-        tip = dbfind.get('Tip', 0)
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="エメラルドが足りません。",
+                    description=f"現在はエメラルドを「0個」持っています。",
+                )
+            )
+
+        tip = dbfind.get("Tip", 0)
 
         if アイテム名.value == "villager":
             if tip < 3:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="エメラルドが足りません。", description=f"現在はエメラルドを「{tip}個」持っています。"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="エメラルドが足りません。",
+                        description=f"現在はエメラルドを「{tip}個」持っています。",
+                    )
+                )
 
             await db.update_one(
                 {"User": interaction.user.id},
-                {"$inc": {
-                    "Tip": -3
-                }},
+                {"$inc": {"Tip": -3}},
                 upsert=True,
             )
             keys = []
@@ -207,14 +273,20 @@ class EmeraldGroup(app_commands.Group):
 
             await db.update_one(
                 {"User": interaction.user.id},
-                {'$addToSet': {"Villagers": r_k}},
+                {"$addToSet": {"Villagers": r_k}},
                 upsert=True,
             )
 
             embed = make_embed.success_embed(title=f"{r_k} が出てきました。")
-            embed.set_image(url=villagers.get(r_k, 'https://static.wikitide.net/minecraftjapanwiki/b/b4/Nitwit_refusing.gif'))
+            embed.set_image(
+                url=villagers.get(
+                    r_k,
+                    "https://static.wikitide.net/minecraftjapanwiki/b/b4/Nitwit_refusing.gif",
+                )
+            )
             await interaction.followup.send(embed=embed)
             return
+
 
 class ScratchGroup(app_commands.Group):
     def __init__(self):
@@ -234,23 +306,33 @@ class ScratchGroup(app_commands.Group):
                         "スクラッチユーザーが見つかりません。", ephemeral=True
                     )
                     return
-                
+
                 embed = make_embed.success_embed(title=f"{ユーザーid} の情報")
                 response = await resp.json()
-                profile = response['profile']
-                if profile.get('images', None):
-                    img = profile.get('images', {}).get("90x90", None)
+                profile = response["profile"]
+                if profile.get("images", None):
+                    img = profile.get("images", {}).get("90x90", None)
                     if img:
                         embed.set_thumbnail(url=img)
-                embed.add_field(name="自己紹介", value=profile.get('bio', 'なし'), inline=False)
-                embed.add_field(name="ステータス", value=profile.get('status', 'なし'), inline=False)
-                embed.add_field(name="国", value=profile.get('country', 'なし'), inline=False)
+                embed.add_field(
+                    name="自己紹介", value=profile.get("bio", "なし"), inline=False
+                )
+                embed.add_field(
+                    name="ステータス", value=profile.get("status", "なし"), inline=False
+                )
+                embed.add_field(
+                    name="国", value=profile.get("country", "なし"), inline=False
+                )
                 await interaction.followup.send(embed=embed)
 
-    @app_commands.command(name="project", description="スクラッチのプロジェクトを検索します。")
+    @app_commands.command(
+        name="project", description="スクラッチのプロジェクトを検索します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def scratch_project(self, interaction: discord.Interaction, プロジェクトid: str):
+    async def scratch_project(
+        self, interaction: discord.Interaction, プロジェクトid: str
+    ):
         await interaction.response.defer()
         async with aiohttp.ClientSession() as session:
             async with session.get(
@@ -265,20 +347,20 @@ class ScratchGroup(app_commands.Group):
                 embed = make_embed.success_embed(title=f"{プロジェクトid} の情報")
                 response = await resp.json()
 
-                title = response.get('title', 'なし')
-                description = response.get('description', 'なし')
-                image = response.get('image', 'なし')
+                title = response.get("title", "なし")
+                description = response.get("description", "なし")
+                image = response.get("image", "なし")
 
-                history = response.get('history', {})
-                created = history.get('created', 'なし')
-                modified = history.get('modified', 'なし')
-                shared = history.get('shared', 'なし')
+                history = response.get("history", {})
+                created = history.get("created", "なし")
+                modified = history.get("modified", "なし")
+                shared = history.get("shared", "なし")
 
-                stats = response.get('stats', {})
-                views = stats.get('views', "0")
-                loves = stats.get('loves', "0")
-                favorites = stats.get('favorites', '0')
-                remixes = stats.get('remixes', '0')
+                stats = response.get("stats", {})
+                views = stats.get("views", "0")
+                loves = stats.get("loves", "0")
+                favorites = stats.get("favorites", "0")
+                remixes = stats.get("remixes", "0")
 
                 embed.add_field(name="タイトル", value=title, inline=False)
                 embed.add_field(name="説明", value=description, inline=False)
@@ -287,14 +369,25 @@ class ScratchGroup(app_commands.Group):
                 embed.add_field(name="変更日", value=modified, inline=True)
                 embed.add_field(name="シェアされた日", value=shared, inline=True)
 
-                embed.add_field(name="表示された感じ", value=str(views) + "回", inline=True)
-                embed.add_field(name="いいねされた回数", value=str(loves) + "回", inline=True)
-                embed.add_field(name="お気に入りされた回数", value=str(favorites) + "回", inline=True)
-                embed.add_field(name="リミックス回数", value=str(remixes) + "回", inline=True)
+                embed.add_field(
+                    name="表示された感じ", value=str(views) + "回", inline=True
+                )
+                embed.add_field(
+                    name="いいねされた回数", value=str(loves) + "回", inline=True
+                )
+                embed.add_field(
+                    name="お気に入りされた回数",
+                    value=str(favorites) + "回",
+                    inline=True,
+                )
+                embed.add_field(
+                    name="リミックス回数", value=str(remixes) + "回", inline=True
+                )
 
                 embed.set_image(url=image)
 
                 await interaction.followup.send(embed=embed)
+
 
 class OsuGroup(app_commands.Group):
     def __init__(self):
@@ -527,11 +620,11 @@ class MinecraftGroup(app_commands.Group):
                             f"サーバー情報を取得できませんでした。\nサーバーがオフラインである可能性があります。"
                         )
             except Exception:
-                await interaction.followup.send("サーバー情報を取得できませんでした。\nサーバーがオフラインである可能性があります。")
+                await interaction.followup.send(
+                    "サーバー情報を取得できませんでした。\nサーバーがオフラインである可能性があります。"
+                )
 
-    @app_commands.command(
-        name="seedmap", description="シード値からマップを取得します"
-    )
+    @app_commands.command(name="seedmap", description="シード値からマップを取得します")
     @app_commands.choices(
         バージョン=[
             app_commands.Choice(name="1.21.5-Java", value="java_one"),
@@ -541,24 +634,41 @@ class MinecraftGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def minecraft_seedmao(
-        self, interaction: discord.Interaction, バージョン: app_commands.Choice[str], シード値: str, 
+        self,
+        interaction: discord.Interaction,
+        バージョン: app_commands.Choice[str],
+        シード値: str,
     ):
-        await interaction.response.send_message(embed=discord.Embed(title="シードマップ", color=discord.Color.green()).add_field(name="シード値", value=シード値, inline=False)
-                                                .add_field(name="バージョン", value=バージョン.name, inline=False)
-                                                , view=discord.ui.View().add_item(discord.ui.Button(label="アクセスする", url=f"https://mcseedmap.net/{バージョン.name}/{シード値}")), ephemeral=True)
+        await interaction.response.send_message(
+            embed=discord.Embed(title="シードマップ", color=discord.Color.green())
+            .add_field(name="シード値", value=シード値, inline=False)
+            .add_field(name="バージョン", value=バージョン.name, inline=False),
+            view=discord.ui.View().add_item(
+                discord.ui.Button(
+                    label="アクセスする",
+                    url=f"https://mcseedmap.net/{バージョン.name}/{シード値}",
+                )
+            ),
+            ephemeral=True,
+        )
+
 
 class GameCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.geo_s = "北海道,青森県,宮城県,秋田県,山形県,福島県,茨城県,栃木県,群馬県,埼玉県,千葉県,東京都,神奈川県,山梨県,長野県,新潟県,富山県,石川県,福井県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県,沖縄県"
         self.quests = [
-            {'miq': '/fun image miqでMake it a quoteを作ってみよう！'},
-            {'geo': '地理クイズで正解してみよう！'},
-            {'8ball': '8ballで占ってもらおう！'},
+            {"miq": "/fun image miqでMake it a quoteを作ってみよう！"},
+            {"geo": "地理クイズで正解してみよう！"},
+            {"8ball": "8ballで占ってもらおう！"},
         ]
         print("init -> GameCog")
 
-    game = app_commands.Group(name="game", description="ゲーム系のコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True))
+    game = app_commands.Group(
+        name="game",
+        description="ゲーム系のコマンドです。",
+        allowed_installs=app_commands.AppInstallationType(guild=True, user=True),
+    )
 
     game.add_command(MinecraftGroup())
     game.add_command(FortniteGroup())
@@ -583,10 +693,10 @@ class GameCog(commands.Cog):
             "可能性はあります。",
             "絶対にそうです！",
         ]
-        embed = make_embed.success_embed(title=f"8ballの回答", description=random.choice(responses))
-        await interaction.response.send_message(
-            embed=embed
+        embed = make_embed.success_embed(
+            title=f"8ballの回答", description=random.choice(responses)
         )
+        await interaction.response.send_message(embed=embed)
         await asyncio.sleep(1)
         await quest.quest_clear(interaction, "8ball")
         return
@@ -638,7 +748,10 @@ class GameCog(commands.Cog):
             for i in range(61)
         ]
 
-        embed = make_embed.success_embed(title="おみくじを引きました。", description=f"```{omikuzi[random.randrange(len(omikuzi))]}```")
+        embed = make_embed.success_embed(
+            title="おみくじを引きました。",
+            description=f"```{omikuzi[random.randrange(len(omikuzi))]}```",
+        )
 
         await interaction.response.send_message(
             embed=embed.set_footer(text="結果は完全にランダムです。")
@@ -771,7 +884,9 @@ class GameCog(commands.Cog):
                             def __init__(self):
                                 super().__init__(timeout=180)
 
-                            async def check_answer(self, interaction_: discord.Interaction, idx: int):
+                            async def check_answer(
+                                self, interaction_: discord.Interaction, idx: int
+                            ):
                                 await interaction_.response.defer(ephemeral=True)
                                 if interaction.user.id != interaction_.user.id:
                                     return
@@ -882,7 +997,9 @@ class GameCog(commands.Cog):
 
             async def check_answer(self, interaction_: discord.Interaction, choice):
                 if interaction.user.id != interaction_.user.id:
-                    await interaction_.response.send_message("あなたの問題ではありません。", ephemeral=True)
+                    await interaction_.response.send_message(
+                        "あなたの問題ではありません。", ephemeral=True
+                    )
                     return
 
                 await interaction_.response.defer()
@@ -919,7 +1036,7 @@ class GameCog(commands.Cog):
             embed=discord.Embed(
                 title="これの答えは？",
                 color=discord.Color.blue(),
-                description=f"```{question}```"
+                description=f"```{question}```",
             ),
             view=view,
         )
@@ -929,15 +1046,26 @@ class GameCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def guess(self, interaction: discord.Interaction):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         await interaction.response.defer()
         number = random.randint(1, 100)
-        await interaction.followup.send(embed=make_embed.success_embed(title="数字あてゲーム", description="1から100までの数字を当ててください。10回以内に当ててね！"))
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="数字あてゲーム",
+                description="1から100までの数字を当ててください。10回以内に当ててね！",
+            )
+        )
 
         def check(m: discord.Message):
             return m.author == interaction.user and m.channel == interaction.channel
-        
+
         attempts = 0
         while attempts < 10:
             try:
@@ -949,22 +1077,52 @@ class GameCog(commands.Cog):
                 attempts += 1
 
                 if guess < number:
-                    await interaction.channel.send(embed=discord.Embed(title="ヒント", description="もっと大きい数字です。", color=discord.Color.orange()))
+                    await interaction.channel.send(
+                        embed=discord.Embed(
+                            title="ヒント",
+                            description="もっと大きい数字です。",
+                            color=discord.Color.orange(),
+                        )
+                    )
                 elif guess > number:
-                    await interaction.channel.send(embed=discord.Embed(title="ヒント", description="もっと小さい数字です。", color=discord.Color.orange()))
+                    await interaction.channel.send(
+                        embed=discord.Embed(
+                            title="ヒント",
+                            description="もっと小さい数字です。",
+                            color=discord.Color.orange(),
+                        )
+                    )
                 else:
-                    await interaction.channel.send(embed=make_embed.success_embed(description=f"正解です！ {attempts} 回で当てました。", title="おめでとう！"))
+                    await interaction.channel.send(
+                        embed=make_embed.success_embed(
+                            description=f"正解です！ {attempts} 回で当てました。",
+                            title="おめでとう！",
+                        )
+                    )
                     return
             except ValueError:
-                await interaction.channel.send(embed=make_embed.error_embed(title="エラー", description="数字以外が入力されました。ゲームを終了します。"))
+                await interaction.channel.send(
+                    embed=make_embed.error_embed(
+                        title="エラー",
+                        description="数字以外が入力されました。ゲームを終了します。",
+                    )
+                )
                 return
             except asyncio.TimeoutError:
-                await interaction.channel.send(make_embed.error_embed(description="時間切れです。ゲームを終了します。", title="エラー"))
+                await interaction.channel.send(
+                    make_embed.error_embed(
+                        description="時間切れです。ゲームを終了します。", title="エラー"
+                    )
+                )
                 return
-            
+
         await asyncio.sleep(0.8)
-            
-        await interaction.channel.send(embed=make_embed.error_embed(description=f"残念！正解は {number} でした。", title="ゲームオーバー"))
+
+        await interaction.channel.send(
+            embed=make_embed.error_embed(
+                description=f"残念！正解は {number} でした。", title="ゲームオーバー"
+            )
+        )
 
     @game.command(name="shiritori", description="しりとりをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -972,16 +1130,32 @@ class GameCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_channels=True)
     async def shiritori(self, interaction: discord.Interaction):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         db = self.bot.async_db["MainTwo"].ShiritoriChannel
         await db.update_one(
             {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-            {"$set": {"Guild": interaction.guild.id, "Channel": interaction.channel.id}},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Channel": interaction.channel.id,
+                }
+            },
             upsert=True,
         )
 
-        await interaction.response.send_message(embed=make_embed.success_embed(title="しりとりを開始しました。", description="ひらがなのみ使用可能です。\nんで終わるか、同じワードを送信すると負けです。"))
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title="しりとりを開始しました。",
+                description="ひらがなのみ使用可能です。\nんで終わるか、同じワードを送信すると負けです。",
+            )
+        )
 
     @commands.Cog.listener("on_message")
     async def shiritori_on_message(self, message: discord.Message):
@@ -991,11 +1165,13 @@ class GameCog(commands.Cog):
             return
 
         db = self.bot.async_db["MainTwo"].ShiritoriChannel
-        dbfind = await db.find_one({"Guild": message.guild.id, "Channel": message.channel.id})
+        dbfind = await db.find_one(
+            {"Guild": message.guild.id, "Channel": message.channel.id}
+        )
 
         if dbfind is None:
             return
-        
+
         word = message.content
 
         if word == "":
@@ -1013,31 +1189,48 @@ class GameCog(commands.Cog):
                 {"$set": {"LastWord": None, "Word": []}},
                 upsert=True,
             )
-            return await message.reply(embed=make_embed.success_embed(title="しりとりをリセットしました。"))
+            return await message.reply(
+                embed=make_embed.success_embed(title="しりとりをリセットしました。")
+            )
 
         if not re.fullmatch(r"[ぁ-んー゛゜、。！？]+", word):
-            await message.reply(embed=make_embed.error_embed(title="ひらがなのみ使用可能です。"))
+            await message.reply(
+                embed=make_embed.error_embed(title="ひらがなのみ使用可能です。")
+            )
             return
 
         if word.endswith("ん"):
-            await message.reply(embed=make_embed.error_embed(title="あなたの負け", description="「ん」で終わったため、負けです。"))
+            await message.reply(
+                embed=make_embed.error_embed(
+                    title="あなたの負け", description="「ん」で終わったため、負けです。"
+                )
+            )
             await db.update_one(
                 {"Guild": message.guild.id, "Channel": message.channel.id},
                 {"$set": {"LastWord": None, "Word": []}},
                 upsert=True,
             )
             return
-            
-        last_word = dbfind.get('LastWord')
+
+        last_word = dbfind.get("LastWord")
         if last_word:
             if word[0] != last_word[-1]:
                 if not re.search(r"[ー゛゜、。！？]+", last_word[-1]):
-                    await message.reply(embed=make_embed.error_embed(title="始まりの文字が違います。", description=f"前の単語の最後の文字「{last_word[-1]}」から始まっていません！"))
+                    await message.reply(
+                        embed=make_embed.error_embed(
+                            title="始まりの文字が違います。",
+                            description=f"前の単語の最後の文字「{last_word[-1]}」から始まっていません！",
+                        )
+                    )
                     return
 
-        used_words = dbfind.get('Word', [])
+        used_words = dbfind.get("Word", [])
         if word in used_words:
-            await message.reply(embed=make_embed.error_embed(title="あなたの負け", description="その言葉はすでに使われています！"))
+            await message.reply(
+                embed=make_embed.error_embed(
+                    title="あなたの負け", description="その言葉はすでに使われています！"
+                )
+            )
             await db.update_one(
                 {"Guild": message.guild.id, "Channel": message.channel.id},
                 {"$set": {"LastWord": None, "Word": []}},
@@ -1047,16 +1240,15 @@ class GameCog(commands.Cog):
 
         await db.update_one(
             {"Guild": message.guild.id, "Channel": message.channel.id},
-            {
-                "$set": {"LastWord": word},
-                "$addToSet": {"Word": word}
-            },
+            {"$set": {"LastWord": word}, "$addToSet": {"Word": word}},
             upsert=True,
         )
 
-        await message.add_reaction('✅')
+        await message.add_reaction("✅")
 
-    @game.command(name="bot-quest", description="Botの出してくるクエストに挑戦するゲームです。")
+    @game.command(
+        name="bot-quest", description="Botの出してくるクエストに挑戦するゲームです。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def bot_quest(self, interaction: discord.Interaction):
@@ -1086,11 +1278,14 @@ class GameCog(commands.Cog):
                 discord.ui.TextDisplay(content="### Botのクエスト"),
                 discord.ui.Separator(),
                 discord.ui.TextDisplay(content=description),
-                discord.ui.TextDisplay(content="-# クリアすると次のクエストが表示されます。"),
-                accent_color=discord.Color.green()
+                discord.ui.TextDisplay(
+                    content="-# クリアすると次のクエストが表示されます。"
+                ),
+                accent_color=discord.Color.green(),
             )
 
         await interaction.followup.send(view=QuestView())
+
 
 async def setup(bot):
     await bot.add_cog(GameCog(bot))

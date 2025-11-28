@@ -41,8 +41,10 @@ class CustomTree(discord.app_commands.CommandTree):
                         ephemeral=True,
                         content="あなた、もしくはサーバーがBotからBanされています。",
                     )
-                
-                interaction.extras["lang"] = await translate.get_guild_lang(interaction.guild.id)
+
+                interaction.extras["lang"] = await translate.get_guild_lang(
+                    interaction.guild.id
+                )
 
                 await self._call(interaction)
 

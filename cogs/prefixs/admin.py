@@ -24,6 +24,7 @@ DIRECTIONS = [
     ("⬅️", 90),
 ]
 
+
 class Prefix_AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -51,7 +52,7 @@ class Prefix_AdminCog(commands.Cog):
     async def reload_lang(self, ctx: commands.Context):
         if ctx.author.id == 1335428061541437531:
             await translate.load()
-            await ctx.message.add_reaction('✅')
+            await ctx.message.add_reaction("✅")
 
     @commands.command(name="task", hidden=True)
     async def task(self, ctx: commands.Context):
@@ -70,7 +71,11 @@ class Prefix_AdminCog(commands.Cog):
                 else:
                     res += f"\n- {k.ljust(value_max)}: Offline"
 
-            await ctx.reply(embed=make_embed.success_embed(title="タスクの稼働状況", description="```diff" + res + "\n```"))
+            await ctx.reply(
+                embed=make_embed.success_embed(
+                    title="タスクの稼働状況", description="```diff" + res + "\n```"
+                )
+            )
 
     @commands.command(name="send", hidden=True)
     async def send(self, ctx: commands.Context, text: str):
@@ -84,21 +89,30 @@ class Prefix_AdminCog(commands.Cog):
                 return
             await ctx.channel.send(text)
 
-    @commands.group(name="test", description="Bot管理者用コマンド。Bot管理者しか実行できません。")
+    @commands.group(
+        name="test", description="Bot管理者用コマンド。Bot管理者しか実行できません。"
+    )
     async def test_command(self, ctx: commands.Context):
         if ctx.author.id == 1335428061541437531:
             if not ctx.invoked_subcommand:
-                await ctx.reply(embed=make_embed.success_embed(title="管理者のテスト用コマンド")
-                                .add_field(name="!.test embed", value="埋め込みをJSONから送信します。", inline=False))
-                
+                await ctx.reply(
+                    embed=make_embed.success_embed(
+                        title="管理者のテスト用コマンド"
+                    ).add_field(
+                        name="!.test embed",
+                        value="埋め込みをJSONから送信します。",
+                        inline=False,
+                    )
+                )
+
     @test_command.command(name="embed")
     async def test_command_embed_send(self, ctx: commands.Context, *, json_data: str):
         if ctx.author.id != 1335428061541437531:
             return
-        
+
         await ctx.channel.send(embed=discord.Embed().from_dict(json.loads(json_data)))
         await ctx.message.add_reaction("✅")
-        
+
     @commands.command(name="save", hidden=True)
     async def save(self, ctx):
         if ctx.author.id == 1335428061541437531:
@@ -115,6 +129,7 @@ class Prefix_AdminCog(commands.Cog):
                 )
 
             await ctx.reply(f"コマンドをセーブしました。\n{count}件。")
+
 
 async def setup(bot):
     await bot.add_cog(Prefix_AdminCog(bot))

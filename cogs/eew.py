@@ -62,6 +62,7 @@ AREA_ID_MAP = {
     900: "不明地域",
 }
 
+
 # -----------------------------
 # 各種変換クラス
 # -----------------------------
@@ -72,14 +73,21 @@ class ChangeToView:
             "Unknown": "不明",
             "None": "なし",
             "Checking": "調査中",
-            "NonEffective": "若干の海面変動"
+            "NonEffective": "若干の海面変動",
         }.get(warning, "情報のフォーマットに失敗。")
 
     def shindo(self, sindo):
         return {
-            10: "1", 20: "2", 30: "3", 40: "4",
-            45: "5弱", 50: "5強", 55: "6弱", 60: "6強", 70: "7",
-            -1: "[不明]"
+            10: "1",
+            20: "2",
+            30: "3",
+            40: "4",
+            45: "5弱",
+            50: "5強",
+            55: "6弱",
+            60: "6強",
+            70: "7",
+            -1: "[不明]",
         }.get(sindo, "[不明]")
 
     def depth(self, depth):
@@ -103,21 +111,23 @@ class EEWCog(commands.Cog):
             web = await interaction.channel.create_webhook(name="SharkBot-EEW")
         except discord.Forbidden:
             await interaction.response.send_message(
-                embed=make_embed.error_embed(title="Webhookを作成できませんでした。権限を確認してください。"),
-                ephemeral=True
+                embed=make_embed.error_embed(
+                    title="Webhookを作成できませんでした。権限を確認してください。"
+                ),
+                ephemeral=True,
             )
             return
 
         await db.update_one(
             {"Guild": interaction.guild.id},
             {
-                '$set': {
+                "$set": {
                     "Guild": interaction.guild.id,
                     "Channel": interaction.channel.id,
-                    "WebHook": web.url
+                    "WebHook": web.url,
                 }
             },
-            upsert=True
+            upsert=True,
         )
 
         await interaction.response.send_message(
@@ -129,9 +139,11 @@ class EEWCog(commands.Cog):
     async def eew_end(self, interaction: discord.Interaction):
         db = self.bot.async_db["MainTwo"].EEWAlert
         await db.delete_one({"Guild": interaction.guild.id})
-        await interaction.response.send_message(embed=make_embed.success_embed(title="地震速報の受信を終了しました。"))
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(title="地震速報の受信を終了しました。")
+        )
 
-    @commands.Cog.listener('on_ready')
+    @commands.Cog.listener("on_ready")
     async def on_ready_start_ws(self):
         asyncio.create_task(self.p2pquake_ws())
 
@@ -140,7 +152,7 @@ class EEWCog(commands.Cog):
         while True:
             try:
                 async with aiohttp.ClientSession() as session:
-                    async with session.ws_connect('wss://api.p2pquake.net/v2/ws') as ws:
+                    async with session.ws_connect("wss://api.p2pquake.net/v2/ws") as ws:
                         async for msg in ws:
                             if msg.type == aiohttp.WSMsgType.TEXT:
                                 try:
@@ -173,7 +185,11 @@ class EEWCog(commands.Cog):
         magnitude = eq.get("hypocenter", {}).get("magnitude", -1)
         hyposentername = eq.get("hypocenter", {}).get("name", "[不明]")
 
-        tsunamiwarning = "現在、津波警報が発表されています。" if domesticTsunami == "Warning" else "この地震による津波の心配はありません。"
+        tsunamiwarning = (
+            "現在、津波警報が発表されています。"
+            if domesticTsunami == "Warning"
+            else "この地震による津波の心配はありません。"
+        )
 
         maxscaleplace = ""
         for i in o.get("points", []):
@@ -189,13 +205,15 @@ class EEWCog(commands.Cog):
         embed = discord.Embed(
             title=title,
             description=f"〈震源と大きさ〉\n{hyposentername} M{magnitude} 最大震度{msindo}\n・震源の深さ : {depth}km\n・発生時刻 : {atime}\n\n{placedescription}\n**{tsunamiwarning}**",
-            color=discord.Color.yellow()
+            color=discord.Color.yellow(),
         )
         embed.set_footer(text=f"id : {o.get('_id')}")
 
         async for channel in db.find({}):
             try:
-                webhook_ = discord.Webhook.from_url(channel.get('WebHook', None), session=session)
+                webhook_ = discord.Webhook.from_url(
+                    channel.get("WebHook", None), session=session
+                )
                 await webhook_.send(embed=embed)
             except Exception:
                 continue
@@ -204,13 +222,15 @@ class EEWCog(commands.Cog):
         embed = discord.Embed(
             title="緊急地震速報 - (警報)",
             description="緊急地震速報です。強い揺れに警戒して下さい。\n震度5弱以上の揺れが来るおそれがあります。\n落ち着いて、身の安全を確保してください。",
-            color=discord.Color.red()
+            color=discord.Color.red(),
         )
         embed.set_footer(text=f"id : {o.get('_id')}")
 
         async for channel in db.find({}):
             try:
-                webhook_ = discord.Webhook.from_url(channel.get('WebHook', None), session=session)
+                webhook_ = discord.Webhook.from_url(
+                    channel.get("WebHook", None), session=session
+                )
                 await webhook_.send(embed=embed)
             except Exception:
                 continue
@@ -230,13 +250,15 @@ class EEWCog(commands.Cog):
         embed = discord.Embed(
             title="地震感知情報（体感報告）",
             description=f"ユーザーから揺れの報告が届いています。\n\n{description}",
-            color=discord.Color.orange()
+            color=discord.Color.orange(),
         )
         embed.set_footer(text=f"id : {o.get('_id')}")
 
         async for channel in db.find({}):
             try:
-                webhook_ = discord.Webhook.from_url(channel.get('WebHook', None), session=session)
+                webhook_ = discord.Webhook.from_url(
+                    channel.get("WebHook", None), session=session
+                )
                 await webhook_.send(embed=embed)
             except Exception:
                 continue

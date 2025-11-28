@@ -22,6 +22,7 @@ import io
 
 DISCORD_EPOCH = 1420070400000
 
+
 def decode_snowflake(snowflake: int):
     timestamp = ((snowflake >> 22) + DISCORD_EPOCH) / 1000
     dt = datetime.datetime.utcfromtimestamp(timestamp)
@@ -34,8 +35,9 @@ def decode_snowflake(snowflake: int):
         "timestamp": dt,
         "worker_id": worker_id,
         "process_id": process_id,
-        "increment": increment
+        "increment": increment,
     }
+
 
 async def ocr_async(image_: io.BytesIO):
     image = await asyncio.to_thread(Image.open, image_)
@@ -58,16 +60,18 @@ ssl_context.verify_mode = ssl.CERT_NONE
 
 EMOJI_RE = re.compile(r"(<a?:(\w+):(\d+?)>)")
 
-def extract_discord_emoji_info(text): 
+
+def extract_discord_emoji_info(text):
     matches = EMOJI_RE.findall(text)
-    
+
     results = []
     for full_emoji, name, emoji_id in matches:
         is_animated = full_emoji.startswith("<a:")
-        
+
         results.append((name, emoji_id, is_animated))
-        
+
     return results
+
 
 class NomTranslater:
     def __init__(self):
@@ -100,6 +104,7 @@ class NomTranslater:
         return bs.find_all(
             {"textarea": {"class": "maxfield outputfield form-control selectAll"}}
         )[1].get_text()
+
 
 class WebGroup(app_commands.Group):
     def __init__(self):
@@ -137,38 +142,44 @@ class WebGroup(app_commands.Group):
                 )
 
                 embed = make_embed.success_embed(
-                    title="翻訳 (ノムリッシュ語へ)",
-                    description=f"```{text}```"
+                    title="翻訳 (ノムリッシュ語へ)", description=f"```{text}```"
                 )
                 await interaction.followup.send(embed=embed)
                 return
-            
+
             if 翻訳先.value == "rune":
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(f"https://api-ryo001339.onrender.com/rune/{urllib.parse.quote(テキスト)}", ssl=ssl_context) as response:
+                    async with session.get(
+                        f"https://api-ryo001339.onrender.com/rune/{urllib.parse.quote(テキスト)}",
+                        ssl=ssl_context,
+                    ) as response:
                         js = await response.json()
                         embed = make_embed.success_embed(
                             title="ルーン文字へ",
-                            description=f"```{js.get('transformatedText', '？？？')}```"
+                            description=f"```{js.get('transformatedText', '？？？')}```",
                         )
                         await interaction.followup.send(embed=embed)
                         return
 
             try:
                 loop = asyncio.get_running_loop()
-                translator = await loop.run_in_executor(None, partial(GoogleTranslator, source="auto", target=翻訳先.value))
-                translated_text = await loop.run_in_executor(None, partial(translator.translate, テキスト))
+                translator = await loop.run_in_executor(
+                    None, partial(GoogleTranslator, source="auto", target=翻訳先.value)
+                )
+                translated_text = await loop.run_in_executor(
+                    None, partial(translator.translate, テキスト)
+                )
 
                 embed = make_embed.success_embed(
                     title=f"翻訳 ({翻訳先.value} へ)",
-                    description=f"```{translated_text}```"
+                    description=f"```{translated_text}```",
                 )
                 await interaction.followup.send(embed=embed)
 
             except Exception:
                 embed = make_embed.error_embed(
                     title="翻訳に失敗しました",
-                    description="指定された言語コードが正しいか確認してください。"
+                    description="指定された言語コードが正しいか確認してください。",
                 )
                 await interaction.followup.send(embed=embed)
         else:
@@ -197,38 +208,43 @@ class WebGroup(app_commands.Group):
                 )
 
                 embed = make_embed.success_embed(
-                    title="翻訳 (ノムリッシュ語へ)",
-                    description=f"```{text}```"
+                    title="翻訳 (ノムリッシュ語へ)", description=f"```{text}```"
                 )
                 await interaction.followup.send(embed=embed)
                 return
-            
+
             if 翻訳先.value == "rune":
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(f"https://api-ryo001339.onrender.com/rune/{urllib.parse.quote(text_ocrd)}", ssl=ssl_context) as response:
+                    async with session.get(
+                        f"https://api-ryo001339.onrender.com/rune/{urllib.parse.quote(text_ocrd)}",
+                        ssl=ssl_context,
+                    ) as response:
                         js = await response.json()
                         embed = make_embed.success_embed(
                             title="ルーン文字へ",
-                            description=f"```{js.get('transformatedText', '？？？')}```"
+                            description=f"```{js.get('transformatedText', '？？？')}```",
                         )
                         await interaction.followup.send(embed=embed)
                         return
-                    
+
             try:
                 loop = asyncio.get_running_loop()
-                translator = await loop.run_in_executor(None, partial(GoogleTranslator, source="auto", target=翻訳先.value))
-                translated_text = await loop.run_in_executor(None, partial(translator.translate, text_ocrd))
+                translator = await loop.run_in_executor(
+                    None, partial(GoogleTranslator, source="auto", target=翻訳先.value)
+                )
+                translated_text = await loop.run_in_executor(
+                    None, partial(translator.translate, text_ocrd)
+                )
 
                 embed = make_embed.success_embed(
                     title=f"翻訳 ({翻訳先.value} へ)",
-                    description=f"```{translated_text}```"
+                    description=f"```{translated_text}```",
                 )
                 await interaction.followup.send(embed=embed)
 
             except Exception as e:
                 embed = make_embed.error_embed(
-                    title="翻訳に失敗しました",
-                    description=f"エラーコード: {e}"
+                    title="翻訳に失敗しました", description=f"エラーコード: {e}"
                 )
                 await interaction.followup.send(embed=embed)
 
@@ -244,24 +260,28 @@ class WebGroup(app_commands.Group):
                 url = title.find_all("a")[0]
                 await interaction.followup.send(f"https:{url['href']}")
 
-    @app_commands.command(name="wikipedia", description="ウィキペディアから取得します。")
+    @app_commands.command(
+        name="wikipedia", description="ウィキペディアから取得します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def wikipedia(self, interaction: discord.Interaction, 検索ワード: str):
         await interaction.response.defer()
 
         encoded = urllib.parse.quote(検索ワード)
-        wikipedia_api_url = f"https://ja.wikipedia.org/api/rest_v1/page/summary/{encoded}"
+        wikipedia_api_url = (
+            f"https://ja.wikipedia.org/api/rest_v1/page/summary/{encoded}"
+        )
 
-        headers = {
-            "User-Agent": "DiscordBot/1.0 (https://example.com)"
-        }
+        headers = {"User-Agent": "DiscordBot/1.0 (https://example.com)"}
 
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(wikipedia_api_url, headers=headers) as resp:
                     if resp.status == 404:
-                        await interaction.followup.send("Wikipedia記事が見つかりませんでした。")
+                        await interaction.followup.send(
+                            "Wikipedia記事が見つかりませんでした。"
+                        )
                         return
 
                     resp.raise_for_status()
@@ -278,7 +298,9 @@ class WebGroup(app_commands.Group):
             if data.get("type") == "disambiguation":
                 embed = make_embed.success_embed(
                     title="曖昧な検索語です。",
-                    description=extract if extract else "以下のボタンのページを確認してください。"
+                    description=extract
+                    if extract
+                    else "以下のボタンのページを確認してください。",
                 )
 
                 view = discord.ui.View()
@@ -288,8 +310,7 @@ class WebGroup(app_commands.Group):
                 return
 
             embed = make_embed.success_embed(
-                title=title,
-                description=extract if extract else "説明文がありません。"
+                title=title, description=extract if extract else "説明文がありません。"
             )
 
             view = discord.ui.View()
@@ -397,23 +418,37 @@ class WebGroup(app_commands.Group):
     async def anime(self, interaction: discord.Interaction, タイトル: str):
         await interaction.response.defer()
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://kitsu.io/api/edge/anime?filter[text]={タイトル}") as response:
+            async with session.get(
+                f"https://kitsu.io/api/edge/anime?filter[text]={タイトル}"
+            ) as response:
                 js = await response.json()
                 datas = js["data"]
                 if datas == []:
-                    return await interaction.followup.send(embed=make_embed.error_embed(title="見つかりませんでした", description="別のタイトルで試してください。"))
+                    return await interaction.followup.send(
+                        embed=make_embed.error_embed(
+                            title="見つかりませんでした",
+                            description="別のタイトルで試してください。",
+                        )
+                    )
                 anime = datas[0]
                 info = anime["attributes"]
                 titlename = info["titles"]["ja_jp"]
                 posterImage = info["posterImage"]["medium"]
                 description = info["description"]
                 loop = asyncio.get_running_loop()
-                translator = await loop.run_in_executor(None, partial(GoogleTranslator, source="auto", target="ja"))
-                translated_text = await loop.run_in_executor(None, partial(translator.translate, description))
-                await interaction.followup.send(embed=make_embed.success_embed(title="アニメの検索結果")
-                                .add_field(name="タイトル", value=titlename, inline=False)
-                                .add_field(name="説明", value=translated_text, inline=False)
-                                .set_image(url=posterImage))
+                translator = await loop.run_in_executor(
+                    None, partial(GoogleTranslator, source="auto", target="ja")
+                )
+                translated_text = await loop.run_in_executor(
+                    None, partial(translator.translate, description)
+                )
+                await interaction.followup.send(
+                    embed=make_embed.success_embed(title="アニメの検索結果")
+                    .add_field(name="タイトル", value=titlename, inline=False)
+                    .add_field(name="説明", value=translated_text, inline=False)
+                    .set_image(url=posterImage)
+                )
+
 
 class SearchCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -524,7 +559,11 @@ class SearchCog(commands.Cog):
         except:
             return "**ロール一覧**: このサーバーにいません。"
 
-    search = app_commands.Group(name="search", description="検索系コマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True))
+    search = app_commands.Group(
+        name="search",
+        description="検索系コマンドです。",
+        allowed_installs=app_commands.AppInstallationType(guild=True, user=True),
+    )
 
     search.add_command(WebGroup())
 
@@ -533,9 +572,20 @@ class SearchCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def multi_search(self, interaction: discord.Interaction, 名前かid: str):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
-        await interaction.response.send_message(embed=make_embed.success_embed(title="検索中です..", description="しばらくお待ちください。"), ephemeral=True)
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title="検索中です..", description="しばらくお待ちください。"
+            ),
+            ephemeral=True,
+        )
 
         await asyncio.sleep(1)
 
@@ -556,13 +606,13 @@ class SearchCog(commands.Cog):
 
         for m in members:
             if 名前かid in m.name:
-                members_searched.append(f'{m.name} ({m.id})')
+                members_searched.append(f"{m.name} ({m.id})")
                 continue
             if 名前かid in m.display_name:
-                members_searched.append(f'{m.name} ({m.id})')
+                members_searched.append(f"{m.name} ({m.id})")
                 continue
             if 名前かid == str(m.id):
-                members_searched.append(f'{m.name} ({m.id})')
+                members_searched.append(f"{m.name} ({m.id})")
                 continue
 
         for em in emojis:
@@ -574,35 +624,34 @@ class SearchCog(commands.Cog):
                 continue
 
         if interaction.user.guild_permissions.administrator:
-
             for ch in channels:
                 if 名前かid in ch.name:
-                    channels_searched.append(f'{ch.name} ({ch.id})')
+                    channels_searched.append(f"{ch.name} ({ch.id})")
                     continue
                 if 名前かid in str(ch.id):
-                    channels_searched.append(f'{ch.name} ({ch.id})')
+                    channels_searched.append(f"{ch.name} ({ch.id})")
                     continue
 
             for r in roles:
                 if 名前かid in r.name:
-                    roles_searched.append(f'{r.name} ({r.id})')
+                    roles_searched.append(f"{r.name} ({r.id})")
                     continue
                 if 名前かid in str(r.id):
-                    roles_searched.append(f'{r.name} ({r.id})')
+                    roles_searched.append(f"{r.name} ({r.id})")
                     continue
 
-        text_member = '\n'.join(members_searched)
-        text_member = text_member if text_member else 'なし'
+        text_member = "\n".join(members_searched)
+        text_member = text_member if text_member else "なし"
 
-        text_emoji = '\n'.join(emojis_searched)
-        text_emoji = text_emoji if text_emoji else 'なし'
+        text_emoji = "\n".join(emojis_searched)
+        text_emoji = text_emoji if text_emoji else "なし"
         if interaction.user.guild_permissions.administrator:
-            text_channels = '\n'.join(channels_searched)
-            text_channels = text_channels if text_channels else 'なし'
+            text_channels = "\n".join(channels_searched)
+            text_channels = text_channels if text_channels else "なし"
 
-            text_roles = '\n'.join(roles_searched)
-            text_roles = text_roles if text_roles else 'なし'
-        
+            text_roles = "\n".join(roles_searched)
+            text_roles = text_roles if text_roles else "なし"
+
         embed = make_embed.success_embed(title="検索結果です。")
         embed.add_field(name="メンバー", value=text_member, inline=False)
 
@@ -613,14 +662,26 @@ class SearchCog(commands.Cog):
         embed.add_field(name="絵文字", value=text_emoji, inline=False)
         await interaction.edit_original_response(embed=embed)
 
-    @search.command(name="tag", description="サーバータグを何人がつけているかを検索します。")
+    @search.command(
+        name="tag", description="サーバータグを何人がつけているかを検索します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tag_search(self, interaction: discord.Interaction, サーバータグ名: str):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
-        await interaction.response.send_message(embed=make_embed.success_embed(title="検索中です..", description="しばらくお待ちください。"))
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title="検索中です..", description="しばらくお待ちください。"
+            )
+        )
 
         await asyncio.sleep(1)
 
@@ -632,10 +693,14 @@ class SearchCog(commands.Cog):
             if m.primary_guild.tag == サーバータグ名:
                 count += 1
                 tag_member.append(m.name + f" ({m.id})")
-        
+
         embed = make_embed.success_embed(title="サーバータグを検索しました。")
-        embed.add_field(name="何人がつけているか", value=str(count) + "人", inline=False)
-        embed.add_field(name="誰がつけているか (20人まで)", value="\n".join(tag_member[:20]))
+        embed.add_field(
+            name="何人がつけているか", value=str(count) + "人", inline=False
+        )
+        embed.add_field(
+            name="誰がつけているか (20人まで)", value="\n".join(tag_member[:20])
+        )
 
         await interaction.edit_original_response(embed=embed)
 
@@ -646,9 +711,7 @@ class SearchCog(commands.Cog):
         await interaction.response.defer()
         JST = datetime.timezone(datetime.timedelta(hours=9))
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            embed = make_embed.success_embed(
-                title=f"{user.display_name}の情報"
-            )
+            embed = make_embed.success_embed(title=f"{user.display_name}の情報")
 
             if user.bot:
                 isbot = "はい"
@@ -660,7 +723,9 @@ class SearchCog(commands.Cog):
                 value=f"ID: **{user.id}**\nユーザーネーム: **{user.name}#{user.discriminator}**\n作成日: **{user.created_at.astimezone(JST)}**\nBot？: **{isbot}**\n認証Bot？: **{'はい' if user.public_flags.verified_bot else 'いいえ'}**",
             )
 
-            embed.set_thumbnail(url=user.avatar.url if user.avatar else user.default_avatar.url)
+            embed.set_thumbnail(
+                url=user.avatar.url if user.avatar else user.default_avatar.url
+            )
 
             await interaction.followup.send(embed=embed)
 
@@ -820,7 +885,13 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def server_info(self, interaction: discord.Interaction):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         await interaction.response.defer()
         embed = make_embed.success_embed(title=f"{interaction.guild.name}の情報")
@@ -879,8 +950,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
         )
 
         embed.add_field(
-            name="Botからの情報",
-            value=f"Shard番号: {interaction.guild.shard_id}番"
+            name="Botからの情報", value=f"Shard番号: {interaction.guild.shard_id}番"
         )
 
         if interaction.guild.icon:
@@ -893,37 +963,66 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @search.command(name="channel", description="チャンネルを検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def channel_search(self, interaction: discord.Interaction, チャンネルid: str = None):
+    async def channel_search(
+        self, interaction: discord.Interaction, チャンネルid: str = None
+    ):
         JST = datetime.timezone(datetime.timedelta(hours=9))
 
         if チャンネルid:
-            if interaction.is_user_integration() and not interaction.is_guild_integration():
-                return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            if (
+                interaction.is_user_integration()
+                and not interaction.is_guild_integration()
+            ):
+                return await interaction.response.send_message(
+                    ephemeral=True,
+                    embed=make_embed.error_embed(
+                        title="このコマンドは使用できません。",
+                        description="サーバーにBotをインストールして使用してください。",
+                    ),
+                )
 
             if not interaction.user.guild_permissions.manage_channels:
-                return await interaction.response.send_message(ephemeral=True,
-                                                               embed=make_embed.error_embed(title="コマンドを実行する権限がありません！", description=f"不足している権限: チャンネルの管理"))
+                return await interaction.response.send_message(
+                    ephemeral=True,
+                    embed=make_embed.error_embed(
+                        title="コマンドを実行する権限がありません！",
+                        description=f"不足している権限: チャンネルの管理",
+                    ),
+                )
 
             await interaction.response.defer()
 
             try:
-
                 channel = await interaction.guild.fetch_channel(int(チャンネルid))
             except discord.InvalidData:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="チャンネルが存在しません。", description="別サーバーにある場合も取得できません。"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="チャンネルが存在しません。",
+                        description="別サーバーにある場合も取得できません。",
+                    )
+                )
             except ValueError:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="無効なチャンネルidです。", description="チャンネルidは数字である必要があります。"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="無効なチャンネルidです。",
+                        description="チャンネルidは数字である必要があります。",
+                    )
+                )
 
             embed = make_embed.success_embed(title="チャンネルの情報")
             embed.add_field(name="名前", value=channel.name, inline=False)
             embed.add_field(name="ID", value=str(channel.id), inline=False)
 
             embed.add_field(
-                name="作成日", value=str(channel.created_at.astimezone(JST)), inline=False
+                name="作成日",
+                value=str(channel.created_at.astimezone(JST)),
+                inline=False,
             )
 
             if channel.category:
-                embed.add_field(name="カテゴリ", value=channel.category.name, inline=False)
+                embed.add_field(
+                    name="カテゴリ", value=channel.category.name, inline=False
+                )
             else:
                 embed.add_field(name="カテゴリ", value="なし", inline=False)
             embed.add_field(name="位置", value=str(channel.position), inline=False)
@@ -940,11 +1039,15 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             embed.add_field(name="ID", value=str(channel.id), inline=False)
 
             embed.add_field(
-                name="作成日", value=str(channel.created_at.astimezone(JST)), inline=False
+                name="作成日",
+                value=str(channel.created_at.astimezone(JST)),
+                inline=False,
             )
 
             if channel.category:
-                embed.add_field(name="カテゴリ", value=channel.category.name, inline=False)
+                embed.add_field(
+                    name="カテゴリ", value=channel.category.name, inline=False
+                )
             else:
                 embed.add_field(name="カテゴリ", value="なし", inline=False)
             embed.add_field(name="位置", value=str(channel.position), inline=False)
@@ -973,7 +1076,13 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @app_commands.checks.has_permissions(ban_members=True)
     async def ban_info(self, interaction: discord.Interaction, ユーザー: discord.User):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         await interaction.response.defer()
         try:
@@ -1036,10 +1145,22 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @app_commands.checks.has_permissions(manage_guild=True)
     async def bot_info(self, interaction: discord.Interaction, bot: discord.User):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         if not bot.bot:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="その人はBotはありません。", description="Botを指定してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="その人はBotはありません。",
+                    description="Botを指定してください。",
+                ),
+            )
 
         await interaction.response.defer()
         embed = make_embed.success_embed(title="Botの情報")
@@ -1060,14 +1181,22 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     async def invite_info(self, interaction: discord.Interaction, 招待リンク: str):
         if interaction.is_guild_integration():
             if not interaction.user.guild_permissions.manage_guild:
-                return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="コマンドを実行する権限がありません！", description="不足している権限: サーバーの管理"))
+                return await interaction.response.send_message(
+                    ephemeral=True,
+                    embed=make_embed.error_embed(
+                        title="コマンドを実行する権限がありません！",
+                        description="不足している権限: サーバーの管理",
+                    ),
+                )
 
         await interaction.response.defer()
         JST = datetime.timezone(datetime.timedelta(hours=9))
         try:
             invite = await self.bot.fetch_invite(招待リンク)
         except ValueError:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="招待リンクが見つかりません。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(title="招待リンクが見つかりません。")
+            )
         embed = (
             make_embed.success_embed(title="招待リンクの情報")
             .add_field(name="サーバー名", value=f"{invite.guild.name}", inline=False)
@@ -1165,17 +1294,26 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     async def banner(self, interaction: discord.Interaction, ユーザー: discord.User):
         ユーザー = await self.bot.fetch_user(ユーザー.id)
         if not ユーザー.banner:
-            return await interaction.response.send_message(ephemeral=True, content="その人はバナーをつけていません。")
+            return await interaction.response.send_message(
+                ephemeral=True, content="その人はバナーをつけていません。"
+            )
         embed = make_embed.success_embed(title=f"{ユーザー.name}さんのバナー")
-        await interaction.response.send_message(embed=embed
-                                                .set_image(url=ユーザー.banner.url if ユーザー.banner else None))
+        await interaction.response.send_message(
+            embed=embed.set_image(url=ユーザー.banner.url if ユーザー.banner else None)
+        )
 
     @search.command(name="emoji", description="絵文字を検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def emoji(self, interaction: discord.Interaction, 絵文字: str):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         JST = datetime.timezone(datetime.timedelta(hours=9))
 
@@ -1184,20 +1322,27 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             if 絵文字 == e.__str__():
                 embed = make_embed.success_embed(title=f"{e.name} の情報")
                 await interaction.followup.send(
-                    embed=embed
-                    .set_image(url=e.url)
+                    embed=embed.set_image(url=e.url)
                     .add_field(name="名前", value=e.name, inline=False)
                     .add_field(name="id", value=str(e.id), inline=False)
-                    .add_field(name="作成日時", value=str(e.created_at.astimezone(JST)), inline=False)
+                    .add_field(
+                        name="作成日時",
+                        value=str(e.created_at.astimezone(JST)),
+                        inline=False,
+                    )
                     .add_field(
                         name="絵文字が動くか",
                         value="はい" if e.animated else "いいえ",
                         inline=False,
                     )
-                    .add_field(name="Botから見た絵文字", value=f"```{e.__str__()}```", inline=False)
+                    .add_field(
+                        name="Botから見た絵文字",
+                        value=f"```{e.__str__()}```",
+                        inline=False,
+                    )
                 )
                 return
-        
+
         extracted_info = extract_discord_emoji_info(絵文字)
         for name, emoji_id, is_animated in extracted_info:
             embed = make_embed.success_embed(title=f"{name} の情報")
@@ -1221,32 +1366,56 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             return
 
         await interaction.followup.send(
-            embed=make_embed.error_embed(title="絵文字が存在しません。", description="絵文字が取得できませんでした。")
+            embed=make_embed.error_embed(
+                title="絵文字が存在しません。",
+                description="絵文字が取得できませんでした。",
+            )
         )
 
-    @search.command(name="spotify", description="メンバーの聞いている曲の情報を表示します。")
+    @search.command(
+        name="spotify", description="メンバーの聞いている曲の情報を表示します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def spotify_info(self, interaction: discord.Interaction, メンバー: discord.User = None):
+    async def spotify_info(
+        self, interaction: discord.Interaction, メンバー: discord.User = None
+    ):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         user = メンバー.id if メンバー else interaction.user.id
 
         if not interaction.guild.get_member(user):
-            return await interaction.response.send_message(content="このサーバーにいるメンバーだけ指定できます。", ephemeral=True)
+            return await interaction.response.send_message(
+                content="このサーバーにいるメンバーだけ指定できます。", ephemeral=True
+            )
 
         for activity in interaction.guild.get_member(user).activities:
             if isinstance(activity, discord.Spotify):
-                await interaction.response.send_message(embed=discord.Embed(title=f"{interaction.guild.get_member(user).name}の聞いている曲", color=discord.Color.green())
-                                                        .add_field(name="曲名", value=activity.title, inline=False)
-                                                        .add_field(name="アーティスト", value=activity.artist, inline=False)
-                                                        .add_field(name="トラックid", value=activity.track_id, inline=False)
-                                                        .set_thumbnail(url=activity.album_cover_url)
-                                                        , view=discord.ui.View().add_item(discord.ui.Button(label="アクセスする", url=activity.track_url)))
+                await interaction.response.send_message(
+                    embed=discord.Embed(
+                        title=f"{interaction.guild.get_member(user).name}の聞いている曲",
+                        color=discord.Color.green(),
+                    )
+                    .add_field(name="曲名", value=activity.title, inline=False)
+                    .add_field(name="アーティスト", value=activity.artist, inline=False)
+                    .add_field(name="トラックid", value=activity.track_id, inline=False)
+                    .set_thumbnail(url=activity.album_cover_url),
+                    view=discord.ui.View().add_item(
+                        discord.ui.Button(label="アクセスする", url=activity.track_url)
+                    ),
+                )
                 return
-            
-        await interaction.response.send_message(ephemeral=True, content="曲を検出できませんでした。")
+
+        await interaction.response.send_message(
+            ephemeral=True, content="曲を検出できませんでした。"
+        )
 
     @search.command(name="snowflake", description="SnowFlakeを解析します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -1256,13 +1425,22 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             sn = int(snowflake)
             info = decode_snowflake(sn)
             embed = make_embed.success_embed(title="Snowflake解析結果")
-            embed.add_field(name="作成日時 (UTC)", value=str(info["timestamp"]), inline=False)
+            embed.add_field(
+                name="作成日時 (UTC)", value=str(info["timestamp"]), inline=False
+            )
             embed.add_field(name="Worker ID", value=str(info["worker_id"]))
             embed.add_field(name="Process ID", value=str(info["process_id"]))
             embed.add_field(name="Increment", value=str(info["increment"]))
             await interaction.response.send_message(embed=embed)
         except:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="SnowFlakeが不正です。", description="正常なSnowFlakeを入力してください。"))
-        
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="SnowFlakeが不正です。",
+                    description="正常なSnowFlakeを入力してください。",
+                ),
+            )
+
+
 async def setup(bot):
     await bot.add_cog(SearchCog(bot))

@@ -96,17 +96,19 @@ class AutoReactionCog(commands.Cog):
         db = self.bot.async_db["Main"].AutoReactionChannel
         await db.update_one(
             {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-            {"$set": {
-                "Guild": interaction.guild.id,
-                "Channel": interaction.channel.id,
-                "Emoji": 絵文字,
-            }},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Channel": interaction.channel.id,
+                    "Emoji": 絵文字,
+                }
+            },
             upsert=True,
         )
         await interaction.response.send_message(
             embed=make_embed.success_embed(
                 title="自動リアクションを設定しました。",
-                description=f"絵文字: {絵文字}\nチャンネル: {interaction.channel.mention}"
+                description=f"絵文字: {絵文字}\nチャンネル: {interaction.channel.mention}",
             )
         )
 
@@ -128,7 +130,7 @@ class AutoReactionCog(commands.Cog):
         await interaction.response.send_message(
             embed=make_embed.success_embed(
                 title="自動リアクションを設定しました。",
-                description=f"絵文字: {絵文字}"
+                description=f"絵文字: {絵文字}",
             )
         )
 
@@ -147,9 +149,7 @@ class AutoReactionCog(commands.Cog):
             db_word = self.bot.async_db["Main"].AutoReactionWord
             await db_word.delete_one({"Guild": interaction.guild.id, "Word": ワード})
         await interaction.response.send_message(
-            embed=make_embed.success_embed(
-                title="自動リアクションを削除しました。"
-            )
+            embed=make_embed.success_embed(title="自動リアクションを削除しました。")
         )
 
     @autoreact.command(name="list", description="自動リアクションをリスト化します。")
@@ -169,9 +169,7 @@ class AutoReactionCog(commands.Cog):
             async for b in db_channel.find({"Guild": interaction.guild.id})
         ]
         await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title="自動リアクションのリスト"
-            )
+            embed=make_embed.success_embed(title="自動リアクションのリスト")
             .add_field(name="特定のワードに対して", value="\n".join(word_list))
             .add_field(name="チャンネルに対して", value="\n".join(channel_list))
         )

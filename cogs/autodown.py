@@ -3,6 +3,7 @@ import discord
 from discord import app_commands
 from models import make_embed
 
+
 class AutoDownCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -10,13 +11,10 @@ class AutoDownCog(commands.Cog):
 
     autodown = app_commands.Group(
         name="autodown",
-        description="オフラインに代わると実行する機能をセットアップします。"
+        description="オフラインに代わると実行する機能をセットアップします。",
     )
 
-    @autodown.command(
-        name="settings",
-        description="現在の設定を確認します。"
-    )
+    @autodown.command(name="settings", description="現在の設定を確認します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_guild=True)
     async def autodown_settings(self, interaction: discord.Interaction):
@@ -26,7 +24,7 @@ class AutoDownCog(commands.Cog):
         if not settings or "Execution" not in settings:
             return await interaction.response.send_message(
                 ephemeral=True,
-                embed=make_embed.error_embed(title="まだ設定されていません。")
+                embed=make_embed.error_embed(title="まだ設定されていません。"),
             )
 
         embed = make_embed.success_embed(title="オフラインになったときの自動実行設定")
@@ -35,7 +33,7 @@ class AutoDownCog(commands.Cog):
         embed.add_field(
             name="自動VCキックするか",
             value="はい" if vc_kick_enabled else "いいえ",
-            inline=False
+            inline=False,
         )
 
         target_roles = settings.get("TargetRoles", [])
@@ -49,11 +47,11 @@ class AutoDownCog(commands.Cog):
 
     @autodown.command(
         name="vc-kick",
-        description="オフラインになるとVCからキックするように設定します。"
+        description="オフラインになるとVCからキックするように設定します。",
     )
     @app_commands.describe(
         キックするか="Trueで有効化、Falseで無効化します。",
-        対象ロール="このロールを持つメンバーのみキック対象にします（複数指定可）"
+        対象ロール="このロールを持つメンバーのみキック対象にします（複数指定可）",
     )
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_guild=True)
@@ -61,7 +59,7 @@ class AutoDownCog(commands.Cog):
         self,
         interaction: discord.Interaction,
         キックするか: bool,
-        対象ロール: discord.Role | None = None
+        対象ロール: discord.Role | None = None,
     ):
         db = self.bot.async_db["MainTwo"].AutoDown
 
@@ -84,20 +82,22 @@ class AutoDownCog(commands.Cog):
 
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
-                    title="自動VCキック設定を更新しました。",
-                    description=desc
+                    title="自動VCキック設定を更新しました。", description=desc
                 )
             )
         else:
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"$pull": {"Execution": "VCKICK"}, "$pull": {"TargetRoles": 対象ロール}},
+                {
+                    "$pull": {"Execution": "VCKICK"},
+                    "$pull": {"TargetRoles": 対象ロール},
+                },
                 upsert=True,
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="自動VCキック設定を削除しました。",
-                    description="オフライン時にVCからキックしないようにしました。"
+                    description="オフライン時にVCからキックしないようにしました。",
                 )
             )
 
@@ -107,7 +107,11 @@ class AutoDownCog(commands.Cog):
 
         db = self.bot.async_db["MainTwo"].AutoDown
         settings = await db.find_one({"Guild": after.guild.id})
-        if not settings or "Execution" not in settings or "VCKICK" not in settings["Execution"]:
+        if (
+            not settings
+            or "Execution" not in settings
+            or "VCKICK" not in settings["Execution"]
+        ):
             return
 
         target_roles = settings.get("TargetRoles", [])
@@ -130,6 +134,7 @@ class AutoDownCog(commands.Cog):
     @commands.Cog.listener("on_presence_update")
     async def on_presence_update(self, before: discord.Member, after: discord.Member):
         await self.process_vckick(before, after)
+
 
 async def setup(bot):
     await bot.add_cog(AutoDownCog(bot))

@@ -5,11 +5,13 @@ import aiohttp
 import discord
 from discord.ext import commands
 from discord import app_commands
+
 # import TagScriptEngine as tse
 from consts import badword
 import io
 
 from models import make_embed
+
 
 class TimerSetModal(discord.ui.Modal):
     def __init__(self, time: int):
@@ -20,7 +22,7 @@ class TimerSetModal(discord.ui.Modal):
         label="投稿するメッセージ",
         placeholder="こんにちは！これはタイマーのメッセージです！",
         style=discord.TextStyle.long,
-        required=True
+        required=True,
     )
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -43,10 +45,14 @@ class TimerSetModal(discord.ui.Modal):
             "channel_id": interaction.channel_id,
             "message": self.text.value,
             "interval": self.time,
-            "webhook_url": webhook.url
+            "webhook_url": webhook.url,
         }
 
-        await interaction.client.async_db['MainTwo'].ServerTimer.update_one({'guild_id': interaction.guild.id, "channel_id": interaction.channel_id}, {'$set': doc}, upsert=True)
+        await interaction.client.async_db["MainTwo"].ServerTimer.update_one(
+            {"guild_id": interaction.guild.id, "channel_id": interaction.channel_id},
+            {"$set": doc},
+            upsert=True,
+        )
 
         await interaction.client.reminder_create(
             datetime.timedelta(minutes=self.time),
@@ -55,15 +61,16 @@ class TimerSetModal(discord.ui.Modal):
             interaction.channel_id,
             webhook.url,
             self.text.value,
-            self.time
+            self.time,
         )
 
         embed = make_embed.success_embed(
             title="定期的に投稿するメッセージを設定しました。",
-            description=f"{self.time}分ごとに送信します。"
+            description=f"{self.time}分ごとに送信します。",
         )
 
         await interaction.followup.send(embed=embed)
+
 
 class TimerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -71,34 +78,34 @@ class TimerCog(commands.Cog):
         print("init -> TimerCog")
 
     timer = app_commands.Group(
-        name="timer", description="定期的に投稿するメッセージを設定します。", allowed_installs=app_commands.AppInstallationType(guild=True, user=False)
+        name="timer",
+        description="定期的に投稿するメッセージを設定します。",
+        allowed_installs=app_commands.AppInstallationType(guild=True, user=False),
     )
 
     @timer.command(name="create", description="タイマーを作成します。")
     @app_commands.checks.has_permissions(manage_channels=True, manage_webhooks=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def timer_create(
-        self,
-        interaction: discord.Interaction,
-        間隔_分: int
-    ):
-        count = await interaction.client.async_db['MainTwo'].ServerTimer.count_documents({"guild_id": interaction.guild_id})
+    async def timer_create(self, interaction: discord.Interaction, 間隔_分: int):
+        count = await interaction.client.async_db[
+            "MainTwo"
+        ].ServerTimer.count_documents({"guild_id": interaction.guild_id})
         if count >= 3:
             return await interaction.response.send_message(
                 embed=discord.Embed(
                     title="タイマーは3個までしか作成できません！",
                     description="先にいらないタイマーを削除してから実行してください！",
-                    color=discord.Color.red()
+                    color=discord.Color.red(),
                 ),
-                ephemeral=True
+                ephemeral=True,
             )
 
         if 間隔_分 < 3:
             embed = discord.Embed(
                 title="時間の指定が正しくありません。",
                 description="3分以上にしてください。",
-                color=discord.Color.red()
+                color=discord.Color.red(),
             )
             return await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -108,39 +115,36 @@ class TimerCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_channels=True, manage_webhooks=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def timer_create(
-        self,
-        interaction: discord.Interaction
-    ):
-        db = interaction.client.async_db['MainTwo'].ServerTimer
+    async def timer_create(self, interaction: discord.Interaction):
+        db = interaction.client.async_db["MainTwo"].ServerTimer
 
-        doc = await db.find_one({
-            "guild_id": interaction.guild_id,
-            "channel_id": interaction.channel_id
-        })
+        doc = await db.find_one(
+            {"guild_id": interaction.guild_id, "channel_id": interaction.channel_id}
+        )
 
         if not doc:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(title="このチャンネルにはタイマーはありません！"),
-                ephemeral=True
+                embed=make_embed.error_embed(
+                    title="このチャンネルにはタイマーはありません！"
+                ),
+                ephemeral=True,
             )
-        
+
         await db.delete_one({"_id": doc["_id"]})
 
         await interaction.response.send_message(
-            embed=make_embed.error_embed(title="タイマーを削除しました。", description=""),
-            ephemeral=True
+            embed=make_embed.error_embed(
+                title="タイマーを削除しました。", description=""
+            ),
+            ephemeral=True,
         )
 
     @timer.command(name="list", description="タイマーの一覧を表示します。")
     @app_commands.checks.has_permissions(manage_channels=True, manage_webhooks=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def timer_list(
-        self,
-        interaction: discord.Interaction
-    ):
-        db = interaction.client.async_db['MainTwo'].ServerTimer
+    async def timer_list(self, interaction: discord.Interaction):
+        db = interaction.client.async_db["MainTwo"].ServerTimer
 
         docs = db.find({"guild_id": interaction.guild_id})
 
@@ -155,7 +159,7 @@ class TimerCog(commands.Cog):
             embed.add_field(
                 name=f"{count}. チャンネル: <#{channel_id}> / {interval}分間隔",
                 value=f"メッセージ: {message}",
-                inline=False
+                inline=False,
             )
 
         if count == 0:
@@ -164,22 +168,28 @@ class TimerCog(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     @commands.Cog.listener()
-    async def on_timer_event(self, guild_id: int, channel_id: int,
-                                webhook_url: str, message: str, interval: int):
-
-        exists = await self.bot.async_db['MainTwo'].ServerTimer.find_one({
-            "guild_id": guild_id,
-            "channel_id": channel_id,
-            "message": message
-        })
+    async def on_timer_event(
+        self,
+        guild_id: int,
+        channel_id: int,
+        webhook_url: str,
+        message: str,
+        interval: int,
+    ):
+        exists = await self.bot.async_db["MainTwo"].ServerTimer.find_one(
+            {"guild_id": guild_id, "channel_id": channel_id, "message": message}
+        )
         if not exists:
             return
 
         async with aiohttp.ClientSession() as session:
-
             async with session.post(
                 webhook_url,
-                json={"content": message, 'username': "SharkBot Timer", 'avatar_url': self.bot.user.avatar.url}
+                json={
+                    "content": message,
+                    "username": "SharkBot Timer",
+                    "avatar_url": self.bot.user.avatar.url,
+                },
             ):
                 pass
 
@@ -190,8 +200,9 @@ class TimerCog(commands.Cog):
             channel_id,
             webhook_url,
             message,
-            interval
+            interval,
         )
+
 
 async def setup(bot):
     await bot.add_cog(TimerCog(bot))

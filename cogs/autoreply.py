@@ -122,11 +122,11 @@ class AutoReplyCog(commands.Cog):
         word = dbfind.get("ReplyWord", None)
         if not word:
             return
-        if dbfind.get('TextChannel', 0) != 0:
-            if dbfind.get('TextChannel', 0) != message.channel.id:
+        if dbfind.get("TextChannel", 0) != 0:
+            if dbfind.get("TextChannel", 0) != message.channel.id:
                 return
-        if dbfind.get('Roles', []) != []:
-            for r in dbfind.get('Roles', []):
+        if dbfind.get("Roles", []) != []:
+            for r in dbfind.get("Roles", []):
                 if message.guild.get_role(r) in message.author.roles:
                     for b in blacklist_word:
                         if b in word:
@@ -174,7 +174,14 @@ class AutoReplyCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def autoreply_create_(
-        self, interaction: discord.Interaction, 条件: str, 結果: str, 特定のチャンネルだけ: discord.TextChannel = None, 反応するロール1: discord.Role = None, 反応するロール2: discord.Role = None, 反応するロール3: discord.Role = None
+        self,
+        interaction: discord.Interaction,
+        条件: str,
+        結果: str,
+        特定のチャンネルだけ: discord.TextChannel = None,
+        反応するロール1: discord.Role = None,
+        反応するロール2: discord.Role = None,
+        反応するロール3: discord.Role = None,
     ):
         roles = [r.id for r in (反応するロール1, 反応するロール2, 反応するロール3) if r]
 
@@ -182,19 +189,20 @@ class AutoReplyCog(commands.Cog):
         db = self.bot.async_db["Main"].AutoReply
         await db.update_one(
             {"Guild": interaction.guild.id, "Word": 条件},
-            {"$set": {
-                "Guild": interaction.guild.id,
-                "Word": 条件,
-                "ReplyWord": 結果,
-                "TextChannel": channel_id,
-                "Roles": roles
-            }},
-            upsert=True
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Word": 条件,
+                    "ReplyWord": 結果,
+                    "TextChannel": channel_id,
+                    "Roles": roles,
+                }
+            },
+            upsert=True,
         )
         await interaction.response.send_message(
-            embed=make_embed.success_embed(
-                title="自動返信を追加しました。"
-            ).add_field(name="条件", value=条件, inline=False)
+            embed=make_embed.success_embed(title="自動返信を追加しました。")
+            .add_field(name="条件", value=条件, inline=False)
             .add_field(name="結果", value=結果, inline=False)
         )
 
@@ -207,14 +215,10 @@ class AutoReplyCog(commands.Cog):
         result = await db.delete_one({"Guild": interaction.guild.id, "Word": 条件})
         if result.deleted_count == 0:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(
-                    title="何も削除されませんでした。"
-                )
+                embed=make_embed.error_embed(title="何も削除されませんでした。")
             )
         await interaction.response.send_message(
-            embed=make_embed.success_embed(
-                title="自動返信を削除しました。"
-            )
+            embed=make_embed.success_embed(title="自動返信を削除しました。")
         )
 
     @autoreply.command(name="list", description="自動返信をリストします。")
@@ -234,9 +238,9 @@ class AutoReplyCog(commands.Cog):
                     "不適切なワードが検出されました。"
                 )
         await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title="自動返信のリストです"
-            ).add_field(name="特定のワードに対して", value="\n".join(word_list))
+            embed=make_embed.success_embed(title="自動返信のリストです").add_field(
+                name="特定のワードに対して", value="\n".join(word_list)
+            )
         )
 
     @autoreply.command(
@@ -264,12 +268,14 @@ class AutoReplyCog(commands.Cog):
             ]:
                 await db.update_one(
                     {"Guild": interaction.guild.id, "Word": t[0]},
-                    {"$set": {
-                        "Guild": interaction.guild.id,
-                        "Word": t[0],
-                        "ReplyWord": t[1]
-                    }},
-                    upsert=True
+                    {
+                        "$set": {
+                            "Guild": interaction.guild.id,
+                            "Word": t[0],
+                            "ReplyWord": t[1],
+                        }
+                    },
+                    upsert=True,
                 )
         elif テンプレート.value == "fun":
             for t in [
@@ -282,23 +288,27 @@ class AutoReplyCog(commands.Cog):
             ]:
                 await db.update_one(
                     {"Guild": interaction.guild.id, "Word": t[0]},
-                    {"$set": {
-                        "Guild": interaction.guild.id,
-                        "Word": t[0],
-                        "ReplyWord": t[1]
-                    }},
-                    upsert=True
+                    {
+                        "$set": {
+                            "Guild": interaction.guild.id,
+                            "Word": t[0],
+                            "ReplyWord": t[1],
+                        }
+                    },
+                    upsert=True,
                 )
         elif テンプレート.value == "emoji":
             for t in [("🌾", '草刈り～(o⌒▽⌒)o>━━"((卍))"ﾌﾞﾝﾌﾞﾝ♪'), ("👈", "👈")]:
                 await db.update_one(
                     {"Guild": interaction.guild.id, "Word": t[0]},
-                    {"$set": {
-                        "Guild": interaction.guild.id,
-                        "Word": t[0],
-                        "ReplyWord": t[1]
-                    }},
-                    upsert=True
+                    {
+                        "$set": {
+                            "Guild": interaction.guild.id,
+                            "Word": t[0],
+                            "ReplyWord": t[1],
+                        }
+                    },
+                    upsert=True,
                 )
         await interaction.response.send_message(
             embed=make_embed.success_embed(
@@ -337,9 +347,7 @@ class AutoReplyCog(commands.Cog):
             res = json.loads(await ファイル.read())
         except:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="Json読み込みに失敗しました。"
-                )
+                embed=make_embed.error_embed(title="Json読み込みに失敗しました。")
             )
 
         c = 0
@@ -349,7 +357,13 @@ class AutoReplyCog(commands.Cog):
                 for k, v in re.items():
                     await db.update_one(
                         {"Guild": interaction.guild.id, "Word": k},
-                        {"$set": {"Guild": interaction.guild.id, "Word": k, "ReplyWord": v}},
+                        {
+                            "$set": {
+                                "Guild": interaction.guild.id,
+                                "Word": k,
+                                "ReplyWord": v,
+                            }
+                        },
                         upsert=True,
                     )
                     c += 1
@@ -357,7 +371,7 @@ class AutoReplyCog(commands.Cog):
         await interaction.followup.send(
             embed=make_embed.success_embed(
                 title="自動返信をインポートしました。",
-                description=f"{c}件インポートしました。"
+                description=f"{c}件インポートしました。",
             )
         )
 

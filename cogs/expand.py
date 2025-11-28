@@ -22,7 +22,7 @@ class ExpandCog(commands.Cog):
             return False
         if dbfind is None:
             return False
-        return dbfind.get('Outside', False)
+        return dbfind.get("Outside", False)
 
     @commands.Cog.listener("on_message")
     async def on_message_expand(self, message: discord.Message):
@@ -53,7 +53,11 @@ class ExpandCog(commands.Cog):
             return
 
         for guild_id, channel_id, message_id in urls:
-            guild_id, channel_id, message_id = int(guild_id), int(channel_id), int(message_id)
+            guild_id, channel_id, message_id = (
+                int(guild_id),
+                int(channel_id),
+                int(message_id),
+            )
             guild = self.bot.get_guild(guild_id)
             if not guild:
                 continue
@@ -67,7 +71,9 @@ class ExpandCog(commands.Cog):
             except discord.NotFound:
                 return await message.add_reaction("❌")
 
-            if getattr(channel, "nsfw", False) and not getattr(message.channel, "nsfw", False):
+            if getattr(channel, "nsfw", False) and not getattr(
+                message.channel, "nsfw", False
+            ):
                 return await message.add_reaction("❌")
 
             try:

@@ -34,7 +34,9 @@ class ChannelCog(commands.Cog):
 
         JST = datetime.timezone(datetime.timedelta(hours=9))
         embed.add_field(
-            name="作成日", value=str(interaction.channel.created_at.astimezone(JST)), inline=False
+            name="作成日",
+            value=str(interaction.channel.created_at.astimezone(JST)),
+            inline=False,
         )
 
         if channel.category:
@@ -133,9 +135,7 @@ class ChannelCog(commands.Cog):
             await interaction.response.defer()
             await interaction.channel.edit(slowmode_delay=何秒か)
             await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="スローモードを設定しました。"
-                )
+                embed=make_embed.success_embed(title="スローモードを設定しました。")
             )
         except discord.Forbidden:
             return await interaction.followup.send(
@@ -200,7 +200,9 @@ class ChannelCog(commands.Cog):
             "Botを使った低速モードを設定しました。", ephemeral=True
         )
 
-    @channel.command(name="command-disable", description="このチャンネルではコマンドを無効化するよ")
+    @channel.command(
+        name="command-disable", description="このチャンネルではコマンドを無効化するよ"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
@@ -211,7 +213,12 @@ class ChannelCog(commands.Cog):
         if not コマンドが使えるか:
             await db.update_one(
                 {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-                {"$set": {"Guild": interaction.guild.id, "Channel": interaction.channel.id}},
+                {
+                    "$set": {
+                        "Guild": interaction.guild.id,
+                        "Channel": interaction.channel.id,
+                    }
+                },
                 upsert=True,
             )
             await interaction.response.send_message(

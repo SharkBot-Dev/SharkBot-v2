@@ -438,7 +438,7 @@ class UpCog(commands.Cog):
                         return
                     if dbfind is None:
                         return
-                    
+
                     ment = await self.mention_get(after)
                     await after.reply(
                         embed=discord.Embed(
@@ -470,20 +470,19 @@ class UpCog(commands.Cog):
         if onか:
             await db.update_one(
                 {"Channel": interaction.channel.id},
-                {'$set': {"Channel": interaction.channel.id}},
+                {"$set": {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
-                    title="Dicoallの通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
+                    title="Dicoallの通知をONにしました。",
+                    description="チャンネルごとにOnにする必要があります。",
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="Dicoallの通知をOFFにしました。"
-                )
+                embed=make_embed.success_embed(title="Dicoallの通知をOFFにしました。")
             )
 
     @bump.command(name="distopia", description="DisTopiaの通知します。")
@@ -495,20 +494,19 @@ class UpCog(commands.Cog):
         if onか:
             await db.update_one(
                 {"Channel": interaction.channel.id},
-                {'$set': {"Channel": interaction.channel.id}},
+                {"$set": {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
-                    title="Distopiaの通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
+                    title="Distopiaの通知をONにしました。",
+                    description="チャンネルごとにOnにする必要があります。",
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="Distopiaの通知をOFFにしました。"
-                )
+                embed=make_embed.success_embed(title="Distopiaの通知をOFFにしました。")
             )
 
     @bump.command(name="sabachannel", description="鯖チャンネルの通知をします。")
@@ -520,12 +518,13 @@ class UpCog(commands.Cog):
         if onか:
             await db.update_one(
                 {"Channel": interaction.channel.id},
-                {'$set': {"Channel": interaction.channel.id}},
+                {"$set": {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
-                    title="鯖チャンネルの通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
+                    title="鯖チャンネルの通知をONにしました。",
+                    description="チャンネルごとにOnにする必要があります。",
                 )
             )
         else:
@@ -545,20 +544,19 @@ class UpCog(commands.Cog):
         if onか:
             await db.update_one(
                 {"Channel": interaction.channel.id},
-                {'$set': {"Channel": interaction.channel.id}},
+                {"$set": {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
-                    title="ディス速の通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
+                    title="ディス速の通知をONにしました。",
+                    description="チャンネルごとにOnにする必要があります。",
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="ディス速の通知をOFFにしました。"
-                )
+                embed=make_embed.success_embed(title="ディス速の通知をOFFにしました。")
             )
 
     @bump.command(name="disboard", description="Disboardの通知をします。")
@@ -570,20 +568,19 @@ class UpCog(commands.Cog):
         if onか:
             await db.update_one(
                 {"Channel": interaction.channel.id},
-                {'$set': {"Channel": interaction.channel.id}},
+                {"$set": {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
-                    title="Disboardの通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
+                    title="Disboardの通知をONにしました。",
+                    description="チャンネルごとにOnにする必要があります。",
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="Disboardの通知をOFFにしました。"
-                )
+                embed=make_embed.success_embed(title="Disboardの通知をOFFにしました。")
             )
 
     @bump.command(name="dcafe", description="Dcafeの通知をします。")
@@ -595,20 +592,19 @@ class UpCog(commands.Cog):
         if onか:
             await db.update_one(
                 {"Channel": interaction.channel.id},
-                {'$set': {"Channel": interaction.channel.id}},
+                {"$set": {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
-                    title="DCafeの通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
+                    title="DCafeの通知をONにしました。",
+                    description="チャンネルごとにOnにする必要があります。",
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="DCafeの通知をOFFにしました。"
-                )
+                embed=make_embed.success_embed(title="DCafeの通知をOFFにしました。")
             )
 
     @bump.command(name="discadia", description="discadiaの通知をします。")
@@ -620,20 +616,19 @@ class UpCog(commands.Cog):
         if onか:
             await db.update_one(
                 {"Channel": interaction.channel.id},
-                {'$set': {"Channel": interaction.channel.id}},
+                {"$set": {"Channel": interaction.channel.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
-                    title="Discadiaの通知をONにしました。", description="チャンネルごとにOnにする必要があります。"
+                    title="Discadiaの通知をONにしました。",
+                    description="チャンネルごとにOnにする必要があります。",
                 )
             )
         else:
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="Discadiaの通知をOFFにしました。"
-                )
+                embed=make_embed.success_embed(title="Discadiaの通知をOFFにしました。")
             )
 
     @bump.command(name="mention", description="Bump・Up通知時にメンションをします。")
@@ -653,7 +648,7 @@ class UpCog(commands.Cog):
             )
         await db.update_one(
             {"Channel": interaction.channel.id},
-            {'$set': {"Channel": interaction.channel.id, "Role": ロール.id}},
+            {"$set": {"Channel": interaction.channel.id, "Role": ロール.id}},
             upsert=True,
         )
         await interaction.response.send_message(

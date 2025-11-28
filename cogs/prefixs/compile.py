@@ -5,16 +5,19 @@ from discord import app_commands
 from models import command_disable, make_embed
 import aiohttp
 
+
 class Prefixs_CompileCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print("init -> Prefixs_CompileCog")
 
-    @commands.command(name="python", aliases=['py'], description="Pythonを実行します。")
+    @commands.command(name="python", aliases=["py"], description="Pythonを実行します。")
     @commands.cooldown(2, 5, type=commands.BucketType.guild)
     @commands.guild_only()
     async def compile_python(self, ctx: commands.Context, *, program: str):
-        if not await command_disable.command_enabled_check_by_cmdname("shell compile", ctx.guild):
+        if not await command_disable.command_enabled_check_by_cmdname(
+            "shell compile", ctx.guild
+        ):
             return
 
         headers = {
@@ -54,7 +57,7 @@ class Prefixs_CompileCog(commands.Cog):
                 "files": [
                     {
                         "name": "main.py",
-                        "content": program.removeprefix('```').removesuffix('```'),
+                        "content": program.removeprefix("```").removesuffix("```"),
                     },
                 ],
                 "newFileOptions": [
@@ -76,15 +79,19 @@ class Prefixs_CompileCog(commands.Cog):
                 await ctx.reply(
                     embed=make_embed.success_embed(
                         title="Pythonの実行結果",
-                        description=f"```{data.get('stdout', '')}```"
+                        description=f"```{data.get('stdout', '')}```",
                     )
                 )
 
-    @commands.command(name="nodejs", aliases=['njs'], description="Nodejsを実行します。")
+    @commands.command(
+        name="nodejs", aliases=["njs"], description="Nodejsを実行します。"
+    )
     @commands.cooldown(2, 5, type=commands.BucketType.guild)
     @commands.guild_only()
     async def compile_nodejs(self, ctx: commands.Context, *, program: str):
-        if not await command_disable.command_enabled_check_by_cmdname("shell compile", ctx.guild):
+        if not await command_disable.command_enabled_check_by_cmdname(
+            "shell compile", ctx.guild
+        ):
             return
 
         headers = {
@@ -123,7 +130,7 @@ class Prefixs_CompileCog(commands.Cog):
                 "files": [
                     {
                         "name": "index.js",
-                        "content": program.removeprefix('```').removesuffix('```'),
+                        "content": program.removeprefix("```").removesuffix("```"),
                     },
                 ],
                 "newFileOptions": [
@@ -150,9 +157,10 @@ class Prefixs_CompileCog(commands.Cog):
                 await ctx.reply(
                     embed=make_embed.success_embed(
                         title="Nodejsの実行結果",
-                        description=f"```{data.get('stdout', '')}```"
+                        description=f"```{data.get('stdout', '')}```",
                     )
                 )
+
 
 async def setup(bot):
     await bot.add_cog(Prefixs_CompileCog(bot))

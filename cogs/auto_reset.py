@@ -127,7 +127,8 @@ class AutoResetCog(commands.Cog):
                 await channel.delete()
                 await ch_.send(
                     embed=discord.Embed(
-                        title="チャンネルがリセットされました。", color=discord.Color.red()
+                        title="チャンネルがリセットされました。",
+                        color=discord.Color.red(),
                     )
                 )
             except:

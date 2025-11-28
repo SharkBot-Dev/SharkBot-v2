@@ -588,11 +588,13 @@ async def logging_set(request: Request, guild_id: str, channel: str = Form(None)
 
         await mongodb.mongo["Main"].EventLoggingChannel.update_one(
             {"Guild": int(guild_id)},
-            {'$set': {
-                "Guild": int(guild_id),
-                "Channel": int(channel),
-                "Webhook": f"https://discord.com/api/webhooks/{webhook_id}/{webhook_token}",
-            }},
+            {
+                "$set": {
+                    "Guild": int(guild_id),
+                    "Channel": int(channel),
+                    "Webhook": f"https://discord.com/api/webhooks/{webhook_id}/{webhook_token}",
+                }
+            },
             upsert=True,
         )
 
@@ -748,12 +750,12 @@ async def leveling_set(
         return RedirectResponse(f"/settings/{guild_id}/leveling")
 
     await mongodb.mongo["Main"].LevelingSetting.update_one(
-        {"Guild": int(guild_id)}, {'$set': {"Guild": int(guild_id)}}, upsert=True
+        {"Guild": int(guild_id)}, {"$set": {"Guild": int(guild_id)}}, upsert=True
     )
 
     await mongodb.mongo["Main"].LevelingUpTiming.update_one(
         {"Guild": int(guild_id)},
-        {'$set': {"Guild": int(guild_id), "Timing": timing}},
+        {"$set": {"Guild": int(guild_id), "Timing": timing}},
         upsert=True,
     )
 
@@ -761,7 +763,7 @@ async def leveling_set(
         channel = html.escape(channel)
         await mongodb.mongo["Main"].LevelingUpAlertChannel.update_one(
             {"Guild": int(guild_id)},
-            {'$set': {"Guild": int(guild_id), "Channel": int(channel)}},
+            {"$set": {"Guild": int(guild_id), "Channel": int(channel)}},
             upsert=True,
         )
     elif channel == "0":
@@ -824,7 +826,7 @@ async def automod_create(request: Request, guild_id: str, name: str = Form(None)
     try:
         await mongodb.mongo["DashboardBot"].CreateAutoModQueue.replace_one(
             {"Guild": int(guild_id)},
-            {'$set': {"Guild": int(guild_id), "Name": safe_name}},
+            {"$set": {"Guild": int(guild_id), "Name": safe_name}},
             upsert=True,
         )
     except:
@@ -867,13 +869,18 @@ async def autoreply(request: Request, guild_id: str):
     word_list = [b async for b in db.find({"Guild": int(guild_id)})]
 
     return templates.templates.TemplateResponse(
-        "autoreply.html", {"request": request, "guild": guild, "autos": word_list, "channels": channels}
+        "autoreply.html",
+        {"request": request, "guild": guild, "autos": word_list, "channels": channels},
     )
 
 
 @router.post("/{guild_id}/autoreply_set", dependencies=[Depends(rate_limiter)])
 async def autoreply_set(
-    request: Request, guild_id: str, tri: str = Form(...), reply: str = Form(...), channel: str = Form(...)
+    request: Request,
+    guild_id: str,
+    tri: str = Form(...),
+    reply: str = Form(...),
+    channel: str = Form(...),
 ):
     u = request.session.get("user")
     if u is None:
@@ -904,13 +911,26 @@ async def autoreply_set(
     if not channel or channel == "none":
         await db.update_one(
             {"Guild": int(guild_id), "Word": safe_trigger},
-            {'$set': {"Guild": int(guild_id), "Word": safe_trigger, "ReplyWord": safe_replyword}},
+            {
+                "$set": {
+                    "Guild": int(guild_id),
+                    "Word": safe_trigger,
+                    "ReplyWord": safe_replyword,
+                }
+            },
             upsert=True,
         )
     else:
         await db.update_one(
             {"Guild": int(guild_id), "Word": safe_trigger},
-            {'$set': {"Guild": int(guild_id), "Word": safe_trigger, "ReplyWord": safe_replyword, 'TextChannel': int(safe_channelid)}},
+            {
+                "$set": {
+                    "Guild": int(guild_id),
+                    "Word": safe_trigger,
+                    "ReplyWord": safe_replyword,
+                    "TextChannel": int(safe_channelid),
+                }
+            },
             upsert=True,
         )
 
@@ -943,7 +963,9 @@ async def autoreply_delete(request: Request, guild_id: str, tri: str = Form(...)
 
     return RedirectResponse(f"/settings/{guild_id}/autoreply", status_code=303)
 
+
 # タグ
+
 
 @router.get("/{guild_id}/tags", dependencies=[Depends(rate_limiter)])
 async def tags(request: Request, guild_id: str):
@@ -967,6 +989,7 @@ async def tags(request: Request, guild_id: str):
     return templates.templates.TemplateResponse(
         "tags.html", {"request": request, "guild": guild, "autos": tags}
     )
+
 
 @router.post("/{guild_id}/tags_set", dependencies=[Depends(rate_limiter)])
 async def tags_set(
@@ -998,7 +1021,13 @@ async def tags_set(
     db = mongodb.mongo["Main"].Tags
     await db.update_one(
         {"guild_id": int(guild_id), "command": safe_trigger},
-        {'$set': {"guild_id": int(guild_id), "tagscript": safe_replyword, "command": safe_trigger}},
+        {
+            "$set": {
+                "guild_id": int(guild_id),
+                "tagscript": safe_replyword,
+                "command": safe_trigger,
+            }
+        },
         upsert=True,
     )
 

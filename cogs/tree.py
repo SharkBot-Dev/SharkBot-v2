@@ -8,6 +8,7 @@ import io
 import asyncio
 import aiohttp
 
+
 def generate_tree_image(length_cm: int):
     hour = datetime.utcnow().hour + 9
     if hour >= 24:
@@ -37,7 +38,9 @@ def generate_tree_image(length_cm: int):
     trunk_x = width // 2 - trunk_width // 2
     trunk_y1 = height - 100
     trunk_y0 = trunk_y1 - trunk_height
-    draw.rectangle([trunk_x, trunk_y0, trunk_x + trunk_width, trunk_y1], fill=(139, 69, 19))
+    draw.rectangle(
+        [trunk_x, trunk_y0, trunk_x + trunk_width, trunk_y1], fill=(139, 69, 19)
+    )
 
     leaf_radius = max(50, trunk_height // 2)
     leaf_x0 = width // 2 - leaf_radius
@@ -48,20 +51,21 @@ def generate_tree_image(length_cm: int):
 
     font = ImageFont.load_default(30)
     if not (6 <= hour < 18):
-        draw.text((10, 10), f"Tree Height: {length_cm} cm", fill=(255, 255, 255), font=font)
+        draw.text(
+            (10, 10), f"Tree Height: {length_cm} cm", fill=(255, 255, 255), font=font
+        )
     else:
         draw.text((10, 10), f"Tree Height: {length_cm} cm", fill=(0, 0, 0), font=font)
 
     return img
+
 
 class TreeCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print("init -> TreeCog")
 
-    tree = app_commands.Group(
-        name="tree", description="みんなで木を育てるゲームです"
-    )
+    tree = app_commands.Group(name="tree", description="みんなで木を育てるゲームです")
 
     async def check_tree_time(self, user: discord.User):
         db = self.bot.async_db["Main"].GlobalTree
@@ -202,9 +206,10 @@ class TreeCog(commands.Cog):
             i.seek(0)
 
             try:
+                await interaction.followup.send(
+                    file=discord.File(i, filename="tree.png")
+                )
 
-                await interaction.followup.send(file=discord.File(i, filename="tree.png"))
-            
             except aiohttp.ClientOSError:
                 c += 1
                 i.close()
@@ -213,6 +218,7 @@ class TreeCog(commands.Cog):
 
             i.close()
             return
+
 
 async def setup(bot):
     await bot.add_cog(TreeCog(bot))

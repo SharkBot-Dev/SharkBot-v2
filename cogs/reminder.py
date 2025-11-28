@@ -4,6 +4,7 @@ from typing import Any
 import discord
 from discord.ext import commands, tasks
 
+
 class ReminderCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -13,7 +14,9 @@ class ReminderCog(commands.Cog):
     async def cog_unload(self):
         self.check_alert.cancel()
 
-    async def reminder_create(self, time: timedelta, event: str, /, *args: Any, **kwargs: Any):
+    async def reminder_create(
+        self, time: timedelta, event: str, /, *args: Any, **kwargs: Any
+    ):
         notify_time = datetime.now(timezone.utc) + time
         db = self.bot.async_db["MainTwo"].ReminderQueue
 
@@ -24,7 +27,7 @@ class ReminderCog(commands.Cog):
                     "NotifyAt": notify_time,
                     "Event": event,
                     "Args": args,
-                    "Kwargs": kwargs
+                    "Kwargs": kwargs,
                 }
             },
             upsert=True,
@@ -47,6 +50,7 @@ class ReminderCog(commands.Cog):
     @check_alert.before_loop
     async def before_check_alert(self):
         await self.bot.wait_until_ready()
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ReminderCog(bot))

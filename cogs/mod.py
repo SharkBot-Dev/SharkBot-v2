@@ -24,11 +24,14 @@ def parse_time(timestr: str):
         seconds=int(seconds),
     )
 
+
 class PauseGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="pause", description="セキュリティ処置用のコマンド")
 
-    @app_commands.command(name="invite", description="サーバー招待の一時停止状態を切り替えます")
+    @app_commands.command(
+        name="invite", description="サーバー招待の一時停止状態を切り替えます"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -38,21 +41,47 @@ class PauseGroup(app_commands.Group):
         await interaction.response.defer()
         if 一時停止するか:
             if not 時間:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="時間を指定する必要があります。", description="指定方法の例: `1d3h5m`"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="時間を指定する必要があります。",
+                        description="指定方法の例: `1d3h5m`",
+                    )
+                )
             try:
                 time = parse_time(時間)
             except ValueError:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="正しい時間を指定する必要があります。", description="指定方法の例: `1d3h5m`"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="正しい時間を指定する必要があります。",
+                        description="指定方法の例: `1d3h5m`",
+                    )
+                )
             try:
-                await interaction.guild.edit(reason="招待停止コマンド実行のため。", invites_disabled_until=discord.utils.utcnow() + time)
+                await interaction.guild.edit(
+                    reason="招待停止コマンド実行のため。",
+                    invites_disabled_until=discord.utils.utcnow() + time,
+                )
             except:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="サーバー招待を停止できませんでした。", description="権限を確認、または最大停止時間を超えていないかを確認してください。\n\nちなみに、最大1日まで停止できます。"))
-            await interaction.followup.send(embed=make_embed.success_embed(title="サーバー招待を停止しました。"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="サーバー招待を停止できませんでした。",
+                        description="権限を確認、または最大停止時間を超えていないかを確認してください。\n\nちなみに、最大1日まで停止できます。",
+                    )
+                )
+            await interaction.followup.send(
+                embed=make_embed.success_embed(title="サーバー招待を停止しました。")
+            )
         else:
-            await interaction.guild.edit(reason="招待停止解除コマンド実行のため。", invites_disabled_until=None)
-            await interaction.followup.send(embed=make_embed.success_embed(title="サーバー招待を再開しました。"))
+            await interaction.guild.edit(
+                reason="招待停止解除コマンド実行のため。", invites_disabled_until=None
+            )
+            await interaction.followup.send(
+                embed=make_embed.success_embed(title="サーバー招待を再開しました。")
+            )
 
-    @app_commands.command(name="dm", description="このサーバーからのDMの一時停止状態を切り替えます")
+    @app_commands.command(
+        name="dm", description="このサーバーからのDMの一時停止状態を切り替えます"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -62,21 +91,47 @@ class PauseGroup(app_commands.Group):
         await interaction.response.defer()
         if 一時停止するか:
             if not 時間:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="時間を指定する必要があります。", description="指定方法の例: `1d3h5m`"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="時間を指定する必要があります。",
+                        description="指定方法の例: `1d3h5m`",
+                    )
+                )
             try:
                 time = parse_time(時間)
             except ValueError:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="正しい時間を指定する必要があります。", description="指定方法の例: `1d3h5m`"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="正しい時間を指定する必要があります。",
+                        description="指定方法の例: `1d3h5m`",
+                    )
+                )
             try:
-                await interaction.guild.edit(reason="DM停止コマンド実行のため。", dms_disabled_until=discord.utils.utcnow() + time)
+                await interaction.guild.edit(
+                    reason="DM停止コマンド実行のため。",
+                    dms_disabled_until=discord.utils.utcnow() + time,
+                )
             except Exception as e:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="DMを停止できませんでした。", description=f"権限を確認、または最大停止時間を超えていないかを確認してください。\n\nちなみに、最大1日まで停止できます。"))
-            await interaction.followup.send(embed=make_embed.success_embed(title="DMを停止しました。"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="DMを停止できませんでした。",
+                        description=f"権限を確認、または最大停止時間を超えていないかを確認してください。\n\nちなみに、最大1日まで停止できます。",
+                    )
+                )
+            await interaction.followup.send(
+                embed=make_embed.success_embed(title="DMを停止しました。")
+            )
         else:
-            await interaction.guild.edit(reason="DM停止コマンド実行のため。", dms_disabled_until=None)
-            await interaction.followup.send(embed=make_embed.success_embed(title="DMを再開しました。"))
+            await interaction.guild.edit(
+                reason="DM停止コマンド実行のため。", dms_disabled_until=None
+            )
+            await interaction.followup.send(
+                embed=make_embed.success_embed(title="DMを再開しました。")
+            )
 
-    @app_commands.command(name="both", description="このサーバーの招待リンクとDM、どちらも停止します。")
+    @app_commands.command(
+        name="both", description="このサーバーの招待リンクとDM、どちらも停止します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -86,19 +141,47 @@ class PauseGroup(app_commands.Group):
         await interaction.response.defer()
         if 一時停止するか:
             if not 時間:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="時間を指定する必要があります。", description="指定方法の例: `1d3h5m`"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="時間を指定する必要があります。",
+                        description="指定方法の例: `1d3h5m`",
+                    )
+                )
             try:
                 time = parse_time(時間)
             except ValueError:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="正しい時間を指定する必要があります。", description="指定方法の例: `1d3h5m`"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="正しい時間を指定する必要があります。",
+                        description="指定方法の例: `1d3h5m`",
+                    )
+                )
             try:
-                await interaction.guild.edit(reason="Dmと正体リンク停止コマンド実行のため。", dms_disabled_until=discord.utils.utcnow() + time, invites_disabled=discord.utils.utcnow() + time)
+                await interaction.guild.edit(
+                    reason="Dmと正体リンク停止コマンド実行のため。",
+                    dms_disabled_until=discord.utils.utcnow() + time,
+                    invites_disabled=discord.utils.utcnow() + time,
+                )
             except Exception as e:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="どちらも停止できませんでした。", description=f"権限を確認、または最大停止時間を超えていないかを確認してください。\n\nちなみに、最大1日まで停止できます。"))
-            await interaction.followup.send(embed=make_embed.success_embed(title="DMとサーバー招待を停止しました。"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="どちらも停止できませんでした。",
+                        description=f"権限を確認、または最大停止時間を超えていないかを確認してください。\n\nちなみに、最大1日まで停止できます。",
+                    )
+                )
+            await interaction.followup.send(
+                embed=make_embed.success_embed(title="DMとサーバー招待を停止しました。")
+            )
         else:
-            await interaction.guild.edit(reason="Dmと正体リンク停止コマンド実行のため。", dms_disabled_until=None, invites_disabled=None)
-            await interaction.followup.send(embed=make_embed.success_embed(title="DMとサーバー招待を再開しました。"))
+            await interaction.guild.edit(
+                reason="Dmと正体リンク停止コマンド実行のため。",
+                dms_disabled_until=None,
+                invites_disabled=None,
+            )
+            await interaction.followup.send(
+                embed=make_embed.success_embed(title="DMとサーバー招待を再開しました。")
+            )
+
 
 class BanGroup(app_commands.Group):
     def __init__(self):
@@ -120,7 +203,9 @@ class BanGroup(app_commands.Group):
             )
         await interaction.response.defer()
         try:
-            await interaction.guild.ban(ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN")
+            await interaction.guild.ban(
+                ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN"
+            )
         except:
             return await interaction.followup.send(
                 embed=discord.Embed(
@@ -132,7 +217,11 @@ class BanGroup(app_commands.Group):
         return await interaction.followup.send(
             embed=make_embed.success_embed(
                 title=f"{ユーザー.name}をBanしました。"
-            ).add_field(name="理由", value=理由 + f"\n{interaction.user.id} によってBAN", inline=False)
+            ).add_field(
+                name="理由",
+                value=理由 + f"\n{interaction.user.id} によってBAN",
+                inline=False,
+            )
         )
 
     @app_commands.command(name="unban", description="ユーザーのBanを解除します。")
@@ -151,7 +240,9 @@ class BanGroup(app_commands.Group):
             )
         await interaction.response.defer()
         try:
-            await interaction.guild.unban(ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN解除")
+            await interaction.guild.unban(
+                ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN解除"
+            )
         except:
             return await interaction.followup.send(
                 embed=discord.Embed(
@@ -163,7 +254,11 @@ class BanGroup(app_commands.Group):
         return await interaction.followup.send(
             embed=make_embed.success_embed(
                 title=f"{ユーザー.name}のBanを解除しました。"
-            ).add_field(name="理由", value=理由 + f"\n{interaction.user.id} によってBAN解除", inline=False)
+            ).add_field(
+                name="理由",
+                value=理由 + f"\n{interaction.user.id} によってBAN解除",
+                inline=False,
+            )
         )
 
     @app_commands.command(name="softban", description="ユーザーをSoftBanします。")
@@ -182,10 +277,14 @@ class BanGroup(app_commands.Group):
             )
         await interaction.response.defer()
         try:
-            await interaction.guild.ban(ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN")
+            await interaction.guild.ban(
+                ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN"
+            )
 
             await asyncio.sleep(2)
-            await interaction.guild.unban(ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN解除")
+            await interaction.guild.unban(
+                ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN解除"
+            )
         except:
             return await interaction.followup.send(
                 embed=discord.Embed(
@@ -195,9 +294,7 @@ class BanGroup(app_commands.Group):
                 )
             )
         return await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title=f"{ユーザー.name}をSoftBanしました。"
-            )
+            embed=make_embed.success_embed(title=f"{ユーザー.name}をSoftBanしました。")
         )
 
     @app_commands.command(name="massban", description="複数ユーザーを一気にbanします。")
@@ -283,9 +380,7 @@ class ModCog(commands.Cog):
     ):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(
-                    title="自分自身はキックできません。"
-                ),
+                embed=make_embed.error_embed(title="自分自身はキックできません。"),
                 ephemeral=True,
             )
         if interaction.guild.get_member(ユーザー.id) is None:
@@ -296,17 +391,23 @@ class ModCog(commands.Cog):
             )
         await interaction.response.defer()
         try:
-            await interaction.guild.kick(ユーザー, reason=理由 if 理由 else "なし" + f"\n{interaction.user.id} によってKick")
+            await interaction.guild.kick(
+                ユーザー,
+                reason=理由
+                if 理由
+                else "なし" + f"\n{interaction.user.id} によってKick",
+            )
         except:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
-                    title="キックに失敗しました。",
-                    description="権限が足りないかも！？"
+                    title="キックに失敗しました。", description="権限が足りないかも！？"
                 )
             )
         return await interaction.followup.send(
             embed=make_embed.success_embed(
-                title=f"{ユーザー.name}をKickしました。", description=f'理由: {理由 if 理由 else "なし"}' + f"\n{interaction.user.id} によってKick"
+                title=f"{ユーザー.name}をKickしました。",
+                description=f"理由: {理由 if 理由 else 'なし'}"
+                + f"\n{interaction.user.id} によってKick",
             )
         )
 
@@ -321,7 +422,6 @@ class ModCog(commands.Cog):
         時間: str,
         理由: str = None,
     ):
-    
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(
@@ -336,12 +436,15 @@ class ModCog(commands.Cog):
                     title="このサーバーにいないメンバーはタイムアウトできません。"
                 )
             )
-        
-        if member.top_role >= interaction.user.top_role and interaction.user != interaction.guild.owner:
+
+        if (
+            member.top_role >= interaction.user.top_role
+            and interaction.user != interaction.guild.owner
+        ):
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(
                     title="タイムアウトできません。",
-                    description=f"{member.mention} はあなたより上位、または同等の権限を持っています。"
+                    description=f"{member.mention} はあなたより上位、または同等の権限を持っています。",
                 ),
                 ephemeral=True,
             )
@@ -356,13 +459,13 @@ class ModCog(commands.Cog):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="タイムアウトに失敗しました。",
-                    description="権限が足りないかも！？"
+                    description="権限が足りないかも！？",
                 )
             )
         return await interaction.followup.send(
             embed=make_embed.success_embed(
                 title=f"タイムアウトしました。",
-                description=f"{member.mention} のタイムアウトをしました。"
+                description=f"{member.mention} のタイムアウトをしました。",
             )
         )
 
@@ -382,16 +485,19 @@ class ModCog(commands.Cog):
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(
                     title="メンバーが見つかりません。",
-                    description="このサーバーにいないユーザーのタイムアウトは解除できません。"
+                    description="このサーバーにいないユーザーのタイムアウトは解除できません。",
                 ),
                 ephemeral=True,
             )
 
-        if member.top_role >= interaction.user.top_role and interaction.user != interaction.guild.owner:
+        if (
+            member.top_role >= interaction.user.top_role
+            and interaction.user != interaction.guild.owner
+        ):
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(
                     title="タイムアウト解除できません。",
-                    description=f"{member.mention} はあなたより上位、または同等の権限を持っています。"
+                    description=f"{member.mention} はあなたより上位、または同等の権限を持っています。",
                 ),
                 ephemeral=True,
             )
@@ -404,15 +510,14 @@ class ModCog(commands.Cog):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="タイムアウト解除に失敗しました。",
-                    description="Botに十分な権限がない可能性があります。"
+                    description="Botに十分な権限がない可能性があります。",
                 ),
                 ephemeral=True,
             )
         except Exception as e:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
-                    title="予期せぬエラーが発生しました。",
-                    description=f"```{e}```"
+                    title="予期せぬエラーが発生しました。", description=f"```{e}```"
                 ),
                 ephemeral=True,
             )
@@ -420,11 +525,11 @@ class ModCog(commands.Cog):
         await interaction.followup.send(
             embed=make_embed.success_embed(
                 title="タイムアウトを解除しました。",
-                description=f"{member.mention} のタイムアウトを解除しました。"
+                description=f"{member.mention} のタイムアウトを解除しました。",
             ),
             ephemeral=False,
         )
-        
+
     @moderation.command(name="max-timeout", description="最大までタイムアウトします。")
     @app_commands.checks.has_permissions(moderate_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -476,7 +581,12 @@ class ModCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def clear(self, interaction: discord.Interaction, メッセージ数: int, ユーザー: discord.User = None):
+    async def clear(
+        self,
+        interaction: discord.Interaction,
+        メッセージ数: int,
+        ユーザー: discord.User = None,
+    ):
         await interaction.response.defer(ephemeral=True)
 
         now = discord.utils.utcnow()
@@ -493,12 +603,18 @@ class ModCog(commands.Cog):
 
         if len(deleted) == 0:
             await interaction.followup.send(
-                ephemeral=True, embed=make_embed.error_embed(title=f"メッセージを一個も削除できませんでした。")
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title=f"メッセージを一個も削除できませんでした。"
+                ),
             )
             return
 
         await interaction.followup.send(
-            ephemeral=True, embed=make_embed.success_embed(title=f"{len(deleted)}個のメッセージを削除しました。")
+            ephemeral=True,
+            embed=make_embed.success_embed(
+                title=f"{len(deleted)}個のメッセージを削除しました。"
+            ),
         )
 
     @moderation.command(name="warn", description="メンバーを警告します。")
@@ -523,8 +639,19 @@ class ModCog(commands.Cog):
                     title=f"あなたは`{interaction.guild.name}`\nで警告されました。",
                     color=discord.Color.yellow(),
                     description=f"```{理由}```",
-                ).set_footer(text=f"{interaction.guild.name} / {interaction.guild.id}", icon_url=interaction.guild.icon.url if interaction.guild.icon else None)
-                .set_author(name=f"{interaction.user.name} / {interaction.user.id}", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url)
+                )
+                .set_footer(
+                    text=f"{interaction.guild.name} / {interaction.guild.id}",
+                    icon_url=interaction.guild.icon.url
+                    if interaction.guild.icon
+                    else None,
+                )
+                .set_author(
+                    name=f"{interaction.user.name} / {interaction.user.id}",
+                    icon_url=interaction.user.avatar.url
+                    if interaction.user.avatar
+                    else interaction.user.default_avatar.url,
+                )
             )
         except:
             return await interaction.followup.send(
@@ -535,24 +662,24 @@ class ModCog(commands.Cog):
                     description="Dmを送信できませんでした。",
                 ),
             )
-        
+
         db = self.bot.async_db["Main"].Warns
         await db.update_one(
             {"Guild": interaction.guild.id, "User": メンバー.id},
             {"$push": {"Reason": 理由}},
-            upsert=True
+            upsert=True,
         )
 
         await db.update_one(
             {"Guild": interaction.guild.id, "User": メンバー.id},
             {"$push": {"Mod": interaction.user.name}},
-            upsert=True
+            upsert=True,
         )
 
         await db.update_one(
             {"Guild": interaction.guild.id, "User": メンバー.id},
             {"$inc": {"Count": 1}},
-            upsert=True
+            upsert=True,
         )
 
         await interaction.followup.send(
@@ -564,13 +691,13 @@ class ModCog(commands.Cog):
             ),
         )
 
-    @moderation.command(name="warns", description="メンバーの警告理由・回数を取得します。")
+    @moderation.command(
+        name="warns", description="メンバーの警告理由・回数を取得します。"
+    )
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def warns(
-        self, interaction: discord.Interaction, メンバー: discord.User
-    ):
+    async def warns(self, interaction: discord.Interaction, メンバー: discord.User):
         db = self.bot.async_db["Main"].Warns
 
         try:
@@ -579,20 +706,32 @@ class ModCog(commands.Cog):
                 {"_id": False},
             )
         except:
-            return await interaction.response.send_message(ephemeral=True, content="取得に失敗しました。")
-        
-        if dbfind is None:
-            return await interaction.response.send_message(ephemeral=True, content="まだ処罰されていないようです。")
+            return await interaction.response.send_message(
+                ephemeral=True, content="取得に失敗しました。"
+            )
 
-        mods = dbfind.get('Mod', [])
-        reason = dbfind.get('Reason', [])
+        if dbfind is None:
+            return await interaction.response.send_message(
+                ephemeral=True, content="まだ処罰されていないようです。"
+            )
+
+        mods = dbfind.get("Mod", [])
+        reason = dbfind.get("Reason", [])
         text = ""
         for _, mod in enumerate(mods):
-            text += f'{reason[_]} by {mod}\n'
+            text += f"{reason[_]} by {mod}\n"
 
-        await interaction.response.send_message(embed=discord.Embed(title=f"{メンバー.name} さんの警告リスト", color=discord.Color.green())
-                                                .add_field(name="合計警告回数", value=str(dbfind.get('Count', 0)) + "回", inline=False)
-                                                .add_field(name="理由・処罰者", value=text, inline=True))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title=f"{メンバー.name} さんの警告リスト", color=discord.Color.green()
+            )
+            .add_field(
+                name="合計警告回数",
+                value=str(dbfind.get("Count", 0)) + "回",
+                inline=False,
+            )
+            .add_field(name="理由・処罰者", value=text, inline=True)
+        )
 
     @moderation.command(name="remake", description="チャンネルを再生成します。")
     @app_commands.checks.has_permissions(administrator=True)
@@ -604,7 +743,12 @@ class ModCog(commands.Cog):
         await ch.edit(position=interaction.channel.position + 1)
         await interaction.channel.delete()
         await asyncio.sleep(1)
-        await ch.send(embed=make_embed.success_embed(title="チャンネルを再生成しました。", description=f"実行者: <@{interaction.user.id}>"))
+        await ch.send(
+            embed=make_embed.success_embed(
+                title="チャンネルを再生成しました。",
+                description=f"実行者: <@{interaction.user.id}>",
+            )
+        )
 
     @moderation.command(name="lock", description="チャンネルをロックします。")
     @app_commands.checks.has_permissions(manage_channels=True)
@@ -709,12 +853,13 @@ class ModCog(commands.Cog):
         db = self.bot.async_db["Main"].GuildBAN
         await db.update_one(
             {"Guild": str(interaction.guild.id), "BANGuild": サーバーid},
-            {'$set': {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}},
+            {"$set": {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}},
             upsert=True,
         )
         return await interaction.response.send_message(
             embed=make_embed.success_embed(
-                title="サーバーをBANしました。", description="次からそのサーバーに入っているユーザーを認証できなくします。"
+                title="サーバーをBANしました。",
+                description="次からそのサーバーに入っているユーザーを認証できなくします。",
             )
         )
 
@@ -736,9 +881,7 @@ class ModCog(commands.Cog):
             {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}
         )
         return await interaction.response.send_message(
-            embed=make_embed.success_embed(
-                title="サーバーのBANを解除しました。"
-            )
+            embed=make_embed.success_embed(title="サーバーのBANを解除しました。")
         )
 
     @moderation.command(
@@ -790,11 +933,20 @@ class ModCog(commands.Cog):
         選ぶ先=[
             app_commands.Choice(name="ロールから", value="role"),
             app_commands.Choice(name="リアクションから", value="reaction"),
-            app_commands.Choice(name="テキストチャンネルのメッセージから", value="messages"),
+            app_commands.Choice(
+                name="テキストチャンネルのメッセージから", value="messages"
+            ),
         ]
     )
     async def lottery(
-        self, interaction: discord.Interaction, 何個選ぶか: int, 選ぶ先: app_commands.Choice[str], ロール: discord.Role = None, メッセージ: str = None, 絵文字: str = None, テキストチャンネル: discord.TextChannel = None
+        self,
+        interaction: discord.Interaction,
+        何個選ぶか: int,
+        選ぶ先: app_commands.Choice[str],
+        ロール: discord.Role = None,
+        メッセージ: str = None,
+        絵文字: str = None,
+        テキストチャンネル: discord.TextChannel = None,
     ):
         await interaction.response.defer(thinking=True)
 
@@ -803,33 +955,44 @@ class ModCog(commands.Cog):
                 return await interaction.followup.send(
                     embed=make_embed.error_embed(
                         title="引数を指定してください。",
-                        description="ロールを指定してください。"
+                        description="ロールを指定してください。",
                     ),
-                    ephemeral=True
+                    ephemeral=True,
                 )
 
             members = [m for m in ロール.members]
             if not members:
                 return await interaction.followup.send(
-                    embed=make_embed.error_embed(title="抽選失敗です", description="指定されたロールに有効なメンバーがいません。")
+                    embed=make_embed.error_embed(
+                        title="抽選失敗です",
+                        description="指定されたロールに有効なメンバーがいません。",
+                    )
                 )
 
             winners = random.sample(members, min(何個選ぶか, len(members)))
             desc = "\n".join([m.mention for m in winners])
             return await interaction.followup.send(
-                embed=make_embed.success_embed(title="抽選結果です (ロールから)", description=desc)
+                embed=make_embed.success_embed(
+                    title="抽選結果です (ロールから)", description=desc
+                )
             )
 
         elif 選ぶ先.value == "reaction":
             if メッセージ is None:
                 return await interaction.followup.send(
-                    embed=make_embed.error_embed(title="引数を指定してください。", description="メッセージIDを指定してください。"),
-                    ephemeral=True
+                    embed=make_embed.error_embed(
+                        title="引数を指定してください。",
+                        description="メッセージIDを指定してください。",
+                    ),
+                    ephemeral=True,
                 )
             if 絵文字 is None:
                 return await interaction.followup.send(
-                    embed=make_embed.error_embed(title="引数を指定してください。", description="絵文字を指定してください。"),
-                    ephemeral=True
+                    embed=make_embed.error_embed(
+                        title="引数を指定してください。",
+                        description="絵文字を指定してください。",
+                    ),
+                    ephemeral=True,
                 )
 
             channel = テキストチャンネル or interaction.channel
@@ -837,51 +1000,75 @@ class ModCog(commands.Cog):
                 message = await channel.fetch_message(int(メッセージ))
             except Exception:
                 return await interaction.followup.send(
-                    embed=make_embed.error_embed(title="取得失敗です", description="指定されたメッセージが見つかりませんでした。")
+                    embed=make_embed.error_embed(
+                        title="取得失敗です",
+                        description="指定されたメッセージが見つかりませんでした。",
+                    )
                 )
 
             reaction = discord.utils.get(message.reactions, emoji=絵文字)
             if reaction is None:
                 return await interaction.followup.send(
-                    embed=make_embed.error_embed(title="エラーです", description=f"指定の絵文字({絵文字})のリアクションが見つかりませんでした。")
+                    embed=make_embed.error_embed(
+                        title="エラーです",
+                        description=f"指定の絵文字({絵文字})のリアクションが見つかりませんでした。",
+                    )
                 )
 
             users = [u async for u in reaction.users()]
             if not users:
                 return await interaction.followup.send(
-                    embed=make_embed.error_embed(title="抽選失敗です", description="リアクションしているユーザーがいません。")
+                    embed=make_embed.error_embed(
+                        title="抽選失敗です",
+                        description="リアクションしているユーザーがいません。",
+                    )
                 )
 
             winners = random.sample(users, min(何個選ぶか, len(users)))
             desc = "\n".join([u.mention for u in winners])
             return await interaction.followup.send(
-                embed=make_embed.success_embed(title="抽選結果です (リアクションから)", description=desc)
+                embed=make_embed.success_embed(
+                    title="抽選結果です (リアクションから)", description=desc
+                )
             )
         elif 選ぶ先.value == "messages":
             if テキストチャンネル is None:
                 return await interaction.followup.send(
-                    embed=make_embed.error_embed(title="引数を指定してください。", description="テキストチャンネルを指定してください。"),
-                    ephemeral=True
+                    embed=make_embed.error_embed(
+                        title="引数を指定してください。",
+                        description="テキストチャンネルを指定してください。",
+                    ),
+                    ephemeral=True,
                 )
 
             try:
                 messages = [m async for m in テキストチャンネル.history(limit=100)]
             except discord.Forbidden:
                 return await interaction.followup.send(
-                    embed=make_embed.error_embed(title="権限エラーです。", description="メッセージ履歴を取得できません。権限を確認してください。")
+                    embed=make_embed.error_embed(
+                        title="権限エラーです。",
+                        description="メッセージ履歴を取得できません。権限を確認してください。",
+                    )
                 )
 
             authors = list({m.author for m in messages})
             if not authors:
                 return await interaction.followup.send(
-                    embed=make_embed.error_embed(title="抽選失敗です。", description="対象チャンネルに有効なメッセージ送信者がいません。")
+                    embed=make_embed.error_embed(
+                        title="抽選失敗です。",
+                        description="対象チャンネルに有効なメッセージ送信者がいません。",
+                    )
                 )
 
             winners = random.sample(authors, min(何個選ぶか, len(authors)))
             desc = "\n".join([a.mention for a in winners])
             return await interaction.followup.send(
-                embed=make_embed.success_embed(title="抽選結果です (テキストチャンネルのメッセージから)", description=desc)
+                embed=make_embed.success_embed(
+                    title="抽選結果です (テキストチャンネルのメッセージから)",
+                    description=desc,
+                )
             )
+
 
 async def setup(bot):
     await bot.add_cog(ModCog(bot))

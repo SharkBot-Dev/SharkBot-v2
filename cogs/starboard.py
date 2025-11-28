@@ -41,11 +41,13 @@ class StarBoardCog(commands.Cog):
         db = self.bot.async_db["Main"].ReactionBoardMessage
         await db.update_one(
             {"Guild": original.guild.id},
-            {'$set': {
-                "Guild": original.guild.id,
-                "ID": original.id,
-                "ReactMessageID": board_msg.id,
-            }},
+            {
+                "$set": {
+                    "Guild": original.guild.id,
+                    "ID": original.id,
+                    "ReactMessageID": board_msg.id,
+                }
+            },
             upsert=True,
         )
 
@@ -80,12 +82,16 @@ class StarBoardCog(commands.Cog):
                     title=f"{emoji_}x1",
                     description=message.content,
                     color=discord.Color.blue(),
-                ).set_author(
+                )
+                .set_author(
                     name=message.author.name,
                     icon_url=message.author.avatar.url
                     if message.author.avatar
                     else message.author.default_avatar.url,
-                ).set_image(url=message.attachments[0].url if message.attachments else None),
+                )
+                .set_image(
+                    url=message.attachments[0].url if message.attachments else None
+                ),
                 view=discord.ui.View().add_item(
                     discord.ui.Button(label="メッセージに飛ぶ", url=message.jump_url)
                 ),
@@ -105,12 +111,16 @@ class StarBoardCog(commands.Cog):
                     title=f"{emoji_}x{count}",
                     description=message.content,
                     color=discord.Color.blue(),
-                ).set_author(
+                )
+                .set_author(
                     name=message.author.name,
                     icon_url=message.author.avatar.url
                     if message.author.avatar
                     else message.author.default_avatar.url,
-                ).set_image(url=message.attachments[0].url if message.attachments else None)
+                )
+                .set_image(
+                    url=message.attachments[0].url if message.attachments else None
+                )
             )
 
     async def reaction_add_2(self, message: discord.Message, emoji_: str):
@@ -143,12 +153,14 @@ class StarBoardCog(commands.Cog):
                 title=f"{emoji_}x{count}",
                 description=message.content,
                 color=discord.Color.blue(),
-            ).set_author(
+            )
+            .set_author(
                 name=message.author.name,
                 icon_url=message.author.avatar.url
                 if message.author.avatar
                 else message.author.default_avatar.url,
-            ).set_image(url=message.attachments[0].url if message.attachments else None)
+            )
+            .set_image(url=message.attachments[0].url if message.attachments else None)
         )
 
     @commands.Cog.listener("on_raw_reaction_add")
@@ -210,7 +222,13 @@ class StarBoardCog(commands.Cog):
         db = self.bot.async_db["Main"].ReactionBoard
         await db.update_one(
             {"Guild": interaction.guild.id, "Channel": チャンネル.id},
-            {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id, "Emoji": 絵文字}},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Channel": チャンネル.id,
+                    "Emoji": 絵文字,
+                }
+            },
             upsert=True,
         )
 
@@ -268,9 +286,7 @@ class StarBoardCog(commands.Cog):
             await interaction.response.defer()
             await self.delete_reaction_board(interaction)
             await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="スターボードを無効にしました。"
-                )
+                embed=make_embed.success_embed(title="スターボードを無効にしました。")
             )
         except discord.Forbidden:
             return await interaction.followup.send(

@@ -42,9 +42,7 @@ class VCCog(commands.Cog):
             else:
                 await メンバー.edit(voice_channel=チャンネル)
             await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="メンバーを移動しました。"
-                )
+                embed=make_embed.success_embed(title="メンバーを移動しました。")
             )
         except discord.Forbidden:
             return await interaction.followup.send(
@@ -65,9 +63,7 @@ class VCCog(commands.Cog):
             await interaction.response.defer()
             await メンバー.edit(voice_channel=None)
             await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="メンバーを退出させました。"
-                )
+                embed=make_embed.success_embed(title="メンバーを退出させました。")
             )
         except discord.Forbidden:
             return await interaction.followup.send(
@@ -103,9 +99,7 @@ class VCCog(commands.Cog):
                     await chm.edit(voice_channel=None)
                     await asyncio.sleep(1)
             await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="VCを解散させました。"
-                )
+                embed=make_embed.success_embed(title="VCを解散させました。")
             )
         except discord.Forbidden:
             return await interaction.followup.send(
@@ -144,9 +138,7 @@ class VCCog(commands.Cog):
                         await vm.edit(voice_channel=ボイスチャンネル)
                         await asyncio.sleep(1)
             await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="VCに集めました。"
-                )
+                embed=make_embed.success_embed(title="VCに集めました。")
             )
         except discord.Forbidden:
             return await interaction.followup.send(
@@ -162,7 +154,9 @@ class VCCog(commands.Cog):
             await db.delete_one({"Guild": guild.id})
             return True
         await db.update_one(
-            {"Guild": guild.id}, {'$set': {"Guild": guild.id, "Channel": vc.id}}, upsert=True
+            {"Guild": guild.id},
+            {"$set": {"Guild": guild.id, "Channel": vc.id}},
+            upsert=True,
         )
         return True
 
@@ -180,14 +174,10 @@ class VCCog(commands.Cog):
         await self.set_tempvc(interaction.guild, チャンネル)
         if not チャンネル:
             return await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="一時的なVCを削除しました。"
-                )
+                embed=make_embed.success_embed(title="一時的なVCを削除しました。")
             )
         await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title="一時的なVCを設定しました。"
-            )
+            embed=make_embed.success_embed(title="一時的なVCを設定しました。")
         )
 
     @vc.command(
@@ -204,7 +194,7 @@ class VCCog(commands.Cog):
         if チャンネル:
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
+                {"$set": {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
                 upsert=True,
             )
             await interaction.followup.send(
@@ -320,9 +310,7 @@ class VCCog(commands.Cog):
                 )
             )
             await vc.send(
-                embed=make_embed.success_embed(
-                    title="一時的なVCの管理パネル"
-                ),
+                embed=make_embed.success_embed(title="一時的なVCの管理パネル"),
                 view=view,
             )
             await member.edit(voice_channel=vc)
@@ -343,26 +331,40 @@ class VCCog(commands.Cog):
                         reason="一時的なVCチャンネルの削除のため。"
                     )
                 elif custom_id == "tempvc_edit":
+
                     class EditNameModal(discord.ui.Modal, title="チャンネルの変更"):
                         ch_name = discord.ui.TextInput(
-                            label='チャンネル名を入力',
+                            label="チャンネル名を入力",
                             required=True,
                             style=discord.TextStyle.short,
                         )
 
-                        async def on_submit(self, interaction_modal: discord.Interaction):
+                        async def on_submit(
+                            self, interaction_modal: discord.Interaction
+                        ):
                             await interaction_modal.response.defer(ephemeral=True)
 
-                            await interaction_modal.channel.edit(name=self.ch_name.value)
+                            await interaction_modal.channel.edit(
+                                name=self.ch_name.value
+                            )
 
-                            await interaction.channel.send(content=f"{interaction_modal.user.mention} がチャンネル名を変更しました。")
+                            await interaction.channel.send(
+                                content=f"{interaction_modal.user.mention} がチャンネル名を変更しました。"
+                            )
+
                     await interaction.response.send_modal(EditNameModal())
                 elif custom_id == "tempvc_help":
-                    await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="VC作成のヘルプ", description="""
+                    await interaction.response.send_message(
+                        ephemeral=True,
+                        embed=make_embed.success_embed(
+                            title="VC作成のヘルプ",
+                            description="""
 > ❓ .. このヘルプを表示します。
 > 🖊️ .. VC名を変更します。
 > 🗑️ .. VCを削除します。
-"""))
+""",
+                        ),
+                    )
         except:
             return
 

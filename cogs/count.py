@@ -50,11 +50,13 @@ class CountCog(commands.Cog):
                         )
                     await db.update_one(
                         {"Guild": message.guild.id, "Channel": message.channel.id},
-                        {'$set': {
-                            "Guild": message.guild.id,
-                            "Channel": message.channel.id,
-                            "Now": 0,
-                        }},
+                        {
+                            "$set": {
+                                "Guild": message.guild.id,
+                                "Channel": message.channel.id,
+                                "Now": 0,
+                            }
+                        },
                         upsert=True,
                     )
                     return
@@ -89,11 +91,13 @@ class CountCog(commands.Cog):
         db = self.bot.async_db["Main"].Counting
         await db.update_one(
             {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-            {"$set": {
-                "Guild": interaction.guild.id,
-                "Channel": interaction.channel.id,
-                "Now": 0,
-            }},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Channel": interaction.channel.id,
+                    "Now": 0,
+                }
+            },
             upsert=True,
         )
         await interaction.channel.send(
@@ -157,11 +161,13 @@ class CountCog(commands.Cog):
             )
         await db.update_one(
             {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-            {"$set": {
-                "Guild": interaction.guild.id,
-                "Channel": interaction.channel.id,
-                "Now": 数字,
-            }},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Channel": interaction.channel.id,
+                    "Now": 数字,
+                }
+            },
             upsert=True,
         )
         return await interaction.followup.send(
@@ -199,11 +205,13 @@ class CountCog(commands.Cog):
             )
         await db.update_one(
             {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-            {"$set": {
-                "Guild": interaction.guild.id,
-                "Channel": interaction.channel.id,
-                "Now": 0,
-            }},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Channel": interaction.channel.id,
+                    "Now": 0,
+                }
+            },
             upsert=True,
         )
         return await interaction.followup.send(

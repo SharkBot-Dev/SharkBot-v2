@@ -28,86 +28,120 @@ invite_only_check = re.compile(
     r"^(https?://)?(www\.)?(discord\.gg/|discord\.com/invite/)[a-zA-Z0-9]+$"
 )
 
-class SitesModal(discord.ui.Modal, title='サイトの作成'):
+
+class SitesModal(discord.ui.Modal, title="サイトの作成"):
     text = discord.ui.TextInput(
         label="説明",
         placeholder="とても人気なサーバーです！",
         style=discord.TextStyle.long,
-        required=True
+        required=True,
     )
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(thinking=True)
         inv = await interaction.channel.create_invite()
-        await interaction.client.async_db['MainTwo'].ServerPage.update_one({'Guild': interaction.guild.id}, {'$set': {'Guild': interaction.guild.id, 'Text': self.text.value, 'Name': interaction.guild.name, 'Invite': inv.url, 'Icon': interaction.guild.icon.url}}, upsert=True)
-        await interaction.followup.send(embed=make_embed.success_embed(title="サイトを作成しました。", description=f'https://sharkbot.xyz/server/{interaction.guild.id}'))
+        await interaction.client.async_db["MainTwo"].ServerPage.update_one(
+            {"Guild": interaction.guild.id},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Text": self.text.value,
+                    "Name": interaction.guild.name,
+                    "Invite": inv.url,
+                    "Icon": interaction.guild.icon.url,
+                }
+            },
+            upsert=True,
+        )
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="サイトを作成しました。",
+                description=f"https://sharkbot.xyz/server/{interaction.guild.id}",
+            )
+        )
+
 
 class GlobalThreadGroup(app_commands.Group):
     def __init__(self):
-        super().__init__(name="thread", description="グローバルスレッド関連のコマンドです。")
+        super().__init__(
+            name="thread", description="グローバルスレッド関連のコマンドです。"
+        )
 
     @app_commands.command(name="join", description="グローバルスレッドに参加します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def global_thread_join(
-        self,
-        interaction: discord.Interaction,
-        板名: str = "総合"
+        self, interaction: discord.Interaction, 板名: str = "総合"
     ):
         await interaction.response.defer()
         if interaction.channel.type != discord.ChannelType.text:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="テキストチャンネルでのみ参加できます。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="テキストチャンネルでのみ参加できます。"
+                )
+            )
         wh = await interaction.channel.create_webhook(name=f"グローバルスレッド-{板名}")
-        db = interaction.client.async_db['MainTwo'].GlobalThread
+        db = interaction.client.async_db["MainTwo"].GlobalThread
         await db.update_one(
             {"name": 板名},
-            {"$push": {
-                "channels": {
-                    "guild_id": interaction.guild.id,
-                    "channel_id": interaction.channel.id,
-                    "webhook_url": wh.url
+            {
+                "$push": {
+                    "channels": {
+                        "guild_id": interaction.guild.id,
+                        "channel_id": interaction.channel.id,
+                        "webhook_url": wh.url,
+                    }
                 }
-            }},
-            upsert=True
+            },
+            upsert=True,
         )
-        return await interaction.followup.send(embed=make_embed.success_embed(title="グローバルスレッドに参加しました。", description="常識を持った発言してください。"))
+        return await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="グローバルスレッドに参加しました。",
+                description="常識を持った発言してください。",
+            )
+        )
 
-    @app_commands.command(name="leave", description="グローバルスレッドから退出します。")
+    @app_commands.command(
+        name="leave", description="グローバルスレッドから退出します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
-    async def global_thread_leave(
-        self,
-        interaction: discord.Interaction
-    ):
+    async def global_thread_leave(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        db = interaction.client.async_db['MainTwo'].GlobalThread
+        db = interaction.client.async_db["MainTwo"].GlobalThread
 
-        data = await db.find_one({
-            "channels.channel_id": interaction.channel.id
-        })
+        data = await db.find_one({"channels.channel_id": interaction.channel.id})
         if not data:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="このチャンネルはグローバルスレッドではありません。"
                 )
             )
-        
+
         target_channel = next(
-            (ch for ch in data["channels"] if ch["channel_id"] == interaction.channel.id),
-            None
+            (
+                ch
+                for ch in data["channels"]
+                if ch["channel_id"] == interaction.channel.id
+            ),
+            None,
         )
         if not target_channel:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(title="このチャンネルは登録されていません。")
+                embed=make_embed.error_embed(
+                    title="このチャンネルは登録されていません。"
+                )
             )
-        
+
         existing_groups = data.get("thread_groups", [])
 
         for group in existing_groups:
             group["threads"] = [
-                t for t in group.get("threads", [])
+                t
+                for t in group.get("threads", [])
                 if t["channel_id"] != interaction.channel.id
             ]
 
@@ -115,16 +149,17 @@ class GlobalThreadGroup(app_commands.Group):
             {"_id": data["_id"]},
             {
                 "$pull": {"channels": {"channel_id": interaction.channel.id}},
-                "$set": {"thread_groups": existing_groups}
-            }
+                "$set": {"thread_groups": existing_groups},
+            },
         )
 
         return await interaction.followup.send(
             embed=make_embed.success_embed(
                 title="グローバルスレッドから退出しました。",
-                description="グローバルスレッドで使用されていたWebHookは各自削除してください。"
+                description="グローバルスレッドで使用されていたWebHookは各自削除してください。",
             )
         )
+
 
 class GlobalCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -154,23 +189,24 @@ class GlobalCog(commands.Cog):
         all_channels = data["channels"]
 
         thread_group = next(
-            (g for g in data.get("thread_groups", [])
-            if g["thread_id"] == thread.id),
-            None
+            (g for g in data.get("thread_groups", []) if g["thread_id"] == thread.id),
+            None,
         )
 
         if not thread_group:
             thread_group = {
                 "parent_channel_id": parent_channel_id,
                 "thread_id": thread.id,
-                "threads": []
+                "threads": [],
             }
 
-        thread_group["threads"].append({
-            "guild_id": guild_id,
-            "channel_id": parent_channel_id,
-            "thread_id": thread.id
-        })
+        thread_group["threads"].append(
+            {
+                "guild_id": guild_id,
+                "channel_id": parent_channel_id,
+                "thread_id": thread.id,
+            }
+        )
 
         async with aiohttp.ClientSession() as session:
             for ch in all_channels:
@@ -186,8 +222,7 @@ class GlobalCog(commands.Cog):
                     continue
 
                 new_thread = await target_channel.create_thread(
-                    name=thread_name,
-                    type=discord.ChannelType.public_thread
+                    name=thread_name, type=discord.ChannelType.public_thread
                 )
 
                 webhook = Webhook.from_url(ch["webhook_url"], session=session)
@@ -196,18 +231,24 @@ class GlobalCog(commands.Cog):
                     await webhook.send(
                         content=thread.starter_message.content,
                         username=thread.starter_message.author.display_name,
-                        avatar_url=(thread.starter_message.author.avatar.url if thread.starter_message.author.avatar else None),
+                        avatar_url=(
+                            thread.starter_message.author.avatar.url
+                            if thread.starter_message.author.avatar
+                            else None
+                        ),
                         allowed_mentions=discord.AllowedMentions.none(),
-                        thread=new_thread
+                        thread=new_thread,
                     )
                 except:
                     continue
 
-                thread_group["threads"].append({
-                    "guild_id": ch["guild_id"],
-                    "channel_id": ch["channel_id"],
-                    "thread_id": new_thread.id
-                })
+                thread_group["threads"].append(
+                    {
+                        "guild_id": ch["guild_id"],
+                        "channel_id": ch["channel_id"],
+                        "thread_id": new_thread.id,
+                    }
+                )
 
                 await asyncio.sleep(1)
 
@@ -219,8 +260,7 @@ class GlobalCog(commands.Cog):
         existing_groups.append(thread_group)
 
         await db.update_one(
-            {"_id": data["_id"]},
-            {"$set": {"thread_groups": existing_groups}}
+            {"_id": data["_id"]}, {"$set": {"thread_groups": existing_groups}}
         )
 
         await thread.starter_message.add_reaction("✅")
@@ -233,19 +273,22 @@ class GlobalCog(commands.Cog):
         if message.channel.type != discord.ChannelType.public_thread:
             return
 
-        db = self.bot.async_db['MainTwo'].GlobalThread
+        db = self.bot.async_db["MainTwo"].GlobalThread
 
-        data = await db.find_one({
-            "thread_groups.threads.thread_id": message.channel.id
-        })
+        data = await db.find_one(
+            {"thread_groups.threads.thread_id": message.channel.id}
+        )
 
         if not data:
             return
 
         target_group = next(
-            (group for group in data["thread_groups"]
-            if any(t["thread_id"] == message.channel.id for t in group["threads"])),
-            None
+            (
+                group
+                for group in data["thread_groups"]
+                if any(t["thread_id"] == message.channel.id for t in group["threads"])
+            ),
+            None,
         )
 
         if not target_group:
@@ -267,8 +310,10 @@ class GlobalCog(commands.Cog):
                 if t["thread_id"] == message.channel.id:
                     continue
 
-                webhook_data = next((c for c in data["channels"]
-                                    if c["channel_id"] == t["channel_id"]), None)
+                webhook_data = next(
+                    (c for c in data["channels"] if c["channel_id"] == t["channel_id"]),
+                    None,
+                )
                 if not webhook_data:
                     continue
 
@@ -284,7 +329,9 @@ class GlobalCog(commands.Cog):
                 target_thread = target_channel.get_thread(t["thread_id"])
                 if not target_thread:
                     try:
-                        target_thread = await target_channel.fetch_message(t["thread_id"])
+                        target_thread = await target_channel.fetch_message(
+                            t["thread_id"]
+                        )
 
                         await asyncio.sleep(1)
                     except:
@@ -293,7 +340,9 @@ class GlobalCog(commands.Cog):
 
                 try:
                     if not message.attachments == []:
-                        embed = discord.Embed(title="添付ファイル", color=discord.Color.blue())
+                        embed = discord.Embed(
+                            title="添付ファイル", color=discord.Color.blue()
+                        )
 
                         for kaku in [".png", ".jpg", ".jpeg", ".gif", ".webm"]:
                             if kaku in message.attachments[0].filename:
@@ -308,18 +357,26 @@ class GlobalCog(commands.Cog):
                         await webhook.send(
                             content=message.content,
                             username=message.author.display_name,
-                            avatar_url=(message.author.avatar.url if message.author.avatar else None),
+                            avatar_url=(
+                                message.author.avatar.url
+                                if message.author.avatar
+                                else None
+                            ),
                             thread=target_thread,
                             allowed_mentions=discord.AllowedMentions.none(),
-                            embed=embed
+                            embed=embed,
                         )
                     else:
                         await webhook.send(
                             content=message.content,
                             username=message.author.display_name,
-                            avatar_url=(message.author.avatar.url if message.author.avatar else None),
+                            avatar_url=(
+                                message.author.avatar.url
+                                if message.author.avatar
+                                else None
+                            ),
                             thread=target_thread,
-                            allowed_mentions=discord.AllowedMentions.none()
+                            allowed_mentions=discord.AllowedMentions.none(),
                         )
                 except:
                     continue
@@ -334,7 +391,7 @@ class GlobalCog(commands.Cog):
             return discord.Color.blue()
         if dbfind is None:
             return discord.Color.blue()
-        color = dbfind.get('Color', "blue")
+        color = dbfind.get("Color", "blue")
         if color == "blue":
             return discord.Color.blue()
         elif color == "red":
@@ -401,7 +458,6 @@ class GlobalCog(commands.Cog):
                 continue
 
             try:
-
                 target_channel = self.bot.get_channel(channel["Channel"])
                 if target_channel:
                     await self.send_one_join_globalchat(channel["Webhook"], ctx)
@@ -450,12 +506,14 @@ class GlobalCog(commands.Cog):
         db = self.bot.async_db["Main"].NewGlobalChat
         await db.update_one(
             {"Guild": ctx.guild.id},
-            {"$set": {
-                "Guild": ctx.guild.id,
-                "Channel": ctx.channel.id,
-                "GuildName": ctx.guild.name,
-                "Webhook": web.url,
-            }},
+            {
+                "$set": {
+                    "Guild": ctx.guild.id,
+                    "Channel": ctx.channel.id,
+                    "GuildName": ctx.guild.name,
+                    "Webhook": web.url,
+                }
+            },
             upsert=True,
         )
         return True
@@ -465,12 +523,14 @@ class GlobalCog(commands.Cog):
         db = self.bot.async_db["Main"].NewGlobalChat
         await db.update_one(
             {"Guild": channel.guild.id},
-            {"$set": {
-                "Guild": channel.guild.id,
-                "Channel": channel.id,
-                "GuildName": channel.guild.name,
-                "Webhook": web.url,
-            }},
+            {
+                "$set": {
+                    "Guild": channel.guild.id,
+                    "Channel": channel.id,
+                    "GuildName": channel.guild.name,
+                    "Webhook": web.url,
+                }
+            },
             upsert=True,
         )
         return True
@@ -569,7 +629,9 @@ class GlobalCog(commands.Cog):
                     pass
             if not message.attachments == []:
                 if message.stickers == []:
-                    embed.add_field(name="添付ファイル", value=message.attachments[0].url)
+                    embed.add_field(
+                        name="添付ファイル", value=message.attachments[0].url
+                    )
                     for kaku in [".png", ".jpg", ".jpeg", ".gif", ".webm"]:
                         if message.attachments[0].filename.endswith(kaku):
                             embed.set_image(url=message.attachments[0].url)
@@ -689,13 +751,15 @@ class GlobalCog(commands.Cog):
         db = self.bot.async_db["Main"].NewGlobalChatRoom
         await db.update_one(
             {"Guild": ctx.guild.id, "Channel": ctx.channel.id},
-            {"$set": {
-                "Guild": ctx.guild.id,
-                "Channel": ctx.channel.id,
-                "GuildName": ctx.guild.name,
-                "Webhook": web.url,
-                "Name": roomname,
-            }},
+            {
+                "$set": {
+                    "Guild": ctx.guild.id,
+                    "Channel": ctx.channel.id,
+                    "GuildName": ctx.guild.name,
+                    "Webhook": web.url,
+                    "Name": roomname,
+                }
+            },
             upsert=True,
         )
         return True
@@ -717,7 +781,13 @@ class GlobalCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_join(self, interaction: discord.Interaction, 部屋名: str = None):
         if interaction.channel.type != discord.ChannelType.text:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このチャンネルでは実行できません。", description="テキストチャンネルでのみグローバルチャットに参加できます。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このチャンネルでは実行できません。",
+                    description="テキストチャンネルでのみグローバルチャットに参加できます。",
+                ),
+            )
 
         await interaction.response.defer()
         if not 部屋名:
@@ -803,7 +873,9 @@ class GlobalCog(commands.Cog):
     async def set_emoji_guild(self, emoji: str, guild: discord.Guild):
         db = self.bot.async_db["Main"].NewGlobalChatEmoji
         await db.update_one(
-            {"Guild": guild.id}, {"$set": {"Guild": guild.id, "Emoji": emoji}}, upsert=True
+            {"Guild": guild.id},
+            {"$set": {"Guild": guild.id, "Emoji": emoji}},
+            upsert=True,
         )
 
     @globalchat.command(
@@ -874,19 +946,19 @@ class GlobalCog(commands.Cog):
         inv = await interaction.channel.create_invite()
         await db.update_one(
             {"Guild": interaction.guild.id},
-            {"$set": {
-                "Guild": interaction.guild.id,
-                "Name": interaction.guild.name,
-                "Description": 説明,
-                "Invite": inv.url,
-                "Icon": interaction.guild.icon.url,
-            }},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Name": interaction.guild.name,
+                    "Description": 説明,
+                    "Invite": inv.url,
+                    "Icon": interaction.guild.icon.url,
+                }
+            },
             upsert=True,
         )
         embed = make_embed.success_embed(title="サーバーを掲載しました。")
-        await interaction.followup.send(
-            embed=embed
-        )
+        await interaction.followup.send(embed=embed)
 
     async def get_reg(self, interaction: discord.Interaction):
         db = self.bot.async_db["Main"].Register
@@ -912,11 +984,12 @@ class GlobalCog(commands.Cog):
         db = self.bot.async_db["Main"].Register
         inv, desc = await self.get_reg(interaction)
         if inv == "https://discord.com":
-            embed = make_embed.error_embed(title="まだ登録されていません。", description=f"/global registerで登録してください。")
-            return await interaction.response.send_message(
-                embed=embed
+            embed = make_embed.error_embed(
+                title="まだ登録されていません。",
+                description=f"/global registerで登録してください。",
             )
-            
+            return await interaction.response.send_message(embed=embed)
+
         data = await db.find_one({"Guild": interaction.guild.id})
         now = time.time()
         cooldown_time = 2 * 60 * 60
@@ -926,37 +999,48 @@ class GlobalCog(commands.Cog):
             remaining = cooldown_time - (now - last_up)
             if remaining > 0:
                 m, s = divmod(int(remaining), 60)
-                embed = make_embed.error_embed(title="まだUpできません。", description=f"あと **{m}分{s}秒** 待ってから再度お試しください。")
-                return await interaction.response.send_message(
-                    embed=embed
+                embed = make_embed.error_embed(
+                    title="まだUpできません。",
+                    description=f"あと **{m}分{s}秒** 待ってから再度お試しください。",
                 )
+                return await interaction.response.send_message(embed=embed)
 
         await db.update_one(
             {"Guild": interaction.guild.id},
-            {"$set": {
-                "Guild": interaction.guild.id,
-                "Name": interaction.guild.name,
-                "Description": desc,
-                "Invite": inv,
-                "Icon": interaction.guild.icon.url,
-                "Up": str(time.time()),
-            }},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Name": interaction.guild.name,
+                    "Description": desc,
+                    "Invite": inv,
+                    "Icon": interaction.guild.icon.url,
+                    "Up": str(time.time()),
+                }
+            },
             upsert=True,
         )
 
-        embed = make_embed.success_embed(title="サーバーをUpしました！", description="2時間後に再度Upできます。")
-
-        await interaction.response.send_message(
-            embed=embed
+        embed = make_embed.success_embed(
+            title="サーバーをUpしました！", description="2時間後に再度Upできます。"
         )
 
-    @globalchat.command(name="sites", description="このサーバーを紹介するサイトを作成します。")
+        await interaction.response.send_message(embed=embed)
+
+    @globalchat.command(
+        name="sites", description="このサーバーを紹介するサイトを作成します。"
+    )
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_sites(self, interaction: discord.Interaction):
         if not interaction.guild.icon:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="アイコンが設定されていません。", description="サイトを作成するには、\nサーバーアイコンを設定してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="アイコンが設定されていません。",
+                    description="サイトを作成するには、\nサーバーアイコンを設定してください。",
+                ),
+            )
         await interaction.response.send_modal(SitesModal())
 
     @globalchat.command(
@@ -968,7 +1052,13 @@ class GlobalCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_private(self, interaction: discord.Interaction):
         if interaction.channel.type != discord.ChannelType.text:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このチャンネルでは実行できません。", description="テキストチャンネルでのみグローバルチャットに参加できます。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このチャンネルでは実行できません。",
+                    description="テキストチャンネルでのみグローバルチャットに参加できます。",
+                ),
+            )
 
         class PrivateGlobalCreate(
             discord.ui.Modal, title="プライベートグローバルチャットを作成する"
@@ -997,14 +1087,16 @@ class GlobalCog(commands.Cog):
                     )
                     await db.update_one(
                         {"Guild": interaction.guild.id, "Name": self.name.value},
-                        {"$set": {
-                            "Guild": interaction.guild.id,
-                            "Name": self.name.value,
-                            "Password": self.password.value,
-                            "Owner": interaction.user.id,
-                            "Channel": interaction.channel.id,
-                            "Webhook": web.url,
-                        }},
+                        {
+                            "$set": {
+                                "Guild": interaction.guild.id,
+                                "Name": self.name.value,
+                                "Password": self.password.value,
+                                "Owner": interaction.user.id,
+                                "Channel": interaction.channel.id,
+                                "Webhook": web.url,
+                            }
+                        },
                         upsert=True,
                     )
                     await interaction.followup.send(
@@ -1033,7 +1125,13 @@ class GlobalCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_private_join(self, interaction: discord.Interaction):
         if interaction.channel.type != discord.ChannelType.text:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このチャンネルでは実行できません。", description="テキストチャンネルでのみグローバルチャットに参加できます。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このチャンネルでは実行できません。",
+                    description="テキストチャンネルでのみグローバルチャットに参加できます。",
+                ),
+            )
 
         class PrivateGlobalJoin(
             discord.ui.Modal, title="プライベートグローバルチャットに参加する"
@@ -1065,14 +1163,16 @@ class GlobalCog(commands.Cog):
                     )
                     await db.update_one(
                         {"Guild": interaction.guild.id, "Name": self.name.value},
-                        {"$set": {
-                            "Guild": interaction.guild.id,
-                            "Name": self.name.value,
-                            "Password": self.password.value,
-                            "Owner": dbfind.get("Owner"),
-                            "Channel": interaction.channel.id,
-                            "Webhook": web.url,
-                        }},
+                        {
+                            "$set": {
+                                "Guild": interaction.guild.id,
+                                "Name": self.name.value,
+                                "Password": self.password.value,
+                                "Owner": dbfind.get("Owner"),
+                                "Channel": interaction.channel.id,
+                                "Webhook": web.url,
+                            }
+                        },
                         upsert=True,
                     )
                     await interaction.followup.send(
@@ -1174,9 +1274,9 @@ class GlobalCog(commands.Cog):
         if message.author.primary_guild.tag:
             dic.update({"x-userTag": message.author.primary_guild.tag})
 
-            dic.update({"x-userPrimaryGuild": {
-                'tag': message.author.primary_guild.tag
-            }})
+            dic.update(
+                {"x-userPrimaryGuild": {"tag": message.author.primary_guild.tag}}
+            )
 
         if message.reference:
             reference_msg = await message.channel.fetch_message(
@@ -1291,12 +1391,14 @@ class GlobalCog(commands.Cog):
         db = self.bot.async_db["Main"].AlpheSuperGlobalChat
         await db.update_one(
             {"Guild": interaction.guild.id},
-            {"$set": {
-                "Guild": interaction.guild.id,
-                "Channel": interaction.channel.id,
-                "GuildName": interaction.guild.name,
-                "Webhook": wh.url,
-            }},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Channel": interaction.channel.id,
+                    "GuildName": interaction.guild.name,
+                    "Webhook": wh.url,
+                }
+            },
             upsert=True,
         )
 
@@ -1528,8 +1630,14 @@ class GlobalCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_sgc(self, interaction: discord.Interaction):
         if interaction.channel.type != discord.ChannelType.text:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このチャンネルでは実行できません。", description="テキストチャンネルでのみグローバルチャットに参加できます。"))
-        
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このチャンネルでは実行できません。",
+                    description="テキストチャンネルでのみグローバルチャットに参加できます。",
+                ),
+            )
+
         await interaction.response.defer()
         if interaction.guild.member_count < 20:
             return await interaction.followup.send(
@@ -1595,8 +1703,14 @@ class GlobalCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_channels=True)
     async def global_shiritori(self, interaction: discord.Interaction):
         if interaction.channel.type != discord.ChannelType.text:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このチャンネルでは実行できません。", description="テキストチャンネルでのみグローバルチャットに参加できます。"))
-        
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このチャンネルでは実行できません。",
+                    description="テキストチャンネルでのみグローバルチャットに参加できます。",
+                ),
+            )
+
         await interaction.response.defer()
         if interaction.guild.member_count < 20:
             return await interaction.followup.send(
@@ -1609,12 +1723,14 @@ class GlobalCog(commands.Cog):
         db = self.bot.async_db["Main"].GlobalShiritori
         await db.update_one(
             {"Guild": interaction.guild.id},
-            {"$set": {
-                "Guild": interaction.guild.id,
-                "Channel": interaction.channel.id,
-                "GuildName": interaction.guild.name,
-                "Webhook": wh.url,
-            }},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Channel": interaction.channel.id,
+                    "GuildName": interaction.guild.name,
+                    "Webhook": wh.url,
+                }
+            },
             upsert=True,
         )
         await interaction.followup.send(
@@ -1640,12 +1756,14 @@ class GlobalCog(commands.Cog):
         db = self.bot.async_db["Main"].NewGlobalAds
         await db.update_one(
             {"Guild": interaction.guild.id},
-            {"$set": {
-                "Guild": interaction.guild.id,
-                "Channel": interaction.channel.id,
-                "GuildName": interaction.guild.name,
-                "Webhook": web.url,
-            }},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Channel": interaction.channel.id,
+                    "GuildName": interaction.guild.name,
+                    "Webhook": web.url,
+                }
+            },
             upsert=True,
         )
         return True
@@ -1751,7 +1869,13 @@ class GlobalCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_channels=True)
     async def global_ads(self, interaction: discord.Interaction):
         if interaction.channel.type != discord.ChannelType.text:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このチャンネルでは実行できません。", description="テキストチャンネルでのみグローバルチャットに参加できます。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このチャンネルでは実行できません。",
+                    description="テキストチャンネルでのみグローバルチャットに参加できます。",
+                ),
+            )
 
         await interaction.response.defer()
         if interaction.guild.member_count < 20:
@@ -1877,7 +2001,10 @@ class GlobalCog(commands.Cog):
         try:
             dbfind = await db.find_one({"User": user.id}, {"_id": False})
             if dbfind is None:
-                await message.reply(embed=discord.Embed(title="これがグローバルチャットのルールです。", description="""
+                await message.reply(
+                    embed=discord.Embed(
+                        title="これがグローバルチャットのルールです。",
+                        description="""
 荒らしをしない
 宣伝をしない (宣伝の場合は宣伝グローバルへ)
 r18やグロ関連のものを貼らない
@@ -1889,17 +2016,24 @@ r18やグロ関連のものを貼らない
 グローバルチャットが利用できなくなります。
 
 同意できる場合は「同意」ボタンを押してください。
-""", color=discord.Color.green()), view=discord.ui.View().add_item(discord.ui.Button(label="同意", style=discord.ButtonStyle.green, custom_id="globalchat_agree+")))
+""",
+                        color=discord.Color.green(),
+                    ),
+                    view=discord.ui.View().add_item(
+                        discord.ui.Button(
+                            label="同意",
+                            style=discord.ButtonStyle.green,
+                            custom_id="globalchat_agree+",
+                        )
+                    ),
+                )
                 return True
         except Exception:
             return False
 
         await db.update_one(
             {"User": user.id},
-            {"$set": {
-                "User": user.id,
-                "UserName": user.name
-            }},
+            {"$set": {"User": user.id, "UserName": user.name}},
             upsert=True,
         )
         return False
@@ -2025,7 +2159,7 @@ r18やグロ関連のものを貼らない
 
         if not block:
             return
-        
+
         current_time = time.time()
         last_message_time = user_last_message_timegc.get(message.guild.id, 0)
         if current_time - last_message_time < COOLDOWN_TIMEGC:
@@ -2066,12 +2200,14 @@ r18やグロ関連のものを貼らない
         db = self.bot.async_db["Main"].AlpheSuperGlobalChatDebug
         await db.update_one(
             {"Guild": interaction.guild.id},
-            {"$set": {
-                "Guild": interaction.guild.id,
-                "Channel": interaction.channel.id,
-                "GuildName": interaction.guild.name,
-                "Webhook": wh.url,
-            }},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Channel": interaction.channel.id,
+                    "GuildName": interaction.guild.name,
+                    "Webhook": wh.url,
+                }
+            },
             upsert=True,
         )
 
@@ -2146,9 +2282,9 @@ r18やグロ関連のものを貼らない
         if message.author.primary_guild.tag:
             dic.update({"x-userTag": message.author.primary_guild.tag})
 
-            dic.update({"x-userPrimaryGuild": {
-                'tag': message.author.primary_guild.tag
-            }})
+            dic.update(
+                {"x-userPrimaryGuild": {"tag": message.author.primary_guild.tag}}
+            )
 
         if message.reference:
             reference_msg = await message.channel.fetch_message(
@@ -2430,7 +2566,9 @@ r18やグロ関連のものを貼らない
                     await asyncio.sleep(1)
         await message.add_reaction("✅")
 
-    @globalchat.command(name="color", description="グローバルチャットでの自分の色を変更します。")
+    @globalchat.command(
+        name="color", description="グローバルチャットでの自分の色を変更します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
@@ -2438,22 +2576,27 @@ r18やグロ関連のものを貼らない
             app_commands.Choice(name="赤", value="red"),
             app_commands.Choice(name="緑", value="green"),
             app_commands.Choice(name="青", value="blue"),
-            app_commands.Choice(name="ランダム", value="random")
+            app_commands.Choice(name="ランダム", value="random"),
         ]
     )
-    async def global_color(self, interaction: discord.Interaction, 色: app_commands.Choice[str]):
+    async def global_color(
+        self, interaction: discord.Interaction, 色: app_commands.Choice[str]
+    ):
         db = self.bot.async_db["MainTwo"].GlobalColor
         await db.update_one(
             {"User": interaction.user.id},
-            {"$set": {
-                "User": interaction.user.id,
-                "Color": 色.value
-            }},
+            {"$set": {"User": interaction.user.id, "Color": 色.value}},
             upsert=True,
         )
-        await interaction.response.send_message(embed=make_embed.success_embed(title="グローバルチャットでの色を変更しました。", description="通常グローバルでのみ適用されます。")
-                                                .add_field(name="色", value=色.name, inline=False)
-                                                .set_footer(text=色.value))
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title="グローバルチャットでの色を変更しました。",
+                description="通常グローバルでのみ適用されます。",
+            )
+            .add_field(name="色", value=色.name, inline=False)
+            .set_footer(text=色.value)
+        )
+
 
 async def setup(bot):
     await bot.add_cog(GlobalCog(bot))

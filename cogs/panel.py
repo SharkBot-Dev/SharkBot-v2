@@ -20,6 +20,7 @@ DIRECTIONS = [
     ("⬅️", 90),
 ]
 
+
 class AuthModal_keisan(discord.ui.Modal, title="認証をする"):
     def __init__(self, role: discord.Role):
         super().__init__()
@@ -38,7 +39,9 @@ class AuthModal_keisan(discord.ui.Modal, title="認証をする"):
                 await interaction.user.add_roles(self.r)
                 await interaction.followup.send("認証に成功しました。", ephemeral=True)
             except:
-                await interaction.followup.send("ロール付与に失敗しました。", ephemeral=True)
+                await interaction.followup.send(
+                    "ロール付与に失敗しました。", ephemeral=True
+                )
         else:
             await interaction.response.send_message(
                 "認証に失敗しました。", ephemeral=True
@@ -65,7 +68,9 @@ class PlusAuthModal_keisan(discord.ui.Modal, title="認証をする"):
                 await interaction.user.add_roles(self.r)
                 await interaction.followup.send("認証に成功しました。", ephemeral=True)
             except Exception as e:
-                await interaction.followup.send(f"ロール付与に失敗しました。", ephemeral=True)
+                await interaction.followup.send(
+                    f"ロール付与に失敗しました。", ephemeral=True
+                )
         else:
             await interaction.response.send_message(
                 "認証に失敗しました。\n計算結果が間違っています。", ephemeral=True
@@ -105,7 +110,9 @@ class AuthGroup(app_commands.Group):
             ephemeral=True,
         )
 
-    @app_commands.command(name="arrow-auth", description="矢印を回転させる認証パネルを作ります。")
+    @app_commands.command(
+        name="arrow-auth", description="矢印を回転させる認証パネルを作ります。"
+    )
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -121,7 +128,9 @@ class AuthGroup(app_commands.Group):
                 title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
             ),
             view=discord.ui.View().add_item(
-                discord.ui.Button(label="認証", custom_id=f"arrow_auth_beta+{ロール.id}")
+                discord.ui.Button(
+                    label="認証", custom_id=f"arrow_auth_beta+{ロール.id}"
+                )
             ),
         )
         await interaction.response.send_message(
@@ -195,7 +204,7 @@ class AuthGroup(app_commands.Group):
         タイトル: str,
         説明: str,
         ロール: discord.Role,
-        web認証成功時に表示するメッセージ: str = 'このままページを閉じてもらって構いません。'
+        web認証成功時に表示するメッセージ: str = "このままページを閉じてもらって構いません。",
     ):
         await interaction.response.defer(ephemeral=True)
         msg = await interaction.channel.send(
@@ -210,12 +219,21 @@ class AuthGroup(app_commands.Group):
         db = interaction.client.async_db["MainTwo"].WebAuthMessage
         await db.update_one(
             {"Channel": interaction.channel.id, "Message": msg.id},
-            {'$set': {"Channel": interaction.channel.id, "Message": msg.id, 'Text': web認証成功時に表示するメッセージ}},
+            {
+                "$set": {
+                    "Channel": interaction.channel.id,
+                    "Message": msg.id,
+                    "Text": web認証成功時に表示するメッセージ,
+                }
+            },
             upsert=True,
         )
 
         await interaction.followup.send(
-            embed=make_embed.success_embed(title="作成しました。", description=f'以下をWeb認証成功時に表示します。\n```{web認証成功時に表示するメッセージ}```'),
+            embed=make_embed.success_embed(
+                title="作成しました。",
+                description=f"以下をWeb認証成功時に表示します。\n```{web認証成功時に表示するメッセージ}```",
+            ),
             ephemeral=True,
         )
 
@@ -277,7 +295,11 @@ class AuthGroup(app_commands.Group):
                         description=self.rule.value,
                         color=discord.Color.green(),
                     )
-                    .set_thumbnail(url=interaction.guild.icon.url if interaction.guild.icon else None)
+                    .set_thumbnail(
+                        url=interaction.guild.icon.url
+                        if interaction.guild.icon
+                        else None
+                    )
                     .set_footer(
                         text="Discord コミュニティガイドライン も忘れないようにして下さい。"
                     ),
@@ -310,7 +332,8 @@ class AuthGroup(app_commands.Group):
                     if current.lower() in message.embeds[0].title.lower():
                         choices.append(
                             discord.app_commands.Choice(
-                                name=message.embeds[0].title[:100], value=str(message.id)
+                                name=message.embeds[0].title[:100],
+                                value=str(message.id),
                             )
                         )
                 except:
@@ -352,7 +375,7 @@ class AuthGroup(app_commands.Group):
             db = interaction.client.async_db["Main"].AuthReqRole
             await db.update_one(
                 {"Message": 認証パネルのid_.id},
-                {'$set': {"Message": 認証パネルのid_.id, "Role": 必要なロール.id}},
+                {"$set": {"Message": 認証パネルのid_.id, "Role": 必要なロール.id}},
                 upsert=True,
             )
             return await interaction.followup.send(
@@ -564,11 +587,14 @@ class PanelCog(commands.Cog):
                         roles = interaction.message.embeds[0].fields[0].value
 
                         pattern = r"<@&(\d{15,})>"
-                            
+
                         role_id_list = re.findall(pattern, roles)
 
                         if not role_id_list:
-                            await interaction.followup.send("埋め込みから有効なロールメンションが見つかりませんでした。", ephemeral=True)
+                            await interaction.followup.send(
+                                "埋め込みから有効なロールメンションが見つかりませんでした。",
+                                ephemeral=True,
+                            )
                             return
 
                         mt = random.choice(role_id_list)
@@ -578,17 +604,14 @@ class PanelCog(commands.Cog):
                                 f"ロールID: {mt} が見つかりません。", ephemeral=True
                             )
                             return
-                        
-                        if (
-                            rl
-                            not in interaction.user.roles
-                        ):
+
+                        if rl not in interaction.user.roles:
                             await interaction.user.add_roles(rl)
-                            await interaction.followup.send(ephemeral=True, content=f"{rl.mention} を追加しました。")
-                        else:
-                            await interaction.user.remove_roles(
-                                rl
+                            await interaction.followup.send(
+                                ephemeral=True, content=f"{rl.mention} を追加しました。"
                             )
+                        else:
+                            await interaction.user.remove_roles(rl)
                             await interaction.followup.send(
                                 f"{rl.mention} を剥奪しました。", ephemeral=True
                             )
@@ -600,8 +623,8 @@ class PanelCog(commands.Cog):
                         return
                     except IndexError:
                         await interaction.followup.send(
-                            "メッセージに埋め込みが存在しないか、ロール情報を含むフィールドが見つかりませんでした。", 
-                            ephemeral=True
+                            "メッセージに埋め込みが存在しないか、ロール情報を含むフィールドが見つかりませんでした。",
+                            ephemeral=True,
                         )
                         return
                     except:
@@ -755,37 +778,50 @@ class PanelCog(commands.Cog):
                                 "あなたはすでに認証しています。", ephemeral=True
                             )
                         await interaction.response.defer(ephemeral=True)
+
                         def generate_arrow_image(angle: int) -> io.BytesIO:
                             size = (200, 200)
                             img = Image.new("RGBA", size, (255, 255, 255, 255))
                             draw = ImageDraw.Draw(img)
                             cx, cy = size[0] // 2, size[1] // 2
 
-                            draw.line((cx, cy + 40, cx, cy - 40), fill=(0, 0, 0), width=8)
-                            draw.polygon([(cx - 15, cy - 40), (cx + 15, cy - 40), (cx, cy - 70)], fill=(0, 0, 0))
+                            draw.line(
+                                (cx, cy + 40, cx, cy - 40), fill=(0, 0, 0), width=8
+                            )
+                            draw.polygon(
+                                [(cx - 15, cy - 40), (cx + 15, cy - 40), (cx, cy - 70)],
+                                fill=(0, 0, 0),
+                            )
 
-                            rotated = img.rotate(angle, expand=True, fillcolor=(255, 255, 255, 255))
+                            rotated = img.rotate(
+                                angle, expand=True, fillcolor=(255, 255, 255, 255)
+                            )
 
                             buffer = io.BytesIO()
                             rotated.save(buffer, format="PNG")
                             buffer.seek(0)
                             return buffer
-                        
+
                         correct_emoji, angle = random.choice(DIRECTIONS)
-                        img_buffer = await asyncio.to_thread(generate_arrow_image, angle)
+                        img_buffer = await asyncio.to_thread(
+                            generate_arrow_image, angle
+                        )
 
                         options = ["⬆️", "➡️", "⬇️", "⬅️"]
 
                         view = discord.ui.View()
 
                         for opt in options:
+
                             async def callback(inter: discord.Interaction, opt=opt):
                                 if opt == correct_emoji:
                                     await inter.response.defer(ephemeral=True)
                                     try:
-                                        await inter.user.add_roles(interaction.guild.get_role(
-                                            int(custom_id.split("+")[1])
-                                        ))
+                                        await inter.user.add_roles(
+                                            interaction.guild.get_role(
+                                                int(custom_id.split("+")[1])
+                                            )
+                                        )
                                     except:
                                         await inter.followup.send(
                                             "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
@@ -793,24 +829,33 @@ class PanelCog(commands.Cog):
                                         )
                                         return
                                     await inter.followup.send(
-                                        content="✅ 認証に成功しました。\nロールを付与しました。", ephemeral=True
+                                        content="✅ 認証に成功しました。\nロールを付与しました。",
+                                        ephemeral=True,
                                     )
                                     await inter.delete_original_response()
                                 else:
                                     await inter.response.edit_message(
                                         content="❌ 不正解です。もう一度試してください。",
-                                        attachments=[], view=None
+                                        attachments=[],
+                                        view=None,
                                     )
 
-                            btn = discord.ui.Button(emoji=opt, style=discord.ButtonStyle.primary)
+                            btn = discord.ui.Button(
+                                emoji=opt, style=discord.ButtonStyle.primary
+                            )
                             btn.callback = callback
                             view.add_item(btn)
 
                         file = discord.File(img_buffer, filename="arrow.png")
-                        embed = discord.Embed(title="この矢印の向きを選んでください。", color=discord.Color.blue())
+                        embed = discord.Embed(
+                            title="この矢印の向きを選んでください。",
+                            color=discord.Color.blue(),
+                        )
                         embed.set_image(url="attachment://arrow.png")
 
-                        await interaction.followup.send(embed=embed, file=file, view=view, ephemeral=True)
+                        await interaction.followup.send(
+                            embed=embed, file=file, view=view, ephemeral=True
+                        )
                     except discord.Forbidden:
                         await interaction.response.send_message(
                             "付与したいロールの位置がSharkBotのロールよりも\n上にあるため付与できませんでした。\nhttps://i.imgur.com/fGcWslT.gif",
@@ -924,11 +969,13 @@ class PanelCog(commands.Cog):
                                             "Message": msg.id,
                                             "Author": interaction.user.id,
                                         },
-                                        {"$set": {
-                                            "Channel": ch.id,
-                                            "Message": msg.id,
-                                            "Author": interaction.user.id,
-                                        }},
+                                        {
+                                            "$set": {
+                                                "Channel": ch.id,
+                                                "Message": msg.id,
+                                                "Author": interaction.user.id,
+                                            }
+                                        },
                                         upsert=True,
                                     )
                                 await interaction.followup.send(
@@ -972,11 +1019,13 @@ class PanelCog(commands.Cog):
                                             "Message": msg.id,
                                             "Author": interaction.user.id,
                                         },
-                                        {'$set': {
-                                            "Channel": ch.id,
-                                            "Message": msg.id,
-                                            "Author": interaction.user.id,
-                                        }},
+                                        {
+                                            "$set": {
+                                                "Channel": ch.id,
+                                                "Message": msg.id,
+                                                "Author": interaction.user.id,
+                                            }
+                                        },
                                         upsert=True,
                                     )
                                 await interaction.followup.send(
@@ -1023,11 +1072,13 @@ class PanelCog(commands.Cog):
                                             "Message": msg.id,
                                             "Author": interaction.user.id,
                                         },
-                                        {'$set': {
-                                            "Channel": ch.id,
-                                            "Message": msg.id,
-                                            "Author": interaction.user.id,
-                                        }},
+                                        {
+                                            "$set": {
+                                                "Channel": ch.id,
+                                                "Message": msg.id,
+                                                "Author": interaction.user.id,
+                                            }
+                                        },
                                         upsert=True,
                                     )
                                 await interaction.followup.send(
@@ -1206,10 +1257,15 @@ class PanelCog(commands.Cog):
                                     "あなたは指定されたロールを持っていないため、認証できません。",
                                     ephemeral=True,
                                 )
-                            
-                        message_db = interaction.client.async_db["MainTwo"].WebAuthMessage
+
+                        message_db = interaction.client.async_db[
+                            "MainTwo"
+                        ].WebAuthMessage
                         msg_ = await message_db.find_one(
-                            {"Channel": interaction.channel.id, "Message": interaction.message.id}
+                            {
+                                "Channel": interaction.channel.id,
+                                "Message": interaction.message.id,
+                            }
                         )
 
                         role = custom_id.split("+")[1]
@@ -1219,27 +1275,38 @@ class PanelCog(commands.Cog):
                         if not msg_:
                             await db.update_one(
                                 {"Guild": str(interaction.guild.id), "Code": code},
-                                {"$set": {
-                                    "Guild": str(interaction.guild.id),
-                                    "Code": code,
-                                    "Role": role
-                                }},
+                                {
+                                    "$set": {
+                                        "Guild": str(interaction.guild.id),
+                                        "Code": code,
+                                        "Role": role,
+                                    }
+                                },
                                 upsert=True,
                             )
                         else:
                             await db.update_one(
                                 {"Guild": str(interaction.guild.id), "Code": code},
-                                {"$set": {
-                                    "Guild": str(interaction.guild.id),
-                                    "Code": code,
-                                    "Role": role,
-                                    'Message': msg_.get('Text', 'このままページを閉じてもらって構いません。')
-                                }},
+                                {
+                                    "$set": {
+                                        "Guild": str(interaction.guild.id),
+                                        "Code": code,
+                                        "Role": role,
+                                        "Message": msg_.get(
+                                            "Text",
+                                            "このままページを閉じてもらって構いません。",
+                                        ),
+                                    }
+                                },
                                 upsert=True,
                             )
-                            
+
                         await interaction.followup.send(
-                            embed=discord.Embed(color=discord.Color.green(), title='Web認証をする', description="この認証パネルは、Webにアクセスする必要があります。\n以下のボタンからアクセスして認証してください。\n\n追記: あなたの参加しているサーバーが取得されます。\nそれらの情報は、\nサーバーオーナーの禁止したサーバーに参加しているか確認するために使用されます。"),
+                            embed=discord.Embed(
+                                color=discord.Color.green(),
+                                title="Web認証をする",
+                                description="この認証パネルは、Webにアクセスする必要があります。\n以下のボタンからアクセスして認証してください。\n\n追記: あなたの参加しているサーバーが取得されます。\nそれらの情報は、\nサーバーオーナーの禁止したサーバーに参加しているか確認するために使用されます。",
+                            ),
                             ephemeral=True,
                             view=discord.ui.View().add_item(
                                 discord.ui.Button(
@@ -1331,7 +1398,9 @@ class PanelCog(commands.Cog):
                             )
                             db = self.bot.async_db["Main"].BlockUser
                             await db.update_one(
-                                {"User": target.id}, {'$set': {"User": target.id}}, upsert=True
+                                {"User": target.id},
+                                {"$set": {"User": target.id}},
+                                upsert=True,
                             )
                         elif type_ == "サーバー":
                             target = self.bot.get_guild(
@@ -1339,7 +1408,9 @@ class PanelCog(commands.Cog):
                             )
                             db = self.bot.async_db["Main"].BlockGuild
                             await db.update_one(
-                                {"Guild": target.id}, {'$set': {"Guild": target.id}}, upsert=True
+                                {"Guild": target.id},
+                                {"$set": {"Guild": target.id}},
+                                upsert=True,
                             )
                         await interaction.message.reply("BotからBANしました。")
                         await interaction.followup.send(
@@ -1506,6 +1577,7 @@ class PanelCog(commands.Cog):
                         )
                 elif "enquete_answer+" in custom_id:
                     embed = interaction.message.embeds[0].fields
+
                     class Modal_Qneuete(discord.ui.Modal):
                         def __init__(self, embed_fields, message: discord.Message):
                             super().__init__(title="アンケートに回答する", timeout=180)
@@ -1518,13 +1590,15 @@ class PanelCog(commands.Cog):
                                         placeholder=f"{e.name}について回答してください",
                                         style=discord.TextStyle.short,
                                         required=True,
-                                        max_length=30
+                                        max_length=30,
                                     )
                                 )
 
                         async def on_submit(self, interaction: discord.Interaction):
                             embed = self.message.embeds[0]
-                            new_embed = discord.Embed(title=embed.title, color=embed.color)
+                            new_embed = discord.Embed(
+                                title=embed.title, color=embed.color
+                            )
                             new_embed.set_footer(text="SharkBot Enquete")
 
                             for i, field in enumerate(embed.fields):
@@ -1532,23 +1606,40 @@ class PanelCog(commands.Cog):
                                     answer = self.children[i].value
                                     user = interaction.user.name
 
-                                    old_value = "" if field.value == "未回答" else field.value
+                                    old_value = (
+                                        "" if field.value == "未回答" else field.value
+                                    )
 
-                                    new_value = f"{old_value}\n{user}: {answer}" if old_value else f"{user}: {answer}"
+                                    new_value = (
+                                        f"{old_value}\n{user}: {answer}"
+                                        if old_value
+                                        else f"{user}: {answer}"
+                                    )
 
-                                    new_embed.add_field(name=field.name, value=new_value, inline=False)
+                                    new_embed.add_field(
+                                        name=field.name, value=new_value, inline=False
+                                    )
                                 else:
-                                    new_embed.add_field(name=field.name, value=field.value, inline=False)
+                                    new_embed.add_field(
+                                        name=field.name, value=field.value, inline=False
+                                    )
 
                             await self.message.edit(embed=new_embed)
-                            await interaction.response.send_message("回答を記録しました", ephemeral=True)
-                    await interaction.response.send_modal(Modal_Qneuete(embed, interaction.message))
+                            await interaction.response.send_message(
+                                "回答を記録しました", ephemeral=True
+                            )
+
+                    await interaction.response.send_modal(
+                        Modal_Qneuete(embed, interaction.message)
+                    )
                 elif "templates_answer+" in custom_id:
                     embed_fields = interaction.message.embeds[0].fields
 
                     class Modal_Qneuete(discord.ui.Modal):
                         def __init__(self, embed_fields, message: discord.Message):
-                            super().__init__(title=f"{message.embeds[0].title}", timeout=180)
+                            super().__init__(
+                                title=f"{message.embeds[0].title}", timeout=180
+                            )
                             self.message = message
                             self.embed_fields = embed_fields
 
@@ -1559,60 +1650,88 @@ class PanelCog(commands.Cog):
                                         placeholder=f"{e.value}について回答してください",
                                         style=discord.TextStyle.short,
                                         required=True,
-                                        max_length=50
+                                        max_length=50,
                                     )
                                 )
 
                         async def on_submit(self, interaction: discord.Interaction):
                             answer_embed = discord.Embed(color=discord.Color.blue())
-                            for i, field in enumerate(self.embed_fields[:len(self.children)]):
+                            for i, field in enumerate(
+                                self.embed_fields[: len(self.children)]
+                            ):
                                 answer = self.children[i].value
 
                                 for b in badword.badwords:
                                     if b in answer:
-                                        return await interaction.response.send_message(content="不適切な言葉が含まれています。", ephemeral=True)
+                                        return await interaction.response.send_message(
+                                            content="不適切な言葉が含まれています。",
+                                            ephemeral=True,
+                                        )
 
-                                answer_embed.add_field(name=field.value, value=answer, inline=False)
+                                answer_embed.add_field(
+                                    name=field.value, value=answer, inline=False
+                                )
 
                             answer_embed.set_author(
                                 name=f"{interaction.user.name} / {interaction.user.id}",
-                                icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url
+                                icon_url=interaction.user.avatar.url
+                                if interaction.user.avatar
+                                else interaction.user.default_avatar.url,
                             )
 
                             await interaction.channel.send(embed=answer_embed)
 
                             question_embed = discord.Embed(
                                 title=self.message.embeds[0].title,
-                                color=discord.Color.green()
+                                color=discord.Color.green(),
                             )
                             for i, q in enumerate(self.embed_fields):
-                                question_embed.add_field(name=f"Q.{i+1}", value=q.value, inline=False)
+                                question_embed.add_field(
+                                    name=f"Q.{i + 1}", value=q.value, inline=False
+                                )
 
                             question_embed.set_footer(text="SharkBot Templates")
 
                             view = discord.ui.View()
-                            view.add_item(discord.ui.Button(label="発言する", custom_id="templates_answer+"))
+                            view.add_item(
+                                discord.ui.Button(
+                                    label="発言する", custom_id="templates_answer+"
+                                )
+                            )
 
-                            await interaction.channel.send(embed=question_embed, view=view)
+                            await interaction.channel.send(
+                                embed=question_embed, view=view
+                            )
 
-                            await interaction.response.send_message("回答を送信しました", ephemeral=True)
+                            await interaction.response.send_message(
+                                "回答を送信しました", ephemeral=True
+                            )
 
                             await asyncio.sleep(2)
 
                             await interaction.message.delete()
 
-                    await interaction.response.send_modal(Modal_Qneuete(embed_fields, interaction.message))
+                    await interaction.response.send_modal(
+                        Modal_Qneuete(embed_fields, interaction.message)
+                    )
 
                 elif custom_id.startswith("quick_tik+"):
                     embed_fields = interaction.message.embeds[0].fields
-                    channel_id = interaction.guild.get_channel(int(custom_id.split("+")[1]))
+                    channel_id = interaction.guild.get_channel(
+                        int(custom_id.split("+")[1])
+                    )
 
                     if not channel_id:
-                        return await interaction.response.send_message("チケットの送信先チャンネルが見つかりません。\n管理者にお問い合わせください。", ephemeral=True)
+                        return await interaction.response.send_message(
+                            "チケットの送信先チャンネルが見つかりません。\n管理者にお問い合わせください。",
+                            ephemeral=True,
+                        )
 
                     class Modal_Ticket(discord.ui.Modal):
                         def __init__(self):
-                            super().__init__(title=interaction.message.embeds[0].title, timeout=180)
+                            super().__init__(
+                                title=interaction.message.embeds[0].title, timeout=180
+                            )
 
                             for e in embed_fields:
                                 self.add_item(
@@ -1621,23 +1740,31 @@ class PanelCog(commands.Cog):
                                         placeholder=f"{e.value}",
                                         style=discord.TextStyle.short,
                                         required=True,
-                                        max_length=100
+                                        max_length=100,
                                     )
                                 )
 
                         async def on_submit(self, interaction: discord.Interaction):
                             await interaction.response.defer(ephemeral=True)
                             ticket_embed = discord.Embed(color=discord.Color.blue())
-                            for i, field in enumerate(embed_fields[:len(self.children)]):
+                            for i, field in enumerate(
+                                embed_fields[: len(self.children)]
+                            ):
                                 answer = self.children[i].value
-                                ticket_embed.add_field(name=field.value, value=answer, inline=False)
+                                ticket_embed.add_field(
+                                    name=field.value, value=answer, inline=False
+                                )
                             ticket_embed.set_author(
                                 name=f"{interaction.user.name} / {interaction.user.id}",
-                                icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url
+                                icon_url=interaction.user.avatar.url
+                                if interaction.user.avatar
+                                else interaction.user.default_avatar.url,
                             )
                             ticket_embed.set_footer(text="SharkBot Quick Ticket")
                             await channel_id.send(embed=ticket_embed)
-                            await interaction.followup.send("チケットを送信しました。", ephemeral=True)
+                            await interaction.followup.send(
+                                "チケットを送信しました。", ephemeral=True
+                            )
 
                     await interaction.response.send_modal(Modal_Ticket())
 
@@ -1645,13 +1772,18 @@ class PanelCog(commands.Cog):
                     db = self.bot.async_db["Main"].GlobalChatRuleAgreeUser
                     await db.update_one(
                         {"User": interaction.user.id},
-                        {'$set': {
-                            "User": interaction.user.id,
-                            "UserName": interaction.user.name
-                        }},
+                        {
+                            "$set": {
+                                "User": interaction.user.id,
+                                "UserName": interaction.user.name,
+                            }
+                        },
                         upsert=True,
                     )
-                    await interaction.response.send_message(ephemeral=True, content="グローバルチャットのルールに同意しました。")
+                    await interaction.response.send_message(
+                        ephemeral=True,
+                        content="グローバルチャットのルールに同意しました。",
+                    )
         except:
             return
 
@@ -1928,29 +2060,34 @@ class PanelCog(commands.Cog):
         ロール5: discord.Role = None,
         説明: str = None,
     ):
-
         await interaction.response.defer()
 
         class NewGuiRolePanel(discord.ui.LayoutView):
             container = discord.ui.Container(
                 discord.ui.TextDisplay(f"### {タイトル}"),
-                accent_color=discord.Color.green().__int__()
+                accent_color=discord.Color.green().__int__(),
             )
 
             if 説明:
                 container.add_item(discord.ui.TextDisplay(f"{説明}"))
 
-            for c in [r for r in [ロール1, ロール2, ロール3, ロール4, ロール5] if r is not None]:
-                button = discord.ui.Section(discord.ui.TextDisplay(content=f"{c.mention}"), accessory=discord.ui.Button(
-                    label=f"取得",
-                    style=discord.ButtonStyle.primary,
-                    custom_id=f"rolepanel_v1+{c.id}",
-                ))
+            for c in [
+                r
+                for r in [ロール1, ロール2, ロール3, ロール4, ロール5]
+                if r is not None
+            ]:
+                button = discord.ui.Section(
+                    discord.ui.TextDisplay(content=f"{c.mention}"),
+                    accessory=discord.ui.Button(
+                        label=f"取得",
+                        style=discord.ButtonStyle.primary,
+                        custom_id=f"rolepanel_v1+{c.id}",
+                    ),
+                )
                 container.add_item(button)
 
         await interaction.channel.send(
-            view=NewGuiRolePanel(),
-            allowed_mentions=discord.AllowedMentions().none()
+            view=NewGuiRolePanel(), allowed_mentions=discord.AllowedMentions().none()
         )
 
         await interaction.delete_original_response()
@@ -2014,24 +2151,29 @@ class PanelCog(commands.Cog):
         except:
             await interaction.delete_original_response()
             return
-        
+
         cont = メッセージ_.components[0]
 
         cont = discord.ui.Container().from_component(cont)
 
         copyd_cont = cont.copy()
         if 削除か追加か.name == "追加":
-            button = discord.ui.Section(discord.ui.TextDisplay(content=f"{ロール.mention}"), accessory=discord.ui.Button(
-                label=f"取得",
-                style=discord.ButtonStyle.primary,
-                custom_id=f"rolepanel_v1+{ロール.id}",
-            ))
+            button = discord.ui.Section(
+                discord.ui.TextDisplay(content=f"{ロール.mention}"),
+                accessory=discord.ui.Button(
+                    label=f"取得",
+                    style=discord.ButtonStyle.primary,
+                    custom_id=f"rolepanel_v1+{ロール.id}",
+                ),
+            )
 
             copyd_cont.add_item(button)
 
             v = discord.ui.LayoutView().add_item(copyd_cont)
 
-            await メッセージ_.edit(view=v, allowed_mentions=discord.AllowedMentions().none())
+            await メッセージ_.edit(
+                view=v, allowed_mentions=discord.AllowedMentions().none()
+            )
         else:
             c = []
             for ch in copyd_cont.children:
@@ -2046,7 +2188,9 @@ class PanelCog(commands.Cog):
 
             v = discord.ui.LayoutView().add_item(copyd_cont)
 
-            await メッセージ_.edit(view=v, allowed_mentions=discord.AllowedMentions().none())
+            await メッセージ_.edit(
+                view=v, allowed_mentions=discord.AllowedMentions().none()
+            )
 
         await interaction.delete_original_response()
 
@@ -2125,13 +2269,15 @@ class PanelCog(commands.Cog):
 
         view = discord.ui.View()
         view.add_item(
-            discord.ui.Button(style=discord.ButtonStyle.blurple, label="取得する", custom_id="rrp+")
+            discord.ui.Button(
+                style=discord.ButtonStyle.blurple, label="取得する", custom_id="rrp+"
+            )
         )
 
         embed = discord.Embed(
             title=タイトル, description=説明, color=discord.Color.green()
         )
-        
+
         embed.add_field(
             name="もらえるロール一覧",
             value="\n".join([role.mention for role in roles if role is not None]),
@@ -2320,21 +2466,21 @@ class PanelCog(commands.Cog):
             db = self.bot.async_db["Main"].TicketCategory
             await db.update_one(
                 {"Channel": カテゴリ.id, "Message": msg.id},
-                {'$set': {"Channel": カテゴリ.id, "Message": msg.id}},
+                {"$set": {"Channel": カテゴリ.id, "Message": msg.id}},
                 upsert=True,
             )
         if 実績チャンネル:
             db = self.bot.async_db["Main"].TicketProgress
             await db.update_one(
                 {"Channel": 実績チャンネル.id, "Message": msg.id},
-                {'$set': {"Channel": 実績チャンネル.id, "Message": msg.id}},
+                {"$set": {"Channel": 実績チャンネル.id, "Message": msg.id}},
                 upsert=True,
             )
         if メンションするロール:
             db = self.bot.async_db["Main"].TicketRole
             await db.update_one(
                 {"Role": メンションするロール.id, "Message": msg.id},
-                {'$set': {"Role": メンションするロール.id, "Message": msg.id}},
+                {"$set": {"Role": メンションするロール.id, "Message": msg.id}},
                 upsert=True,
             )
         await interaction.response.send_message(
@@ -2342,7 +2488,10 @@ class PanelCog(commands.Cog):
             ephemeral=True,
         )
 
-    @panel.command(name="quick-ticket", description="チャンネルを作成しないチケットパネルを作成します。")
+    @panel.command(
+        name="quick-ticket",
+        description="チャンネルを作成しないチケットパネルを作成します。",
+    )
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -2360,15 +2509,19 @@ class PanelCog(commands.Cog):
     ):
         questions = [質問1, 質問2, 質問3, 質問4, 質問5]
         questions = [q for q in questions if q is not None]
-        embed = discord.Embed(title=タイトル, description=説明, color=discord.Color.blue())
+        embed = discord.Embed(
+            title=タイトル, description=説明, color=discord.Color.blue()
+        )
         for i, q in enumerate(questions):
-            embed.add_field(name=f"Q.{i+1}", value=q, inline=False)
+            embed.add_field(name=f"Q.{i + 1}", value=q, inline=False)
         embed.set_footer(text="SharkBot Quick Ticket")
         await interaction.response.defer()
         await interaction.channel.send(
             embed=embed,
             view=discord.ui.View().add_item(
-                discord.ui.Button(label="チケットを送信", custom_id=f"quick_tik+{送信先チャンネル.id}")
+                discord.ui.Button(
+                    label="チケットを送信", custom_id=f"quick_tik+{送信先チャンネル.id}"
+                )
             ),
         )
         await interaction.delete_original_response()
@@ -2412,33 +2565,60 @@ class PanelCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_enquete(
-        self, interaction: discord.Interaction, タイトル: str, 質問1: str, 質問2: str=None, 質問3: str=None, 質問4: str=None, 質問5: str=None
+        self,
+        interaction: discord.Interaction,
+        タイトル: str,
+        質問1: str,
+        質問2: str = None,
+        質問3: str = None,
+        質問4: str = None,
+        質問5: str = None,
     ):
         await interaction.response.defer()
         q_s = [質問1, 質問2, 質問3, 質問4, 質問5]
         q_s = [q for q in q_s if q is not None]
-        embed=discord.Embed(title=タイトル, color=discord.Color.green())
+        embed = discord.Embed(title=タイトル, color=discord.Color.green())
         for q in q_s:
             embed.add_field(name=q, inline=False, value="未回答")
         embed.set_footer(text="SharkBot Enquete")
-        await interaction.channel.send(embed=embed, view=discord.ui.View().add_item(discord.ui.Button(label="回答する", custom_id="enquete_answer+")))
+        await interaction.channel.send(
+            embed=embed,
+            view=discord.ui.View().add_item(
+                discord.ui.Button(label="回答する", custom_id="enquete_answer+")
+            ),
+        )
         await interaction.delete_original_response()
 
-    @panel.command(name="templates", description="テンプレートに沿って話してもらうパネルを作成します。")
+    @panel.command(
+        name="templates",
+        description="テンプレートに沿って話してもらうパネルを作成します。",
+    )
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def panel_templates(
-        self, interaction: discord.Interaction, タイトル: str, 質問1: str, 質問2: str=None, 質問3: str=None, 質問4: str=None, 質問5: str=None
+        self,
+        interaction: discord.Interaction,
+        タイトル: str,
+        質問1: str,
+        質問2: str = None,
+        質問3: str = None,
+        質問4: str = None,
+        質問5: str = None,
     ):
         await interaction.response.defer()
         q_s = [質問1, 質問2, 質問3, 質問4, 質問5]
         q_s = [q for q in q_s if q is not None]
-        embed=discord.Embed(title=タイトル, color=discord.Color.green())
+        embed = discord.Embed(title=タイトル, color=discord.Color.green())
         for i, q in enumerate(q_s):
-            embed.add_field(name=f"Q.{i+1}", inline=False, value=f"{q}")
+            embed.add_field(name=f"Q.{i + 1}", inline=False, value=f"{q}")
         embed.set_footer(text="SharkBot Templates")
-        await interaction.channel.send(embed=embed, view=discord.ui.View().add_item(discord.ui.Button(label="発言する", custom_id="templates_answer+")))
+        await interaction.channel.send(
+            embed=embed,
+            view=discord.ui.View().add_item(
+                discord.ui.Button(label="発言する", custom_id="templates_answer+")
+            ),
+        )
         await interaction.delete_original_response()
 
     @panel.command(name="top", description="一コメを取得します。")
@@ -2481,7 +2661,7 @@ class PanelCog(commands.Cog):
             db = self.bot.async_db["Main"].FreeChannelCategory
             await db.update_one(
                 {"Channel": カテゴリ.id, "Message": msg.id},
-                {'$set': {"Channel": カテゴリ.id, "Message": msg.id}},
+                {"$set": {"Channel": カテゴリ.id, "Message": msg.id}},
                 upsert=True,
             )
         await interaction.response.send_message(

@@ -98,25 +98,20 @@ class WelcomeCog(commands.Cog):
             return m.guild.id == g.id and m.id == member.id
 
         try:
-            m = await self.bot.wait_for(
-                "member_remove", check=check, timeout=60
-            )
+            m = await self.bot.wait_for("member_remove", check=check, timeout=60)
         except asyncio.TimeoutError:
             return
         except Exception as e:
             print(f"wait_for error: {e}")
             return
-        
+
         joined_after = datetime.datetime.now(datetime.timezone.utc) - member.joined_at
 
-        embed = (
-            discord.Embed(
-                title=f"{m.name} さんが即抜けしたよ・・",
-                color=discord.Color.yellow(),
-                description=f"{round(joined_after.seconds, 6)} 秒で即抜けしました。",
-            )
-            .set_thumbnail(url=m.display_avatar.url)
-        )
+        embed = discord.Embed(
+            title=f"{m.name} さんが即抜けしたよ・・",
+            color=discord.Color.yellow(),
+            description=f"{round(joined_after.seconds, 6)} 秒で即抜けしました。",
+        ).set_thumbnail(url=m.display_avatar.url)
         await ch.send(embed=embed)
 
     @commands.Cog.listener("on_member_join")
@@ -139,19 +134,19 @@ class WelcomeCog(commands.Cog):
             )
 
         try:
-            if not dbfind.get('Webhook'):
+            if not dbfind.get("Webhook"):
                 wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
                 webhooks = discord.utils.get(wb, name="SharkBot")
                 if webhooks is None:
-                    webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
-                        name="SharkBot"
-                    )
+                    webhooks = await self.bot.get_channel(
+                        dbfind["Channel"]
+                    ).create_webhook(name="SharkBot")
 
                 webhooks = webhooks.url
 
                 await db.update_one({"Guild": g.id}, {"$set": {"Webhook": webhooks}})
             else:
-                webhooks = dbfind.get('Webhook')
+                webhooks = dbfind.get("Webhook")
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(webhooks, session=session)
                 try:
@@ -189,19 +184,19 @@ class WelcomeCog(commands.Cog):
             )
 
         try:
-            if not dbfind.get('Webhook'):
+            if not dbfind.get("Webhook"):
                 wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
                 webhooks = discord.utils.get(wb, name="SharkBot")
                 if webhooks is None:
-                    webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
-                        name="SharkBot"
-                    )
+                    webhooks = await self.bot.get_channel(
+                        dbfind["Channel"]
+                    ).create_webhook(name="SharkBot")
 
                 webhooks = webhooks.url
 
                 await db.update_one({"Guild": g.id}, {"$set": {"Webhook": webhooks}})
             else:
-                webhooks = dbfind.get('Webhook')
+                webhooks = dbfind.get("Webhook")
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(webhooks, session=session)
                 try:
@@ -237,19 +232,21 @@ class WelcomeCog(commands.Cog):
             return m
 
         try:
-            if not dbfind.get('Webhook'):
+            if not dbfind.get("Webhook"):
                 wb = await self.bot.get_channel(dbfind["Channel"]).webhooks()
                 webhooks = discord.utils.get(wb, name="SharkBot")
                 if webhooks is None:
-                    webhooks = await self.bot.get_channel(dbfind["Channel"]).create_webhook(
-                        name="SharkBot"
-                    )
+                    webhooks = await self.bot.get_channel(
+                        dbfind["Channel"]
+                    ).create_webhook(name="SharkBot")
 
                 webhooks = webhooks.url
 
-                await db.update_one({"Guild": guild.id}, {"$set": {"Webhook": webhooks}})
+                await db.update_one(
+                    {"Guild": guild.id}, {"$set": {"Webhook": webhooks}}
+                )
             else:
-                webhooks = dbfind.get('Webhook')
+                webhooks = dbfind.get("Webhook")
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(webhooks, session=session)
                 try:

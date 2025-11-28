@@ -2,6 +2,7 @@ import time
 
 cooldowns = {}
 
+
 class Cooldown:
     def __init__(self, cooldown_time: int):
         self.cooldown_time = cooldown_time

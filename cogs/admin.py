@@ -14,6 +14,7 @@ import asyncio
 
 import importlib.util
 
+
 class AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -29,7 +30,9 @@ class AdminCog(commands.Cog):
             return True
 
     admin = app_commands.Group(
-        name="admin", description="SharkBot管理者向けのコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True)
+        name="admin",
+        description="SharkBot管理者向けのコマンドです。",
+        allowed_installs=app_commands.AppInstallationType(guild=True, user=True),
     )
 
     @admin.command(name="cogs", description="cogの操作をします。")
@@ -59,23 +62,23 @@ class AdminCog(commands.Cog):
         if 操作の種類.value == "reload":
             await self.bot.reload_extension(f"cogs.{cog名}")
             return await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="Cogをリロードしました。"
-                )
+                embed=make_embed.success_embed(title="Cogをリロードしました。")
             )
         elif 操作の種類.value == "load":
             await self.bot.load_extension(f"cogs.{cog名}")
             return await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="Cogをロードしました。"
-                )
+                embed=make_embed.success_embed(title="Cogをロードしました。")
             )
         elif 操作の種類.value == "modulereload":
-            if cog名 == 'bot':
-                return await interaction.followup.send(embed=make_embed.error_embed(title="Bot本体をリロードできません。"))
-            if cog名 == 'api':
-                return await interaction.followup.send(embed=make_embed.error_embed(title="API本体をリロードできません。"))
-            
+            if cog名 == "bot":
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(title="Bot本体をリロードできません。")
+                )
+            if cog名 == "api":
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(title="API本体をリロードできません。")
+                )
+
             try:
                 if cog名 in sys.modules:
                     importlib.reload(sys.modules[cog名])
@@ -85,7 +88,7 @@ class AdminCog(commands.Cog):
                 return await interaction.followup.send(
                     embed=make_embed.success_embed(
                         title="モジュールをリロードしました。",
-                        description=f"`{cog名}` を再読み込みしました。"
+                        description=f"`{cog名}` を再読み込みしました。",
                     )
                 )
 
@@ -94,7 +97,7 @@ class AdminCog(commands.Cog):
                 return await interaction.followup.send(
                     embed=make_embed.error_embed(
                         title="モジュールリロードに失敗しました。",
-                        description=f"```{tb}```"
+                        description=f"```{tb}```",
                     )
                 )
 
@@ -119,7 +122,7 @@ class AdminCog(commands.Cog):
         操作の種類: app_commands.Choice[str],
         操作: app_commands.Choice[str],
         内容: str,
-        理由: str
+        理由: str,
     ):
         isadmin = await self.get_admins(interaction.user)
 
@@ -139,18 +142,37 @@ class AdminCog(commands.Cog):
                     return
                 user = await self.bot.fetch_user(int(内容))
                 db = self.bot.async_db["Main"].BlockUser
-                await db.update_one({"User": user.id}, {'$set': {"User": user.id, 'Reason': 理由, 'Runner': interaction.user.id}}, upsert=True)
+                await db.update_one(
+                    {"User": user.id},
+                    {
+                        "$set": {
+                            "User": user.id,
+                            "Reason": 理由,
+                            "Runner": interaction.user.id,
+                        }
+                    },
+                    upsert=True,
+                )
                 await interaction.followup.send(
                     embed=make_embed.success_embed(
                         title=f"{user.name}をBotからBANしました。"
                     )
                 )
 
-                await self.bot.get_channel(1359793645842206912).send(embed=make_embed.success_embed(title="ブロックしているユーザーを追加しました。")
-                                                                     .add_field(name="ユーザー名", value=user.name, inline=False)
-                                                                     .add_field(name="ユーザーID", value=str(user.id), inline=False)
-                                                                     .add_field(name="理由", value=理由, inline=False)
-                                                                     .set_footer(text=f'実行者: {interaction.user.name}', icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url))
+                await self.bot.get_channel(1359793645842206912).send(
+                    embed=make_embed.success_embed(
+                        title="ブロックしているユーザーを追加しました。"
+                    )
+                    .add_field(name="ユーザー名", value=user.name, inline=False)
+                    .add_field(name="ユーザーID", value=str(user.id), inline=False)
+                    .add_field(name="理由", value=理由, inline=False)
+                    .set_footer(
+                        text=f"実行者: {interaction.user.name}",
+                        icon_url=interaction.user.avatar.url
+                        if interaction.user.avatar
+                        else interaction.user.default_avatar.url,
+                    )
+                )
             elif 操作.value == "remove":
                 user = await self.bot.fetch_user(int(内容))
                 db = self.bot.async_db["Main"].BlockUser
@@ -164,7 +186,15 @@ class AdminCog(commands.Cog):
             if 操作.value == "add":
                 db = self.bot.async_db["Main"].BlockGuild
                 await db.update_one(
-                    {"Guild": int(内容)}, {'$set': {"Guild": int(内容), 'Reason': 理由, 'Runner': interaction.user.id}}, upsert=True
+                    {"Guild": int(内容)},
+                    {
+                        "$set": {
+                            "Guild": int(内容),
+                            "Reason": 理由,
+                            "Runner": interaction.user.id,
+                        }
+                    },
+                    upsert=True,
                 )
                 await interaction.followup.send(
                     embed=make_embed.success_embed(
@@ -212,16 +242,12 @@ class AdminCog(commands.Cog):
         if 操作.value == "leave":
             await self.bot.get_guild(int(内容)).leave()
             await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="サーバーから退出しました。"
-                )
+                embed=make_embed.success_embed(title="サーバーから退出しました。")
             )
         elif 操作.value == "warn":
             if 理由 is None:
                 return await interaction.followup.send(
-                    embed=make_embed.error_embed(
-                        title="警告理由を入力してください。"
-                    )
+                    embed=make_embed.error_embed(title="警告理由を入力してください。")
                 )
 
             await self.bot.get_guild(int(内容)).owner.send(
@@ -232,9 +258,7 @@ class AdminCog(commands.Cog):
                 ).set_footer(text="詳しくはSharkBot公式サポートサーバーまで。")
             )
             await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="サーバーを警告しました。"
-                )
+                embed=make_embed.success_embed(title="サーバーを警告しました。")
             )
         elif 操作.value == "getinfo":
             guild = self.bot.get_guild(int(内容))
@@ -242,9 +266,7 @@ class AdminCog(commands.Cog):
             embed = make_embed.success_embed(title=f"{guild.name}の情報")
             embed.add_field(name="サーバー名", value=guild.name)
             embed.add_field(name="サーバーID", value=str(guild.id))
-            embed.add_field(
-                name="チャンネル数", value=f"{len(guild.channels)}個"
-            )
+            embed.add_field(name="チャンネル数", value=f"{len(guild.channels)}個")
             embed.add_field(name="絵文字数", value=f"{len(guild.emojis)}個")
             embed.add_field(name="ロール数", value=f"{len(guild.roles)}個")
             embed.add_field(name="ロールリスト", value="`/listing role`\nで見れます。")
@@ -261,20 +283,12 @@ class AdminCog(commands.Cog):
             )
             embed.add_field(name="オーナーID", value=str(guild.owner_id))
             JST = datetime.timezone(datetime.timedelta(hours=9))
-            embed.add_field(
-                name="作成日", value=guild.created_at.astimezone(JST)
-            )
+            embed.add_field(name="作成日", value=guild.created_at.astimezone(JST))
 
-            onlines = [
-                m for m in guild.members if m.status == discord.Status.online
-            ]
-            idles = [
-                m for m in guild.members if m.status == discord.Status.idle
-            ]
+            onlines = [m for m in guild.members if m.status == discord.Status.online]
+            idles = [m for m in guild.members if m.status == discord.Status.idle]
             dnds = [m for m in guild.members if m.status == discord.Status.dnd]
-            offlines = [
-                m for m in guild.members if m.status == discord.Status.offline
-            ]
+            offlines = [m for m in guild.members if m.status == discord.Status.offline]
 
             pcs = [m for m in guild.members if m.client_status.desktop]
             sms = [m for m in guild.members if m.client_status.mobile]
@@ -326,7 +340,13 @@ class AdminCog(commands.Cog):
             )
 
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         await interaction.response.defer()
 
@@ -336,7 +356,7 @@ class AdminCog(commands.Cog):
                 ephemeral=True,
                 embed=make_embed.success_embed(
                     title="埋め込みを解析しました。",
-                    description=f"```{msg.embeds[0].to_dict()}```"
+                    description=f"```{msg.embeds[0].to_dict()}```",
                 ),
             )
         elif 操作.value == "prefixreset":
@@ -348,16 +368,12 @@ class AdminCog(commands.Cog):
             )
             await interaction.followup.send(
                 ephemeral=True,
-                embed=make_embed.success_embed(
-                    title="頭文字をリセットしました。"
-                ),
+                embed=make_embed.success_embed(title="頭文字をリセットしました。"),
             )
         else:
             await interaction.followup.send(
                 ephemeral=True,
-                embed=make_embed.success_embed(
-                    title="デバッグしました。"
-                ),
+                embed=make_embed.success_embed(title="デバッグしました。"),
             )
 
     @admin.command(name="member", description="管理者を追加します。")
@@ -383,19 +399,15 @@ class AdminCog(commands.Cog):
         db = self.bot.async_db["Main"].BotAdmins
         if 操作.value == "add":
             await db.update_one(
-                {"User": ユーザー.id}, {'$set': {"User": ユーザー.id}}, upsert=True
+                {"User": ユーザー.id}, {"$set": {"User": ユーザー.id}}, upsert=True
             )
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="管理者を追加しました。"
-                )
+                embed=make_embed.success_embed(title="管理者を追加しました。")
             )
         else:
             await db.delete_one({"User": ユーザー.id})
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="管理者を削除しました。"
-                )
+                embed=make_embed.success_embed(title="管理者を削除しました。")
             )
 
     @admin.command(name="shutdown", description="シャットダウンします。")
@@ -406,9 +418,7 @@ class AdminCog(commands.Cog):
         ]
     )
     async def admin_shutdown(
-        self,
-        interaction: discord.Interaction,
-        操作: app_commands.Choice[str]
+        self, interaction: discord.Interaction, 操作: app_commands.Choice[str]
     ):
         if interaction.user.id != 1335428061541437531:
             return await interaction.response.send_message(
@@ -417,21 +427,24 @@ class AdminCog(commands.Cog):
                     title="あなたはSharkBotのオーナーではないため実行できません。"
                 ),
             )
-        
-        if 操作.value == "reboot":
 
+        if 操作.value == "reboot":
             with open("./reboot", "w") as f:
                 f.write("Reboot!")
         else:
-
             with open("./shutdown", "w") as f:
                 f.write("Shutdown!")
 
-        await interaction.response.send_message(embed=discord.Embed(title=f"{操作.name} します。", color=discord.Color.red()))
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title=f"{操作.name} します。", color=discord.Color.red()
+            )
+        )
 
         if 操作.value == "reboot":
-
-            await self.bot.change_presence(status=discord.Status.dnd, activity=discord.Game(name="再起動中!!"))
+            await self.bot.change_presence(
+                status=discord.Status.dnd, activity=discord.Game(name="再起動中!!")
+            )
 
     @admin.command(name="premium", description="プレミアムユーザーを手動で追加します。")
     @app_commands.choices(
@@ -486,10 +499,13 @@ class AdminCog(commands.Cog):
                 await self.bot.get_channel(1359793645842206912).send(
                     embed=make_embed.success_embed(
                         title=f"ブロックされているサーバーから退出しました。"
-                    ).set_thumbnail(url=guild.icon.url if guild.icon else None)
+                    )
+                    .set_thumbnail(url=guild.icon.url if guild.icon else None)
                     .add_field(name=f"サーバー名", value=guild.name, inline=False)
                     .add_field(name=f"サーバーID", value=str(guild.id), inline=False)
-                    .add_field(name=f"理由", value=profile.get('Reason', 'なし'), inline=False)
+                    .add_field(
+                        name=f"理由", value=profile.get("Reason", "なし"), inline=False
+                    )
                 )
                 return
         except:
@@ -501,7 +517,8 @@ class AdminCog(commands.Cog):
             embed=discord.Embed(
                 title=f"サーバーに参加しました。",
                 color=discord.Color.green(),
-            ).set_thumbnail(url=guild.icon.url if guild.icon else None)
+            )
+            .set_thumbnail(url=guild.icon.url if guild.icon else None)
             .add_field(name=f"サーバー名", value=guild.name, inline=False)
             .add_field(name=f"サーバーID", value=str(guild.id), inline=False)
         )
@@ -518,10 +535,13 @@ class AdminCog(commands.Cog):
                 await self.bot.get_channel(1359793645842206912).send(
                     embed=make_embed.success_embed(
                         title=f"ブロックされているサーバーから退出しました。"
-                    ).set_thumbnail(url=guild.icon.url if guild.icon else None)
+                    )
+                    .set_thumbnail(url=guild.icon.url if guild.icon else None)
                     .add_field(name=f"サーバー名", value=guild.name, inline=False)
                     .add_field(name=f"サーバーID", value=str(guild.id), inline=False)
-                    .add_field(name=f"理由", value=profile.get('Reason', 'なし'), inline=False)
+                    .add_field(
+                        name=f"理由", value=profile.get("Reason", "なし"), inline=False
+                    )
                 )
                 return
         except:
@@ -532,10 +552,12 @@ class AdminCog(commands.Cog):
         await self.bot.get_channel(1359793645842206912).send(
             embed=discord.Embed(
                 title=f"サーバーから退出しました。", color=discord.Color.red()
-            ).set_thumbnail(url=guild.icon.url if guild.icon else None)
+            )
+            .set_thumbnail(url=guild.icon.url if guild.icon else None)
             .add_field(name=f"サーバー名", value=guild.name, inline=False)
             .add_field(name=f"サーバーID", value=str(guild.id), inline=False)
         )
+
 
 async def setup(bot):
     await bot.add_cog(AdminCog(bot))

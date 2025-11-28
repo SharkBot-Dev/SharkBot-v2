@@ -24,18 +24,17 @@ class LevelCog(commands.Cog):
             return False
         if dbfind is None:
             return
-        return dbfind.get('Message', "`{user}`さんの\nレベルが「{newlevel}」になったよ！")
+        return dbfind.get(
+            "Message", "`{user}`さんの\nレベルが「{newlevel}」になったよ！"
+        )
 
     async def set_message(self, guild: discord.Guild, msg: str = None):
         try:
             db = self.bot.async_db["Main"].LevelingSetting
-            await db.update_one(
-                {"Guild": guild.id},
-                {"$set": {"Message": msg}}
-            )
+            await db.update_one({"Guild": guild.id}, {"$set": {"Message": msg}})
         except:
             return
-        
+
     async def check_level_enabled(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].LevelingSetting
         try:
@@ -65,7 +64,14 @@ class LevelCog(commands.Cog):
             db = self.bot.async_db["Main"].Leveling
             await db.update_one(
                 {"Guild": guild.id, "User": user.id},
-                {"$set": {"Guild": guild.id, "User": user.id, "Level": level, "XP": xp}},
+                {
+                    "$set": {
+                        "Guild": guild.id,
+                        "User": user.id,
+                        "Level": level,
+                        "XP": xp,
+                    }
+                },
                 upsert=True,
             )
         except:
@@ -107,7 +113,9 @@ class LevelCog(commands.Cog):
         try:
             db = self.bot.async_db["Main"].LevelingBackImage
             await db.update_one(
-                {"User": user.id}, {"$set": {"User": user.id, "Image": url}}, upsert=True
+                {"User": user.id},
+                {"$set": {"User": user.id, "Image": url}},
+                upsert=True,
             )
         except:
             return
@@ -239,16 +247,23 @@ class LevelCog(commands.Cog):
                             await user.add_roles(grole)
                     try:
                         msg = await self.get_message(user.guild.id)
-                        rpd_msg = msg.replace('{user}', user.name).replace('{newlevel}', str(lvg))
+                        rpd_msg = msg.replace("{user}", user.name).replace(
+                            "{newlevel}", str(lvg)
+                        )
                         if cha:
                             ch = user.guild.get_channel(cha)
                             if ch:
                                 await ch.send(
-                                    embed=discord.Embed(description=rpd_msg, color=discord.Color.yellow())
+                                    embed=discord.Embed(
+                                        description=rpd_msg,
+                                        color=discord.Color.yellow(),
+                                    )
                                 )
                         else:
                             return await reaction.message.channel.send(
-                                embed=discord.Embed(description=rpd_msg, color=discord.Color.yellow())
+                                embed=discord.Embed(
+                                    description=rpd_msg, color=discord.Color.yellow()
+                                )
                             )
                     except:
                         return
@@ -298,16 +313,23 @@ class LevelCog(commands.Cog):
                             await message.author.add_roles(grole)
                     try:
                         msg = await self.get_message(message.guild.id)
-                        rpd_msg = msg.replace('{user}', message.author.name).replace('{newlevel}', str(lvg))
+                        rpd_msg = msg.replace("{user}", message.author.name).replace(
+                            "{newlevel}", str(lvg)
+                        )
                         if cha:
                             ch = message.guild.get_channel(cha)
                             if ch:
                                 await ch.send(
-                                    embed=discord.Embed(description=rpd_msg, color=discord.Color.yellow())
+                                    embed=discord.Embed(
+                                        description=rpd_msg,
+                                        color=discord.Color.yellow(),
+                                    )
                                 )
                         else:
                             return await message.channel.send(
-                                embed=discord.Embed(description=rpd_msg, color=discord.Color.yellow())
+                                embed=discord.Embed(
+                                    description=rpd_msg, color=discord.Color.yellow()
+                                )
                             )
                     except:
                         return
@@ -361,7 +383,7 @@ class LevelCog(commands.Cog):
                 return await interaction.followup.send(
                     embed=make_embed.success_embed(
                         title=f"`{interaction.user.name}`のレベル",
-                        description="レベル: 「0レベル」\nXP: 「0XP」"
+                        description="レベル: 「0レベル」\nXP: 「0XP」",
                     ).set_thumbnail(url=avatar)
                 )
             xp = await self.get_xp(interaction.guild, interaction.user)
@@ -369,20 +391,18 @@ class LevelCog(commands.Cog):
                 return await interaction.followup.send(
                     embed=make_embed.success_embed(
                         title=f"`{interaction.user.name}`のレベル",
-                        description="レベル: 「0レベル」\nXP: 「0XP」"
+                        description="レベル: 「0レベル」\nXP: 「0XP」",
                     ).set_thumbnail(url=avatar)
                 )
             await interaction.followup.send(
                 embed=make_embed.success_embed(
                     title=f"`{interaction.user.name}`のレベル",
-                    description=f"レベル: 「{lv}レベル」\nXP: 「{xp}XP」"
+                    description=f"レベル: 「{lv}レベル」\nXP: 「{xp}XP」",
                 ).set_thumbnail(url=avatar)
             )
         else:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
 
     async def get_user_color(self, user: discord.User):
@@ -422,14 +442,22 @@ class LevelCog(commands.Cog):
             app_commands.Choice(name="灰", value="gray"),
         ]
     )
-    async def level_card_custom(self, interaction: discord.Interaction, 色: app_commands.Choice[str]):
+    async def level_card_custom(
+        self, interaction: discord.Interaction, 色: app_commands.Choice[str]
+    ):
         db = self.bot.async_db["Main"].RankColor
         await db.update_one(
             {"User": interaction.user.id},
-            {'$set': {"User": interaction.user.id, "Color": 色.value}},
+            {"$set": {"User": interaction.user.id, "Color": 色.value}},
             upsert=True,
         )
-        await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="レベルカードをカスタマイズしました。", description=f"色: {色.name}").set_footer(text=f"ID: {色.value}"))
+        await interaction.response.send_message(
+            ephemeral=True,
+            embed=make_embed.success_embed(
+                title="レベルカードをカスタマイズしました。",
+                description=f"色: {色.name}",
+            ).set_footer(text=f"ID: {色.value}"),
+        )
 
     @level.command(name="card", description="レベルカードを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -439,16 +467,12 @@ class LevelCog(commands.Cog):
             enabled = await self.check_level_enabled(interaction.guild)
         except:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                ),
+                embed=make_embed.error_embed(title="レベルは無効です。"),
                 ephemeral=True,
             )
         if not enabled:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                ),
+                embed=make_embed.error_embed(title="レベルは無効です。"),
                 ephemeral=True,
             )
         await interaction.response.defer()
@@ -545,7 +569,8 @@ class LevelCog(commands.Cog):
                 await self.set_channel(interaction.guild, チャンネル)
                 await interaction.followup.send(
                     embed=make_embed.success_embed(
-                        title="レベルアップの通知チャンネルを設定しました。", description=f"チャンネル: {チャンネル.mention}"
+                        title="レベルアップの通知チャンネルを設定しました。",
+                        description=f"チャンネル: {チャンネル.mention}",
                     )
                 )
             else:
@@ -557,9 +582,7 @@ class LevelCog(commands.Cog):
                 )
         else:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
 
     @level.command(
@@ -576,9 +599,7 @@ class LevelCog(commands.Cog):
             enabled = await self.check_level_enabled(interaction.guild)
         except:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
         if enabled:
             if not ロール:
@@ -596,9 +617,7 @@ class LevelCog(commands.Cog):
             )
         else:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
 
     @level.command(
@@ -615,28 +634,39 @@ class LevelCog(commands.Cog):
             enabled = await self.check_level_enabled(interaction.guild)
         except:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
         if not enabled:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
 
         if message:
             await self.set_message(interaction.guild, message)
-            await interaction.followup.send(embed=make_embed.success_embed(title="レベルアップ時のメッセージを変更しました。", description=f"例\n\n{message.replace('{user}', interaction.user.name).replace('{newlevel}', str(13))}\n\n" + "{user}はユーザー名に、\n{newlevel}はレベルにレベルアップ後の置き換えられます。"))
+            await interaction.followup.send(
+                embed=make_embed.success_embed(
+                    title="レベルアップ時のメッセージを変更しました。",
+                    description=f"例\n\n{message.replace('{user}', interaction.user.name).replace('{newlevel}', str(13))}\n\n"
+                    + "{user}はユーザー名に、\n{newlevel}はレベルにレベルアップ後の置き換えられます。",
+                )
+            )
         else:
             db = self.bot.async_db["Main"].LevelingSetting
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"$set": {"Message": "`{user}`さんの\nレベルが「{newlevel}」になったよ！"}}
+                {
+                    "$set": {
+                        "Message": "`{user}`さんの\nレベルが「{newlevel}」になったよ！"
+                    }
+                },
             )
-            await interaction.followup.send(embed=make_embed.success_embed(title="レベルアップ時のメッセージをリセットしました。", description=f"例\n\n`{interaction.user.name}`さんの\nレベルが「13」になったよ！"))
-        
+            await interaction.followup.send(
+                embed=make_embed.success_embed(
+                    title="レベルアップ時のメッセージをリセットしました。",
+                    description=f"例\n\n`{interaction.user.name}`さんの\nレベルが「13」になったよ！",
+                )
+            )
+
     @level.command(name="edit", description="レベルを編集します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -653,21 +683,17 @@ class LevelCog(commands.Cog):
             enabled = await self.check_level_enabled(interaction.guild)
         except:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
         if not enabled:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
         await self.user_write(interaction.guild, ユーザー, レベル, xp)
         return await interaction.followup.send(
             embed=make_embed.success_embed(
                 title="レベルを編集しました。",
-                description=f"ユーザー: 「{ユーザー.name}」\nレベル: 「{レベル}レベル」\nXP: 「{xp}XP」"
+                description=f"ユーザー: 「{ユーザー.name}」\nレベル: 「{レベル}レベル」\nXP: 「{xp}XP」",
             )
         )
 
@@ -683,15 +709,11 @@ class LevelCog(commands.Cog):
             enabled = await self.check_level_enabled(interaction.guild)
         except:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
         if not enabled:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
         if xp < 21:
             return await interaction.followup.send(
@@ -723,15 +745,11 @@ class LevelCog(commands.Cog):
             enabled = await self.check_level_enabled(interaction.guild)
         except:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
         if not enabled:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
         db = self.bot.async_db["Main"].LevelingUpRole
         roles_cursor = db.find({"Guild": interaction.guild.id})
@@ -759,15 +777,11 @@ class LevelCog(commands.Cog):
             enabled = await self.check_level_enabled(interaction.guild)
         except:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
         if not enabled:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="レベルは無効です。"
-                )
+                embed=make_embed.error_embed(title="レベルは無効です。")
             )
         db = self.bot.async_db["Main"].Leveling
         top_users = (
@@ -785,8 +799,7 @@ class LevelCog(commands.Cog):
             msg += f"{index}.**{username}** - {user_data['Level']}レベル\n"
         return await interaction.followup.send(
             embed=make_embed.success_embed(
-                title="このサーバーでのランキング",
-                description=msg
+                title="このサーバーでのランキング", description=msg
             )
         )
 

@@ -14,11 +14,7 @@ from slowapi.errors import RateLimitExceeded
 from consts import mongodb
 from consts import settings, templates
 
-app = FastAPI(
-    docs_url=None,
-    redoc_url=None,
-    openapi_url=None
-)
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 app.add_middleware(SessionMiddleware, secret_key=settings.SESSINKEY)
 
@@ -31,6 +27,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(s_r.router)
 app.include_router(mainpage.router)
+
 
 @app.get("/login")
 async def login():

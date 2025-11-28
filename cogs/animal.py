@@ -121,22 +121,24 @@ class AnimalCog(commands.Cog):
         if not await self.is_keeping_animal(interaction.user, 種類.value):
             await db.update_one(
                 {"User": interaction.user.id, "Kinds": 種類.value},
-                {"$set": {
-                    "User": interaction.user.id,
-                    "Kinds": 種類.value,
-                    "Name": 名前,
-                    "Level": 0,
-                    "XP": 0,
-                    "Status": "いつも通り",
-                    "IV": random.randint(100, 130),
-                    "LastFeed": None,
-                }},
+                {
+                    "$set": {
+                        "User": interaction.user.id,
+                        "Kinds": 種類.value,
+                        "Name": 名前,
+                        "Level": 0,
+                        "XP": 0,
+                        "Status": "いつも通り",
+                        "IV": random.randint(100, 130),
+                        "LastFeed": None,
+                    }
+                },
                 upsert=True,
             )
             await interaction.followup.send(
                 embed=make_embed.success_embed(
                     title="ペットを飼いました！",
-                    description=f"名前: {名前}\n種類: {種類.name}"
+                    description=f"名前: {名前}\n種類: {種類.name}",
                 )
             )
         else:
@@ -171,7 +173,7 @@ class AnimalCog(commands.Cog):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="まだそのペットを飼っていません！",
-                    description="/animal keeping で飼えます。"
+                    description="/animal keeping で飼えます。",
                 )
             )
 
@@ -220,7 +222,7 @@ class AnimalCog(commands.Cog):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="そのペットは飼っていません！",
-                    description="/animal keeping で飼えます。"
+                    description="/animal keeping で飼えます。",
                 )
             )
 
@@ -235,7 +237,7 @@ class AnimalCog(commands.Cog):
                 return await interaction.followup.send(
                     embed=make_embed.error_embed(
                         title="まだ餌をあげられません！",
-                        description=f"次に餌をあげられるまで **{minutes}分{seconds}秒**"
+                        description=f"次に餌をあげられるまで **{minutes}分{seconds}秒**",
                     )
                 )
 
@@ -251,7 +253,7 @@ class AnimalCog(commands.Cog):
         await interaction.followup.send(
             embed=make_embed.success_embed(
                 title=f"{status.get('Name', '名無し')}に餌をあげました！",
-                description=f"XPが **+{xp_gain}** 増えたよ！"
+                description=f"XPが **+{xp_gain}** 増えたよ！",
             )
         )
 
@@ -278,7 +280,7 @@ class AnimalCog(commands.Cog):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="そのペットは飼っていません！",
-                    description="/animal keeping で飼えます。"
+                    description="/animal keeping で飼えます。",
                 )
             )
 
@@ -293,7 +295,7 @@ class AnimalCog(commands.Cog):
                 return await interaction.followup.send(
                     embed=make_embed.error_embed(
                         title="まだ訓練できません！",
-                        description=f"次に訓練ができるまで **{minutes}分{seconds}秒**"
+                        description=f"次に訓練ができるまで **{minutes}分{seconds}秒**",
                     )
                 )
 
@@ -319,7 +321,7 @@ class AnimalCog(commands.Cog):
         await interaction.followup.send(
             embed=make_embed.success_embed(
                 title=f"{status.get('Name', '名無し')}の訓練結果",
-                description=result_text
+                description=result_text,
             )
         )
 

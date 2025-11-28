@@ -1,6 +1,7 @@
 from discord import Interaction, Message
 from consts import mongodb
 
+
 async def user_block_check(user: int):
     db = mongodb.mongo["Main"].BlockUser
     try:
@@ -21,6 +22,7 @@ async def guild_block_check(guild: int):
     if dbfind is not None:
         return False
     return True
+
 
 async def is_blockd_by_message(message: Message):
     if not await user_block_check(message.author.id):

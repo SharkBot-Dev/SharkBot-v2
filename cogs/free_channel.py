@@ -93,7 +93,9 @@ class FreeChannelModal(discord.ui.Modal):
             else:
                 return
 
-        await channel.send(f"{interaction.user.mention}: フリーチャンネルを作成しました。")
+        await channel.send(
+            f"{interaction.user.mention}: フリーチャンネルを作成しました。"
+        )
 
 
 class FreeChannelCog(commands.Cog):

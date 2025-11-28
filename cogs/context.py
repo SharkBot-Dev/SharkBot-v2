@@ -26,14 +26,15 @@ UNICODE_EMOJI_RE = re.compile(
     r"\U0001F830-\U0001F8FF"  # Supplemental Symbols and Pictographs (continued)
     r"\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs (more modern emojis)
     r"\U00002600-\U000027BF"  # Miscellaneous Symbols
-    r"\U00002B50"             # Star symbol
+    r"\U00002B50"  # Star symbol
     r"]+",
-    flags=re.UNICODE
+    flags=re.UNICODE,
 )
 COMBINED_EMOJI_RE = re.compile(
     r"<a?:[a-zA-Z0-9_]{1,32}:[0-9]{17,22}>|" + UNICODE_EMOJI_RE.pattern,
     flags=re.UNICODE | re.DOTALL,
 )
+
 
 # --- 行分割 ---
 def wrap_text_with_scroll_cut(text, font, draw, max_width, max_height, line_height):
@@ -67,6 +68,7 @@ def wrap_text_with_scroll_cut(text, font, draw, max_width, max_height, line_heig
 
     return lines
 
+
 # --- 絵文字描画付きテキスト描画 ---
 def draw_text_with_emojis(img, draw, position, text, font, fill):
     x, y = position
@@ -75,7 +77,7 @@ def draw_text_with_emojis(img, draw, position, text, font, fill):
 
     for m in COMBINED_EMOJI_RE.finditer(text):
         if m.start() > last_end:
-            part = text[last_end:m.start()]
+            part = text[last_end : m.start()]
             if part:
                 draw.text((cursor_x, y), part, font=font, fill=fill)
                 bbox = draw.textbbox((0, 0), part, font=font)
@@ -86,7 +88,7 @@ def draw_text_with_emojis(img, draw, position, text, font, fill):
 
         # --- Discord絵文字処理 ---
         # d = DISCORD_EMOJI_RE.fullmatch(token_clean)
-        #if d:
+        # if d:
         #    is_animated, name, emoji_id = d.groups()
         #    ext = "gif" if is_animated else "png"
         #    url = f"https://cdn.discordapp.com/emojis/{emoji_id}.{ext}?size=64"
@@ -123,7 +125,9 @@ def draw_text_with_emojis(img, draw, position, text, font, fill):
                     ascent, descent = font.getmetrics()
                     font_height = ascent + descent
                     emoji_size = int(font_height * 0.9)
-                    emoji_img = emoji_img.resize((emoji_size, emoji_size), Image.Resampling.LANCZOS)
+                    emoji_img = emoji_img.resize(
+                        (emoji_size, emoji_size), Image.Resampling.LANCZOS
+                    )
 
                     y_offset = y + (font_height - emoji_size) // 2
                     img.paste(emoji_img, (int(cursor_x), int(y_offset)), emoji_img)
@@ -145,6 +149,7 @@ def draw_text_with_emojis(img, draw, position, text, font, fill):
         tail = text[last_end:]
         if tail:
             draw.text((cursor_x, y), tail, font=font, fill=fill)
+
 
 def create_quote_image(
     author,
@@ -198,15 +203,15 @@ def create_quote_image(
     text_y = (height - text_block_height) // 2
 
     for i, line in enumerate(lines):
-        bbox = draw.textbbox((0, 0), re.sub(r"<(a?):([a-zA-Z0-9_]{1,32}):([0-9]{17,22})>", 'あ', line), font=font)
+        bbox = draw.textbbox(
+            (0, 0),
+            re.sub(r"<(a?):([a-zA-Z0-9_]{1,32}):([0-9]{17,22})>", "あ", line),
+            font=font,
+        )
         line_width = bbox[2] - bbox[0]
         line_x = (width + text_x - 50 - line_width) // 2
         draw_text_with_emojis(
-            img, draw,
-            (line_x, text_y + i * line_height),
-            line,
-            font,
-            text_color
+            img, draw, (line_x, text_y + i * line_height), line, font, text_color
         )
 
     author_text = f"- {author}"
@@ -227,6 +232,7 @@ def create_quote_image(
     else:
         return img.convert("L")
 
+
 class ContextCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -244,10 +250,20 @@ async def setup(bot: commands.Bot):
         interaction: discord.Interaction, message: discord.Message
     ):
         if message.content == "":
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="メッセージ内容が空です。", description="メッセージ内容があるものを選択してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="メッセージ内容が空です。",
+                    description="メッセージ内容があるものを選択してください。",
+                ),
+            )
 
         await interaction.response.defer()
-        av = message.author.avatar if message.author.avatar else message.author.default_avatar
+        av = (
+            message.author.avatar
+            if message.author.avatar
+            else message.author.default_avatar
+        )
         av = await av.read()
         color = True
         back = (0, 0, 0)
@@ -271,7 +287,7 @@ async def setup(bot: commands.Bot):
                 channel = bot.get_channel(obj_id)
                 return f"#{channel.name}" if channel else "#不明チャンネル"
             return match.group(0)
-        
+
         content = re.sub(pattern, replacer, content)
 
         while True:
@@ -283,13 +299,7 @@ async def setup(bot: commands.Bot):
                     )
                 )
             miq_ = await miq.make_quote_async(
-                message.author.display_name,
-                content,
-                av,
-                back,
-                text,
-                color,
-                False
+                message.author.display_name, content, av, back, text, color, False
             )
             image_binary = io.BytesIO()
             await asyncio.to_thread(miq_.save, image_binary, "PNG")
@@ -605,9 +615,7 @@ async def setup(bot: commands.Bot):
         JST = datetime.timezone(datetime.timedelta(hours=9))
 
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            embed = make_embed.success_embed(
-                title=f"{member.display_name}の情報"
-            )
+            embed = make_embed.success_embed(title=f"{member.display_name}の情報")
 
             if member.bot:
                 isbot = "はい"
@@ -619,7 +627,9 @@ async def setup(bot: commands.Bot):
                 value=f"ID: **{member.id}**\nユーザーネーム: **{member.name}#{member.discriminator}**\n作成日: **{member.created_at.astimezone(JST)}**\nBot？: **{isbot}**\n認証Bot？: **{'はい' if member.public_flags.verified_bot else 'いいえ'}**",
             )
 
-            embed.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
+            embed.set_thumbnail(
+                url=member.avatar.url if member.avatar else member.default_avatar.url
+            )
 
             await interaction.followup.send(embed=embed)
 

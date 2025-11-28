@@ -13,7 +13,6 @@ class RoleCog(commands.Cog):
 
     role = app_commands.Group(name="role", description="ロール系のコマンドです。")
 
-
     @role.command(name="add", description="メンバーにロールを追加します。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=False)
@@ -32,7 +31,7 @@ class RoleCog(commands.Cog):
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(
                     title="ロール追加失敗",
-                    description="Botにロール管理権限がありません。"
+                    description="Botにロール管理権限がありません。",
                 ),
                 ephemeral=True,
             )
@@ -41,16 +40,19 @@ class RoleCog(commands.Cog):
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(
                     title="ロール追加失敗",
-                    description="指定されたロールはBotより上位のため、操作できません。"
+                    description="指定されたロールはBotより上位のため、操作できません。",
                 ),
                 ephemeral=True,
             )
 
-        if ロール.position >= executor.top_role.position and not executor.guild_permissions.administrator:
+        if (
+            ロール.position >= executor.top_role.position
+            and not executor.guild_permissions.administrator
+        ):
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(
                     title="ロール追加失敗",
-                    description="あなたより上位のロールは追加できません。"
+                    description="あなたより上位のロールは追加できません。",
                 ),
                 ephemeral=True,
             )
@@ -71,15 +73,14 @@ class RoleCog(commands.Cog):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="ロール追加失敗",
-                    description="権限不足により、ロールを追加できませんでした。"
+                    description="権限不足により、ロールを追加できませんでした。",
                 ),
                 ephemeral=True,
             )
         except discord.HTTPException as e:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
-                    title="エラーが発生しました。",
-                    description=f"詳細: {e}"
+                    title="エラーが発生しました。", description=f"詳細: {e}"
                 ),
                 ephemeral=True,
             )
@@ -87,7 +88,7 @@ class RoleCog(commands.Cog):
         await interaction.followup.send(
             embed=make_embed.success_embed(
                 title="ロールを追加しました。",
-                description=f"{メンバー.mention} に {ロール.mention} を追加しました。"
+                description=f"{メンバー.mention} に {ロール.mention} を追加しました。",
             )
         )
 
@@ -109,7 +110,7 @@ class RoleCog(commands.Cog):
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(
                     title="ロール剥奪失敗",
-                    description="Botにロール管理権限がありません。"
+                    description="Botにロール管理権限がありません。",
                 ),
                 ephemeral=True,
             )
@@ -118,16 +119,19 @@ class RoleCog(commands.Cog):
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(
                     title="ロール剥奪失敗",
-                    description="指定されたロールはBotより上位のため、操作できません。"
+                    description="指定されたロールはBotより上位のため、操作できません。",
                 ),
                 ephemeral=True,
             )
 
-        if ロール.position >= executor.top_role.position and not executor.guild_permissions.administrator:
+        if (
+            ロール.position >= executor.top_role.position
+            and not executor.guild_permissions.administrator
+        ):
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(
                     title="ロール剥奪失敗",
-                    description="あなたより上位のロールは剥奪できません。"
+                    description="あなたより上位のロールは剥奪できません。",
                 ),
                 ephemeral=True,
             )
@@ -148,15 +152,14 @@ class RoleCog(commands.Cog):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="ロール剥奪失敗",
-                    description="権限不足により、ロールを剥奪できませんでした。"
+                    description="権限不足により、ロールを剥奪できませんでした。",
                 ),
                 ephemeral=True,
             )
         except discord.HTTPException as e:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
-                    title="エラーが発生しました。",
-                    description=f"詳細: {e}"
+                    title="エラーが発生しました。", description=f"詳細: {e}"
                 ),
                 ephemeral=True,
             )
@@ -164,7 +167,7 @@ class RoleCog(commands.Cog):
         await interaction.followup.send(
             embed=make_embed.success_embed(
                 title="ロールを剥奪しました。",
-                description=f"{メンバー.mention} から {ロール.mention} を剥奪しました。"
+                description=f"{メンバー.mention} から {ロール.mention} を剥奪しました。",
             )
         )
 
@@ -208,10 +211,11 @@ class RoleCog(commands.Cog):
             role = await interaction.guild.create_role(
                 name=ロール名, color=discord.Colour.gold()
             )
-        embed = make_embed.success_embed(title="色付きロールを作成しました。", description=f"作成したロール: {role.mention}")
-        await interaction.followup.send(
-            embed=embed
+        embed = make_embed.success_embed(
+            title="色付きロールを作成しました。",
+            description=f"作成したロール: {role.mention}",
         )
+        await interaction.followup.send(embed=embed)
 
     @role.command(name="info", description="ロール情報を確認します。")
     @app_commands.checks.has_permissions(manage_roles=True)
@@ -285,10 +289,13 @@ class RoleCog(commands.Cog):
             user_perms_str = ", ".join(user_perms)
             embed = make_embed.success_embed(title=f"{ロール.name} の情報")
             await interaction.followup.send(
-                embed=embed
-                .add_field(name="ID", value=str(ロール.id), inline=False)
+                embed=embed.add_field(name="ID", value=str(ロール.id), inline=False)
                 .add_field(name="名前", value=str(ロール.name), inline=False)
-                .add_field(name="ロールを持っている人数", value=str(len(ロール.members)) + "人", inline=False)
+                .add_field(
+                    name="ロールを持っている人数",
+                    value=str(len(ロール.members)) + "人",
+                    inline=False,
+                )
                 .add_field(
                     name="作成日時",
                     value=str(ロール.created_at.astimezone(JST)),

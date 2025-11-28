@@ -111,35 +111,39 @@ async def fetch_whois(target_domain):
     res = await loop.run_in_executor(None, partial(whois_query, target_domain))
     return io.StringIO(res)
 
+
 COLOR_MAP = {
-    'red': discord.Color.red(),
-    '赤': discord.Color.red(),
-    'blue': discord.Color.blue(),
-    '青': discord.Color.red(),
-    'green': discord.Color.green(),
-    '緑': discord.Color.green(),
-    'yellow': discord.Color.yellow(),
-    '黄': discord.Color.yellow(),
-    'pink': discord.Color.pink(),
-    'ピンク': discord.Color.pink(),
-    'white': discord.Color.from_str('#FFFFFF'),
-    '白': discord.Color.from_str('#FFFFFF'),
-    'black': discord.Color.from_str('#000000'),
-    '黒': discord.Color.from_str("#000000"),
+    "red": discord.Color.red(),
+    "赤": discord.Color.red(),
+    "blue": discord.Color.blue(),
+    "青": discord.Color.red(),
+    "green": discord.Color.green(),
+    "緑": discord.Color.green(),
+    "yellow": discord.Color.yellow(),
+    "黄": discord.Color.yellow(),
+    "pink": discord.Color.pink(),
+    "ピンク": discord.Color.pink(),
+    "white": discord.Color.from_str("#FFFFFF"),
+    "白": discord.Color.from_str("#FFFFFF"),
+    "black": discord.Color.from_str("#000000"),
+    "黒": discord.Color.from_str("#000000"),
 }
 
+
 class EmbedBuilder(discord.ui.View):
-    def __init__(self, *, timeout = 180):
+    def __init__(self, *, timeout=180):
         super().__init__(timeout=timeout)
 
     @discord.ui.button(label="タイトル", style=discord.ButtonStyle.gray)
-    async def title_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def title_edit_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         class EditTitleModal(discord.ui.Modal, title="タイトル編集"):
             text = discord.ui.Label(
                 text="タイトルを入力",
                 description="タイトルを入力してください。",
                 component=discord.ui.TextInput(
-                style=discord.TextStyle.short, max_length=30, required=True
+                    style=discord.TextStyle.short, max_length=30, required=True
                 ),
             )
 
@@ -154,16 +158,19 @@ class EmbedBuilder(discord.ui.View):
 
                 em.title = self.text.component.value
                 await ol_m.edit(embed=em)
+
         await interaction.response.send_modal(EditTitleModal())
 
     @discord.ui.button(label="説明", style=discord.ButtonStyle.gray)
-    async def desc_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def desc_edit_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         class EditTitleModal(discord.ui.Modal, title="説明編集"):
             text = discord.ui.Label(
                 text="説明を入力",
                 description="説明を入力してください。",
                 component=discord.ui.TextInput(
-                style=discord.TextStyle.long, required=True
+                    style=discord.TextStyle.long, required=True
                 ),
             )
 
@@ -175,13 +182,16 @@ class EmbedBuilder(discord.ui.View):
                 ol_m = await interaction.original_response()
 
                 em = ol_m.embeds[0].copy()
-                
+
                 em.description = self.text.component.value
                 await ol_m.edit(embed=em)
+
         await interaction.response.send_modal(EditTitleModal())
 
     @discord.ui.button(label="画像", style=discord.ButtonStyle.gray)
-    async def image_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def image_edit_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         class EditTitleModal(discord.ui.Modal, title="画像URLを追加"):
             text = discord.ui.Label(
                 text="画像URL",
@@ -204,10 +214,15 @@ class EmbedBuilder(discord.ui.View):
                     await ol_m.edit(embed=em)
                 except:
                     return
+
         await interaction.response.send_modal(EditTitleModal())
 
-    @discord.ui.button(label="サムネイル画像", style=discord.ButtonStyle.gray, emoji="🆕")
-    async def thum_image_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="サムネイル画像", style=discord.ButtonStyle.gray, emoji="🆕"
+    )
+    async def thum_image_edit_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         class EditTitleModal(discord.ui.Modal, title="サムネイル画像編集"):
             text = discord.ui.Label(
                 text="サムネイル画像URL",
@@ -230,10 +245,15 @@ class EmbedBuilder(discord.ui.View):
                     await ol_m.edit(embed=em)
                 except:
                     return
+
         await interaction.response.send_modal(EditTitleModal())
 
-    @discord.ui.button(label="フィールド追加", style=discord.ButtonStyle.gray, emoji="🆕", row=2)
-    async def field_add_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="フィールド追加", style=discord.ButtonStyle.gray, emoji="🆕", row=2
+    )
+    async def field_add_edit_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         class EditTitleModal(discord.ui.Modal, title="フィールド追加"):
             title_ = discord.ui.Label(
                 text="フィールド名",
@@ -272,14 +292,22 @@ class EmbedBuilder(discord.ui.View):
                 try:
                     # inline_bool = (self.inl.component.options[0].value == "yes")
 
-                    em.add_field(name=self.title_.component.value, value=self.value.component.value)
+                    em.add_field(
+                        name=self.title_.component.value,
+                        value=self.value.component.value,
+                    )
                     await ol_m.edit(embed=em)
                 except:
                     return
+
         await interaction.response.send_modal(EditTitleModal())
 
-    @discord.ui.button(label="フィールド削除", style=discord.ButtonStyle.gray, emoji="🆕", row=2)
-    async def field_remove_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    @discord.ui.button(
+        label="フィールド削除", style=discord.ButtonStyle.gray, emoji="🆕", row=2
+    )
+    async def field_remove_edit_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         class EditTitleModal(discord.ui.Modal, title="フィールド削除"):
             title_ = discord.ui.Label(
                 text="削除するフィールド名",
@@ -304,10 +332,13 @@ class EmbedBuilder(discord.ui.View):
                     await ol_m.edit(embed=em)
                 except:
                     return
+
         await interaction.response.send_modal(EditTitleModal())
 
     @discord.ui.button(label="色", style=discord.ButtonStyle.blurple, row=3)
-    async def footer_edit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def footer_edit_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         class EditTitleModal(discord.ui.Modal, title="色を入力"):
             text = discord.ui.Label(
                 text="色",
@@ -332,18 +363,34 @@ class EmbedBuilder(discord.ui.View):
                         em.color = COLOR_MAP[self.text.component.value.lower()]
                     await ol_m.edit(embed=em)
                 except:
-                    return await interaction.followup.send(ephemeral=True, embed=make_embed.error_embed(title="適切な色を入力してください。", description="例: `#000000`"))
+                    return await interaction.followup.send(
+                        ephemeral=True,
+                        embed=make_embed.error_embed(
+                            title="適切な色を入力してください。",
+                            description="例: `#000000`",
+                        ),
+                    )
+
         await interaction.response.send_modal(EditTitleModal())
 
     @discord.ui.button(label="送信", style=discord.ButtonStyle.green, row=3)
-    async def embed_send_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def embed_send_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         await interaction.response.defer(ephemeral=True)
         ol_m = await interaction.original_response()
         try:
             await interaction.channel.send(embed=ol_m.embeds[0].copy())
         except Exception as e:
-            await interaction.followup.send(ephemeral=True, embed=make_embed.error_embed(title="埋め込み送信時にエラーが発生しました。", description=f"```{e}```"))
-            return    
+            await interaction.followup.send(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="埋め込み送信時にエラーが発生しました。",
+                    description=f"```{e}```",
+                ),
+            )
+            return
+
 
 class EmbedMake(discord.ui.Modal, title="埋め込みを作成"):
     title_ = discord.ui.TextInput(
@@ -711,6 +758,7 @@ class OcrGroup(app_commands.Group):
             )
         )
 
+
 class TwitterGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="twitter", description="ツイッター系のコマンドです。")
@@ -734,31 +782,44 @@ class TwitterGroup(app_commands.Group):
         async with aiohttp.ClientSession() as session:
             async with session.get(api_url) as resp:
                 if resp.status != 200:
-                    return await interaction.followup.send("APIリクエストに失敗しました")
+                    return await interaction.followup.send(
+                        "APIリクエストに失敗しました"
+                    )
                 data = await resp.json()
 
         tweet = data["tweet"]
 
-        source = tweet.get('source', '取得失敗').replace('Twitter ', '')
+        source = tweet.get("source", "取得失敗").replace("Twitter ", "")
 
-        await interaction.followup.send(embed=discord.Embed(title="ツイートの情報を取得しました。", description=tweet.get('text', 'なし'), color=discord.Color.green(), url=tweet['url'])
-                                        .set_author(name=tweet["author"]["name"], icon_url=tweet["author"]["avatar_url"])
-                                        .add_field(name="名前", value=tweet["author"]["name"])
-                                        .add_field(name="スクリーン名前", value=tweet["author"]['screen_name'])
-                                        .add_field(name="アバターの色", value=tweet["author"]['avatar_color'])
-                                        .add_field(name="投稿日時", value=tweet.get('created_at', '取得失敗'))
-                                        .add_field(name="リツイート回数", value=str(tweet["retweets"]) + '回')
-                                        .add_field(name="いいね回数", value=str(tweet["likes"]) + '回')
-                                        .add_field(name="表示回数", value=str(tweet["views"]) + '回')
-                                        .add_field(name="返信回数", value=str(tweet["replies"]) + '回')
-                                        .add_field(name="機種", value=source)
-                                        .add_field(name="言語id", value=tweet['lang'])
-                                        .add_field(name="ツイートの色", value=tweet['color'])
-                                        )
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="ツイートの情報を取得しました。",
+                description=tweet.get("text", "なし"),
+                color=discord.Color.green(),
+                url=tweet["url"],
+            )
+            .set_author(
+                name=tweet["author"]["name"], icon_url=tweet["author"]["avatar_url"]
+            )
+            .add_field(name="名前", value=tweet["author"]["name"])
+            .add_field(name="スクリーン名前", value=tweet["author"]["screen_name"])
+            .add_field(name="アバターの色", value=tweet["author"]["avatar_color"])
+            .add_field(name="投稿日時", value=tweet.get("created_at", "取得失敗"))
+            .add_field(name="リツイート回数", value=str(tweet["retweets"]) + "回")
+            .add_field(name="いいね回数", value=str(tweet["likes"]) + "回")
+            .add_field(name="表示回数", value=str(tweet["views"]) + "回")
+            .add_field(name="返信回数", value=str(tweet["replies"]) + "回")
+            .add_field(name="機種", value=source)
+            .add_field(name="言語id", value=tweet["lang"])
+            .add_field(name="ツイートの色", value=tweet["color"])
+        )
+
 
 class NetworkGroup(app_commands.Group):
     def __init__(self):
-        super().__init__(name="network", description="ネットワークツール系コマンドです。")
+        super().__init__(
+            name="network", description="ネットワークツール系コマンドです。"
+        )
 
     @app_commands.command(name="whois", description="Whoisします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -801,7 +862,9 @@ class NetworkGroup(app_commands.Group):
                             categorized_records[record_type] = []
                         categorized_records[record_type].append(record_entry)
 
-                embed = make_embed.success_embed(title="NSLookupをしてDNS情報を取得しました。")
+                embed = make_embed.success_embed(
+                    title="NSLookupをしてDNS情報を取得しました。"
+                )
 
                 for record_type, entries in categorized_records.items():
                     value_text = "\n".join(entries)
@@ -850,11 +913,15 @@ class NetworkGroup(app_commands.Group):
                 )
             )
 
-    @app_commands.command(name="webshot", description="スクリーンショットを撮影します。")
+    @app_commands.command(
+        name="webshot", description="スクリーンショットを撮影します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def webshot(self, interaction: discord.Interaction, url: str):
-        return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="現在は一時封鎖中です。"))
+        return await interaction.response.send_message(
+            ephemeral=True, embed=make_embed.error_embed(title="現在は一時封鎖中です。")
+        )
         if not is_url.search(url):
             return await interaction.response.send_message(
                 ephemeral=True, content="URLを入力してください。"
@@ -898,7 +965,10 @@ class NetworkGroup(app_commands.Group):
         )
 
         filepath = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{filename}"
-        embed = make_embed.success_embed(title="スクリーンショットを撮影しました。", description="一日の終わりにファイルが削除されます。")
+        embed = make_embed.success_embed(
+            title="スクリーンショットを撮影しました。",
+            description="一日の終わりにファイルが削除されます。",
+        )
         await interaction.followup.send(
             embed=embed,
             view=discord.ui.View().add_item(
@@ -909,27 +979,29 @@ class NetworkGroup(app_commands.Group):
     @app_commands.command(name="ping", description="ドメインにpingを送信します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def ping_domein(self, interaction: discord.Interaction, ドメイン: str, ポート: int):
+    async def ping_domein(
+        self, interaction: discord.Interaction, ドメイン: str, ポート: int
+    ):
         await interaction.response.defer()
         data = {
-            'params': f'target_domain={ドメイン}&target_port={ポート}',
+            "params": f"target_domain={ドメイン}&target_port={ポート}",
         }
 
         headers = {
-            'accept': 'application/json, text/javascript, */*; q=0.01',
-            'accept-language': 'ja,en-US;q=0.9,en;q=0.8',
-            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'origin': 'https://tech-unlimited.com',
-            'priority': 'u=1, i',
-            'referer': 'https://tech-unlimited.com/ping.html',
-            'sec-ch-ua': '"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
-            'x-requested-with': 'XMLHttpRequest'
+            "accept": "application/json, text/javascript, */*; q=0.01",
+            "accept-language": "ja,en-US;q=0.9,en;q=0.8",
+            "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "origin": "https://tech-unlimited.com",
+            "priority": "u=1, i",
+            "referer": "https://tech-unlimited.com/ping.html",
+            "sec-ch-ua": '"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+            "x-requested-with": "XMLHttpRequest",
         }
 
         async with aiohttp.ClientSession() as session:
@@ -937,11 +1009,19 @@ class NetworkGroup(app_commands.Group):
                 "https://tech-unlimited.com/proc/ping.php", data=data, headers=headers
             ) as response:
                 text = await response.text()
-                
+
                 check = json.loads(text)
-                await interaction.followup.send(embed=make_embed.success_embed(title="ドメインにPingを送信しました。")
-                                                .add_field(name="ステータス", value=check['result'], inline=False)
-                                                .add_field(name="反応までかかった時間", value=check['response_time'], inline=False))
+                await interaction.followup.send(
+                    embed=make_embed.success_embed(
+                        title="ドメインにPingを送信しました。"
+                    )
+                    .add_field(name="ステータス", value=check["result"], inline=False)
+                    .add_field(
+                        name="反応までかかった時間",
+                        value=check["response_time"],
+                        inline=False,
+                    )
+                )
 
     @app_commands.command(name="meta", description="サイトのメタデータを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -949,9 +1029,9 @@ class NetworkGroup(app_commands.Group):
     async def sites_meta(self, interaction: discord.Interaction, url: str):
         await interaction.response.defer()
 
-        connector = aiohttp_socks.ProxyConnector('127.0.0.1', port=9050)
+        connector = aiohttp_socks.ProxyConnector("127.0.0.1", port=9050)
         async with aiohttp.ClientSession(connector=connector) as session:
-            async with session.get('https://rakko.tools/tools/34/') as response:
+            async with session.get("https://rakko.tools/tools/34/") as response:
                 regex = r"var (?:tokenId|token) = '([^']+)'"
 
                 text = await response.text()
@@ -959,35 +1039,58 @@ class NetworkGroup(app_commands.Group):
                 match = re.findall(regex, text)
 
                 data = {
-                    'token_id': match[0],
-                    'token': match[1],
-                    'value': url,
+                    "token_id": match[0],
+                    "token": match[1],
+                    "value": url,
                 }
 
                 headers = {
-                    'accept': 'application/json, text/javascript, */*; q=0.01',
-                    'accept-language': 'ja,en-US;q=0.9,en;q=0.8',
-                    'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'origin': 'https://rakko.tools',
-                    'priority': 'u=1, i',
-                    'referer': 'https://rakko.tools/tools/34/',
-                    'sec-ch-ua': '"Google Chrome";v="141", "Not?A_Brand";v="8", "Chromium";v="141"',
-                    'sec-ch-ua-mobile': '?0',
-                    'sec-ch-ua-platform': '"Windows"',
-                    'sec-fetch-dest': 'empty',
-                    'sec-fetch-mode': 'cors',
-                    'sec-fetch-site': 'same-origin',
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
-                    'x-requested-with': 'XMLHttpRequest',
+                    "accept": "application/json, text/javascript, */*; q=0.01",
+                    "accept-language": "ja,en-US;q=0.9,en;q=0.8",
+                    "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+                    "origin": "https://rakko.tools",
+                    "priority": "u=1, i",
+                    "referer": "https://rakko.tools/tools/34/",
+                    "sec-ch-ua": '"Google Chrome";v="141", "Not?A_Brand";v="8", "Chromium";v="141"',
+                    "sec-ch-ua-mobile": "?0",
+                    "sec-ch-ua-platform": '"Windows"',
+                    "sec-fetch-dest": "empty",
+                    "sec-fetch-mode": "cors",
+                    "sec-fetch-site": "same-origin",
+                    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+                    "x-requested-with": "XMLHttpRequest",
                 }
 
-                async with session.post('https://rakko.tools/tools/34/urlToTitleController.php', data=data, headers=headers) as response_2:
+                async with session.post(
+                    "https://rakko.tools/tools/34/urlToTitleController.php",
+                    data=data,
+                    headers=headers,
+                ) as response_2:
                     js = json.loads(await response_2.text())
 
-                    await interaction.followup.send(embed=make_embed.success_embed(title="サイトのメタデータを取得しました。")
-                                                    .add_field(name="サイト名", value=js['result'][0].get('title', '取得失敗'), inline=False)
-                                                    .add_field(name="サイト説明", value=js['result'][0].get('metadata_description', '取得失敗'), inline=False)
-                                                    .add_field(name="ロボット", value=js['result'][0].get('metadata_robot', '取得失敗'), inline=False))
+                    await interaction.followup.send(
+                        embed=make_embed.success_embed(
+                            title="サイトのメタデータを取得しました。"
+                        )
+                        .add_field(
+                            name="サイト名",
+                            value=js["result"][0].get("title", "取得失敗"),
+                            inline=False,
+                        )
+                        .add_field(
+                            name="サイト説明",
+                            value=js["result"][0].get(
+                                "metadata_description", "取得失敗"
+                            ),
+                            inline=False,
+                        )
+                        .add_field(
+                            name="ロボット",
+                            value=js["result"][0].get("metadata_robot", "取得失敗"),
+                            inline=False,
+                        )
+                    )
+
 
 class ToolsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -1106,22 +1209,37 @@ class ToolsCog(commands.Cog):
     @app_commands.choices(
         操作モード=[
             app_commands.Choice(name="PC・Web", value="pc"),
-            app_commands.Choice(name="スマホ・タブレット", value="phone")
+            app_commands.Choice(name="スマホ・タブレット", value="phone"),
         ]
     )
-    async def tools_embed(self, interaction: discord.Interaction, 操作モード: app_commands.Choice[str] = None):
+    async def tools_embed(
+        self,
+        interaction: discord.Interaction,
+        操作モード: app_commands.Choice[str] = None,
+    ):
         async def send_pc_embed_builder():
-            await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="埋め込みタイトル", description="埋め込み説明です", color=discord.Color.green()).set_author(
+            await interaction.response.send_message(
+                ephemeral=True,
+                embed=discord.Embed(
+                    title="埋め込みタイトル",
+                    description="埋め込み説明です",
+                    color=discord.Color.green(),
+                )
+                .set_author(
                     name=f"{interaction.user.name}",
                     icon_url=interaction.user.avatar.url
                     if interaction.user.avatar
                     else interaction.user.default_avatar.url,
-                ).set_footer(
-                        text=f"{interaction.guild.name} | {interaction.guild.id}",
-                        icon_url=interaction.guild.icon.url
-                        if interaction.guild.icon
-                        else interaction.user.default_avatar.url,
-                    ), view=EmbedBuilder())
+                )
+                .set_footer(
+                    text=f"{interaction.guild.name} | {interaction.guild.id}",
+                    icon_url=interaction.guild.icon.url
+                    if interaction.guild.icon
+                    else interaction.user.default_avatar.url,
+                ),
+                view=EmbedBuilder(),
+            )
+
         if not 操作モード:
             is_pc = interaction.user.client_status.is_on_mobile()
             if not is_pc:
@@ -1157,23 +1275,36 @@ class ToolsCog(commands.Cog):
             view=discord.ui.View().add_item(discord.ui.Button(label=ラベル, url=url))
         )
 
-    @tools.command(name="choice", description="自分だけが見えるようにBotが選んでくれます。")
+    @tools.command(
+        name="choice", description="自分だけが見えるようにBotが選んでくれます。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tools_choice(
-        self, interaction: discord.Interaction, 選択肢1: str, 選択肢2: str, 選択肢3: str = None, 選択肢4: str = None, 選択肢5: str = None
+        self,
+        interaction: discord.Interaction,
+        選択肢1: str,
+        選択肢2: str,
+        選択肢3: str = None,
+        選択肢4: str = None,
+        選択肢5: str = None,
     ):
-        choices = [c for c in [選択肢1, 選択肢2, 選択肢3, 選択肢4, 選択肢5] if c != None]
+        choices = [
+            c for c in [選択肢1, 選択肢2, 選択肢3, 選択肢4, 選択肢5] if c != None
+        ]
         choiced = random.choice(choices)
-        await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="Botが選びました。", description=choiced))
+        await interaction.response.send_message(
+            ephemeral=True,
+            embed=make_embed.success_embed(
+                title="Botが選びました。", description=choiced
+            ),
+        )
 
     @tools.command(name="timestamp", description="タイムスタンプを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def tools_timestamp(
-        self, interaction: discord.Interaction, 時間: str
-    ):
+    async def tools_timestamp(self, interaction: discord.Interaction, 時間: str):
         def parse_time(timestr: str):
             match = TIMESTAMP_REGEX.fullmatch(timestr.strip().lower())
             if not match:
@@ -1186,18 +1317,50 @@ class ToolsCog(commands.Cog):
                 minutes=int(minutes),
                 seconds=int(seconds),
             )
+
         try:
             timed = parse_time(時間)
         except ValueError:
-            return await interaction.response.send_message(ephemeral=True, content="時間の形式が正しくありません。\nサンプル: `2h3m`")
+            return await interaction.response.send_message(
+                ephemeral=True,
+                content="時間の形式が正しくありません。\nサンプル: `2h3m`",
+            )
         text = ""
-        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "t")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "t") + "\n"
-        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "T")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "T") + "\n"
-        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "d")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "d") + "\n"
-        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "D")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "D") + "\n"
-        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "f")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "f") + "\n"
-        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "F")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "F") + "\n"
-        text += f'`{discord.utils.format_dt(discord.utils.utcnow() + timed, "R")}` -> ' + discord.utils.format_dt(discord.utils.utcnow() + timed, "R") + "\n"
+        text += (
+            f"`{discord.utils.format_dt(discord.utils.utcnow() + timed, 't')}` -> "
+            + discord.utils.format_dt(discord.utils.utcnow() + timed, "t")
+            + "\n"
+        )
+        text += (
+            f"`{discord.utils.format_dt(discord.utils.utcnow() + timed, 'T')}` -> "
+            + discord.utils.format_dt(discord.utils.utcnow() + timed, "T")
+            + "\n"
+        )
+        text += (
+            f"`{discord.utils.format_dt(discord.utils.utcnow() + timed, 'd')}` -> "
+            + discord.utils.format_dt(discord.utils.utcnow() + timed, "d")
+            + "\n"
+        )
+        text += (
+            f"`{discord.utils.format_dt(discord.utils.utcnow() + timed, 'D')}` -> "
+            + discord.utils.format_dt(discord.utils.utcnow() + timed, "D")
+            + "\n"
+        )
+        text += (
+            f"`{discord.utils.format_dt(discord.utils.utcnow() + timed, 'f')}` -> "
+            + discord.utils.format_dt(discord.utils.utcnow() + timed, "f")
+            + "\n"
+        )
+        text += (
+            f"`{discord.utils.format_dt(discord.utils.utcnow() + timed, 'F')}` -> "
+            + discord.utils.format_dt(discord.utils.utcnow() + timed, "F")
+            + "\n"
+        )
+        text += (
+            f"`{discord.utils.format_dt(discord.utils.utcnow() + timed, 'R')}` -> "
+            + discord.utils.format_dt(discord.utils.utcnow() + timed, "R")
+            + "\n"
+        )
         await interaction.response.send_message(content=text)
 
     @commands.Cog.listener(name="on_interaction")
@@ -1209,6 +1372,7 @@ class ToolsCog(commands.Cog):
                 except:
                     return
                 if custom_id == "todo_add+":
+
                     class TodoAddModal(discord.ui.Modal):
                         def __init__(self):
                             super().__init__(title="Todoに追加", timeout=180)
@@ -1217,33 +1381,71 @@ class ToolsCog(commands.Cog):
                             text="やることを入力",
                             description="やることを入力してください。",
                             component=discord.ui.TextInput(
-                                style=discord.TextStyle.short, max_length=30, required=True
+                                style=discord.TextStyle.short,
+                                max_length=30,
+                                required=True,
                             ),
                         )
 
                         async def on_submit(self, interaction: discord.Interaction):
-                            await interaction.response.defer(ephemeral=True, thinking=False)
-                            
+                            await interaction.response.defer(
+                                ephemeral=True, thinking=False
+                            )
+
                             assert isinstance(self.text.component, discord.ui.TextInput)
 
                             msg = interaction.message.embeds[0].description
                             if interaction.message.embeds[0].description:
-                                count = len(interaction.message.embeds[0].description.split('\n')) + 1
-                                msg = msg + f"\n{count}. {self.text.component.value.replace('.', '')} .. ❌"
+                                count = (
+                                    len(
+                                        interaction.message.embeds[0].description.split(
+                                            "\n"
+                                        )
+                                    )
+                                    + 1
+                                )
+                                msg = (
+                                    msg
+                                    + f"\n{count}. {self.text.component.value.replace('.', '')} .. ❌"
+                                )
                             else:
                                 msg = f"\n1. {self.text.component.value.replace('.', '')} .. ❌\n"
-                            em = discord.Embed(title=interaction.message.embeds[0].title, description=msg, color=interaction.message.embeds[0].color)
+                            em = discord.Embed(
+                                title=interaction.message.embeds[0].title,
+                                description=msg,
+                                color=interaction.message.embeds[0].color,
+                            )
                             await interaction.message.edit(embed=em)
+
                     await interaction.response.send_modal(TodoAddModal())
                 elif custom_id == "todo_end+":
                     if interaction.message.embeds[0].description:
-                        todo_s = [discord.SelectOption(label=t.split(' .. ')[0].split('. ')[1], value=t.split(' .. ')[0].split('. ')[1]) for t in interaction.message.embeds[0].description.split('\n') if t.split(' .. ')[1] == "❌"]
-                        await interaction.response.send_message(ephemeral=True, content=f"どれを終了させる？\n{interaction.message.id}", view=discord.ui.View()
-                                                                .add_item(discord.ui.Select(custom_id="todo_end_select+", placeholder="終了させるTodoを選択", options=todo_s)))
+                        todo_s = [
+                            discord.SelectOption(
+                                label=t.split(" .. ")[0].split(". ")[1],
+                                value=t.split(" .. ")[0].split(". ")[1],
+                            )
+                            for t in interaction.message.embeds[0].description.split(
+                                "\n"
+                            )
+                            if t.split(" .. ")[1] == "❌"
+                        ]
+                        await interaction.response.send_message(
+                            ephemeral=True,
+                            content=f"どれを終了させる？\n{interaction.message.id}",
+                            view=discord.ui.View().add_item(
+                                discord.ui.Select(
+                                    custom_id="todo_end_select+",
+                                    placeholder="終了させるTodoを選択",
+                                    options=todo_s,
+                                )
+                            ),
+                        )
                     else:
-                        return await interaction.response.send_message(ephemeral=True, content="まだTodoがありません。")
+                        return await interaction.response.send_message(
+                            ephemeral=True, content="まだTodoがありません。"
+                        )
                 elif custom_id == "todo_delete+":
-
                     embed = interaction.message.embeds[0]
                     if embed.description:
                         todo_s = [
@@ -1284,14 +1486,17 @@ class ToolsCog(commands.Cog):
 
                 if custom_id.startswith("todo_end_select+"):
                     await interaction.response.defer(ephemeral=True)
-                    original_msg_id = int(interaction.message.content.split('\n')[1])
+                    original_msg_id = int(interaction.message.content.split("\n")[1])
                     msg = await interaction.channel.fetch_message(original_msg_id)
 
                     embed = msg.embeds[0]
                     desc = embed.description
 
                     for t in desc.split("\n"):
-                        if t.split(" .. ")[0].split(". ")[1] == interaction.data["values"][0]:
+                        if (
+                            t.split(" .. ")[0].split(". ")[1]
+                            == interaction.data["values"][0]
+                        ):
                             new_line = t.replace("❌", "✅")
                             desc = desc.replace(t, new_line)
                             break
@@ -1307,7 +1512,7 @@ class ToolsCog(commands.Cog):
                         ephemeral=True, content="Todoを完了しました"
                     )
                 elif custom_id.startswith("todo_delete_select+"):
-                    original_msg_id = int(interaction.message.content.split('\n')[1])
+                    original_msg_id = int(interaction.message.content.split("\n")[1])
                     msg = await interaction.channel.fetch_message(original_msg_id)
 
                     embed = msg.embeds[0]
@@ -1315,11 +1520,17 @@ class ToolsCog(commands.Cog):
 
                     new_lines = []
                     for t in desc.split("\n"):
-                        if t.split(" .. ")[0].split(". ")[1] != interaction.data["values"][0]:
+                        if (
+                            t.split(" .. ")[0].split(". ")[1]
+                            != interaction.data["values"][0]
+                        ):
                             new_lines.append(t)
 
                     new_desc = "\n".join(
-                        [f"{i+1}. {line.split('. ',1)[1]}" for i, line in enumerate(new_lines)]
+                        [
+                            f"{i + 1}. {line.split('. ', 1)[1]}"
+                            for i, line in enumerate(new_lines)
+                        ]
                     )
 
                     em = discord.Embed(
@@ -1341,11 +1552,25 @@ class ToolsCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def todo(self, interaction: discord.Interaction, タイトル: str):
         view = discord.ui.View()
-        view.add_item(discord.ui.Button(label="追加", style=discord.ButtonStyle.blurple, custom_id="todo_add+"))
-        view.add_item(discord.ui.Button(label="完了", style=discord.ButtonStyle.green, custom_id="todo_end+"))
-        view.add_item(discord.ui.Button(label="削除", style=discord.ButtonStyle.red, custom_id="todo_delete+"))
-        await interaction.response.send_message(embed=discord.Embed(title=タイトル, color=discord.Color.blue()), view=view)
-        
+        view.add_item(
+            discord.ui.Button(
+                label="追加", style=discord.ButtonStyle.blurple, custom_id="todo_add+"
+            )
+        )
+        view.add_item(
+            discord.ui.Button(
+                label="完了", style=discord.ButtonStyle.green, custom_id="todo_end+"
+            )
+        )
+        view.add_item(
+            discord.ui.Button(
+                label="削除", style=discord.ButtonStyle.red, custom_id="todo_delete+"
+            )
+        )
+        await interaction.response.send_message(
+            embed=discord.Embed(title=タイトル, color=discord.Color.blue()), view=view
+        )
+
     @tools.command(name="invite", description="招待リンクを作成します。")
     @app_commands.checks.has_permissions(create_instant_invite=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -1371,10 +1596,10 @@ class ToolsCog(commands.Cog):
                 "https://www.uuidtools.com/api/generate/v1"
             ) as response:
                 jso = await response.json()
-                embed = make_embed.success_embed(title="UUIDを生成しました。", description=jso[0])
-                await interaction.followup.send(
-                    embed=embed
+                embed = make_embed.success_embed(
+                    title="UUIDを生成しました。", description=jso[0]
                 )
+                await interaction.followup.send(embed=embed)
 
     @tools.command(name="short", description="短縮urlを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -1438,7 +1663,7 @@ class ToolsCog(commands.Cog):
                     "https://shb.red/shorten", params={"url": url}
                 ) as response:
                     url_ = await response.json()
-                    url_ = url_['short_url'].replace('http', 'https')
+                    url_ = url_["short_url"].replace("http", "https")
         embed = make_embed.success_embed(title="URLを短縮しました。", description=url_)
         await interaction.followup.send(
             embed=embed,
@@ -1462,9 +1687,7 @@ class ToolsCog(commands.Cog):
             upsert=True,
         )
         embed = make_embed.success_embed(title="AFKを設定しました。", description=理由)
-        await interaction.followup.send(
-            embed=embed
-        )
+        await interaction.followup.send(embed=embed)
 
     @tools.command(name="timer", description="タイマーをセットします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -1541,10 +1764,10 @@ class ToolsCog(commands.Cog):
                 async def on_submit(self, interaction_: discord.Interaction):
                     await interaction_.response.defer()
                     embed = make_embed.success_embed(title="QRコードを作成しました。")
-                    embed.set_image(url=f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={self.url.value}")
-                    await interaction_.followup.send(
-                        embed=embed
+                    embed.set_image(
+                        url=f"https://api.qrserver.com/v1/create-qr-code/?size=500x500&data={self.url.value}"
                     )
+                    await interaction_.followup.send(embed=embed)
 
             await interaction.response.send_modal(CreateModal())
         elif 操作.value == "read":
@@ -1560,10 +1783,10 @@ class ToolsCog(commands.Cog):
                 await interaction.followup.send("QRコードが見つかりませんでした。")
                 return
             results = "\n".join([obj.data.decode("utf-8") for obj in decoded_objects])
-            embed = make_embed.success_embed(title="QRコード読み取りました。", description=f"```{results}```")
-            await interaction.followup.send(
-                embed=embed
+            embed = make_embed.success_embed(
+                title="QRコード読み取りました。", description=f"```{results}```"
             )
+            await interaction.followup.send(embed=embed)
             i_.close()
             await asyncio.to_thread(img.close)
 
@@ -1594,7 +1817,10 @@ class ToolsCog(commands.Cog):
                 for dt, w in zip(time_defs, weathers):
                     weather_info.append((dt, w))
 
-                embed = make_embed.success_embed(title=f"{場所.name} の天気を取得しました。", description="気象庁データを元にしています")
+                embed = make_embed.success_embed(
+                    title=f"{場所.name} の天気を取得しました。",
+                    description="気象庁データを元にしています",
+                )
 
                 for dt, w in weather_info:
                     embed.add_field(name=dt, value=w, inline=False)
@@ -1613,10 +1839,10 @@ class ToolsCog(commands.Cog):
                 return None
             time_params = {k: int(v) if v else 0 for k, v in match.groupdict().items()}
             return (
-                time_params["days"] * 86400 +
-                time_params["hours"] * 3600 +
-                time_params["minutes"] * 60 +
-                time_params["seconds"]
+                time_params["days"] * 86400
+                + time_params["hours"] * 3600
+                + time_params["minutes"] * 60
+                + time_params["seconds"]
             )
 
         seconds = parse_time(時間)
@@ -1624,38 +1850,44 @@ class ToolsCog(commands.Cog):
             embed = discord.Embed(
                 title="時間の指定が正しくありません。",
                 description="例: `1d2h3m4s`",
-                color=discord.Color.red()
+                color=discord.Color.red(),
             )
             return await interaction.response.send_message(embed=embed, ephemeral=True)
 
         await self.bot.reminder_create(
             datetime.timedelta(seconds=seconds),
-            "reminder_sendtime",        # イベント名
-            interaction.user.id,           # args
-            interaction.guild.id, # args
+            "reminder_sendtime",  # イベント名
+            interaction.user.id,  # args
+            interaction.guild.id,  # args
             channel_id=interaction.channel_id,
-            reason=要件
+            reason=要件,
         )
 
         embed = make_embed.success_embed(
             title="リマインダーをセットしました。",
-            description=f"{seconds}秒後に通知します。"
+            description=f"{seconds}秒後に通知します。",
         )
 
         await interaction.response.send_message(embed=embed)
-    
-    @commands.Cog.listener('on_reminder_sendtime')
+
+    @commands.Cog.listener("on_reminder_sendtime")
     async def on_reminder_sendtime_main(self, user_id: int, guild_id: int, **kwargs):
-        channel_id = kwargs.get('channel_id')
-        reason = kwargs.get('reason')
-        print(f'リマインダーの時間になりました: {user_id}')
+        channel_id = kwargs.get("channel_id")
+        reason = kwargs.get("reason")
+        print(f"リマインダーの時間になりました: {user_id}")
         guild = self.bot.get_guild(guild_id)
         if not guild:
             return
         channel = guild.get_channel(channel_id)
         if channel:
             try:
-                await channel.send(embed=make_embed.success_embed(title="リマインダーのセットされた時間になりました。", description=reason), content=f"<@{user_id}>")
+                await channel.send(
+                    embed=make_embed.success_embed(
+                        title="リマインダーのセットされた時間になりました。",
+                        description=reason,
+                    ),
+                    content=f"<@{user_id}>",
+                )
             except:
                 return
 
@@ -1708,7 +1940,9 @@ class ToolsCog(commands.Cog):
                         if day == day_today:
                             x0, y0 = col * cell_w, (row + 2) * cell_h
                             x1, y1 = x0 + cell_w, y0 + cell_h
-                            draw.rectangle([x0, y0, x1, y1], fill="#ffe5e5", outline="red", width=3)
+                            draw.rectangle(
+                                [x0, y0, x1, y1], fill="#ffe5e5", outline="red", width=3
+                            )
 
                         draw.text((x, y), str(day), font=font, fill="black")
 
@@ -1749,7 +1983,7 @@ class ToolsCog(commands.Cog):
     async def download(self, interaction: discord.Interaction, タイプ: str, url: str):
         if タイプ == "いらすとや":
             await interaction.response.defer()
-            
+
             if not IRASUTOTA_REGEX.match(url):
                 await interaction.followup.send(
                     embed=discord.Embed(
@@ -1808,18 +2042,30 @@ class ToolsCog(commands.Cog):
             async with aiohttp.ClientSession() as session:
                 async with session.get(api_url) as resp:
                     if resp.status != 200:
-                        return await interaction.followup.send("APIリクエストに失敗しました")
+                        return await interaction.followup.send(
+                            "APIリクエストに失敗しました"
+                        )
                     data = await resp.json()
 
             tweet = data["tweet"]
 
-            if "media" not in tweet or "videos" not in tweet["media"] or not tweet["media"]["videos"]:
-                return await interaction.followup.send("このツイートには動画がありません")
+            if (
+                "media" not in tweet
+                or "videos" not in tweet["media"]
+                or not tweet["media"]["videos"]
+            ):
+                return await interaction.followup.send(
+                    "このツイートには動画がありません"
+                )
 
-            videos_under_1080p = [v for v in tweet["media"]["videos"] if v.get("height", 9999) <= 1080]
+            videos_under_1080p = [
+                v for v in tweet["media"]["videos"] if v.get("height", 9999) <= 1080
+            ]
 
             if not videos_under_1080p:
-                return await interaction.followup.send("1080p以下の動画が見つかりませんでした")
+                return await interaction.followup.send(
+                    "1080p以下の動画が見つかりませんでした"
+                )
 
             embeds = []
             buttons = []
@@ -1829,21 +2075,25 @@ class ToolsCog(commands.Cog):
                     title="X(Twitter)にある動画のダウンロード",
                     url=tweet["url"],
                     description=tweet.get("text", ""),
-                    color=discord.Color.green()
+                    color=discord.Color.green(),
                 )
-                embed.set_author(name=tweet["author"]["name"], icon_url=tweet["author"]["avatar_url"])
+                embed.set_author(
+                    name=tweet["author"]["name"], icon_url=tweet["author"]["avatar_url"]
+                )
                 embed.set_image(url=video["thumbnail_url"])
 
                 button = discord.ui.Button(
                     label=f"動画{index}",
                     style=discord.ButtonStyle.link,
-                    url=video["url"]
+                    url=video["url"],
                 )
 
                 embeds.append(embed)
                 buttons.append(button)
 
-            await interaction.followup.send(embeds=embeds, view=discord.ui.View().add_item(*buttons), ephemeral=True)
+            await interaction.followup.send(
+                embeds=embeds, view=discord.ui.View().add_item(*buttons), ephemeral=True
+            )
         else:
             embed = discord.Embed(
                 title="タイプが見つかりません。", color=discord.Color.red()

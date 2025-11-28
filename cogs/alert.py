@@ -16,6 +16,7 @@ ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
+
 class AlertCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -41,9 +42,9 @@ class AlertCog(commands.Cog):
 
                 news_db = self.bot.async_db["Main"].NewsAlert
                 async for n in news_db.find({}):
-                    guild= self.bot.get_guild(n.get('Guild', 0))
+                    guild = self.bot.get_guild(n.get("Guild", 0))
                     if guild:
-                        channel = guild.get_channel(n.get('Channel', 0))
+                        channel = guild.get_channel(n.get("Channel", 0))
                         if channel:
                             mention = await self.get_mention(guild, channel.id)
                             mention = mention if mention else ""
@@ -130,13 +131,13 @@ class AlertCog(commands.Cog):
         if チャンネル:
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
+                {"$set": {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="イベント作成時に通知するチャンネルを設定しました。",
-                    description="`/alert event`で、チャンネルを指定しなければ無効化できます。"
+                    description="`/alert event`で、チャンネルを指定しなければ無効化できます。",
                 ),
                 ephemeral=True,
             )
@@ -162,13 +163,13 @@ class AlertCog(commands.Cog):
         if チャンネル:
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
+                {"$set": {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="ニュースを通知するチャンネルを設定しました。",
-                    description="`/alert news`で、チャンネルを指定しなければ無効化できます。"
+                    description="`/alert news`で、チャンネルを指定しなければ無効化できます。",
                 ),
                 ephemeral=True,
             )
@@ -200,7 +201,7 @@ class AlertCog(commands.Cog):
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="アラート時にメンションするようにしました。",
-                    description=f"{ロール.mention}"
+                    description=f"{ロール.mention}",
                 ),
                 ephemeral=True,
             )

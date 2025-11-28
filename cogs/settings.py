@@ -53,6 +53,7 @@ class CommandDisableChannel(commands.CommandError):
 class BanBotError(commands.CommandError):
     pass
 
+
 DISCORD_EMOJI_RE = re.compile(r"<(a?):([a-zA-Z0-9_]{1,32}):([0-9]{17,22})>")
 UNICODE_EMOJI_RE = re.compile(
     r"["
@@ -65,22 +66,21 @@ UNICODE_EMOJI_RE = re.compile(
     r"\U0001F830-\U0001F8FF"  # Supplemental Symbols and Pictographs (continued)
     r"\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs (more modern emojis)
     r"\U00002600-\U000027BF"  # Miscellaneous Symbols
-    r"\U00002B50"             # Star symbol
+    r"\U00002B50"  # Star symbol
     r"]+",
-    flags=re.UNICODE
+    flags=re.UNICODE,
 )
 COMBINED_EMOJI_RE = re.compile(
     r"<a?:[a-zA-Z0-9_]{1,32}:[0-9]{17,22}>|" + UNICODE_EMOJI_RE.pattern,
     flags=re.UNICODE | re.DOTALL,
 )
 
+
 class DiceSettingGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="dice", description="ダイスを設定します。")
 
-    @app_commands.command(
-        name="dice", description="ダイスの設定を変更します。"
-    )
+    @app_commands.command(name="dice", description="ダイスの設定を変更します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -95,22 +95,19 @@ class DiceSettingGroup(app_commands.Group):
             return await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="ダイスを有効化しました。",
-                    description="反応する言葉の例: `3d8`, `9d3`, `ダイス`, `dd`, `🎲`, `チンチロ`"
+                    description="反応する言葉の例: `3d8`, `9d3`, `ダイス`, `dd`, `🎲`, `チンチロ`",
                 )
             )
         else:
             result = await db.delete_one({"Guild": interaction.guild.id})
             if result.deleted_count == 0:
                 return await interaction.response.send_message(
-                    embed=make_embed.error_embed(
-                        title="ダイスは有効化されていません。"
-                    )
+                    embed=make_embed.error_embed(title="ダイスは有効化されていません。")
                 )
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="ダイスを無効化しました。"
-                )
+                embed=make_embed.success_embed(title="ダイスを無効化しました。")
             )
+
 
 class CommandsManageGroup(app_commands.Group):
     def __init__(self):
@@ -213,7 +210,9 @@ class RoleCommands(app_commands.Group):
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def autorole_setting(self, interaction: discord.Interaction, ロール: discord.Role = None):
+    async def autorole_setting(
+        self, interaction: discord.Interaction, ロール: discord.Role = None
+    ):
         await interaction.response.defer()
         db = interaction.client.async_db["MainTwo"].AutoRole
         try:
@@ -222,13 +221,25 @@ class RoleCommands(app_commands.Group):
             return
         if ロール is None:
             if not dbfind is None:
-                _ = "\n".join([f"<@&{r}>" for r in dbfind.get('Roles', [])])
-                await interaction.followup.send(embed=make_embed.success_embed('現在のメンバー参加時のロール追加機能の設定', description=_ if _ else 'まだ設定がありません。')
-                                                .set_footer(text="設定を変更するにはこのコマンドにロールを指定してください。"))
+                _ = "\n".join([f"<@&{r}>" for r in dbfind.get("Roles", [])])
+                await interaction.followup.send(
+                    embed=make_embed.success_embed(
+                        "現在のメンバー参加時のロール追加機能の設定",
+                        description=_ if _ else "まだ設定がありません。",
+                    ).set_footer(
+                        text="設定を変更するにはこのコマンドにロールを指定してください。"
+                    )
+                )
                 return
             else:
-                await interaction.followup.send(embed=make_embed.success_embed('現在のメンバー参加時のロール追加機能の設定', description="まだ設定がありません。")
-                                                .set_footer(text="設定を変更するにはこのコマンドにロールを指定してください。"))
+                await interaction.followup.send(
+                    embed=make_embed.success_embed(
+                        "現在のメンバー参加時のロール追加機能の設定",
+                        description="まだ設定がありません。",
+                    ).set_footer(
+                        text="設定を変更するにはこのコマンドにロールを指定してください。"
+                    )
+                )
                 return
         message = ""
         if dbfind is None:
@@ -239,7 +250,7 @@ class RoleCommands(app_commands.Group):
             )
             message = f"{ロール.mention} をメンバー参加時に追加するようにします。"
         else:
-            if not ロール.id in dbfind.get('Roles', []):
+            if not ロール.id in dbfind.get("Roles", []):
                 await db.update_one(
                     {"Guild": interaction.guild.id},
                     {"$addToSet": {"Roles": ロール.id}},
@@ -253,7 +264,13 @@ class RoleCommands(app_commands.Group):
                     upsert=True,
                 )
                 message = f"{ロール.mention} をメンバー参加時に追加しないようにします。"
-        await interaction.followup.send(embed=make_embed.success_embed(title="メンバー参加時のロール追加機能の設定を変更しました。", description=message))
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="メンバー参加時のロール追加機能の設定を変更しました。",
+                description=message,
+            )
+        )
+
 
 class WelcomeCommands(app_commands.Group):
     def __init__(self):
@@ -298,12 +315,14 @@ class WelcomeCommands(app_commands.Group):
                             "Channel": interaction_.channel.id,
                             "Guild": interaction_.guild.id,
                         },
-                        {"$set": {
-                            "Channel": interaction_.channel.id,
-                            "Guild": interaction_.guild.id,
-                            "Title": self.etitle.value,
-                            "Description": self.desc.value,
-                        }},
+                        {
+                            "$set": {
+                                "Channel": interaction_.channel.id,
+                                "Guild": interaction_.guild.id,
+                                "Title": self.etitle.value,
+                                "Description": self.desc.value,
+                            }
+                        },
                         upsert=True,
                     )
                     await interaction_.response.send_message(
@@ -363,12 +382,14 @@ class WelcomeCommands(app_commands.Group):
                             "Channel": interaction_.channel.id,
                             "Guild": interaction_.guild.id,
                         },
-                        {"$set": {
-                            "Channel": interaction_.channel.id,
-                            "Guild": interaction_.guild.id,
-                            "Title": self.etitle.value,
-                            "Description": self.desc.value,
-                        }},
+                        {
+                            "$set": {
+                                "Channel": interaction_.channel.id,
+                                "Guild": interaction_.guild.id,
+                                "Title": self.etitle.value,
+                                "Description": self.desc.value,
+                            }
+                        },
                         upsert=True,
                     )
                     await interaction_.response.send_message(
@@ -426,12 +447,14 @@ class WelcomeCommands(app_commands.Group):
                             "Channel": interaction.channel.id,
                             "Guild": interaction.guild.id,
                         },
-                        {"$set": {
-                            "Channel": interaction.channel.id,
-                            "Guild": interaction.guild.id,
-                            "Title": self.etitle.value,
-                            "Description": self.desc.value,
-                        }},
+                        {
+                            "$set": {
+                                "Channel": interaction.channel.id,
+                                "Guild": interaction.guild.id,
+                                "Title": self.etitle.value,
+                                "Description": self.desc.value,
+                            }
+                        },
                         upsert=True,
                     )
                     await interaction_.response.send_message(
@@ -449,12 +472,12 @@ class WelcomeCommands(app_commands.Group):
                 }
             )
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="BANメッセージを無効化しました。"
-                )
+                embed=make_embed.success_embed(title="BANメッセージを無効化しました。")
             )
 
-    @app_commands.command(name="rta", description="即抜けをするとメッセージを送信するようにします。")
+    @app_commands.command(
+        name="rta", description="即抜けをするとメッセージを送信するようにします。"
+    )
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -465,22 +488,35 @@ class WelcomeCommands(app_commands.Group):
                 "Channel": interaction.channel.id,
                 "Guild": interaction.guild.id,
             },
-            {"$set": {
-                "Channel": interaction.channel.id,
-                "Guild": interaction.guild.id
-            }},
+            {
+                "$set": {
+                    "Channel": interaction.channel.id,
+                    "Guild": interaction.guild.id,
+                }
+            },
             upsert=True,
         )
-        await interaction.response.send_message(embed=make_embed.success_embed(title=f"即抜けメッセージを {'有効化' if 有効か else '無効化'} しました。", description="参加してから1分以内に退出するとメッセージを送信します。"))
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title=f"即抜けメッセージを {'有効化' if 有効か else '無効化'} しました。",
+                description="参加してから1分以内に退出するとメッセージを送信します。",
+            )
+        )
 
-    @app_commands.command(name="help", description="各メッセージのセットアップ方法のヘルプです。")
+    @app_commands.command(
+        name="help", description="各メッセージのセットアップ方法のヘルプです。"
+    )
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def welcome_help(self, interaction: discord.Interaction):
         await interaction.response.send_message(
-            embed=discord.Embed(title="各メッセージのセットアップ方法", color=discord.Color.green())
-            .add_field(name="よろしくメッセージ", value="""
+            embed=discord.Embed(
+                title="各メッセージのセットアップ方法", color=discord.Color.green()
+            )
+            .add_field(
+                name="よろしくメッセージ",
+                value="""
 タイトルと説明を設定して、
 メンバー参加時にメッセージを送信します。
 以下が該当コマンドです。
@@ -488,8 +524,12 @@ class WelcomeCommands(app_commands.Group):
 /settings welcome welcome
 ```
 また、参加したメンバーの名前などを送信させることもできます。
-""", inline=False)
-            .add_field(name="さようならメッセージ", value="""
+""",
+                inline=False,
+            )
+            .add_field(
+                name="さようならメッセージ",
+                value="""
 タイトルと説明を設定して、
 メンバー退出時にメッセージを送信します。
 以下が該当コマンドです。
@@ -497,8 +537,12 @@ class WelcomeCommands(app_commands.Group):
 /settings welcome goodbye
 ```
 また、退出したメンバーの名前などを送信させることもできます。
-""", inline=False)
-            .add_field(name="BANメッセージ", value="""
+""",
+                inline=False,
+            )
+            .add_field(
+                name="BANメッセージ",
+                value="""
 タイトルと説明を設定して、
 ユーザーBAN時にメッセージを送信します。
 以下が該当コマンドです。
@@ -506,16 +550,23 @@ class WelcomeCommands(app_commands.Group):
 /settings welcome ban
 ```
 また、BANしたユーザーの名前などを送信させることもできます。
-""", inline=False)
-            .add_field(name="置き換えられる文字列たち", value=f"""
+""",
+                inline=False,
+            )
+            .add_field(
+                name="置き換えられる文字列たち",
+                value=f"""
 これらの文字列は、メッセージ送信時に自動的に置き換えられます。
 ```
 <name> .. 名前に置きかえられる
 <count> .. 現在のメンバー数に置き換えられる
 <guild> .. サーバー名に置き換えられる
 <createdat> .. メンバーのアカウント作成日に置き換えられる
-```""", inline=False)
+```""",
+                inline=False,
+            )
         )
+
 
 class SettingCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -535,7 +586,7 @@ class SettingCog(commands.Cog):
     async def on_member_join_auto_role(self, member: discord.Member):
         if member.bot:
             return
-        
+
         db = self.bot.async_db["MainTwo"].AutoRole
         try:
             dbfind = await db.find_one({"Guild": member.guild.id}, {"_id": False})
@@ -543,7 +594,7 @@ class SettingCog(commands.Cog):
             return
         if dbfind is None:
             return
-        
+
         roles = dbfind.get("Roles")
         if not roles:
             return
@@ -566,7 +617,7 @@ class SettingCog(commands.Cog):
     async def on_member_remove_role_backup(self, member: discord.Member):
         if member.bot:
             return
-        
+
         db = self.bot.async_db["Main"].RoleRestore
         try:
             dbfind = await db.find_one({"Guild": member.guild.id}, {"_id": False})
@@ -581,14 +632,14 @@ class SettingCog(commands.Cog):
             await db_rs.update_one(
                 {"Guild": member.guild.id, "UserID": member.id},
                 {"$set": {"Roles": role_ids}},
-                upsert=True
+                upsert=True,
             )
 
     @commands.Cog.listener("on_member_join")
     async def on_member_join_role_restore(self, member: discord.Member):
         if member.bot:
             return
-        
+
         db = self.bot.async_db["Main"].RoleRestore
         try:
             dbfind = await db.find_one({"Guild": member.guild.id}, {"_id": False})
@@ -596,12 +647,13 @@ class SettingCog(commands.Cog):
             return
         if dbfind is None:
             return
-        
+
         db_rs = self.bot.async_db["Main"].RoleRestoreBackup
-        data = await db_rs.find_one_and_delete({"Guild": member.guild.id, "UserID": member.id})
+        data = await db_rs.find_one_and_delete(
+            {"Guild": member.guild.id, "UserID": member.id}
+        )
 
         if data and "Roles" in data:
-
             roles = [member.guild.get_role(rid) for rid in data["Roles"]]
             roles = [r for r in roles if r]
 
@@ -620,7 +672,9 @@ class SettingCog(commands.Cog):
             await asyncio.sleep(3)
 
             try:
-                embed = discord.Embed(title="ロールが復元されました。", color=discord.Color.green())
+                embed = discord.Embed(
+                    title="ロールが復元されました。", color=discord.Color.green()
+                )
                 if added_roles:
                     embed.add_field(name="復元したロール", value="\n".join(added_roles))
                 await member.send(embed=embed)
@@ -681,12 +735,14 @@ class SettingCog(commands.Cog):
             return
         cooldown_auto_translate[message.channel.id] = current_time
 
-        translator = await asyncio.to_thread(GoogleTranslator, source="auto", target=dbfind.get("Lang", "en"))
+        translator = await asyncio.to_thread(
+            GoogleTranslator, source="auto", target=dbfind.get("Lang", "en")
+        )
         translated_text = await asyncio.to_thread(translator.translate, message.content)
 
         embed = make_embed.success_embed(
             title=f"翻訳 ({dbfind.get('Lang', 'en')} へ)",
-            description=f"{translated_text}"
+            description=f"{translated_text}",
         ).set_footer(text="Google Translate")
 
         await message.reply(embed=embed)
@@ -908,18 +964,14 @@ class SettingCog(commands.Cog):
         db = self.bot.async_db["MainTwo"].AutoModLog
 
         try:
-
-            dbfind = await db.find_one(
-                {"Guild": guild.id}, {"_id": False}
-            )
-    
+            dbfind = await db.find_one({"Guild": guild.id}, {"_id": False})
 
             if dbfind is None:
                 return
         except:
             return
-        
-        channel = dbfind.get('Channel', None)
+
+        channel = dbfind.get("Channel", None)
         if not channel:
             return
         channel = guild.get_channel(channel)
@@ -1033,7 +1085,13 @@ class SettingCog(commands.Cog):
         if dbfind is None:
             await db.update_one(
                 {"Guild": message.guild.id, "User": message.author.id},
-                {'$set': {"Guild": message.guild.id, "User": message.author.id, "Score": 1}},
+                {
+                    "$set": {
+                        "Guild": message.guild.id,
+                        "User": message.author.id,
+                        "Score": 1,
+                    }
+                },
                 upsert=True,
             )
             try:
@@ -1044,18 +1102,26 @@ class SettingCog(commands.Cog):
         else:
             await db.update_one(
                 {"Guild": message.guild.id, "User": message.author.id},
-                {'$set': {
-                    "Guild": message.guild.id,
-                    "User": message.author.id,
-                    "Score": dbfind["Score"] + 1,
-                }},
+                {
+                    "$set": {
+                        "Guild": message.guild.id,
+                        "User": message.author.id,
+                        "Score": dbfind["Score"] + 1,
+                    }
+                },
                 upsert=True,
             )
             nowscore = dbfind["Score"] + 1
             if nowscore == 10:
                 await db.update_one(
                     {"Guild": message.guild.id, "User": message.author.id},
-                    {'$set': {"Guild": message.guild.id, "User": message.author.id, "Score": 0}},
+                    {
+                        "$set": {
+                            "Guild": message.guild.id,
+                            "User": message.author.id,
+                            "Score": 0,
+                        }
+                    },
                     upsert=True,
                 )
                 return await self.run_warn(10, message)
@@ -1081,7 +1147,7 @@ class SettingCog(commands.Cog):
         if dbfind is None:
             await db.update_one(
                 {"Guild": guild.id, "User": user.id},
-                {'$set': {"Guild": guild.id, "User": user.id, "Score": 1}},
+                {"$set": {"Guild": guild.id, "User": user.id, "Score": 1}},
                 upsert=True,
             )
             try:
@@ -1092,14 +1158,20 @@ class SettingCog(commands.Cog):
         else:
             await db.update_one(
                 {"Guild": guild.id, "User": user.id},
-                {'$set': {"Guild": guild.id, "User": user.id, "Score": dbfind["Score"] + 1}},
+                {
+                    "$set": {
+                        "Guild": guild.id,
+                        "User": user.id,
+                        "Score": dbfind["Score"] + 1,
+                    }
+                },
                 upsert=True,
             )
             nowscore = dbfind["Score"] + 1
             if nowscore == 10:
                 await db.update_one(
                     {"Guild": guild.id, "User": user.id},
-                    {'$set': {"Guild": guild.id, "User": user.id, "Score": 0}},
+                    {"$set": {"Guild": guild.id, "User": user.id, "Score": 0}},
                     upsert=True,
                 )
                 return await self.run_warn_automod(10, guild, user)
@@ -1123,7 +1195,7 @@ class SettingCog(commands.Cog):
         if dbfind is None:
             await db.update_one(
                 {"Guild": message.guild.id, "User": int_.user.id},
-                {'$set': {"Guild": message.guild.id, "User": int_.user.id, "Score": 1}},
+                {"$set": {"Guild": message.guild.id, "User": int_.user.id, "Score": 1}},
                 upsert=True,
             )
             try:
@@ -1134,18 +1206,26 @@ class SettingCog(commands.Cog):
         else:
             await db.update_one(
                 {"Guild": message.guild.id, "User": int_.user.id},
-                {'$set': {
-                    "Guild": message.guild.id,
-                    "User": int_.user.id,
-                    "Score": dbfind["Score"] + 1,
-                }},
+                {
+                    "$set": {
+                        "Guild": message.guild.id,
+                        "User": int_.user.id,
+                        "Score": dbfind["Score"] + 1,
+                    }
+                },
                 upsert=True,
             )
             nowscore = dbfind["Score"] + 1
             if nowscore == 10:
                 await db.update_one(
                     {"Guild": message.guild.id, "User": int_.user.id},
-                    {'$set': {"Guild": message.guild.id, "User": int_.user.id, "Score": 0}},
+                    {
+                        "$set": {
+                            "Guild": message.guild.id,
+                            "User": int_.user.id,
+                            "Score": 0,
+                        }
+                    },
                     upsert=True,
                 )
                 return await self.run_warn_int_author(10, message, int_)
@@ -1195,7 +1275,9 @@ class SettingCog(commands.Cog):
 
         channel_db = self.bot.async_db["Main"].UnBlockChannel
         try:
-            channel_db_find = await channel_db.find_one({"Channel": message.channel.id}, {"_id": False})
+            channel_db_find = await channel_db.find_one(
+                {"Channel": message.channel.id}, {"_id": False}
+            )
         except:
             channel_db_find = None
 
@@ -1213,17 +1295,17 @@ class SettingCog(commands.Cog):
             await message.channel.send(
                 embed=discord.Embed(
                     description=f"10個以上の絵文字を送信したため処罰されました。\n現在のスコア: {sc}",
-                    color=discord.Color.yellow()
+                    color=discord.Color.yellow(),
                 ),
-                content=f"{message.author.mention}"
+                content=f"{message.author.mention}",
             )
             await self.send_modlog(
                 message.guild,
-                f"{message.author.name} は10個以上の絵文字を送信したため、処罰されました。"
+                f"{message.author.name} は10個以上の絵文字を送信したため、処罰されました。",
             )
         except Exception as e:
             return
-        
+
     @commands.Cog.listener("on_message")
     async def on_message_everyone_block(self, message: discord.Message):
         if message.author.bot:
@@ -1255,11 +1337,17 @@ class SettingCog(commands.Cog):
                     sc = await self.score_get(message.guild, message.author)
 
                     await message.channel.send(
-                        embed=discord.Embed(description=f"全体メンションを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
-                        content=f"{message.author.mention}"
+                        embed=discord.Embed(
+                            description=f"全体メンションを送信したため処罰されました。\n現在のスコア: {sc}",
+                            color=discord.Color.yellow(),
+                        ),
+                        content=f"{message.author.mention}",
                     )
 
-                    await self.send_modlog(message.guild, f"{message.author.name} は全体メンションを送信しようとしたため、処罰されました。")
+                    await self.send_modlog(
+                        message.guild,
+                        f"{message.author.name} は全体メンションを送信しようとしたため、処罰されました。",
+                    )
                 except:
                     return
             if channel_db_find is None:
@@ -1272,11 +1360,17 @@ class SettingCog(commands.Cog):
                     sc = await self.score_get(message.guild, message.author)
 
                     await message.channel.send(
-                        embed=discord.Embed(description=f"全体メンションを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
-                        content=f"{message.author.mention}"
+                        embed=discord.Embed(
+                            description=f"全体メンションを送信したため処罰されました。\n現在のスコア: {sc}",
+                            color=discord.Color.yellow(),
+                        ),
+                        content=f"{message.author.mention}",
                     )
 
-                    await self.send_modlog(message.guild, f"{message.author.name} は全体メンションを送信しようとしたため、処罰されました。")
+                    await self.send_modlog(
+                        message.guild,
+                        f"{message.author.name} は全体メンションを送信しようとしたため、処罰されました。",
+                    )
                 except:
                     return
 
@@ -1307,11 +1401,17 @@ class SettingCog(commands.Cog):
                     await self.warn_user(message)
                     sc = await self.score_get(message.guild, message.author)
                     await message.channel.send(
-                        embed=discord.Embed(description=f"招待リンクを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
-                        content=f"{message.author.mention}"
+                        embed=discord.Embed(
+                            description=f"招待リンクを送信したため処罰されました。\n現在のスコア: {sc}",
+                            color=discord.Color.yellow(),
+                        ),
+                        content=f"{message.author.mention}",
                     )
 
-                    await self.send_modlog(message.guild, f"{message.author.name} は招待リンクを送信したため、処罰されました。")
+                    await self.send_modlog(
+                        message.guild,
+                        f"{message.author.name} は招待リンクを送信したため、処罰されました。",
+                    )
                 except:
                     return
             if channel_db_find is None:
@@ -1320,11 +1420,17 @@ class SettingCog(commands.Cog):
                     sc = await self.score_get(message.guild, message.author)
 
                     await message.channel.send(
-                        embed=discord.Embed(description=f"招待リンクを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
-                        content=f"{message.author.mention}"
+                        embed=discord.Embed(
+                            description=f"招待リンクを送信したため処罰されました。\n現在のスコア: {sc}",
+                            color=discord.Color.yellow(),
+                        ),
+                        content=f"{message.author.mention}",
                     )
 
-                    await self.send_modlog(message.guild, f"{message.author.name} は招待リンクを送信したため、処罰されました。")
+                    await self.send_modlog(
+                        message.guild,
+                        f"{message.author.name} は招待リンクを送信したため、処罰されました。",
+                    )
                 except:
                     return
 
@@ -1359,11 +1465,17 @@ class SettingCog(commands.Cog):
                     await self.warn_user(message)
                     sc = await self.score_get(message.guild, message.author)
                     await message.channel.send(
-                        embed=discord.Embed(description=f"Tokenを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
-                        content=f"{message.author.mention}"
+                        embed=discord.Embed(
+                            description=f"Tokenを送信したため処罰されました。\n現在のスコア: {sc}",
+                            color=discord.Color.yellow(),
+                        ),
+                        content=f"{message.author.mention}",
                     )
 
-                    await self.send_modlog(message.guild, f"{message.author.name} はTokenを送信したため、処罰されました。")
+                    await self.send_modlog(
+                        message.guild,
+                        f"{message.author.name} はTokenを送信したため、処罰されました。",
+                    )
                 except:
                     return
             if channel_db_find is None:
@@ -1375,11 +1487,17 @@ class SettingCog(commands.Cog):
                     await self.warn_user(message)
                     sc = await self.score_get(message.guild, message.author)
                     await message.channel.send(
-                        embed=discord.Embed(description=f"Tokenを送信したため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
-                        content=f"{message.author.mention}"
+                        embed=discord.Embed(
+                            description=f"Tokenを送信したため処罰されました。\n現在のスコア: {sc}",
+                            color=discord.Color.yellow(),
+                        ),
+                        content=f"{message.author.mention}",
                     )
 
-                    await self.send_modlog(message.guild, f"{message.author.name} はTokenを送信したため、処罰されました。")
+                    await self.send_modlog(
+                        message.guild,
+                        f"{message.author.name} はTokenを送信したため、処罰されました。",
+                    )
                 except:
                     return
 
@@ -1438,7 +1556,10 @@ class SettingCog(commands.Cog):
                     f"SpamDetected: {message.author.id}/{message.author.display_name}"
                 )
                 message_counts[message.author.id] = 0  # リセット
-                await self.send_modlog(message.guild, f"{message.author.name} はスパムをしたため、処罰されました。")
+                await self.send_modlog(
+                    message.guild,
+                    f"{message.author.name} はスパムをしたため、処罰されました。",
+                )
 
             # 指定時間後にカウントを減らす
             await asyncio.sleep(time_window)
@@ -1480,7 +1601,10 @@ class SettingCog(commands.Cog):
                     f"AppSpamDetected: {message.interaction_metadata.user.id}/{message.interaction_metadata.user.display_name}"
                 )
                 message_counts_userapp[message.interaction_metadata.user.id] = 0
-                await self.send_modlog(message.guild, f"{message.author.name} はスラッシュコマンドを連打したため、処罰されました。")
+                await self.send_modlog(
+                    message.guild,
+                    f"{message.author.name} はスラッシュコマンドを連打したため、処罰されました。",
+                )
 
             await asyncio.sleep(time_window)
             message_counts_userapp[message.interaction_metadata.user.id] -= 1
@@ -1517,11 +1641,17 @@ class SettingCog(commands.Cog):
                 await self.warn_user_automod(guild, member)
                 sc = await self.score_get(guild, member)
                 await execution.channel.send(
-                    embed=discord.Embed(description=f"{automod_rule.name.replace('対策', '')} を送信しようとしたため処罰されました。\n現在のスコア: {sc}", color=discord.Color.yellow()),
-                    content=f"{member.mention}"
+                    embed=discord.Embed(
+                        description=f"{automod_rule.name.replace('対策', '')} を送信しようとしたため処罰されました。\n現在のスコア: {sc}",
+                        color=discord.Color.yellow(),
+                    ),
+                    content=f"{member.mention}",
                 )
 
-                await self.send_modlog(execution.guild, f"{member.name} {automod_rule.name.replace('対策', '')}を送信しようとしたため処罰されました。")
+                await self.send_modlog(
+                    execution.guild,
+                    f"{member.name} {automod_rule.name.replace('対策', '')}を送信しようとしたため処罰されました。",
+                )
             except:
                 return
         except:
@@ -1703,9 +1833,8 @@ class SettingCog(commands.Cog):
             return
         if dbfind is None:
             return
-        
+
         try:
-            
             match = re.fullmatch(r"(\d+)d(\d+)", message.content)
             if not match:
                 current_time = time.time()
@@ -1715,36 +1844,46 @@ class SettingCog(commands.Cog):
                 cooldown_dice[message.channel.id] = current_time
 
                 if "ダイス" == message.content:
-                    await message.reply(f"🎲 {message.author.mention}: {random.randint(1, 6)}")
+                    await message.reply(
+                        f"🎲 {message.author.mention}: {random.randint(1, 6)}"
+                    )
                     return
                 if "🎲" == message.content:
-                    await message.reply(f"🎲 {message.author.mention}: {random.randint(1, 6)}")
+                    await message.reply(
+                        f"🎲 {message.author.mention}: {random.randint(1, 6)}"
+                    )
                     return
                 if "dd" == message.content:
-                    await message.reply(f"🎲 {message.author.mention}: {random.randint(1, 100)}")
+                    await message.reply(
+                        f"🎲 {message.author.mention}: {random.randint(1, 100)}"
+                    )
                     return
                 if "チンチロ" == message.content:
-                    a = random.randint(1,6)
-                    b = random.randint(1,6)
-                    c = random.randint(1,6)
+                    a = random.randint(1, 6)
+                    b = random.randint(1, 6)
+                    c = random.randint(1, 6)
+
                     def check():
-                        if a==b==c==1:
-                            return 'ピンゾロ！'
-                        elif a==b==c!=1:
-                            return 'ゾロ目！'
-                        elif a!=b!=c and a+b+c==15:
-                            return 'シゴロ！'
-                        elif a==b!=c:
-                            return f'結果は{c}！'
-                        elif b==c!=a:
-                            return f'結果は{a}！'
-                        elif c==a!=b:
-                            return f'結果は{b}！'
-                        elif a!=b!=c and a+b+c==6:
-                            return '残念！ヒフミ！'
+                        if a == b == c == 1:
+                            return "ピンゾロ！"
+                        elif a == b == c != 1:
+                            return "ゾロ目！"
+                        elif a != b != c and a + b + c == 15:
+                            return "シゴロ！"
+                        elif a == b != c:
+                            return f"結果は{c}！"
+                        elif b == c != a:
+                            return f"結果は{a}！"
+                        elif c == a != b:
+                            return f"結果は{b}！"
+                        elif a != b != c and a + b + c == 6:
+                            return "残念！ヒフミ！"
                         else:
-                            return '残念！目無し！'
-                    await message.reply(f"🎲 {message.author.mention}: {a}, {b}, {c} ... {check()}")
+                            return "残念！目無し！"
+
+                    await message.reply(
+                        f"🎲 {message.author.mention}: {a}, {b}, {c} ... {check()}"
+                    )
                     return
 
             current_time = time.time()
@@ -1834,13 +1973,15 @@ class SettingCog(commands.Cog):
                             "Channel": interaction.channel.id,
                             "Guild": interaction.guild.id,
                         },
-                        {'$set': {
-                            "Channel": interaction.channel.id,
-                            "Guild": interaction.guild.id,
-                            "Title": self.etitle.value,
-                            "Desc": self.desc.value,
-                            "MessageID": msg.id,
-                        }},
+                        {
+                            "$set": {
+                                "Channel": interaction.channel.id,
+                                "Guild": interaction.guild.id,
+                                "Title": self.etitle.value,
+                                "Desc": self.desc.value,
+                                "MessageID": msg.id,
+                            }
+                        },
                         upsert=True,
                     )
                     await interaction.response.send_message(
@@ -1886,7 +2027,7 @@ class SettingCog(commands.Cog):
         db = self.bot.async_db["DashboardBot"].CustomPrefixBot
         await db.update_one(
             {"Guild": interaction.guild.id},
-            {'$set': {"Guild": interaction.guild.id, "Prefix": prefix}},
+            {"$set": {"Guild": interaction.guild.id, "Prefix": prefix}},
             upsert=True,
         )
         await interaction.followup.send(
@@ -1948,11 +2089,13 @@ class SettingCog(commands.Cog):
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {'$set': {
-                                    "Guild": interaction.guild.id,
-                                    "User": self.ユーザー.id,
-                                    "Score": 8,
-                                }},
+                                {
+                                    "$set": {
+                                        "Guild": interaction.guild.id,
+                                        "User": self.ユーザー.id,
+                                        "Score": 8,
+                                    }
+                                },
                                 upsert=True,
                             )
                         else:
@@ -1961,11 +2104,13 @@ class SettingCog(commands.Cog):
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {'$set': {
-                                    "Guild": interaction.guild.id,
-                                    "User": self.ユーザー.id,
-                                    "Score": 8,
-                                }},
+                                {
+                                    "$set": {
+                                        "Guild": interaction.guild.id,
+                                        "User": self.ユーザー.id,
+                                        "Score": 8,
+                                    }
+                                },
                                 upsert=True,
                             )
                         await interaction.response.send_message(
@@ -1989,11 +2134,13 @@ class SettingCog(commands.Cog):
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {'$set': {
-                                    "Guild": interaction.guild.id,
-                                    "User": self.ユーザー.id,
-                                    "Score": 5,
-                                }},
+                                {
+                                    "$set": {
+                                        "Guild": interaction.guild.id,
+                                        "User": self.ユーザー.id,
+                                        "Score": 5,
+                                    }
+                                },
                                 upsert=True,
                             )
                         else:
@@ -2002,11 +2149,13 @@ class SettingCog(commands.Cog):
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {'$set': {
-                                    "Guild": interaction.guild.id,
-                                    "User": self.ユーザー.id,
-                                    "Score": 5,
-                                }},
+                                {
+                                    "$set": {
+                                        "Guild": interaction.guild.id,
+                                        "User": self.ユーザー.id,
+                                        "Score": 5,
+                                    }
+                                },
                                 upsert=True,
                             )
                         await interaction.response.send_message(
@@ -2030,11 +2179,13 @@ class SettingCog(commands.Cog):
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {'$set': {
-                                    "Guild": interaction.guild.id,
-                                    "User": self.ユーザー.id,
-                                    "Score": 3,
-                                }},
+                                {
+                                    "$set": {
+                                        "Guild": interaction.guild.id,
+                                        "User": self.ユーザー.id,
+                                        "Score": 3,
+                                    }
+                                },
                                 upsert=True,
                             )
                         else:
@@ -2043,11 +2194,13 @@ class SettingCog(commands.Cog):
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {'$set': {
-                                    "Guild": interaction.guild.id,
-                                    "User": self.ユーザー.id,
-                                    "Score": 3,
-                                }},
+                                {
+                                    "$set": {
+                                        "Guild": interaction.guild.id,
+                                        "User": self.ユーザー.id,
+                                        "Score": 3,
+                                    }
+                                },
                                 upsert=True,
                             )
                         await interaction.response.send_message(
@@ -2071,11 +2224,13 @@ class SettingCog(commands.Cog):
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {'$set': {
-                                    "Guild": interaction.guild.id,
-                                    "User": self.ユーザー.id,
-                                    "Score": 9,
-                                }},
+                                {
+                                    "$set": {
+                                        "Guild": interaction.guild.id,
+                                        "User": self.ユーザー.id,
+                                        "Score": 9,
+                                    }
+                                },
                                 upsert=True,
                             )
                         else:
@@ -2084,11 +2239,13 @@ class SettingCog(commands.Cog):
                                     "Guild": interaction.guild.id,
                                     "User": self.ユーザー.id,
                                 },
-                                {'$set': {
-                                    "Guild": interaction.guild.id,
-                                    "User": self.ユーザー.id,
-                                    "Score": 9,
-                                }},
+                                {
+                                    "$set": {
+                                        "Guild": interaction.guild.id,
+                                        "User": self.ユーザー.id,
+                                        "Score": 9,
+                                    }
+                                },
                                 upsert=True,
                             )
                         await interaction.response.send_message(
@@ -2153,66 +2310,78 @@ class SettingCog(commands.Cog):
                         dbs = self.db.WarnScoreSetting
                         await dbs.update_one(
                             {"Guild": interaction_.guild.id, "Score": self.sc},
-                            {'$set': {
-                                "Guild": interaction_.guild.id,
-                                "Score": self.sc,
-                                "Setting": 0,
-                            }},
+                            {
+                                "$set": {
+                                    "Guild": interaction_.guild.id,
+                                    "Score": self.sc,
+                                    "Setting": 0,
+                                }
+                            },
                             upsert=True,
                         )
                     elif "タイムアウト5分" == select.values[0]:
                         dbs = self.db.WarnScoreSetting
                         await dbs.update_one(
                             {"Guild": interaction_.guild.id, "Score": self.sc},
-                            {'$set': {
-                                "Guild": interaction_.guild.id,
-                                "Score": self.sc,
-                                "Setting": 1,
-                            }},
+                            {
+                                "$set": {
+                                    "Guild": interaction_.guild.id,
+                                    "Score": self.sc,
+                                    "Setting": 1,
+                                }
+                            },
                             upsert=True,
                         )
                     elif "タイムアウト10分" == select.values[0]:
                         dbs = self.db.WarnScoreSetting
                         await dbs.update_one(
                             {"Guild": interaction_.guild.id, "Score": self.sc},
-                            {'$set': {
-                                "Guild": interaction_.guild.id,
-                                "Score": self.sc,
-                                "Setting": 2,
-                            }},
+                            {
+                                "$set": {
+                                    "Guild": interaction_.guild.id,
+                                    "Score": self.sc,
+                                    "Setting": 2,
+                                }
+                            },
                             upsert=True,
                         )
                     elif "Kick" == select.values[0]:
                         dbs = self.db.WarnScoreSetting
                         await dbs.update_one(
                             {"Guild": interaction_.guild.id, "Score": self.sc},
-                            {'$set': {
-                                "Guild": interaction_.guild.id,
-                                "Score": self.sc,
-                                "Setting": 3,
-                            }},
+                            {
+                                "$set": {
+                                    "Guild": interaction_.guild.id,
+                                    "Score": self.sc,
+                                    "Setting": 3,
+                                }
+                            },
                             upsert=True,
                         )
                     elif "BAN" == select.values[0]:
                         dbs = self.db.WarnScoreSetting
                         await dbs.update_one(
                             {"Guild": interaction_.guild.id, "Score": self.sc},
-                            {'$set': {
-                                "Guild": interaction_.guild.id,
-                                "Score": self.sc,
-                                "Setting": 4,
-                            }},
+                            {
+                                "$set": {
+                                    "Guild": interaction_.guild.id,
+                                    "Score": self.sc,
+                                    "Setting": 4,
+                                }
+                            },
                             upsert=True,
                         )
                     elif "なし" == select.values[0]:
                         dbs = self.db.WarnScoreSetting
                         await dbs.update_one(
                             {"Guild": interaction_.guild.id, "Score": self.sc},
-                            {'$set': {
-                                "Guild": interaction_.guild.id,
-                                "Score": self.sc,
-                                "Setting": 5,
-                            }},
+                            {
+                                "$set": {
+                                    "Guild": interaction_.guild.id,
+                                    "Score": self.sc,
+                                    "Setting": 5,
+                                }
+                            },
                             upsert=True,
                         )
                     await interaction.response.send_message(
@@ -2278,7 +2447,10 @@ class SettingCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_messages=True)
     async def setting_message_expand(
-        self, interaction: discord.Interaction, 有効化するか: bool, 外部からの展開を許可するか: bool
+        self,
+        interaction: discord.Interaction,
+        有効化するか: bool,
+        外部からの展開を許可するか: bool,
     ):
         db = self.bot.async_db["Main"].ExpandSettings
 
@@ -2286,12 +2458,14 @@ class SettingCog(commands.Cog):
             # 有効化する場合
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"$set": {
-                    "Guild": interaction.guild.id,
-                    "Enabled": True,
-                    "Outside": 外部からの展開を許可するか
-                }},
-                upsert=True
+                {
+                    "$set": {
+                        "Guild": interaction.guild.id,
+                        "Enabled": True,
+                        "Outside": 外部からの展開を許可するか,
+                    }
+                },
+                upsert=True,
             )
 
             await interaction.response.send_message(
@@ -2300,23 +2474,20 @@ class SettingCog(commands.Cog):
                     description=(
                         "メッセージURLを送信すると自動的に展開されます。\n"
                         f"外部からの展開: {'許可' if 外部からの展開を許可するか else '不許可'}"
-                    )
+                    ),
                 )
             )
         else:
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"$set": {
-                    "Enabled": False,
-                    "Outside": 外部からの展開を許可するか
-                }},
-                upsert=True
+                {"$set": {"Enabled": False, "Outside": 外部からの展開を許可するか}},
+                upsert=True,
             )
 
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="メッセージ展開を無効化しました。",
-                    description=f"外部からの展開: {'許可' if 外部からの展開を許可するか else '不許可'}"
+                    description=f"外部からの展開: {'許可' if 外部からの展開を許可するか else '不許可'}",
                 )
             )
 
@@ -2350,7 +2521,7 @@ class SettingCog(commands.Cog):
             await interaction.followup.send(
                 embed=make_embed.success_embed(
                     title="自動アナウンス公開を設定しました。",
-                    description=f"{チャンネル.mention} で {'有効' if 有効にするか else '無効'} にしました。"
+                    description=f"{チャンネル.mention} で {'有効' if 有効にするか else '無効'} にしました。",
                 )
             )
         except discord.Forbidden:
@@ -2431,17 +2602,17 @@ class SettingCog(commands.Cog):
         if 有効にするか:
             await db.update_one(
                 {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-                {"$set": {
-                    "Guild": interaction.guild.id,
-                    "Channel": interaction.channel.id,
-                    "Lang": 翻訳先.value,
-                }},
+                {
+                    "$set": {
+                        "Guild": interaction.guild.id,
+                        "Channel": interaction.channel.id,
+                        "Lang": 翻訳先.value,
+                    }
+                },
                 upsert=True,
             )
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="自動翻訳を有効化しました。"
-                )
+                embed=make_embed.success_embed(title="自動翻訳を有効化しました。")
             )
         else:
             result = await db.delete_one(
@@ -2454,12 +2625,12 @@ class SettingCog(commands.Cog):
                     )
                 )
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="自動翻訳を無効化しました。"
-                )
+                embed=make_embed.success_embed(title="自動翻訳を無効化しました。")
             )
 
-    @settings.command(name="good-morning", description="おはよう挨拶チャンネルをセットアップします。")
+    @settings.command(
+        name="good-morning", description="おはよう挨拶チャンネルをセットアップします。"
+    )
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_messages=True)
     async def good_morning(
@@ -2471,15 +2642,18 @@ class SettingCog(commands.Cog):
         if 有効にするか:
             await db.update_one(
                 {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-                {"$set": {
-                    "Guild": interaction.guild.id,
-                    "Channel": interaction.channel.id
-                }},
+                {
+                    "$set": {
+                        "Guild": interaction.guild.id,
+                        "Channel": interaction.channel.id,
+                    }
+                },
                 upsert=True,
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
-                    title="おはよう挨拶を有効化しました。", description="毎日8時に通知します。"
+                    title="おはよう挨拶を有効化しました。",
+                    description="毎日8時に通知します。",
                 )
             )
         else:
@@ -2488,14 +2662,10 @@ class SettingCog(commands.Cog):
             )
             if result.deleted_count == 0:
                 return await interaction.response.send_message(
-                    embed=discord.Embed(
-                        title="おはよう挨拶は有効化されていません。"
-                    )
+                    embed=discord.Embed(title="おはよう挨拶は有効化されていません。")
                 )
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="おはよう挨拶を無効化しました。"
-                )
+                embed=make_embed.success_embed(title="おはよう挨拶を無効化しました。")
             )
 
     @commands.Cog.listener("on_message")
@@ -2505,7 +2675,7 @@ class SettingCog(commands.Cog):
         if not message.guild:
             return
 
-        db = self.bot.async_db['MainTwo'].AutoThread
+        db = self.bot.async_db["MainTwo"].AutoThread
 
         dbfind = await db.find_one({"Guild": message.guild.id})
         if not dbfind or "Channels" not in dbfind:
@@ -2524,8 +2694,7 @@ class SettingCog(commands.Cog):
         cooldown_auto_thread[message.channel.id] = current_time
 
         thread_name = channel_data.get("ThreadName", "{Name}のスレッド").format(
-            Name=message.author.display_name,
-            Channel=message.channel.name
+            Name=message.author.display_name, Channel=message.channel.name
         )
 
         try:
@@ -2541,36 +2710,33 @@ class SettingCog(commands.Cog):
         interaction: discord.Interaction,
         チャンネル: discord.TextChannel,
         有効にするか: bool,
-        スレッド名: str = '{Name}のスレッド'
+        スレッド名: str = "{Name}のスレッド",
     ):
-        db = interaction.client.async_db['MainTwo'].AutoThread
+        db = interaction.client.async_db["MainTwo"].AutoThread
         guild_id = interaction.guild.id
 
-        dbfind = await db.find_one({"Guild": guild_id}) or {"Guild": guild_id, "Channels": {}}
+        dbfind = await db.find_one({"Guild": guild_id}) or {
+            "Guild": guild_id,
+            "Channels": {},
+        }
         channels = dbfind.get("Channels", {})
 
         if 有効にするか:
-            channels[str(チャンネル.id)] = {
-                "ThreadName": スレッド名
-            }
+            channels[str(チャンネル.id)] = {"ThreadName": スレッド名}
             await db.update_one(
-                {"Guild": guild_id},
-                {"$set": {"Channels": channels}},
-                upsert=True
+                {"Guild": guild_id}, {"$set": {"Channels": channels}}, upsert=True
             )
             status_text = "有効化"
         else:
             channels.pop(str(チャンネル.id), None)
             await db.update_one(
-                {"Guild": guild_id},
-                {"$set": {"Channels": channels}},
-                upsert=True
+                {"Guild": guild_id}, {"$set": {"Channels": channels}}, upsert=True
             )
             status_text = "無効化"
 
         embed = make_embed.success_embed(
             title=f"自動スレッド作成を{status_text}しました",
-            description=f"チャンネル: {チャンネル.mention}\nスレッド名テンプレート: `{スレッド名}`"
+            description=f"チャンネル: {チャンネル.mention}\nスレッド名テンプレート: `{スレッド名}`",
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -2584,12 +2750,15 @@ class SettingCog(commands.Cog):
         ]
     )
     async def bot_langs(
-        self,
-        interaction: discord.Interaction,
-        言語: app_commands.Choice[str]
+        self, interaction: discord.Interaction, 言語: app_commands.Choice[str]
     ):
         await translate.set_guild_lang(interaction.guild.id, 言語.value)
-        await interaction.response.send_message(embed=make_embed.success_embed(title="Change the bot's language.", description=言語.name))
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title="Change the bot's language.", description=言語.name
+            )
+        )
+
 
 async def setup(bot):
     await bot.add_cog(SettingCog(bot))

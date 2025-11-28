@@ -4,10 +4,13 @@ from consts import mongodb
 
 langs: dict[str, dict] = {}
 
+
 async def load() -> None:
     for code in ("ja", "en"):
         try:
-            async with aiofiles.open(f"translate/{code}.json", mode="r", encoding="utf-8") as f:
+            async with aiofiles.open(
+                f"translate/{code}.json", mode="r", encoding="utf-8"
+            ) as f:
                 data = await f.read()
                 langs[code] = json.loads(data)
         except FileNotFoundError:
@@ -17,6 +20,7 @@ async def load() -> None:
             print(f"[ERROR] 翻訳ファイルの読み込みに失敗しました: {code}.json ({e})")
             langs[code] = {}
 
+
 async def set_guild_lang(guild_id: int, lang: str) -> None:
     m = mongodb.mongo
     db = m.async_db["Main"].BotLang
@@ -25,6 +29,7 @@ async def set_guild_lang(guild_id: int, lang: str) -> None:
         {"$set": {"Lang": lang}},
         upsert=True,
     )
+
 
 async def get_guild_lang(guild_id: int) -> str:
     m = mongodb.mongo
@@ -36,6 +41,7 @@ async def get_guild_lang(guild_id: int) -> str:
     if not dbfind:
         return "ja"
     return dbfind.get("Lang", "ja")
+
 
 def get(lang: str, category: str, key: str) -> str:
     if lang == "ja":

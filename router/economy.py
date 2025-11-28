@@ -9,8 +9,10 @@ import html
 
 router = APIRouter(prefix="/settings")
 
+
 def rate_limiter(request: Request):
     return request.app.state.limiter.limit("1/2 seconds")
+
 
 async def check_owner(user, guild_id: str) -> bool:
     user_guilds = await mongodb.mongo["DashboardBot"].user_guilds.find_one(
@@ -34,6 +36,7 @@ async def check_owner(user, guild_id: str) -> bool:
 
     return True
 
+
 @router.get("/{guild_id}/economy", dependencies=[Depends(rate_limiter)])
 async def economy(request: Request, guild_id: str):
     u = request.session.get("user")
@@ -49,11 +52,8 @@ async def economy(request: Request, guild_id: str):
 
     if not await check_owner(u, guild_id):
         return RedirectResponse("/login/guilds")
-    
+
     return templates.templates.TemplateResponse(
         "economy.html",
-        {
-            "request": request,
-            "guild": guild
-        },
+        {"request": request, "guild": guild},
     )

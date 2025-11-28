@@ -10,13 +10,14 @@ from models import make_embed
 
 cooldown_automation = {}
 
+
 class AutoMationCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print("init -> AutoMationCog")
 
     async def run_automation(self, action: str, guild_id: int, ctx: dict):
-        db = self.bot.async_db['MainTwo'].AutoMation
+        db = self.bot.async_db["MainTwo"].AutoMation
         try:
             data = await db.find_one({"Guild": guild_id}, {"_id": False})
         except:
@@ -63,12 +64,12 @@ class AutoMationCog(commands.Cog):
                     continue
 
             if not ctx.get("author") is None:
-                ath = ctx.get('author')
+                ath = ctx.get("author")
                 if isinstance(ath, discord.Member):
                     try:
-                        run_value = run_value.replace('{user}', ath.name)
-                        run_value = run_value.replace('{user.mention}', ath.mention)
-                        run_value = run_value.replace('{user.id}', str(ath.id))
+                        run_value = run_value.replace("{user}", ath.name)
+                        run_value = run_value.replace("{user.mention}", ath.mention)
+                        run_value = run_value.replace("{user.id}", str(ath.id))
                     except:
                         pass
 
@@ -80,8 +81,10 @@ class AutoMationCog(commands.Cog):
                 cooldown_automation[ctx["channel"].guild.id] = current_time
 
                 try:
-
-                    await ctx["channel"].send(run_value + "\n-# このメッセージは自動化機能によるメッセージです。")
+                    await ctx["channel"].send(
+                        run_value
+                        + "\n-# このメッセージは自動化機能によるメッセージです。"
+                    )
                 except:
                     pass
 
@@ -94,7 +97,10 @@ class AutoMationCog(commands.Cog):
 
                 try:
                     if not ctx["message"] is None:
-                        await ctx["message"].reply(run_value + "\n-# このメッセージは自動化機能によるメッセージです。")
+                        await ctx["message"].reply(
+                            run_value
+                            + "\n-# このメッセージは自動化機能によるメッセージです。"
+                        )
                 except:
                     pass
 
@@ -152,27 +158,35 @@ class AutoMationCog(commands.Cog):
         if not message.guild:
             return
 
-        await self.run_automation("send", message.guild.id, {
-            "message": message,
-            "channel": message.channel,
-            "content": message.content,
-            "author": message.author
-        })
+        await self.run_automation(
+            "send",
+            message.guild.id,
+            {
+                "message": message,
+                "channel": message.channel,
+                "content": message.content,
+                "author": message.author,
+            },
+        )
 
     @commands.Cog.listener()
     async def on_message_delete(self, message: discord.Message):
         if message.author.bot:
             return
-        
+
         if not message.guild:
             return
 
-        await self.run_automation("delete", message.guild.id, {
-            "message": message,
-            "channel": message.channel,
-            "content": message.content,
-            "author": message.author
-        })
+        await self.run_automation(
+            "delete",
+            message.guild.id,
+            {
+                "message": message,
+                "channel": message.channel,
+                "content": message.content,
+                "author": message.author,
+            },
+        )
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
@@ -181,30 +195,38 @@ class AutoMationCog(commands.Cog):
         if not reaction.message.guild:
             return
 
-        await self.run_automation("reaction", reaction.message.guild.id, {
-            "message": reaction.message,
-            "channel": reaction.message.channel,
-            "emoji": str(reaction.emoji),
-            "user": user,
-            "content": reaction.message.content
-        })
+        await self.run_automation(
+            "reaction",
+            reaction.message.guild.id,
+            {
+                "message": reaction.message,
+                "channel": reaction.message.channel,
+                "emoji": str(reaction.emoji),
+                "user": user,
+                "content": reaction.message.content,
+            },
+        )
 
     @commands.Cog.listener()
     async def on_thread_create(self, thread: discord.Thread):
         if not thread.guild:
             return
 
-        await self.run_automation("threadcreate", thread.guild.id, {
-            "thread": thread,
-            "channel": thread.parent,
-            "name": thread.name,
-            "message": thread.starter_message
-        })
+        await self.run_automation(
+            "threadcreate",
+            thread.guild.id,
+            {
+                "thread": thread,
+                "channel": thread.parent,
+                "name": thread.name,
+                "message": thread.starter_message,
+            },
+        )
 
     automation = app_commands.Group(
         name="automation",
         description="サーバー内での行動に対して自動的に実行する内容を設定します。",
-        allowed_installs=app_commands.AppInstallationType(guild=True, user=False)
+        allowed_installs=app_commands.AppInstallationType(guild=True, user=False),
     )
 
     @automation.command(name="create", description="自動化ルールを作成します。")
@@ -214,14 +236,14 @@ class AutoMationCog(commands.Cog):
             app_commands.Choice(name="メッセージを送信したら", value="send"),
             app_commands.Choice(name="メッセージを削除したら", value="delete"),
             app_commands.Choice(name="リアクションをしたら", value="reaction"),
-            app_commands.Choice(name="スレッドを作成したら", value="threadcreate")
+            app_commands.Choice(name="スレッドを作成したら", value="threadcreate"),
         ]
     )
     @app_commands.choices(
         条件=[
             app_commands.Choice(name="含まれていたら", value="in"),
             app_commands.Choice(name="同じだったら", value="equal"),
-            app_commands.Choice(name="チャンネルだったら", value="channel")
+            app_commands.Choice(name="チャンネルだったら", value="channel"),
         ]
     )
     @app_commands.choices(
@@ -230,7 +252,9 @@ class AutoMationCog(commands.Cog):
             app_commands.Choice(name="を返信する", value="reply"),
             app_commands.Choice(name="メッセージを削除する", value="delete"),
             app_commands.Choice(name="をリアクションする", value="reaction"),
-            app_commands.Choice(name="という名前のスレッドを作成する", value="threadcreate")
+            app_commands.Choice(
+                name="という名前のスレッドを作成する", value="threadcreate"
+            ),
         ]
     )
     @app_commands.checks.has_permissions(manage_guild=True)
@@ -243,14 +267,12 @@ class AutoMationCog(commands.Cog):
         行動: app_commands.Choice[str],
         条件のチャンネル: discord.TextChannel = None,
         条件のテキストや絵文字: str = None,
-        行動のテキストや絵文字: str = None
+        行動のテキストや絵文字: str = None,
     ):
-
         if 条件.value == "channel":
             if not 条件のチャンネル:
                 return await interaction.response.send_message(
-                    ephemeral=True,
-                    content="条件のチャンネルを指定する必要があります。"
+                    ephemeral=True, content="条件のチャンネルを指定する必要があります。"
                 )
             if_value = 条件のチャンネル.id
             if_value_display = f"<#{if_value}>"
@@ -258,7 +280,7 @@ class AutoMationCog(commands.Cog):
             if not 条件のテキストや絵文字:
                 return await interaction.response.send_message(
                     ephemeral=True,
-                    content="条件のテキストや絵文字を指定する必要があります。"
+                    content="条件のテキストや絵文字を指定する必要があります。",
                 )
             if_value = 条件のテキストや絵文字
             if_value_display = if_value
@@ -270,35 +292,34 @@ class AutoMationCog(commands.Cog):
             run_value = 行動のテキストや絵文字
             run_value_display = run_value
 
-        db = interaction.client.async_db['MainTwo'].AutoMation
-        
+        db = interaction.client.async_db["MainTwo"].AutoMation
+
         data = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
         automations = data.get("AutoMations", []) if data else []
 
         if len(automations) >= 20:
             return await interaction.response.send_message(
-                ephemeral=True,
-                content="自動化は **25個まで** しか作成できません。"
+                ephemeral=True, content="自動化は **25個まで** しか作成できません。"
             )
 
         for a in automations:
             if a.get("Title") == タイトル:
                 return await interaction.response.send_message(
                     ephemeral=True,
-                    content=f"自動化「{タイトル}」は既に存在します。別の名前を使ってください。"
+                    content=f"自動化「{タイトル}」は既に存在します。別の名前を使ってください。",
                 )
 
         await db.update_one(
             {"Guild": interaction.guild.id},
             {
-                '$addToSet': {
+                "$addToSet": {
                     "AutoMations": {
                         "Title": タイトル,
                         "Action": アクション.value,
                         "If": 条件.value,
                         "IfValue": if_value,
                         "Run": 行動.value,
-                        "RunValue": run_value
+                        "RunValue": run_value,
                     }
                 }
             },
@@ -312,26 +333,19 @@ class AutoMationCog(commands.Cog):
 **アクション**：{アクション.name}  
 **条件**：{if_value_display} が {条件.name}  
 **行動**：{run_value_display} を {行動.name}
-"""
+""",
             )
         )
 
-    @automation.command(
-        name="delete",
-        description="既存の自動化ルールを削除します。"
-    )
+    @automation.command(name="delete", description="既存の自動化ルールを削除します。")
     @app_commands.checks.has_permissions(manage_guild=True)
-    async def automation_delete(
-        self,
-        interaction: discord.Interaction
-    ):
-        db = interaction.client.async_db['MainTwo'].AutoMation
+    async def automation_delete(self, interaction: discord.Interaction):
+        db = interaction.client.async_db["MainTwo"].AutoMation
 
         data = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
         if not data or not data.get("AutoMations"):
             return await interaction.response.send_message(
-                ephemeral=True,
-                content="削除できる自動化がありません。"
+                ephemeral=True, content="削除できる自動化がありません。"
             )
 
         automations = data["AutoMations"]
@@ -346,10 +360,10 @@ class AutoMationCog(commands.Cog):
                     options=[
                         discord.SelectOption(
                             label=a.get("Title", "名称なし"),
-                            description=f"{a['Action']} / {a['If']} / {a['Run']}"
+                            description=f"{a['Action']} / {a['If']} / {a['Run']}",
                         )
                         for a in items
-                    ]
+                    ],
                 )
                 select.callback = self.select_callback
                 self.select = select
@@ -364,9 +378,7 @@ class AutoMationCog(commands.Cog):
         view = AutoDeletionView(automations)
 
         await interaction.response.send_message(
-            content="削除する自動化ルールを選んでください：",
-            ephemeral=True,
-            view=view
+            content="削除する自動化ルールを選んでください：", ephemeral=True, view=view
         )
 
         await view.wait()
@@ -376,13 +388,13 @@ class AutoMationCog(commands.Cog):
 
         await db.update_one(
             {"Guild": interaction.guild.id},
-            {"$pull": {"AutoMations": {"Title": view.value}}}
+            {"$pull": {"AutoMations": {"Title": view.value}}},
         )
 
         await interaction.followup.send(
-            ephemeral=True,
-            content=f"自動化「{view.value}」を削除しました。"
+            ephemeral=True, content=f"自動化「{view.value}」を削除しました。"
         )
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(AutoMationCog(bot))

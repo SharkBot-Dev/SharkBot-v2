@@ -4,11 +4,14 @@ from discord import app_commands
 
 import asyncio
 
+
 class BulkChannelGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="channel", description="チャンネル系のコマンドです。")
 
-    @app_commands.command(name="delete", description="同じ名前のチャンネルを削除します。")
+    @app_commands.command(
+        name="delete", description="同じ名前のチャンネルを削除します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -28,7 +31,14 @@ class BulkChannelGroup(app_commands.Group):
                 c += 1
                 await asyncio.sleep(0.5)
 
-        await interaction.followup.send(embed=discord.Embed(title="同じ名前のチャンネルを一括削除しました。", description=f"{c}個チャンネルを削除しました。", color=discord.Color.green()))
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="同じ名前のチャンネルを一括削除しました。",
+                description=f"{c}個チャンネルを削除しました。",
+                color=discord.Color.green(),
+            )
+        )
+
 
 class BulkRoleGroup(app_commands.Group):
     def __init__(self):
@@ -57,7 +67,14 @@ class BulkRoleGroup(app_commands.Group):
                 c += 1
                 await asyncio.sleep(0.5)
 
-        await interaction.followup.send(embed=discord.Embed(title="同じ名前のロールを一括削除しました。", description=f"{c}個ロールを削除しました。\n{f}個削除できませんでした。", color=discord.Color.green()))
+        await interaction.followup.send(
+            embed=discord.Embed(
+                title="同じ名前のロールを一括削除しました。",
+                description=f"{c}個ロールを削除しました。\n{f}個削除できませんでした。",
+                color=discord.Color.green(),
+            )
+        )
+
 
 class BulkCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -68,6 +85,7 @@ class BulkCog(commands.Cog):
 
     bulk.add_command(BulkChannelGroup())
     bulk.add_command(BulkRoleGroup())
+
 
 async def setup(bot):
     await bot.add_cog(BulkCog(bot))

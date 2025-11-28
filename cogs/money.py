@@ -154,7 +154,7 @@ class Money:
         guild: discord.Guild,
         author: discord.User,
         cooldown: int = 3600,
-        cooldown_type: str = "work"
+        cooldown_type: str = "work",
     ):
         db = self.bot.async_db["Main"].ServerMoneyCooldwon
         key = f"{guild.id}-{author.id}-{cooldown_type}"
@@ -235,7 +235,7 @@ class Money:
         if not dbfind:
             return 0
         return dbfind.get("count", 0)
-    
+
     async def get_server_money_bank(self, guild: discord.Guild, author: discord.User):
         db = self.bot.async_db["Main"].ServerMoney
         dbfind = await db.find_one({"_id": f"{guild.id}-{author.id}"}, {"_id": False})
@@ -253,9 +253,7 @@ class Money:
             return "このサーバーのランキングはありません。"
 
         ranked_users = sorted(
-            all_users,
-            key=lambda u: u.get("count", 0) + u.get("bank", 0),
-            reverse=True
+            all_users, key=lambda u: u.get("count", 0) + u.get("bank", 0), reverse=True
         )[:10]
 
         leaderboard_text = f"**{guild.name} のお金持ちランキング**\n\n"
@@ -274,33 +272,23 @@ class Money:
         return leaderboard_text
 
     # 通貨名管理
-    async def set_currency_name(
-        self, guild: discord.Guild, name: str
-    ):
+    async def set_currency_name(self, guild: discord.Guild, name: str):
         db = self.bot.async_db["Main"].ServerMoneyCurrency
         _id = f"{guild.id}"
         user_data = await db.find_one({"_id": _id})
         if user_data:
             await db.update_one({"_id": _id}, {"$set": {"Name": name}})
         else:
-            await db.insert_one(
-                {
-                    "_id": _id,
-                    "Guild": guild.id,
-                    "Name": name
-                }
-            )
+            await db.insert_one({"_id": _id, "Guild": guild.id, "Name": name})
         return True
 
-    async def get_currency_name(
-        self, guild: discord.Guild
-    ):
+    async def get_currency_name(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].ServerMoneyCurrency
         _id = f"{guild.id}"
         dbfind = await db.find_one({"_id": _id}, {"_id": False})
         if not dbfind:
-            return 'コイン'
-        return dbfind.get('Name', 'コイン')
+            return "コイン"
+        return dbfind.get("Name", "コイン")
 
     # --- アイテム管理 ---
     async def add_server_item(
@@ -334,10 +322,15 @@ class Money:
         rr = await self.get_server_items(guild, itemname)
         if not rr:
             return dbfind.get("count", 0), 0
-        return dbfind.get("count", 0), rr.get("Role", 0), rr.get('DM', "なし")
+        return dbfind.get("count", 0), rr.get("Role", 0), rr.get("DM", "なし")
 
     async def create_server_items(
-        self, guild: discord.Guild, money: int, itemname: str, role: discord.Role = None, dm: str = None
+        self,
+        guild: discord.Guild,
+        money: int,
+        itemname: str,
+        role: discord.Role = None,
+        dm: str = None,
     ):
         db = self.bot.async_db["Main"].ServerMoneyItems
         await db.replace_one(
@@ -820,7 +813,7 @@ class GamesGroup(app_commands.Group):
         result = random.choice(["表", "裏"])
         if 裏表.lower() == result:
             await Money(interaction.client).add_server_money(
-                interaction.guild, interaction.user, 金額*2
+                interaction.guild, interaction.user, 金額 * 2
             )
             await interaction.followup.send(
                 embed=discord.Embed(
@@ -919,9 +912,7 @@ class ManageGroup(app_commands.Group):
             interaction.guild, メンバー, 金額
         )
         await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title="金額を追加しました。"
-            )
+            embed=make_embed.success_embed(title="金額を追加しました。")
         )
 
     @app_commands.command(name="remove", description="お金を減らします。")
@@ -936,14 +927,10 @@ class ManageGroup(app_commands.Group):
             interaction.guild, メンバー, -金額
         )
         await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title="金額を減らしました。"
-            )
+            embed=make_embed.success_embed(title="金額を減らしました。")
         )
 
-    @app_commands.command(
-        name="currency", description="新しい通貨名を設定します。"
-    )
+    @app_commands.command(name="currency", description="新しい通貨名を設定します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -954,8 +941,7 @@ class ManageGroup(app_commands.Group):
         await Money(interaction.client).set_currency_name(interaction.guild, 通貨名)
         await interaction.followup.send(
             embed=make_embed.success_embed(
-                title="新しい通貨名を設定しました。",
-                description=f"通貨名: {通貨名}"
+                title="新しい通貨名を設定しました。", description=f"通貨名: {通貨名}"
             )
         )
 
@@ -979,7 +965,7 @@ class ManageGroup(app_commands.Group):
 
         await db.update_one(
             {"Guild": interaction.guild.id, "Money": 金額},
-            {'$set': {"Guild": interaction.guild.id, "Money": 金額}},
+            {"$set": {"Guild": interaction.guild.id, "Money": 金額}},
             upsert=True,
         )
 
@@ -988,7 +974,7 @@ class ManageGroup(app_commands.Group):
         await interaction.response.send_message(
             embed=make_embed.success_embed(
                 title="会話するたびに、お金がもらえるようにしました。",
-                description=f"{金額}{c_n}です。"
+                description=f"{金額}{c_n}です。",
             )
         )
 
@@ -1007,7 +993,7 @@ class ItemGroup(app_commands.Group):
         アイテム名: str,
         値段: int,
         ロール: discord.Role = None,
-        使用時にdmに送信するメッセージ: str = None
+        使用時にdmに送信するメッセージ: str = None,
     ):
         await interaction.response.defer()
         if ロール and not interaction.user.guild_permissions.administrator:
@@ -1050,11 +1036,16 @@ class ItemGroup(app_commands.Group):
                 )
             )
 
+
 class ShopPanelGroup(app_commands.Group):
     def __init__(self):
-        super().__init__(name="shop", description="ショップパネルを作成するためのコマンドたちです。")
+        super().__init__(
+            name="shop", description="ショップパネルを作成するためのコマンドたちです。"
+        )
 
-    @app_commands.command(name="item", description="アイテムショップパネルを作成します。")
+    @app_commands.command(
+        name="item", description="アイテムショップパネルを作成します。"
+    )
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -1066,21 +1057,31 @@ class ShopPanelGroup(app_commands.Group):
         アイテム名2: str = None,
         アイテム名3: str = None,
         アイテム名4: str = None,
-        アイテム名5: str = None
+        アイテム名5: str = None,
     ):
         await interaction.response.defer()
-        items = [i for i in [アイテム名1, アイテム名2, アイテム名3, アイテム名4, アイテム名5] if i is not None]
-        embed=discord.Embed(title=タイトル, color=discord.Color.green())
+        items = [
+            i
+            for i in [アイテム名1, アイテム名2, アイテム名3, アイテム名4, アイテム名5]
+            if i is not None
+        ]
+        embed = discord.Embed(title=タイトル, color=discord.Color.green())
         view = discord.ui.View()
         c_n = await Money(interaction.client).get_currency_name(interaction.guild)
         for _, i in enumerate(items):
             db = await Money(interaction.client).get_server_items(interaction.guild, i)
             if not db:
-                return await interaction.followup.send(embed=discord.Embed(title=f"{i} というアイテムが見つかりません。", color=discord.Color.red()))
+                return await interaction.followup.send(
+                    embed=discord.Embed(
+                        title=f"{i} というアイテムが見つかりません。",
+                        color=discord.Color.red(),
+                    )
+                )
             embed.add_field(name=i, value=f"{db.get('Money', 0)} {c_n}", inline=False)
             view.add_item(discord.ui.Button(label=i, custom_id=f"item_shop+{_}"))
         await interaction.channel.send(embed=embed, view=view)
         await interaction.delete_original_response()
+
 
 class ServerMoneyCog(commands.Cog):
     def __init__(self, bot):
@@ -1113,29 +1114,40 @@ class ServerMoneyCog(commands.Cog):
                     custom_id = interaction.data["custom_id"]
                 except:
                     return
-                if custom_id.startswith('item_shop+'):
+                if custom_id.startswith("item_shop+"):
                     await interaction.response.defer(ephemeral=True)
-                    f = interaction.message.embeds[0].fields[int(custom_id.split('item_shop+')[1])]
+                    f = interaction.message.embeds[0].fields[
+                        int(custom_id.split("item_shop+")[1])
+                    ]
 
                     m = await Money(interaction.client).get_server_money(
                         interaction.guild, interaction.user
                     )
-                    if m < int(f.value.split(' ')[0]):
-                        c_n = await Money(interaction.client).get_currency_name(interaction.guild)
+                    if m < int(f.value.split(" ")[0]):
+                        c_n = await Money(interaction.client).get_currency_name(
+                            interaction.guild
+                        )
                         return await interaction.followup.send(
                             embed=make_embed.error_embed(
                                 title="残高が足りません。",
-                                description=f"「{f.name}」を買うには {f.value.split(' ')[0]}{c_n}が必要です。"
+                                description=f"「{f.name}」を買うには {f.value.split(' ')[0]}{c_n}が必要です。",
                             ),
-                            ephemeral=True
+                            ephemeral=True,
                         )
-                    
+
                     await Money(interaction.client).add_server_money(
-                        interaction.guild, interaction.user, -int(f.value.split(' ')[0])
+                        interaction.guild, interaction.user, -int(f.value.split(" ")[0])
                     )
 
-                    await Money(self.bot).add_server_item(interaction.guild, interaction.user, f.name, 1)
-                    await interaction.followup.send(embed=make_embed.success_embed(title="アイテムを買いました。", description=f"「{f.name}」"), ephemeral=True)
+                    await Money(self.bot).add_server_item(
+                        interaction.guild, interaction.user, f.name, 1
+                    )
+                    await interaction.followup.send(
+                        embed=make_embed.success_embed(
+                            title="アイテムを買いました。", description=f"「{f.name}」"
+                        ),
+                        ephemeral=True,
+                    )
         except:
             return
 
@@ -1159,14 +1171,14 @@ class ServerMoneyCog(commands.Cog):
             guild=interaction.guild,
             author=interaction.user,
             cooldown=3600,
-            cooldown_type="work"
+            cooldown_type="work",
         )
 
         if not ok:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="まだ働けません。",
-                    description=f"あと {str(datetime.timedelta(seconds=remaining))} 待ってください。"
+                    description=f"あと {str(datetime.timedelta(seconds=remaining))} 待ってください。",
                 )
             )
 
@@ -1176,8 +1188,7 @@ class ServerMoneyCog(commands.Cog):
         c_n = await Money(interaction.client).get_currency_name(interaction.guild)
         await interaction.followup.send(
             embed=make_embed.success_embed(
-                title="働きました。",
-                description=f"{m}{c_n}入手しました。"
+                title="働きました。", description=f"{m}{c_n}入手しました。"
             )
         )
 
@@ -1190,22 +1201,22 @@ class ServerMoneyCog(commands.Cog):
             guild=interaction.guild,
             author=interaction.user,
             cooldown=600,
-            cooldown_type="beg"
+            cooldown_type="beg",
         )
 
         if not ok:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="まだ物乞いできません。",
-                    description=f"あと {str(datetime.timedelta(seconds=remaining))} 待ってください。"
+                    description=f"あと {str(datetime.timedelta(seconds=remaining))} 待ってください。",
                 )
             )
-        
+
         if random.randint(1, 2) == 2:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="物乞いに失敗しました。",
-                    description="誰もお金をくれませんでした。"
+                    description="誰もお金をくれませんでした。",
                 )
             )
 
@@ -1215,12 +1226,13 @@ class ServerMoneyCog(commands.Cog):
         c_n = await Money(interaction.client).get_currency_name(interaction.guild)
         await interaction.followup.send(
             embed=make_embed.success_embed(
-                title="物乞いをしました。",
-                description=f"{m}{c_n}入手しました。"
+                title="物乞いをしました。", description=f"{m}{c_n}入手しました。"
             )
         )
 
-    @server_economy.command(name="crime", description="犯罪をしてお金を得ます。(リスクあり)")
+    @server_economy.command(
+        name="crime", description="犯罪をしてお金を得ます。(リスクあり)"
+    )
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     @app_commands.choices(
         内容=[
@@ -1230,21 +1242,23 @@ class ServerMoneyCog(commands.Cog):
             app_commands.Choice(name="闇バイト", value="yamibaito"),
         ]
     )
-    async def economy_crime_server(self, interaction: discord.Interaction, 内容: app_commands.Choice[str]):
+    async def economy_crime_server(
+        self, interaction: discord.Interaction, 内容: app_commands.Choice[str]
+    ):
         await interaction.response.defer()
         m = random.randint(100, 1000)
         ok, remaining = await Money(interaction.client).add_cooldown(
             guild=interaction.guild,
             author=interaction.user,
             cooldown=3600,
-            cooldown_type="crime"
+            cooldown_type="crime",
         )
 
         if not ok:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="まだ犯罪できません。",
-                    description=f"あと {str(datetime.timedelta(seconds=remaining))} 待ってください。"
+                    description=f"あと {str(datetime.timedelta(seconds=remaining))} 待ってください。",
                 )
             )
 
@@ -1257,10 +1271,10 @@ class ServerMoneyCog(commands.Cog):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title=f"{内容.name}に失敗しました。",
-                    description=f"{lost}{c_n}を失いました。"
+                    description=f"{lost}{c_n}を失いました。",
                 )
             )
-        
+
         if 内容.value == "gotou":
             m = random.randint(500, 3000)
         elif 内容.value == "sagi":
@@ -1268,15 +1282,14 @@ class ServerMoneyCog(commands.Cog):
         elif 内容.value == "ouyou":
             m = random.randint(200, 1500)
         else:
-            m = random.randint(100, 1000)    
+            m = random.randint(100, 1000)
 
         await Money(interaction.client).add_server_money(
             interaction.guild, interaction.user, m
         )
         await interaction.followup.send(
             embed=make_embed.success_embed(
-                title=f"{内容.name}をしました。",
-                description=f"{m}{c_n}入手しました。"
+                title=f"{内容.name}をしました。", description=f"{m}{c_n}入手しました。"
             )
         )
 
@@ -1295,22 +1308,17 @@ class ServerMoneyCog(commands.Cog):
         sb_m = await m.get_server_money_bank(interaction.guild, target)
         c_n = await m.get_currency_name(interaction.guild)
         await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title=f"{target.name}の残高です。"
-            ).add_field(name="手持ち", value=f"{sm}{c_n}")
+            embed=make_embed.success_embed(title=f"{target.name}の残高です。")
+            .add_field(name="手持ち", value=f"{sm}{c_n}")
             .add_field(name="預金", value=f"{sb_m}{c_n}")
         )
 
     @server_economy.command(
-        name="pay",
-        description="指定したメンバーにサーバー内通貨を送金します。"
+        name="pay", description="指定したメンバーにサーバー内通貨を送金します。"
     )
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_pay_server(
-        self,
-        interaction: discord.Interaction,
-        メンバー: discord.User,
-        金額: int
+        self, interaction: discord.Interaction, メンバー: discord.User, 金額: int
     ):
         await interaction.response.defer()
         m = Money(interaction.client)
@@ -1323,24 +1331,21 @@ class ServerMoneyCog(commands.Cog):
         if メンバー.id == user.id:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
-                    title="送金エラー",
-                    description="自分自身には送金できません。"
+                    title="送金エラー", description="自分自身には送金できません。"
                 )
             )
 
         if メンバー.bot:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
-                    title="送金エラー",
-                    description="Botには送金できません。"
+                    title="送金エラー", description="Botには送金できません。"
                 )
             )
 
         if 金額 <= 0:
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
-                    title="送金エラー",
-                    description="0以下の金額は送金できません。"
+                    title="送金エラー", description="0以下の金額は送金できません。"
                 )
             )
 
@@ -1348,7 +1353,7 @@ class ServerMoneyCog(commands.Cog):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="残高不足",
-                    description=f"あなたの残高（{sender_balance} {c_n}）より多い金額は送金できません。"
+                    description=f"あなたの残高（{sender_balance} {c_n}）より多い金額は送金できません。",
                 )
             )
 
@@ -1365,36 +1370,34 @@ class ServerMoneyCog(commands.Cog):
                     f"{メンバー.mention} に {金額} {c_n} を送金しました。\n\n"
                     f"あなたの残高: {new_sender_balance} {c_n}\n"
                     f"相手の残高: {receiver_balance} {c_n}"
-                )
+                ),
             )
         )
 
-    @server_economy.command(
-        name="deposit", description="銀行にお金を預けます。"
-    )
+    @server_economy.command(name="deposit", description="銀行にお金を預けます。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
-    async def economy_deposit_server(
-        self, interaction: discord.Interaction, 金額: int
-    ):
+    async def economy_deposit_server(self, interaction: discord.Interaction, 金額: int):
         await interaction.response.defer()
         m = Money(interaction.client)
         sm = await m.get_server_money(interaction.guild, interaction.user)
         c_n = await m.get_currency_name(interaction.guild)
         if sm < 金額:
-            return await interaction.followup.send(embed=make_embed.error_embed(title=f"{sm} {c_n}より大きい金額は預けられません。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title=f"{sm} {c_n}より大きい金額は預けられません。"
+                )
+            )
         await m.add_server_money(interaction.guild, interaction.user, -金額)
         await m.add_server_money_bank(interaction.guild, interaction.user, 金額)
         b_m = await m.get_server_money_bank(interaction.guild, interaction.user)
         await interaction.followup.send(
             embed=make_embed.success_embed(
                 title=f"銀行にお金を預けました。",
-                description=f"預けた{c_n}: {金額}\n現在の{c_n}: {b_m}"
+                description=f"預けた{c_n}: {金額}\n現在の{c_n}: {b_m}",
             )
         )
 
-    @server_economy.command(
-        name="withdraw", description="銀行からお金を引き出します。"
-    )
+    @server_economy.command(name="withdraw", description="銀行からお金を引き出します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_withdraw_server(
         self, interaction: discord.Interaction, 金額: int
@@ -1404,14 +1407,18 @@ class ServerMoneyCog(commands.Cog):
         bm = await m.get_server_money_bank(interaction.guild, interaction.user)
         c_n = await m.get_currency_name(interaction.guild)
         if bm < 金額:
-            return await interaction.followup.send(embed=make_embed.error_embed(title=f"{bm} {c_n}より大きい金額は引き出せません。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title=f"{bm} {c_n}より大きい金額は引き出せません。"
+                )
+            )
         await m.add_server_money_bank(interaction.guild, interaction.user, -金額)
         await m.add_server_money(interaction.guild, interaction.user, 金額)
         _m = await m.get_server_money(interaction.guild, interaction.user)
         await interaction.followup.send(
             embed=make_embed.success_embed(
                 title=f"銀行からお金を引き出しました。",
-                description=f"引き出した{c_n}: {金額}\n現在の手持ち: {_m}"
+                description=f"引き出した{c_n}: {金額}\n現在の手持ち: {_m}",
             )
         )
 
@@ -1421,7 +1428,9 @@ class ServerMoneyCog(commands.Cog):
     async def economy_ranking_server(self, interaction: discord.Interaction):
         text = await Money(interaction.client).get_server_ranking(interaction.guild)
         await interaction.response.send_message(
-            embed=make_embed.success_embed(title="お金持ちランキングです。", description=text)
+            embed=make_embed.success_embed(
+                title="お金持ちランキングです。", description=text
+            )
         )
 
     # ====== buy ======
@@ -1436,11 +1445,9 @@ class ServerMoneyCog(commands.Cog):
         )
         if not sm:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="アイテムが見つかりません。"
-                )
+                embed=make_embed.error_embed(title="アイテムが見つかりません。")
             )
-        
+
         c_n = await Money(interaction.client).get_currency_name(interaction.guild)
 
         m = await Money(interaction.client).get_server_money(
@@ -1450,7 +1457,7 @@ class ServerMoneyCog(commands.Cog):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="残高が足りません。",
-                    description=f"「{アイテム名}」を買うには {sm.get('Money', 0)}{c_n}が必要です。"
+                    description=f"「{アイテム名}」を買うには {sm.get('Money', 0)}{c_n}が必要です。",
                 )
             )
 
@@ -1462,8 +1469,7 @@ class ServerMoneyCog(commands.Cog):
         )
         await interaction.followup.send(
             embed=make_embed.success_embed(
-                title="アイテムを買いました。",
-                description=f"「{アイテム名}」"
+                title="アイテムを買いました。", description=f"「{アイテム名}」"
             )
         )
 
@@ -1479,9 +1485,7 @@ class ServerMoneyCog(commands.Cog):
         )
         if not sm:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="アイテムが見つかりません。"
-                )
+                embed=make_embed.error_embed(title="アイテムが見つかりません。")
             )
 
         count, role, dm = await Money(interaction.client).get_server_item(
@@ -1489,9 +1493,7 @@ class ServerMoneyCog(commands.Cog):
         )
         if count < 1:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="アイテムを持っていません。"
-                )
+                embed=make_embed.error_embed(title="アイテムを持っていません。")
             )
 
         flag = "アイテムが一つ使用されました。\n"
@@ -1509,14 +1511,23 @@ class ServerMoneyCog(commands.Cog):
         )
         await interaction.followup.send(
             embed=make_embed.success_embed(
-                title="アイテムを使用しました。",
-                description=flag
+                title="アイテムを使用しました。", description=flag
             )
         )
 
         if dm != "なし":
-            await interaction.user.send(embed=discord.Embed(title=f"{アイテム名}にメッセージが添付されていました！", description=f"内容\n```{dm}```", color=discord.Color.blue())
-                                        .set_footer(text=interaction.guild.name, icon_url=interaction.guild.icon.url if interaction.guild.icon else None))
+            await interaction.user.send(
+                embed=discord.Embed(
+                    title=f"{アイテム名}にメッセージが添付されていました！",
+                    description=f"内容\n```{dm}```",
+                    color=discord.Color.blue(),
+                ).set_footer(
+                    text=interaction.guild.name,
+                    icon_url=interaction.guild.icon.url
+                    if interaction.guild.icon
+                    else None,
+                )
+            )
 
     # ====== items ======
     @server_economy.command(

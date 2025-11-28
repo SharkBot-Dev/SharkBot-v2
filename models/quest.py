@@ -1,5 +1,6 @@
 import discord
 
+
 async def quest_clear(interaction: discord.Interaction, qid: str) -> bool:
     db = interaction.client.async_db["Main"].BotQuest
 
@@ -18,7 +19,7 @@ async def quest_clear(interaction: discord.Interaction, qid: str) -> bool:
     embed = discord.Embed(
         title="クエストをクリアしました！",
         description=f"```{quest_text}```\nをクリアしたよ！",
-        color=discord.Color.green()
+        color=discord.Color.green(),
     )
     await interaction.channel.send(embed=embed)
 

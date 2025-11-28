@@ -55,6 +55,7 @@ async def on_ready():
 async def on_message(message):
     return
 
+
 async def load_cogs(bot: commands.Bot, base_folder="cogs"):
     for root, dirs, files in os.walk(base_folder):
         for file in files:
@@ -66,6 +67,7 @@ async def load_cogs(bot: commands.Bot, base_folder="cogs"):
                     await bot.load_extension(module)
                 except Exception as e:
                     print(f"❌ Failed to load {module}: {e}")
+
 
 @bot.event
 async def setup_hook() -> None:

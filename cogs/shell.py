@@ -161,7 +161,7 @@ class RunNodeJS(discord.ui.Modal, title="NodoJSを実行"):
                 await interaction.followup.send(
                     embed=make_embed.success_embed(
                         title="Nodejsの実行結果",
-                        description=f"```{data.get('stdout', '')}```"
+                        description=f"```{data.get('stdout', '')}```",
                     )
                 )
 
@@ -243,7 +243,7 @@ class RunCPlapla(discord.ui.Modal, title="C++を実行"):
                 await interaction.followup.send(
                     embed=make_embed.success_embed(
                         title="C++の実行結果",
-                        description=f"```{data.get('stdout', '')}```"
+                        description=f"```{data.get('stdout', '')}```",
                     )
                 )
 
@@ -318,7 +318,7 @@ class RunCSharp(discord.ui.Modal, title="C#を実行"):
                 await interaction.followup.send(
                     embed=make_embed.success_embed(
                         title="C#の実行結果",
-                        description=f"```{data.get('stdout', '')}```"
+                        description=f"```{data.get('stdout', '')}```",
                     )
                 )
 
@@ -515,17 +515,17 @@ class ShellCog(commands.Cog):
             web = await interaction.channel.create_webhook(name="PythonShell")
             await db.update_one(
                 {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-                {'$set': {
-                    "Guild": interaction.guild.id,
-                    "Channel": interaction.channel.id,
-                    "WebHook": web.url,
-                }},
+                {
+                    "$set": {
+                        "Guild": interaction.guild.id,
+                        "Channel": interaction.channel.id,
+                        "WebHook": web.url,
+                    }
+                },
                 upsert=True,
             )
             return await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="Pythonシェルを有効化しました。"
-                )
+                embed=make_embed.success_embed(title="Pythonシェルを有効化しました。")
             )
         else:
             result = await db.delete_one(
@@ -538,9 +538,7 @@ class ShellCog(commands.Cog):
                     )
                 )
             return await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="Pythonシェルを無効化しました。"
-                )
+                embed=make_embed.success_embed(title="Pythonシェルを無効化しました。")
             )
 
     @shell.command(name="math", description="計算式を計算します。")
@@ -627,26 +625,20 @@ class ShellCog(commands.Cog):
             if not コマンド名 is None:
                 if コマンド名 in k:
                     return await interaction.followup.send(
-                        embed=make_embed.success_embed(
-                            title="Linuxコマンド検索結果"
-                        )
+                        embed=make_embed.success_embed(title="Linuxコマンド検索結果")
                         .add_field(name="コマンド名", value=k, inline=False)
                         .add_field(name="説明", value=v, inline=False)
                     )
             if not 説明 is None:
                 if 説明 in v:
                     return await interaction.followup.send(
-                        embed=make_embed.success_embed(
-                            title="Linuxコマンド検索結果"
-                        )
+                        embed=make_embed.success_embed(title="Linuxコマンド検索結果")
                         .add_field(name="コマンド名", value=k, inline=False)
                         .add_field(name="説明", value=v, inline=False)
                     )
 
         return await interaction.followup.send(
-            embed=make_embed.error_embed(
-                title="検索結果が見つかりません。"
-            )
+            embed=make_embed.error_embed(title="検索結果が見つかりません。")
         )
 
     @shell.command(name="compile", description="プログラムをコンパイルします。")

@@ -30,11 +30,15 @@ YouTubeとかですげー再生数伸びるんで
 データなんかねえよ
 """
 
+
 async def generate_text(text: str, started_word: str, max_words: int = 50):
     loop = asyncio.get_running_loop()
     tokenizer = await loop.run_in_executor(None, Tokenizer)
 
-    words = [token.surface for token in await loop.run_in_executor(None, partial(tokenizer.tokenize, text))]
+    words = [
+        token.surface
+        for token in await loop.run_in_executor(None, partial(tokenizer.tokenize, text))
+    ]
 
     markov = {}
     for i in range(len(words) - 2):
@@ -45,7 +49,11 @@ async def generate_text(text: str, started_word: str, max_words: int = 50):
     def generate_sentence(start_word=None, max_words=50):
         if start_word:
             candidates = [k for k in markov.keys() if start_word in k]
-            start = random.choice(candidates) if candidates else random.choice(list(markov.keys()))
+            start = (
+                random.choice(candidates)
+                if candidates
+                else random.choice(list(markov.keys()))
+            )
         else:
             start = random.choice(list(markov.keys()))
 
@@ -61,7 +69,9 @@ async def generate_text(text: str, started_word: str, max_words: int = 50):
                 break
         return "".join(sentence)
 
-    gen_text = await loop.run_in_executor(None, partial(generate_sentence, started_word, max_words))
+    gen_text = await loop.run_in_executor(
+        None, partial(generate_sentence, started_word, max_words)
+    )
     if gen_text.startswith(started_word):
         return gen_text
     return started_word + gen_text

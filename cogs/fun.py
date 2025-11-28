@@ -32,6 +32,7 @@ import cowsay
 
 cooldown_hiroyuki = {}
 
+
 class EditImageView(discord.ui.View):
     def __init__(self, user: discord.User):
         super().__init__(timeout=180)
@@ -117,158 +118,213 @@ def sudden_generator(msg):
     generating += "^Y￣"
     return generating
 
+
 class BirthdayGroup(app_commands.Group):
     def __init__(self):
-        super().__init__(name="birthday", description="誕生日を設定&祝ってもらうためのコマンドです。")
+        super().__init__(
+            name="birthday", description="誕生日を設定&祝ってもらうためのコマンドです。"
+        )
 
     @app_commands.command(name="set", description="誕生日を設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def birthday_set(
-        self,
-        interaction: discord.Interaction,
-        月: int,
-        日: int
-    ):
+    async def birthday_set(self, interaction: discord.Interaction, 月: int, 日: int):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         if 月 < 1 or 月 > 12:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(title="月の値が不正です。", description="1～12の間で指定してください。"),
-                ephemeral=True
+                embed=make_embed.error_embed(
+                    title="月の値が不正です。",
+                    description="1～12の間で指定してください。",
+                ),
+                ephemeral=True,
             )
         if 日 < 1 or 日 > 31:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(title="日の値が不正です。", description="1～31の間で指定してください。"),
-                ephemeral=True
+                embed=make_embed.error_embed(
+                    title="日の値が不正です。",
+                    description="1～31の間で指定してください。",
+                ),
+                ephemeral=True,
             )
         if 月 == 2 and 日 > 29:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(title="日の値が不正です。", description="2月は29日までしかありません。"),
-                ephemeral=True
+                embed=make_embed.error_embed(
+                    title="日の値が不正です。",
+                    description="2月は29日までしかありません。",
+                ),
+                ephemeral=True,
             )
         if 月 in [4, 6, 9, 11] and 日 > 30:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(title="日の値が不正です。", description=f"{月}月は30日までしかありません。"),
-                ephemeral=True
+                embed=make_embed.error_embed(
+                    title="日の値が不正です。",
+                    description=f"{月}月は30日までしかありません。",
+                ),
+                ephemeral=True,
             )
 
         db = interaction.client.async_db["Main"].Birthdays
         await db.update_one(
             {"user_id": interaction.user.id, "guild_id": interaction.guild_id},
             {"$set": {"month": 月, "day": 日}},
-            upsert=True
+            upsert=True,
         )
 
         await interaction.response.send_message(
-            embed=make_embed.success_embed(title="誕生日を設定しました。", description=f"{月}月{日}日 が誕生日に設定されました。"),
-            ephemeral=True
+            embed=make_embed.success_embed(
+                title="誕生日を設定しました。",
+                description=f"{月}月{日}日 が誕生日に設定されました。",
+            ),
+            ephemeral=True,
         )
 
     @app_commands.command(name="get", description="ほかの人の誕生日を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def birthday_get(
-        self,
-        interaction: discord.Interaction,
-        メンバー: discord.User = None
+        self, interaction: discord.Interaction, メンバー: discord.User = None
     ):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         if interaction.guild.get_member(interaction.user.id) is None:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(title="サーバーに参加していません。", description="このコマンドではサーバーに参加している人の誕生日のみ取得できます。"),
-                ephemeral=True
+                embed=make_embed.error_embed(
+                    title="サーバーに参加していません。",
+                    description="このコマンドではサーバーに参加している人の誕生日のみ取得できます。",
+                ),
+                ephemeral=True,
             )
 
         if not メンバー:
             メンバー = interaction.user
 
         db = interaction.client.async_db["Main"].Birthdays
-        data = await db.find_one({"user_id": メンバー.id, "guild_id": interaction.guild_id})
+        data = await db.find_one(
+            {"user_id": メンバー.id, "guild_id": interaction.guild_id}
+        )
 
         if not data:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(title="誕生日が設定されていません。", description=f"{メンバー} さんは誕生日を設定していません。"),
-                ephemeral=True
+                embed=make_embed.error_embed(
+                    title="誕生日が設定されていません。",
+                    description=f"{メンバー} さんは誕生日を設定していません。",
+                ),
+                ephemeral=True,
             )
 
         await interaction.response.send_message(
-            embed=make_embed.success_embed(title=f"{メンバー.name} さんの誕生日", description=f"{メンバー.name} さんの誕生日は {data['month']}月{data['day']}日 です。")
+            embed=make_embed.success_embed(
+                title=f"{メンバー.name} さんの誕生日",
+                description=f"{メンバー.name} さんの誕生日は {data['month']}月{data['day']}日 です。",
+            )
         )
 
     @app_commands.command(name="list", description="今月が誕生日の人を表示します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def birthday_list(
-        self,
-        interaction: discord.Interaction,
-        月: int = None
-    ):
+    async def birthday_list(self, interaction: discord.Interaction, 月: int = None):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         db = interaction.client.async_db["Main"].Birthdays
-        data = db.find({"guild_id": interaction.guild_id, "month": 月 if 月 else interaction.created_at.month})
+        data = db.find(
+            {
+                "guild_id": interaction.guild_id,
+                "month": 月 if 月 else interaction.created_at.month,
+            }
+        )
 
         members = []
         async for d in data:
-            member = interaction.guild.get_member(d['user_id'])
+            member = interaction.guild.get_member(d["user_id"])
             if member:
                 members.append(f"{member.name} さん - {d['month']}月{d['day']}日")
 
         if not members:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(title=f"{月 if 月 else interaction.created_at.month}月 が誕生日の人はいません。"),
-                ephemeral=True
+                embed=make_embed.error_embed(
+                    title=f"{月 if 月 else interaction.created_at.month}月 が誕生日の人はいません。"
+                ),
+                ephemeral=True,
             )
 
         await interaction.response.send_message(
-            embed=make_embed.success_embed(title=f"{月 if 月 else interaction.created_at.month}月 が誕生日の人を表示しています。", description="\n".join(members[:30]),)
-            .set_footer(text="30人までしか表示されません。")
+            embed=make_embed.success_embed(
+                title=f"{月 if 月 else interaction.created_at.month}月 が誕生日の人を表示しています。",
+                description="\n".join(members[:30]),
+            ).set_footer(text="30人までしか表示されません。")
         )
+
 
 class SayGroup(app_commands.Group):
     def __init__(self):
-        super().__init__(name="say", description="いろいろなキャラクターに発言させます。")
+        super().__init__(
+            name="say", description="いろいろなキャラクターに発言させます。"
+        )
 
     @app_commands.command(name="caw", description="牛にしゃべらせます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def say_cow(
-        self,
-        interaction: discord.Interaction,
-        テキスト: str
-    ):
-        text = cowsay.get_output_string('cow', テキスト)
-        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="牛が発言しました。", description=f"```{text}```", color=discord.Color.green())
-                                                .set_footer(text="コピーして貼り付けると会話中にしようできます。"))
+    async def say_cow(self, interaction: discord.Interaction, テキスト: str):
+        text = cowsay.get_output_string("cow", テキスト)
+        await interaction.response.send_message(
+            ephemeral=True,
+            embed=discord.Embed(
+                title="牛が発言しました。",
+                description=f"```{text}```",
+                color=discord.Color.green(),
+            ).set_footer(text="コピーして貼り付けると会話中にしようできます。"),
+        )
 
     @app_commands.command(name="dragon", description="ドラゴンにしゃべらせます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def say_dragon(
-        self,
-        interaction: discord.Interaction,
-        テキスト: str
-    ):
-        text = cowsay.get_output_string('dragon', テキスト)
-        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="ドラゴンが発言しました。", description=f"```{text}```", color=discord.Color.green())
-                                                .set_footer(text="コピーして貼り付けると会話中にしようできます。"))
+    async def say_dragon(self, interaction: discord.Interaction, テキスト: str):
+        text = cowsay.get_output_string("dragon", テキスト)
+        await interaction.response.send_message(
+            ephemeral=True,
+            embed=discord.Embed(
+                title="ドラゴンが発言しました。",
+                description=f"```{text}```",
+                color=discord.Color.green(),
+            ).set_footer(text="コピーして貼り付けると会話中にしようできます。"),
+        )
 
     @app_commands.command(name="penguin", description="ペンギンにしゃべらせます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def say_tux(
-        self,
-        interaction: discord.Interaction,
-        テキスト: str
-    ):
-        text = cowsay.get_output_string('tux', テキスト)
-        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="ペンギンが発言しました。", description=f"```{text}```", color=discord.Color.green())
-                                                .set_footer(text="コピーして貼り付けると会話中にしようできます。"))
+    async def say_tux(self, interaction: discord.Interaction, テキスト: str):
+        text = cowsay.get_output_string("tux", テキスト)
+        await interaction.response.send_message(
+            ephemeral=True,
+            embed=discord.Embed(
+                title="ペンギンが発言しました。",
+                description=f"```{text}```",
+                color=discord.Color.green(),
+            ).set_footer(text="コピーして貼り付けると会話中にしようできます。"),
+        )
+
 
 class AudioGroup(app_commands.Group):
     def __init__(self):
@@ -313,19 +369,23 @@ class AudioGroup(app_commands.Group):
                     io_.close()
         elif 声の種類.value == "hiroyuki":
             json_data = {
-                'variant': 'maker-tts',
-                'text': テキスト,
+                "variant": "maker-tts",
+                "text": テキスト,
             }
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    f"https://backend.coefont.cloud/coefonts/19d55439-312d-4a1d-a27b-28f0f31bedc5/try", json=json_data
+                    f"https://backend.coefont.cloud/coefonts/19d55439-312d-4a1d-a27b-28f0f31bedc5/try",
+                    json=json_data,
                 ) as response:
                     j = await response.json()
-                    if not j.get('location'):
-                        return await interaction.followup.send(embed=discord.Embed(title="音声生成に失敗しました。", color=discord.Color.red()))
-                    async with session.get(
-                        j['location']
-                    ) as response_wav:
+                    if not j.get("location"):
+                        return await interaction.followup.send(
+                            embed=discord.Embed(
+                                title="音声生成に失敗しました。",
+                                color=discord.Color.red(),
+                            )
+                        )
+                    async with session.get(j["location"]) as response_wav:
                         io_ = io.BytesIO(await response_wav.read())
                         await interaction.followup.send(
                             file=discord.File(io_, filename="tts.wav")
@@ -462,8 +522,7 @@ class TextGroup(app_commands.Group):
     ):
         await interaction.response.send_message(
             embed=make_embed.success_embed(
-                description=f"```{sudden_generator(テキスト)}```",
-                title="突然の死"
+                description=f"```{sudden_generator(テキスト)}```", title="突然の死"
             )
         )
 
@@ -477,9 +536,7 @@ class TextGroup(app_commands.Group):
 
         desc = f"ja -> {テキスト}"
         msg = await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title="何回も翻訳 (ja)", description=desc
-            )
+            embed=make_embed.success_embed(title="何回も翻訳 (ja)", description=desc)
         )
 
         word = テキスト
@@ -495,16 +552,14 @@ class TextGroup(app_commands.Group):
             desc += f"\n{lang} -> {word}"
             await interaction.edit_original_response(
                 embed=make_embed.success_embed(
-                    title=f"何回も翻訳 ({lang})",
-                    description=desc
+                    title=f"何回も翻訳 ({lang})", description=desc
                 )
             )
 
         await asyncio.sleep(1)
         await interaction.edit_original_response(
             embed=make_embed.success_embed(
-                title="何回も翻訳",
-                description=f"{desc}\n完了しました。"
+                title="何回も翻訳", description=f"{desc}\n完了しました。"
             )
         )
 
@@ -535,7 +590,9 @@ class TextGroup(app_commands.Group):
                         if char.isalnum()
                     ]
 
-                romaji_text = "".join(item["kunrei"] for item in result if "kunrei" in item)
+                romaji_text = "".join(
+                    item["kunrei"] for item in result if "kunrei" in item
+                )
                 emojis = text_to_discord_emoji(romaji_text)
 
                 return emojis
@@ -543,7 +600,11 @@ class TextGroup(app_commands.Group):
             ems = await text_emoji(テキスト[:20])
             await interaction.followup.send(content=" ".join(ems))
         except KeyError:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="特殊文字や絵文字、記号などは使用できません。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="特殊文字や絵文字、記号などは使用できません。"
+                )
+            )
 
     @app_commands.command(name="reencode", description="文字化けを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -552,7 +613,7 @@ class TextGroup(app_commands.Group):
         await interaction.response.send_message(
             embed=make_embed.success_embed(
                 title="文字化け",
-                description=encode(テキスト).decode("sjis", errors="ignore")
+                description=encode(テキスト).decode("sjis", errors="ignore"),
             )
         )
 
@@ -585,21 +646,18 @@ class TextGroup(app_commands.Group):
             except InvalidToken:
                 await interaction.response.send_message(
                     embed=make_embed.error_embed(
-                        title="復号エラー",
-                        description="無効な暗号またはキーです。"
+                        title="復号エラー", description="無効な暗号またはキーです。"
                     )
                 )
             except Exception as e:
                 await interaction.response.send_message(
-                    embed=make_embed.error_embed(
-                        title="エラー", description=str(e)
-                    )
+                    embed=make_embed.error_embed(title="エラー", description=str(e))
                 )
         else:
             await interaction.response.send_message(
                 embed=make_embed.error_embed(
                     title="使用方法エラー",
-                    description="暗号化には `テキスト` を、復号には `暗号` と `暗号化キー` を指定してください。"
+                    description="暗号化には `テキスト` を、復号には `暗号` と `暗号化キー` を指定してください。",
                 )
             )
 
@@ -611,7 +669,7 @@ class TextGroup(app_commands.Group):
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(
                     title="対応していない進数です。",
-                    description="2～16進数まで対応しています。"
+                    description="2～16進数まで対応しています。",
                 )
             )
 
@@ -621,14 +679,14 @@ class TextGroup(app_commands.Group):
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(
                     title="変換エラー",
-                    description=f"入力 `{数字}` は {進数} 進数として無効です。"
+                    description=f"入力 `{数字}` は {進数} 進数として無効です。",
                 )
             )
 
         await interaction.response.send_message(
             embed=make_embed.success_embed(
                 title="進数を変換しました。",
-                description=f"`{数字}` ({進数}進数) → `{result}` (10進数)"
+                description=f"`{数字}` ({進数}進数) → `{result}` (10進数)",
             )
         )
 
@@ -642,7 +700,9 @@ class TextGroup(app_commands.Group):
             ord_str = f"{ord(t)}"
             raw_text += t.center(len(ord_str) + 1)
             text += ord_str + " "
-        await interaction.response.send_message(f"```{raw_text}\n{text}```", ephemeral=True)
+        await interaction.response.send_message(
+            f"```{raw_text}\n{text}```", ephemeral=True
+        )
 
     @app_commands.command(name="arm", description="armのasmを、バイナリに変換します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -679,7 +739,7 @@ class TextGroup(app_commands.Group):
                             await interaction_.followup.send(
                                 embed=make_embed.success_embed(
                                     title="ARMのバイナリ",
-                                    description=f"```{hex_result}```"
+                                    description=f"```{hex_result}```",
                                 )
                             )
                 except Exception as e:
@@ -693,22 +753,53 @@ class TextGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def morse_convert(self, interaction: discord.Interaction, テキスト: str):
-        words = {"A": "・－","B": "－・・・","C": "－・－・","D": "－・・","E": "・","F": "・・－・",
-                    "G": "－－・","H": "・・・・","I": "・・","J": "・－－－","K": "－・－","L": "・－・・",
-                    "M": "－－","N": "－・","O": "－－－","P": "・－－・","Q": "－－・－","R": "・－・",
-                    "S": "・・・","T": "－","U": "・・－","V": "・・・－","W": "・－－","X": "－・・－","Y": "－・－－","Z": "－－・・"
+        words = {
+            "A": "・－",
+            "B": "－・・・",
+            "C": "－・－・",
+            "D": "－・・",
+            "E": "・",
+            "F": "・・－・",
+            "G": "－－・",
+            "H": "・・・・",
+            "I": "・・",
+            "J": "・－－－",
+            "K": "－・－",
+            "L": "・－・・",
+            "M": "－－",
+            "N": "－・",
+            "O": "－－－",
+            "P": "・－－・",
+            "Q": "－－・－",
+            "R": "・－・",
+            "S": "・・・",
+            "T": "－",
+            "U": "・・－",
+            "V": "・・・－",
+            "W": "・－－",
+            "X": "－・・－",
+            "Y": "－・－－",
+            "Z": "－－・・",
         }
-        
+
         def morse_code_encrypt(st: str):
             try:
                 codes = [words[s] for s in st.upper() if s in words]
-                return '  '.join(codes)
+                return "  ".join(codes)
             except:
                 return None
-            
+
         text = morse_code_encrypt(テキスト)
-        
-        await interaction.response.send_message(embed=make_embed.success_embed(title="モールス信号に変換しました。", description=text if text else '変換に失敗しました。\n英語にしか対応していません。'))
+
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title="モールス信号に変換しました。",
+                description=text
+                if text
+                else "変換に失敗しました。\n英語にしか対応していません。",
+            )
+        )
+
 
 class NounaiGroup(app_commands.Group):
     def __init__(self):
@@ -774,6 +865,7 @@ class NounaiGroup(app_commands.Group):
             )
         )
 
+
 class AnimalGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="animal", description="動物系の面白いコマンド")
@@ -828,6 +920,7 @@ class AnimalGroup(app_commands.Group):
                     ).set_image(url=f"{json.loads(await dog_.text())['url']}")
                 )
 
+
 class ImageGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="image", description="画像系の面白いコマンド")
@@ -850,23 +943,21 @@ class ImageGroup(app_commands.Group):
         if noアルファ:
             if noアルファ == False:
                 msg = await interaction.response.send_message(
-                    embed=make_embed.success_embed(
-                        title="5000兆円ほしい！"
-                    ).set_image(url=f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(上)}&bottom={urllib.parse.quote(下)}")
+                    embed=make_embed.success_embed(title="5000兆円ほしい！").set_image(
+                        url=f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(上)}&bottom={urllib.parse.quote(下)}"
+                    )
                 )
             else:
                 msg = await interaction.response.send_message(
-                    embed=make_embed.success_embed(
-                        title="5000兆円ほしい！"
-                    ).set_image(
+                    embed=make_embed.success_embed(title="5000兆円ほしい！").set_image(
                         url=f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(上)}&bottom={urllib.parse.quote(下)}&noalpha=true"
                     )
                 )
         else:
             msg = await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="5000兆円ほしい！"
-                ).set_image(url=f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(上)}&bottom={urllib.parse.quote(下)}")
+                embed=make_embed.success_embed(title="5000兆円ほしい！").set_image(
+                    url=f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(上)}&bottom={urllib.parse.quote(下)}"
+                )
             )
 
     @app_commands.command(name="emoji-kitchen", description="絵文字を合体させます。")
@@ -875,7 +966,7 @@ class ImageGroup(app_commands.Group):
     @app_commands.choices(
         調理方法=[
             app_commands.Choice(name="合成させる", value="mix"),
-            app_commands.Choice(name="重ねる", value="layer")
+            app_commands.Choice(name="重ねる", value="layer"),
         ]
     )
     async def emoji_kitchen(
@@ -883,24 +974,37 @@ class ImageGroup(app_commands.Group):
         interaction: discord.Interaction,
         unicode絵文字: str,
         unicode絵文字2: str,
-        調理方法: app_commands.Choice[str]
+        調理方法: app_commands.Choice[str],
     ):
         await interaction.response.defer()
-        if 調理方法.value == 'layer':
+        if 調理方法.value == "layer":
             async with aiohttp.ClientSession() as session:
                 async with session.get(
                     f"https://emojik.vercel.app/s/{urllib.parse.quote(unicode絵文字)}_{urllib.parse.quote(unicode絵文字2)}"
                 ) as response:
                     image = await response.read()
                     i = io.BytesIO(image)
-                    await interaction.followup.send(embed=make_embed.success_embed(title="絵文字を合成させました。")
-                                                            .set_image(url='attachment://emoji.png'), file=discord.File(i, filename='emoji.png'))
+                    await interaction.followup.send(
+                        embed=make_embed.success_embed(
+                            title="絵文字を合成させました。"
+                        ).set_image(url="attachment://emoji.png"),
+                        file=discord.File(i, filename="emoji.png"),
+                    )
                     i.close()
-        elif 調理方法.value == 'mix':
+        elif 調理方法.value == "mix":
+
             def make_emoji_mix():
-                img = Image.new(mode='RGBA', size=(500, 500))
-                emojI_1 = io.BytesIO(requests.get(f'https://emojicdn.elk.sh/{urllib.parse.quote(unicode絵文字)}').content)
-                emojI_2 = io.BytesIO(requests.get(f'https://emojicdn.elk.sh/{urllib.parse.quote(unicode絵文字2)}').content)
+                img = Image.new(mode="RGBA", size=(500, 500))
+                emojI_1 = io.BytesIO(
+                    requests.get(
+                        f"https://emojicdn.elk.sh/{urllib.parse.quote(unicode絵文字)}"
+                    ).content
+                )
+                emojI_2 = io.BytesIO(
+                    requests.get(
+                        f"https://emojicdn.elk.sh/{urllib.parse.quote(unicode絵文字2)}"
+                    ).content
+                )
                 img_emoji_1 = Image.open(emojI_1).resize((500, 500))
                 img_emoji_2 = Image.open(emojI_2).resize((500, 500))
                 img.paste(img_emoji_1)
@@ -913,9 +1017,14 @@ class ImageGroup(app_commands.Group):
                 img.save(i_, format="png")
                 i_.seek(0)
                 return i_
+
             e = await asyncio.to_thread(make_emoji_mix)
-            await interaction.followup.send(embed=make_embed.success_embed(title="絵文字を合成させました。")
-                                                    .set_image(url='attachment://emoji.png'), file=discord.File(e, filename='emoji.png'))
+            await interaction.followup.send(
+                embed=make_embed.success_embed(
+                    title="絵文字を合成させました。"
+                ).set_image(url="attachment://emoji.png"),
+                file=discord.File(e, filename="emoji.png"),
+            )
             e.close()
 
     @app_commands.command(name="textmoji", description="テキストを絵文字にします。")
@@ -933,7 +1042,7 @@ class ImageGroup(app_commands.Group):
         フォント=[
             app_commands.Choice(name="Discordフォント", value="discordfont"),
             app_commands.Choice(name="ガマフォント", value="gamafont"),
-            app_commands.Choice(name="クラフト明朝", value="craft")
+            app_commands.Choice(name="クラフト明朝", value="craft"),
         ]
     )
     async def textmoji(
@@ -942,9 +1051,10 @@ class ImageGroup(app_commands.Group):
         色: app_commands.Choice[str],
         フォント: app_commands.Choice[str],
         テキスト: str,
-        正方形にするか: bool
+        正方形にするか: bool,
     ):
         await interaction.response.defer()
+
         def make_text(text: str, color: str, sq: bool, font: str):
             if font == "discordfont":
                 font = ImageFont.truetype("data/DiscordFont.ttf", 50)
@@ -962,10 +1072,17 @@ class ImageGroup(app_commands.Group):
             text_h = bbox[3] - bbox[1]
 
             padding = 0
-            img = Image.new("RGBA", (text_w + padding*2, text_h + padding*2), (255, 255, 255, 0))
+            img = Image.new(
+                "RGBA", (text_w + padding * 2, text_h + padding * 2), (255, 255, 255, 0)
+            )
             draw = ImageDraw.Draw(img)
 
-            draw.text((padding - bbox[0], padding - bbox[1]), text, fill=f"#{color}", font=font)
+            draw.text(
+                (padding - bbox[0], padding - bbox[1]),
+                text,
+                fill=f"#{color}",
+                font=font,
+            )
 
             if sq:
                 img = img.resize((200, 200))
@@ -974,13 +1091,13 @@ class ImageGroup(app_commands.Group):
             img.save(i, format="PNG")
             i.seek(0)
             return i
-                
-        image = await asyncio.to_thread(make_text, テキスト, 色.value, 正方形にするか, フォント.value)
+
+        image = await asyncio.to_thread(
+            make_text, テキスト, 色.value, 正方形にするか, フォント.value
+        )
 
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            await interaction.followup.send(
-                file=discord.File(image, "emoji.png")
-            )
+            await interaction.followup.send(file=discord.File(image, "emoji.png"))
         else:
             await interaction.followup.send(
                 file=discord.File(image, "emoji.png"),
@@ -1020,7 +1137,7 @@ class ImageGroup(app_commands.Group):
     @app_commands.choices(
         タイプ=[
             app_commands.Choice(name="通常", value="normal"),
-            app_commands.Choice(name="外交風", value="gaikou")
+            app_commands.Choice(name="外交風", value="gaikou"),
         ]
     )
     async def miq(
@@ -1039,11 +1156,16 @@ class ImageGroup(app_commands.Group):
             image_binary = io.BytesIO()
             now = datetime.datetime.now()
             formatted_date = now.strftime("%Y年%m月%d日")
-            await asyncio.to_thread(m.generate_image, 発言.replace('\\n', "\n"), ユーザー.display_name, formatted_date, is_fake=True, output=image_binary)
-            file = discord.File(fp=image_binary, filename="fake_quote.png")
-            await interaction.followup.send(
-                file=file
+            await asyncio.to_thread(
+                m.generate_image,
+                発言.replace("\\n", "\n"),
+                ユーザー.display_name,
+                formatted_date,
+                is_fake=True,
+                output=image_binary,
             )
+            file = discord.File(fp=image_binary, filename="fake_quote.png")
+            await interaction.followup.send(file=file)
             image_binary.close()
             return
 
@@ -1087,7 +1209,7 @@ class ImageGroup(app_commands.Group):
                 channel = interaction.client.get_channel(obj_id)
                 return f"#{channel.name}" if channel else "#不明チャンネル"
             return match.group(0)
-        
+
         content = re.sub(pattern, replacer, 発言)
 
         while True:
@@ -1099,14 +1221,7 @@ class ImageGroup(app_commands.Group):
                     )
                 )
             miq_ = await miq.make_quote_async(
-                ユーザー.display_name,
-                content,
-                av,
-                back,
-                text,
-                color,
-                negapoji,
-                True
+                ユーザー.display_name, content, av, back, text, color, negapoji, True
             )
             image_binary = io.BytesIO()
             await asyncio.to_thread(miq_.save, image_binary, "PNG")
@@ -1166,12 +1281,13 @@ class ImageGroup(app_commands.Group):
     @app_commands.command(name="game", description="ゲームのコラ画像を作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.choices(
-        タイプ=[
-            app_commands.Choice(name="3ds", value="_3ds")
-        ]
-    )
-    async def game_package_image_(self, interaction: discord.Interaction, タイプ: app_commands.Choice[str], 添付ファイル: discord.Attachment):
+    @app_commands.choices(タイプ=[app_commands.Choice(name="3ds", value="_3ds")])
+    async def game_package_image_(
+        self,
+        interaction: discord.Interaction,
+        タイプ: app_commands.Choice[str],
+        添付ファイル: discord.Attachment,
+    ):
         await interaction.response.defer(ephemeral=True)
 
         def make_image(type_: str, image: io.BytesIO) -> io.BytesIO:
@@ -1193,7 +1309,7 @@ class ImageGroup(app_commands.Group):
                         title="予期しないエラーが発生しました。",
                         color=discord.Color.red(),
                     ),
-                    ephemeral=True
+                    ephemeral=True,
                 )
 
             img = io.BytesIO(await 添付ファイル.read())
@@ -1202,7 +1318,7 @@ class ImageGroup(app_commands.Group):
                 await interaction.followup.send(
                     file=discord.File(image, filename=f"{タイプ.name}.png"),
                     content=f"-# {c}回再試行しました。",
-                    ephemeral=True
+                    ephemeral=True,
                 )
             except Exception as e:
                 c += 1
@@ -1310,7 +1426,11 @@ class FunCog(commands.Cog):
         self.bot = bot
         print("init -> FunCog")
 
-    fun = app_commands.Group(name="fun", description="面白いコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True))
+    fun = app_commands.Group(
+        name="fun",
+        description="面白いコマンドです。",
+        allowed_installs=app_commands.AppInstallationType(guild=True, user=True),
+    )
 
     fun.add_command(TextGroup())
     fun.add_command(ImageGroup())
@@ -1325,16 +1445,18 @@ class FunCog(commands.Cog):
     async def on_message(self, message: discord.Message):
         if message.author.bot:
             return
-        
+
         if not message.guild:
             return
-        
-        db = self.bot.async_db['MainTwo'].Hiroyuki
 
-        dbfind = await db.find_one({"Guild": message.guild.id, "Channel": message.channel.id})
+        db = self.bot.async_db["MainTwo"].Hiroyuki
+
+        dbfind = await db.find_one(
+            {"Guild": message.guild.id, "Channel": message.channel.id}
+        )
         if dbfind is None:
             return
-        
+
         current_time = time.time()
         last_message_time = cooldown_hiroyuki.get(message.guild.id, 0)
         if current_time - last_message_time < 3:
@@ -1342,16 +1464,25 @@ class FunCog(commands.Cog):
         cooldown_hiroyuki[message.guild.id] = current_time
 
         try:
-            
             async with aiohttp.ClientSession() as session:
-                wh = discord.Webhook.from_url(dbfind.get('WebHook'), session=session)
+                wh = discord.Webhook.from_url(dbfind.get("WebHook"), session=session)
 
-                if message.clean_content.startswith('miq'):
+                if message.clean_content.startswith("miq"):
                     async with message.channel.typing():
-                        content = message.clean_content.removeprefix('miq')
+                        content = message.clean_content.removeprefix("miq")
                         g_text = await markov.generate_text(HIROYUKI_TEXT, content, 30)
-                        async with session.get("https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg") as av:
-                            miq_ = await miq.make_quote_async("ひろゆき", g_text, await av.read(), (0, 0, 0), textcolor=(255, 255, 255), color=True, negapoji=False)
+                        async with session.get(
+                            "https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg"
+                        ) as av:
+                            miq_ = await miq.make_quote_async(
+                                "ひろゆき",
+                                g_text,
+                                await av.read(),
+                                (0, 0, 0),
+                                textcolor=(255, 255, 255),
+                                color=True,
+                                negapoji=False,
+                            )
                             i = io.BytesIO()
                             await asyncio.to_thread(miq_.save, i, format="png")
                             i.seek(0)
@@ -1360,10 +1491,19 @@ class FunCog(commands.Cog):
 
                             while True:
                                 if c > 8:
-                                    return await wh.send(content="データなんかねーよ", username="ひろゆき", avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg")
+                                    return await wh.send(
+                                        content="データなんかねーよ",
+                                        username="ひろゆき",
+                                        avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg",
+                                    )
 
                                 try:
-                                    await wh.send(content="画像を生成したの見てもらってもいいですか？", username="ひろゆき", avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg", file=discord.File(i, filename="miq.png"))
+                                    await wh.send(
+                                        content="画像を生成したの見てもらってもいいですか？",
+                                        username="ひろゆき",
+                                        avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg",
+                                        file=discord.File(i, filename="miq.png"),
+                                    )
                                 except aiohttp.ClientOSError:
                                     c += 1
                                     await asyncio.sleep(0.5)
@@ -1372,29 +1512,51 @@ class FunCog(commands.Cog):
                             miq_.close()
                             i.close()
 
-                            await message.channel.send(message.author.mention, delete_after=3)
-                            
+                            await message.channel.send(
+                                message.author.mention, delete_after=3
+                            )
+
                     return
 
                 ca = random.randint(0, 12)
 
                 if ca == 11:
-                    await wh.send(content=await markov.generate_text(HIROYUKI_TEXT, message.clean_content, 100), username="パワー系ひろゆき", avatar_url="https://assets.st-note.com/production/uploads/images/152150583/rectangle_large_type_2_8a80ddb83cbc1b260fe6b958986ca4bd.jpeg?width=1280")
+                    await wh.send(
+                        content=await markov.generate_text(
+                            HIROYUKI_TEXT, message.clean_content, 100
+                        ),
+                        username="パワー系ひろゆき",
+                        avatar_url="https://assets.st-note.com/production/uploads/images/152150583/rectangle_large_type_2_8a80ddb83cbc1b260fe6b958986ca4bd.jpeg?width=1280",
+                    )
                     return
 
                 if ca == 10:
-                    ishiba_text = random.choice([f"{message.clean_content}とは...何か(ﾈｯﾄﾘ", "恥を知れ"])
-                    await wh.send(content=ishiba_text, username="石破茂", avatar_url="https://ishiba2024.jp/contents/wp-content/uploads/2024/09/profile_77.jpg")
+                    ishiba_text = random.choice(
+                        [f"{message.clean_content}とは...何か(ﾈｯﾄﾘ", "恥を知れ"]
+                    )
+                    await wh.send(
+                        content=ishiba_text,
+                        username="石破茂",
+                        avatar_url="https://ishiba2024.jp/contents/wp-content/uploads/2024/09/profile_77.jpg",
+                    )
                     return
 
-                await wh.send(content=await markov.generate_text(HIROYUKI_TEXT, message.clean_content, 100), username="ひろゆき", avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg")
+                await wh.send(
+                    content=await markov.generate_text(
+                        HIROYUKI_TEXT, message.clean_content, 100
+                    ),
+                    username="ひろゆき",
+                    avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg",
+                )
 
         except Exception as e:
-            await db.delete_one(
-                {"Guild": message.guild.id}
+            await db.delete_one({"Guild": message.guild.id})
+            return await message.channel.send(
+                embed=make_embed.error_embed(
+                    title="ひろゆきが消滅してしまいました。",
+                    description="消滅したため登録を解除しました。",
+                ).add_field(name="エラーコード", value=f"```{e}```", inline=False)
             )
-            return await message.channel.send(embed=make_embed.error_embed(title="ひろゆきが消滅してしまいました。", description="消滅したため登録を解除しました。")
-                                              .add_field(name="エラーコード", value=f"```{e}```", inline=False))
 
     @fun.command(name="hiroyuki", description="ひろゆきを召喚します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -1402,26 +1564,33 @@ class FunCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_channels=True)
     async def hiroyuki(self, interaction: discord.Interaction):
         if interaction.channel.type != discord.ChannelType.text:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="テキストチャンネルでのみ召喚できます。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="テキストチャンネルでのみ召喚できます。"
+                ),
+            )
 
         await interaction.response.defer()
 
-        db = interaction.client.async_db['MainTwo'].Hiroyuki
+        db = interaction.client.async_db["MainTwo"].Hiroyuki
 
         dbfind = await db.find_one({"Guild": interaction.guild.id})
         if dbfind is None:
             wh = await interaction.channel.create_webhook(name="ひろゆき")
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"$set": {"Channel": interaction.channel.id, 'WebHook': wh.url}},
-                upsert=True
+                {"$set": {"Channel": interaction.channel.id, "WebHook": wh.url}},
+                upsert=True,
             )
-            await interaction.followup.send(embed=make_embed.success_embed(title="ひろゆきを召喚しました。"))
+            await interaction.followup.send(
+                embed=make_embed.success_embed(title="ひろゆきを召喚しました。")
+            )
         else:
-            await db.delete_one(
-                {"Guild": interaction.guild.id}
+            await db.delete_one({"Guild": interaction.guild.id})
+            await interaction.followup.send(
+                embed=make_embed.success_embed(title="ひろゆきを退出させました。")
             )
-            await interaction.followup.send(embed=make_embed.success_embed(title="ひろゆきを退出させました。"))
 
     @fun.command(name="ranking", description="様々なランキングを表示します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -1431,31 +1600,54 @@ class FunCog(commands.Cog):
             app_commands.Choice(name="Top.ggのVoteランキング", value="vote")
         ]
     )
-    async def ranking(self, interaction: discord.Interaction, ランキングの種類: app_commands.Choice[str]):
+    async def ranking(
+        self,
+        interaction: discord.Interaction,
+        ランキングの種類: app_commands.Choice[str],
+    ):
         await interaction.response.defer()
 
         if ランキングの種類.value == "vote":
-            db = interaction.client.async_db['Main']['TOPGGVote']
+            db = interaction.client.async_db["Main"]["TOPGGVote"]
             top_users = await db.find().sort("count", -1).limit(15).to_list(length=15)
             if len(top_users) == 0:
-                await interaction.followup.send(embed=make_embed.success_embed(title="TOPGGVote回数", description="まだTopggでVoteされていません。"))
+                await interaction.followup.send(
+                    embed=make_embed.success_embed(
+                        title="TOPGGVote回数",
+                        description="まだTopggでVoteされていません。",
+                    )
+                )
                 return
             ranking_message = ""
             for index, user_data in enumerate(top_users, start=1):
                 user_id = user_data["_id"]
                 delete_count = user_data["count"]
                 member = self.bot.get_user(user_id)
-                username = f"{member.display_name} ({user_id})" if member else f"Unknown ({user_id})"
+                username = (
+                    f"{member.display_name} ({user_id})"
+                    if member
+                    else f"Unknown ({user_id})"
+                )
                 ranking_message += f"{index}. **{username}** - {delete_count} 回\n"
 
-            await interaction.followup.send(embed=make_embed.success_embed(title="TOPGGVote回数", description=ranking_message))
+            await interaction.followup.send(
+                embed=make_embed.success_embed(
+                    title="TOPGGVote回数", description=ranking_message
+                )
+            )
 
     @fun.command(name="janken", description="じゃんけんをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def janken(self, interaction: discord.Interaction):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         bot = random.choice(["ぐー", "ちょき", "ぱー"])
 

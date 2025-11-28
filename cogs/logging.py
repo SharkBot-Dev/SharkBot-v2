@@ -19,11 +19,13 @@ class LoggingCog(commands.Cog):
 
         try:
             query = {"Guild": guild.id}
-            query['Event'] = event
+            query["Event"] = event
 
             dbfind = await db.find_one(query, {"_id": False})
             if not dbfind:
-                dbfind = await db.find_one({"Guild": guild.id, "Event": {"$exists": False}}, {"_id": False})
+                dbfind = await db.find_one(
+                    {"Guild": guild.id, "Event": {"$exists": False}}, {"_id": False}
+                )
 
                 if not dbfind:
                     return None
@@ -33,7 +35,11 @@ class LoggingCog(commands.Cog):
 
                 if not wh:
                     dbfind_existing = await db.find_one(
-                        {"Guild": guild.id, "Channel": channel_id, "Webhook": {"$exists": True, "$ne": None}},
+                        {
+                            "Guild": guild.id,
+                            "Channel": channel_id,
+                            "Webhook": {"$exists": True, "$ne": None},
+                        },
                         {"Webhook": 1, "_id": 0},
                     )
 
@@ -63,7 +69,11 @@ class LoggingCog(commands.Cog):
 
             if not wh:
                 dbfind_existing = await db.find_one(
-                    {"Guild": guild.id, "Channel": channel_id, "Webhook": {"$exists": True, "$ne": None}},
+                    {
+                        "Guild": guild.id,
+                        "Channel": channel_id,
+                        "Webhook": {"$exists": True, "$ne": None},
+                    },
                     {"Webhook": 1, "_id": 0},
                 )
 
@@ -94,7 +104,9 @@ class LoggingCog(commands.Cog):
         except Exception as e:
             return None
 
-    async def is_ignore_channel(self, guild: discord.Guild, channel: discord.abc.GuildChannel):
+    async def is_ignore_channel(
+        self, guild: discord.Guild, channel: discord.abc.GuildChannel
+    ):
         db = self.bot.async_db["MainTwo"].LoggingIgnore
         try:
             dbfind = await db.find_one({"Guild": guild.id}, {"_id": False})
@@ -102,7 +114,7 @@ class LoggingCog(commands.Cog):
             return False
         if dbfind is None:
             return False
-        if channel.id in dbfind.get('Channel', []):
+        if channel.id in dbfind.get("Channel", []):
             return True
         else:
             return False
@@ -136,7 +148,10 @@ class LoggingCog(commands.Cog):
                         color=discord.Color.red(),
                     )
                     .set_footer(text=f"mid:{message.id}")
-                    .add_field(name="削除したメッセージのあったチャンネル", value=message.channel.mention)
+                    .add_field(
+                        name="削除したメッセージのあったチャンネル",
+                        value=message.channel.mention,
+                    )
                     .set_author(
                         name=f"{message.author.name}",
                         icon_url=message.author.avatar.url
@@ -319,7 +334,10 @@ class LoggingCog(commands.Cog):
                         color=discord.Color.yellow(),
                     )
                     .set_footer(text=f"mid:{after.id}")
-                    .add_field(name="編集したメッセージのあったチャンネル", value=before.channel.mention)
+                    .add_field(
+                        name="編集したメッセージのあったチャンネル",
+                        value=before.channel.mention,
+                    )
                     .set_author(
                         name=f"{after.author.name}",
                         icon_url=after.author.avatar.url
@@ -526,7 +544,6 @@ class LoggingCog(commands.Cog):
                 return
 
             if before.channel is None and after.channel is not None:
-
                 ignore = await self.is_ignore_channel(member.guild, after.channel)
                 if ignore:
                     return
@@ -550,7 +567,7 @@ class LoggingCog(commands.Cog):
                     )
         except:
             return
-        
+
     @commands.Cog.listener(name="on_voice_state_update")
     async def on_voice_state_update_leave_log(
         self,
@@ -562,9 +579,8 @@ class LoggingCog(commands.Cog):
             wh = await self.get_logging_webhook(member.guild, "vc_leave")
             if not wh:
                 return
-            
-            if before.channel is not None and after.channel is None:
 
+            if before.channel is not None and after.channel is None:
                 ignore = await self.is_ignore_channel(member.guild, before.channel)
                 if ignore:
                     return
@@ -591,14 +607,13 @@ class LoggingCog(commands.Cog):
 
     @commands.Cog.listener(name="on_audit_log_entry_create")
     async def on_on_audit_log_entry_create_log_bot_join(
-        self,
-        entry: discord.AuditLogEntry
+        self, entry: discord.AuditLogEntry
     ):
         try:
             wh = await self.get_logging_webhook(entry.guild, "bot_join")
             if not wh:
                 return
-            
+
             if entry.action == discord.AuditLogAction.bot_add:
                 async with aiohttp.ClientSession() as session:
                     webhook_ = Webhook.from_url(wh, session=session)
@@ -624,29 +639,29 @@ class LoggingCog(commands.Cog):
 
     @log.command(name="setup", description="イベントごとにログを設定します。")
     @app_commands.describe(event="ログを取りたいイベント（未指定なら全て）")
-    @app_commands.choices(event=[
-        app_commands.Choice(name="メッセージ削除", value="message_delete"),
-        app_commands.Choice(name="メッセージ編集", value="message_edit"),
-        app_commands.Choice(name="メンバーBAN", value="member_ban"),
-        app_commands.Choice(name="メンバー参加", value="member_join"),
-        app_commands.Choice(name="メンバー退出", value="member_remove"),
-        app_commands.Choice(name="メンバー更新", value="member_update"),
-        app_commands.Choice(name="ロール作成", value="role_create"),
-        app_commands.Choice(name="ロール削除", value="role_delete"),
-        app_commands.Choice(name="チャンネル作成", value="channel_create"),
-        app_commands.Choice(name="チャンネル削除", value="channel_delete"),
-        app_commands.Choice(name="招待リンク作成", value="invite_create"),
-        app_commands.Choice(name="AutoModアクション", value="automod_action"),
-        app_commands.Choice(name="VC参加", value="vc_join"),
-        app_commands.Choice(name="VC退出", value="vc_leave"),
-        app_commands.Choice(name="Bot導入", value="bot_join"),
-    ])
+    @app_commands.choices(
+        event=[
+            app_commands.Choice(name="メッセージ削除", value="message_delete"),
+            app_commands.Choice(name="メッセージ編集", value="message_edit"),
+            app_commands.Choice(name="メンバーBAN", value="member_ban"),
+            app_commands.Choice(name="メンバー参加", value="member_join"),
+            app_commands.Choice(name="メンバー退出", value="member_remove"),
+            app_commands.Choice(name="メンバー更新", value="member_update"),
+            app_commands.Choice(name="ロール作成", value="role_create"),
+            app_commands.Choice(name="ロール削除", value="role_delete"),
+            app_commands.Choice(name="チャンネル作成", value="channel_create"),
+            app_commands.Choice(name="チャンネル削除", value="channel_delete"),
+            app_commands.Choice(name="招待リンク作成", value="invite_create"),
+            app_commands.Choice(name="AutoModアクション", value="automod_action"),
+            app_commands.Choice(name="VC参加", value="vc_join"),
+            app_commands.Choice(name="VC退出", value="vc_leave"),
+            app_commands.Choice(name="Bot導入", value="bot_join"),
+        ]
+    )
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(administrator=True)
     async def log_setup(
-        self,
-        interaction: discord.Interaction,
-        event: app_commands.Choice[str] = None
+        self, interaction: discord.Interaction, event: app_commands.Choice[str] = None
     ):
         db = self.bot.async_db["Main"].EventLoggingChannel
 
@@ -670,9 +685,21 @@ class LoggingCog(commands.Cog):
         if event:
             update_data["$set"]["Event"] = event.value
 
-            await db.update_one({"Guild": interaction.guild.id, "Channel": interaction.channel.id, 'Event': event.value}, update_data, upsert=True)
+            await db.update_one(
+                {
+                    "Guild": interaction.guild.id,
+                    "Channel": interaction.channel.id,
+                    "Event": event.value,
+                },
+                update_data,
+                upsert=True,
+            )
         else:
-            await db.update_one({"Guild": interaction.guild.id, "Channel": interaction.channel.id}, update_data, upsert=True)
+            await db.update_one(
+                {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+                update_data,
+                upsert=True,
+            )
 
         await interaction.response.send_message(
             embed=make_embed.success_embed(
@@ -684,30 +711,42 @@ class LoggingCog(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.choices(event=[
-        app_commands.Choice(name="メッセージ削除", value="message_delete"),
-        app_commands.Choice(name="メッセージ編集", value="message_edit"),
-        app_commands.Choice(name="メンバーBAN", value="member_ban"),
-        app_commands.Choice(name="メンバー参加", value="member_join"),
-        app_commands.Choice(name="メンバー退出", value="member_remove"),
-        app_commands.Choice(name="メンバー更新", value="member_update"),
-        app_commands.Choice(name="ロール作成", value="role_create"),
-        app_commands.Choice(name="ロール削除", value="role_delete"),
-        app_commands.Choice(name="チャンネル作成", value="channel_create"),
-        app_commands.Choice(name="チャンネル削除", value="channel_delete"),
-        app_commands.Choice(name="招待リンク作成", value="invite_create"),
-        app_commands.Choice(name="AutoModアクション", value="automod_action"),
-        app_commands.Choice(name="VC参加", value="vc_join"),
-        app_commands.Choice(name="VC退出", value="vc_leave"),
-        app_commands.Choice(name="Bot導入", value="bot_join"),
-    ])
-    async def log_disable(self, interaction: discord.Interaction, event: app_commands.Choice[str] = None):       
+    @app_commands.choices(
+        event=[
+            app_commands.Choice(name="メッセージ削除", value="message_delete"),
+            app_commands.Choice(name="メッセージ編集", value="message_edit"),
+            app_commands.Choice(name="メンバーBAN", value="member_ban"),
+            app_commands.Choice(name="メンバー参加", value="member_join"),
+            app_commands.Choice(name="メンバー退出", value="member_remove"),
+            app_commands.Choice(name="メンバー更新", value="member_update"),
+            app_commands.Choice(name="ロール作成", value="role_create"),
+            app_commands.Choice(name="ロール削除", value="role_delete"),
+            app_commands.Choice(name="チャンネル作成", value="channel_create"),
+            app_commands.Choice(name="チャンネル削除", value="channel_delete"),
+            app_commands.Choice(name="招待リンク作成", value="invite_create"),
+            app_commands.Choice(name="AutoModアクション", value="automod_action"),
+            app_commands.Choice(name="VC参加", value="vc_join"),
+            app_commands.Choice(name="VC退出", value="vc_leave"),
+            app_commands.Choice(name="Bot導入", value="bot_join"),
+        ]
+    )
+    async def log_disable(
+        self, interaction: discord.Interaction, event: app_commands.Choice[str] = None
+    ):
         if event:
             db = self.bot.async_db["Main"].EventLoggingChannel
-            dbfind = await db.find_one({"Guild": interaction.guild.id, "Event": event.value}, {"_id": False})
+            dbfind = await db.find_one(
+                {"Guild": interaction.guild.id, "Event": event.value}, {"_id": False}
+            )
 
             if not dbfind:
-                return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="そのログは有効ではありません。", description="一括ですべてのログを有効化した際は、\nいったんすべてのログを無効化してから\n再度ログをセットアップしてください。"))
+                return await interaction.response.send_message(
+                    ephemeral=True,
+                    embed=make_embed.error_embed(
+                        title="そのログは有効ではありません。",
+                        description="一括ですべてのログを有効化した際は、\nいったんすべてのログを無効化してから\n再度ログをセットアップしてください。",
+                    ),
+                )
 
             await db.delete_one({"Guild": interaction.guild.id, "Event": event.value})
         else:
@@ -723,22 +762,53 @@ class LoggingCog(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def log_ignore(self, interaction: discord.Interaction, チャンネル: discord.abc.GuildChannel, 無視するか: bool):
+    async def log_ignore(
+        self,
+        interaction: discord.Interaction,
+        チャンネル: discord.abc.GuildChannel,
+        無視するか: bool,
+    ):
         if チャンネル.type == discord.ChannelType.category:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="カテゴリチャンネルは指定できません。", description="指定できるのはテキストチャンネル、ボイスチャンネル、スレッドのみです。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="カテゴリチャンネルは指定できません。",
+                    description="指定できるのはテキストチャンネル、ボイスチャンネル、スレッドのみです。",
+                ),
+            )
 
         if チャンネル.type == discord.ChannelType.forum:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="フォーラムチャンネルも指定できません。", description="指定できるのはテキストチャンネル、ボイスチャンネル、スレッドのみです。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="フォーラムチャンネルも指定できません。",
+                    description="指定できるのはテキストチャンネル、ボイスチャンネル、スレッドのみです。",
+                ),
+            )
 
         db = self.bot.async_db["MainTwo"].LoggingIgnore
 
         if 無視するか:
-            await db.update_one({"Guild": interaction.guild.id}, {'$addToSet': {"Channel": チャンネル.id}}, upsert=True)
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$addToSet": {"Channel": チャンネル.id}},
+                upsert=True,
+            )
         else:
-            await db.update_one({"Guild": interaction.guild.id}, {'$pull': {"Channel": チャンネル.id}}, upsert=True)
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$pull": {"Channel": チャンネル.id}},
+                upsert=True,
+            )
 
-        await interaction.response.send_message(embed=make_embed.success_embed(title="ログを送信しないチャンネルを設定しました。", description=f"次から {チャンネル.mention} のログを送信し {'ます' if not 無視するか else 'ません'}。"))
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title="ログを送信しないチャンネルを設定しました。",
+                description=f"次から {チャンネル.mention} のログを送信し {'ます' if not 無視するか else 'ません'}。",
+            )
+        )
         return
+
 
 async def setup(bot):
     await bot.add_cog(LoggingCog(bot))

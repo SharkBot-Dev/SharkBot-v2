@@ -5,6 +5,7 @@ from models import permissions_text
 
 from models import make_embed
 
+
 class ErrorHandleCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -28,7 +29,10 @@ class ErrorHandleCog(commands.Cog):
                     for perm in error.missing_permissions
                 ]
                 missing_perms_str = ", ".join(missing_perms)
-                embed = make_embed.error_embed(title="コマンドを実行する権限がありません！", description=f"不足している権限: {missing_perms_str}")
+                embed = make_embed.error_embed(
+                    title="コマンドを実行する権限がありません！",
+                    description=f"不足している権限: {missing_perms_str}",
+                )
                 if not interaction.response.is_done():
                     await interaction.response.send_message(
                         embed=embed,
@@ -37,16 +41,17 @@ class ErrorHandleCog(commands.Cog):
                 return
 
             print("App command error:", error)
-            embed = make_embed.error_embed(title="予期しないエラーが発生しました。", description=f"開発チームに報告してください。\n\nエラーコード```{error}```")
+            embed = make_embed.error_embed(
+                title="予期しないエラーが発生しました。",
+                description=f"開発チームに報告してください。\n\nエラーコード```{error}```",
+            )
             if not interaction.response.is_done():
                 await interaction.response.send_message(
                     embed=embed,
                     ephemeral=True,
                 )
             else:
-                await interaction.followup.send(
-                    embed=embed
-                )
+                await interaction.followup.send(embed=embed)
 
     @commands.Cog.listener("on_error")
     async def on_error(self, event: str, *args, **kwargs):

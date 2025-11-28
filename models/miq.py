@@ -16,14 +16,15 @@ UNICODE_EMOJI_RE = re.compile(
     r"\U0001F830-\U0001F8FF"  # Supplemental Symbols and Pictographs (continued)
     r"\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs (more modern emojis)
     r"\U00002600-\U000027BF"  # Miscellaneous Symbols
-    r"\U00002B50"             # Star symbol
+    r"\U00002B50"  # Star symbol
     r"]+",
-    flags=re.UNICODE
+    flags=re.UNICODE,
 )
 COMBINED_EMOJI_RE = re.compile(
     r"<a?:[a-zA-Z0-9_]{1,32}:[0-9]{17,22}>|" + UNICODE_EMOJI_RE.pattern,
     flags=re.UNICODE | re.DOTALL,
 )
+
 
 def wrap_text_with_scroll_cut(text, font, draw, max_width, max_height, line_height):
     lines = []
@@ -64,7 +65,7 @@ def draw_text_with_emojis(img, draw, position, text, font, fill):
 
     for m in COMBINED_EMOJI_RE.finditer(text):
         if m.start() > last_end:
-            part = text[last_end:m.start()]
+            part = text[last_end : m.start()]
             if part:
                 draw.text((cursor_x, y), part, font=font, fill=fill)
                 bbox = draw.textbbox((0, 0), part, font=font)
@@ -75,7 +76,7 @@ def draw_text_with_emojis(img, draw, position, text, font, fill):
 
         # --- Discord絵文字処理 ---
         # d = DISCORD_EMOJI_RE.fullmatch(token_clean)
-        #if d:
+        # if d:
         #    is_animated, name, emoji_id = d.groups()
         #    ext = "gif" if is_animated else "png"
         #    url = f"https://cdn.discordapp.com/emojis/{emoji_id}.{ext}?size=64"
@@ -112,7 +113,9 @@ def draw_text_with_emojis(img, draw, position, text, font, fill):
                     ascent, descent = font.getmetrics()
                     font_height = ascent + descent
                     emoji_size = int(font_height * 0.9)
-                    emoji_img = emoji_img.resize((emoji_size, emoji_size), Image.Resampling.LANCZOS)
+                    emoji_img = emoji_img.resize(
+                        (emoji_size, emoji_size), Image.Resampling.LANCZOS
+                    )
 
                     y_offset = y + (font_height - emoji_size) // 2
                     img.paste(emoji_img, (int(cursor_x), int(y_offset)), emoji_img)
@@ -135,6 +138,7 @@ def draw_text_with_emojis(img, draw, position, text, font, fill):
         if tail:
             draw.text((cursor_x, y), tail, font=font, fill=fill)
 
+
 def create_quote_image(
     author,
     text,
@@ -143,7 +147,7 @@ def create_quote_image(
     textcolor,
     color: bool,
     negapoji: bool = False,
-    fake: bool = False
+    fake: bool = False,
 ):
     width, height = 800, 400
     background_color = background
@@ -188,15 +192,15 @@ def create_quote_image(
     text_y = (height - text_block_height) // 2
 
     for i, line in enumerate(lines):
-        bbox = draw.textbbox((0, 0), re.sub(r"<(a?):([a-zA-Z0-9_]{1,32}):([0-9]{17,22})>", 'あ', line), font=font)
+        bbox = draw.textbbox(
+            (0, 0),
+            re.sub(r"<(a?):([a-zA-Z0-9_]{1,32}):([0-9]{17,22})>", "あ", line),
+            font=font,
+        )
         line_width = bbox[2] - bbox[0]
         line_x = (width + text_x - 50 - line_width) // 2
         draw_text_with_emojis(
-            img, draw,
-            (line_x, text_y + i * line_height),
-            line,
-            font,
-            text_color
+            img, draw, (line_x, text_y + i * line_height), line, font, text_color
         )
 
     author_text = f"- {author}"
@@ -219,7 +223,8 @@ def create_quote_image(
         return img
     else:
         return img.convert("L")
-    
+
+
 async def make_quote_async(
     author,
     text,
@@ -228,7 +233,17 @@ async def make_quote_async(
     textcolor,
     color: bool,
     negapoji: bool = False,
-    fake: bool = False
+    fake: bool = False,
 ):
-    img = await asyncio.to_thread(create_quote_image, author, text, avatar_bytes, background, textcolor, color, negapoji, fake)
+    img = await asyncio.to_thread(
+        create_quote_image,
+        author,
+        text,
+        avatar_bytes,
+        background,
+        textcolor,
+        color,
+        negapoji,
+        fake,
+    )
     return img

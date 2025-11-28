@@ -6,7 +6,10 @@ import mimetypes
 import io
 import asyncio
 
-def image_to_data_uri_sync(image_path: str = None, io_: io.BytesIO = None, mime_type: str = None) -> str:
+
+def image_to_data_uri_sync(
+    image_path: str = None, io_: io.BytesIO = None, mime_type: str = None
+) -> str:
     if image_path:
         mime_type, _ = mimetypes.guess_type(image_path)
         if mime_type is None:
@@ -24,6 +27,7 @@ def image_to_data_uri_sync(image_path: str = None, io_: io.BytesIO = None, mime_
 
     return f"data:{mime_type};base64,{encoded}"
 
+
 class Raw:
     def __init__(self, token: str = None, bot: commands.Bot = None):
         if not token:
@@ -34,16 +38,20 @@ class Raw:
             self.token = token
         self.api_base = "https://discord.com/api/v10"
 
-    async def image_to_data_uri(self, image_path: str = None, io_: io.BytesIO = None, mime_type: str = None):
-        return await asyncio.to_thread(image_to_data_uri_sync, image_path, io_, mime_type)
+    async def image_to_data_uri(
+        self, image_path: str = None, io_: io.BytesIO = None, mime_type: str = None
+    ):
+        return await asyncio.to_thread(
+            image_to_data_uri_sync, image_path, io_, mime_type
+        )
 
     async def modify_current_member(
-        self, 
-        guildId: str, 
-        bannerUri: str = None, 
-        avatarUri: str = None, 
-        nick: str = None, 
-        bio: str = None
+        self,
+        guildId: str,
+        bannerUri: str = None,
+        avatarUri: str = None,
+        nick: str = None,
+        bio: str = None,
     ):
         payload = {}
         if bannerUri is not None:
@@ -67,19 +75,23 @@ class Raw:
             async with session.patch(
                 f"{self.api_base}/guilds/{guildId}/members/@me",
                 headers={"Authorization": f"Bot {self.token}"},
-                json=payload
+                json=payload,
             ) as response:
                 if response.status == 400:
                     raise discord.RateLimited(30.0)
                 if response.status != 200:
                     text = await response.text()
-                    raise RuntimeError(f"Failed to modify member: {response.status} {text}")
+                    raise RuntimeError(
+                        f"Failed to modify member: {response.status} {text}"
+                    )
                 return await response.json()
+
 
 class RawCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.bot.raw = Raw
+
 
 async def setup(bot):
     await bot.add_cog(RawCog(bot))

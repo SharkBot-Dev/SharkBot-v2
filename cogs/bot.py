@@ -14,6 +14,7 @@ import aiohttp
 
 FEEDBACK_CHANNEL = 1437397034213703762
 
+
 class FeedBackModal(discord.ui.Modal):
     def __init__(self):
         super().__init__(title="フィードバックを送信する。")
@@ -23,17 +24,41 @@ class FeedBackModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True, thinking=True)
         await asyncio.sleep(1)
-        await interaction.client.get_channel(FEEDBACK_CHANNEL).send(embed=discord.Embed(title=f"フィードバック: {interaction.user.id}", color=discord.Color.green(), description=self.text.value)
-                                                                    .add_field(name="ユーザー", value=f"{interaction.user.display_name}({interaction.user.id})")
-                                                                    .set_author(name=f"{interaction.user.display_name}({interaction.user.id})", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url))
-        await interaction.followup.send(embed=make_embed.success_embed(title="フィードバックを送信しました！", description="ご意見ありがとうございます。"))
+        await interaction.client.get_channel(FEEDBACK_CHANNEL).send(
+            embed=discord.Embed(
+                title=f"フィードバック: {interaction.user.id}",
+                color=discord.Color.green(),
+                description=self.text.value,
+            )
+            .add_field(
+                name="ユーザー",
+                value=f"{interaction.user.display_name}({interaction.user.id})",
+            )
+            .set_author(
+                name=f"{interaction.user.display_name}({interaction.user.id})",
+                icon_url=interaction.user.avatar.url
+                if interaction.user.avatar
+                else interaction.user.default_avatar.url,
+            )
+        )
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="フィードバックを送信しました！",
+                description="ご意見ありがとうございます。",
+            )
+        )
+
 
 class BotCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print("init -> BotCog")
 
-    bot = app_commands.Group(name="bot", description="Bot系のコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True))
+    bot = app_commands.Group(
+        name="bot",
+        description="Bot系のコマンドです。",
+        allowed_installs=app_commands.AppInstallationType(guild=True, user=True),
+    )
 
     @bot.command(name="about", description="Botの情報を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -85,11 +110,14 @@ class BotCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def ping_bot(self, interaction: discord.Interaction):
-        embed = make_embed.success_embed(title=translate.get(interaction.extras["lang"], 'bot', 'Pingを測定しました。'), description=f"DiscordAPI: {round(self.bot.latency * 1000)}ms")
-
-        await interaction.response.send_message(
-            embed=embed
+        embed = make_embed.success_embed(
+            title=translate.get(
+                interaction.extras["lang"], "bot", "Pingを測定しました。"
+            ),
+            description=f"DiscordAPI: {round(self.bot.latency * 1000)}ms",
         )
+
+        await interaction.response.send_message(embed=embed)
 
     def create_bar(self, percentage, length=20):
         filled = int(percentage / 100 * length)
@@ -173,9 +201,12 @@ Sharkアカウント: {sharkaccount_count}人
         if interaction.is_user_integration() and not interaction.is_guild_integration():
             await interaction.response.defer()
 
-            embed = make_embed.success_embed(title=f"{botのid}の招待リンクを作成しました。", description=f"""# [☢️管理者権限で招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=8&integration_type=0&scope=bot+applications.commands)
+            embed = make_embed.success_embed(
+                title=f"{botのid}の招待リンクを作成しました。",
+                description=f"""# [☢️管理者権限で招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=8&integration_type=0&scope=bot+applications.commands)
 # [🖊️権限を選んで招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=1759218604441591&integration_type=0&scope=bot+applications.commands)
-# [😆権限なしで招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=0&integration_type=0&scope=bot+applications.commands)""")
+# [😆権限なしで招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=0&integration_type=0&scope=bot+applications.commands)""",
+            )
 
             await interaction.followup.send(embed=embed)
             return
@@ -185,10 +216,13 @@ Sharkアカウント: {sharkaccount_count}人
         gu = interaction.guild.default_role
         mem_kengen = discord.utils.oauth_url(botのid.id, permissions=gu.permissions)
 
-        embed = make_embed.success_embed(title=f"{botのid}の招待リンクを作成しました。", description=f"""# [☢️管理者権限で招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=8&integration_type=0&scope=bot+applications.commands)
+        embed = make_embed.success_embed(
+            title=f"{botのid}の招待リンクを作成しました。",
+            description=f"""# [☢️管理者権限で招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=8&integration_type=0&scope=bot+applications.commands)
 # [🖊️権限を選んで招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=1759218604441591&integration_type=0&scope=bot+applications.commands)
 # [✅メンバーの権限で招待]({mem_kengen})
-# [😆権限なしで招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=0&integration_type=0&scope=bot+applications.commands)""")
+# [😆権限なしで招待](https://discord.com/oauth2/authorize?client_id={botのid.id}&permissions=0&integration_type=0&scope=bot+applications.commands)""",
+        )
 
         await interaction.followup.send(embed=embed)
 
@@ -228,16 +262,33 @@ Sharkアカウント: {sharkaccount_count}人
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def bot_uptime(self, interaction: discord.Interaction):
-        uptime = self.bot.extensions.get('jishaku').Feature.load_time.timestamp()
-        await interaction.response.send_message(embed=make_embed.success_embed(title="Botの起動した時刻を取得しました。", description=f"<t:{uptime:.0f}:R>"))
+        uptime = self.bot.extensions.get("jishaku").Feature.load_time.timestamp()
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title="Botの起動した時刻を取得しました。",
+                description=f"<t:{uptime:.0f}:R>",
+            )
+        )
 
     @bot.command(name="custom", description="Botのアバターなどをカスタマイズします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(administrator=True)
-    async def bot_customize(self, interaction: discord.Interaction, アバター: discord.Attachment = None, バナー: discord.Attachment = None, 名前: str = None):
+    async def bot_customize(
+        self,
+        interaction: discord.Interaction,
+        アバター: discord.Attachment = None,
+        バナー: discord.Attachment = None,
+        名前: str = None,
+    ):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="このコマンドは使用できません。", description="サーバーにBotをインストールして使用してください。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
 
         await interaction.response.defer()
 
@@ -264,9 +315,11 @@ Sharkアカウント: {sharkaccount_count}人
         if アバター:
             av_io = io.BytesIO(await アバター.read())
             av_check = await check_nsfw(av_io)
-            av_check = av_check.get('safe', False)
+            av_check = av_check.get("safe", False)
             if not av_check:
-                return await interaction.followup.send(content="不適切なアバターなため、設定できません。")
+                return await interaction.followup.send(
+                    content="不適切なアバターなため、設定できません。"
+                )
             avatar = await raw.image_to_data_uri(io_=av_io)
             av_io.close()
         else:
@@ -274,18 +327,32 @@ Sharkアカウント: {sharkaccount_count}人
         if バナー:
             bn_io = io.BytesIO(await バナー.read())
             ba_check = await check_nsfw(bn_io)
-            ba_check = ba_check.get('safe', False)
+            ba_check = ba_check.get("safe", False)
             if not ba_check:
-                return await interaction.followup.send(content="不適切なバナーなため、設定できません。")
+                return await interaction.followup.send(
+                    content="不適切なバナーなため、設定できません。"
+                )
             banner = await raw.image_to_data_uri(io_=bn_io)
             bn_io.close()
         else:
             banner = None
         try:
-            await raw.modify_current_member(str(interaction.guild.id), avatarUri=avatar, bannerUri=banner, nick=名前)
+            await raw.modify_current_member(
+                str(interaction.guild.id), avatarUri=avatar, bannerUri=banner, nick=名前
+            )
         except Exception as e:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="レートリミットです。", description=f"何分かお待ちください。\n\nエラーコード\n```{e}```"))
-        await interaction.followup.send(embed=make_embed.success_embed(title="Botのアバターなどをカスタマイズしました。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="レートリミットです。",
+                    description=f"何分かお待ちください。\n\nエラーコード\n```{e}```",
+                )
+            )
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="Botのアバターなどをカスタマイズしました。"
+            )
+        )
+
 
 async def setup(bot):
     await bot.add_cog(BotCog(bot))
