@@ -37,6 +37,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/leave-message`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             👋さようならメッセージ
           </a>
+          <a href={`/dashboard/settings/${guildid}/rolepanel`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🧙ロールパネル
+          </a>
           <a href={`/dashboard/settings/${guildid}/auth`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             ✅認証
           </a>
