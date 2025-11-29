@@ -232,6 +232,27 @@ def create_quote_image(
     else:
         return img.convert("L")
 
+class DeleteMiqView(discord.ui.View):
+    def __init__(self, *, timeout=180, can_delete_user: discord.User, create_user: discord.User):
+        super().__init__(timeout=timeout)
+        self.can_delete_user = can_delete_user
+        self.create_user = create_user
+
+    @discord.ui.button(label="削除", emoji="🗑️", style=discord.ButtonStyle.red)
+    async def delete_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id not in (self.can_delete_user.id, self.create_user.id):
+            return await interaction.response.send_message(
+                ephemeral=True,
+                content="Miqを作った人か、作られた人のみ削除できます。",
+            )
+
+        await interaction.response.defer()
+
+        await interaction.edit_original_response(
+            content=f"🗑️ {interaction.user.name} によって削除されました。",
+            attachments=[],
+            view=None,
+        )
 
 class ContextCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -307,7 +328,7 @@ async def setup(bot: commands.Bot):
             try:
                 file = discord.File(fp=image_binary, filename=f"{message.id}_quote.png")
                 await interaction.followup.send(
-                    file=file, content=f"-# {c}回再試行しました。"
+                    file=file, content=f"-# {c}回再試行しました。", view=DeleteMiqView(timeout=180, can_delete_user=interaction.user, create_user=message.author)
                 )
             except:
                 c += 1
