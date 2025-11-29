@@ -24,6 +24,7 @@ export default async function RolePanelPage({
         const guild = await getGuild(sessionId, guildid);
         if (!guild) return;
 
+        // クールダウン
         const now = Date.now();
         const lastTime = cooldowns.get(sessionId) ?? 0;
         const cooldownMs = 10 * 1000;
