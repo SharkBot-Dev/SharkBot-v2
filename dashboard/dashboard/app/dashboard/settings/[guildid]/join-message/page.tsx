@@ -95,7 +95,7 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
 
     return (
         <div className="p-4">
-        <h1 className="text-2xl font-bold mb-4">{guild.name} の挨拶メッセージ設定</h1>
+        <h1 className="text-2xl font-bold mb-4">{guild.name} のよろしくメッセージ</h1>
 
         <form action={sendData} className="flex flex-col gap-2">
             <span className="font-semibold mb-1">機能を有効にする</span>
