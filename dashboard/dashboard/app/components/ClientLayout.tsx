@@ -46,6 +46,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/auto-thread`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             📖自動スレッド作成
           </a>
+          <a href={`/dashboard/settings/${guildid}/autoreply`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🚗自動返信
+          </a>
           <a href={`/dashboard/settings/${guildid}/expand`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             💬メッセージ展開
           </a>
