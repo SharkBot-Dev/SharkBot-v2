@@ -84,7 +84,7 @@ export default async function AutoReplyPage({ params }: { params: { guildid: str
             <h1 className="text-2xl font-bold mb-4">{guild.name} の自動返信</h1>
 
             <div className="mb-6">
-                <h2 className="text-lg font-semibold mb-2">アイテム一覧</h2>
+                <h2 className="text-lg font-semibold mb-2">自動返信一覧</h2>
                 {autoreplys.length > 0 ? (
                 <ul className="border rounded divide-y divide-gray-700">
                     {autoreplys.map((item) => (
