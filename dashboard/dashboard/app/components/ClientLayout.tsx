@@ -55,6 +55,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/expand`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             💬メッセージ展開
           </a>
+          <a href={`/dashboard/settings/${guildid}/embed`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🟫埋め込み作成
+          </a>
           <a href={`/dashboard/settings/${guildid}/poll`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🗳️投票
           </a>
