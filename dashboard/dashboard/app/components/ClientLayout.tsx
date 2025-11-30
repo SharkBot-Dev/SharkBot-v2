@@ -43,6 +43,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/auth`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             ✅認証
           </a>
+          <a href={`/dashboard/settings/${guildid}/ticket`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🎫チケット
+          </a>
           <a href={`/dashboard/settings/${guildid}/auto-thread`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             📖自動スレッド作成
           </a>
