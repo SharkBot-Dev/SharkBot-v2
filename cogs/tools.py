@@ -1663,7 +1663,7 @@ class ToolsCog(commands.Cog):
                     "https://shb.red/shorten", params={"url": url}
                 ) as response:
                     url_ = await response.json()
-                    url_ = url_["short_url"].replace("http", "https")
+                    url_ = url_["short_url"]
         embed = make_embed.success_embed(title="URLを短縮しました。", description=url_)
         await interaction.followup.send(
             embed=embed,
