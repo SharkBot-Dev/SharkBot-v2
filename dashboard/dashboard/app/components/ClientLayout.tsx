@@ -73,6 +73,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/starboard`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             ⭐スターボード
           </a>
+          <a href={`/dashboard/settings/${guildid}/music`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🎵音楽
+          </a>
           <a href={`/dashboard/settings/${guildid}/dice`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🎲ダイス
           </a>
