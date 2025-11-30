@@ -1524,7 +1524,7 @@ class FunCog(commands.Cog):
                     if ca == 11:
                         await wh.send(
                             content=await markov.generate_text(
-                                HIROYUKI_TEXT, message.clean_content, 100
+                                HIROYUKI_TEXT, message.clean_content[:50], 100
                             ),
                             username="パワー系ひろゆき",
                             avatar_url="https://assets.st-note.com/production/uploads/images/152150583/rectangle_large_type_2_8a80ddb83cbc1b260fe6b958986ca4bd.jpeg?width=1280",
@@ -1533,7 +1533,7 @@ class FunCog(commands.Cog):
 
                     if ca == 10:
                         ishiba_text = random.choice(
-                            [f"{message.clean_content}とは...何か(ﾈｯﾄﾘ", "恥を知れ"]
+                            [f"{message.clean_content[:50]}とは...何か(ﾈｯﾄﾘ", "恥を知れ"]
                         )
                         await wh.send(
                             content=ishiba_text,
@@ -1544,7 +1544,7 @@ class FunCog(commands.Cog):
 
                     await wh.send(
                         content=await markov.generate_text(
-                            HIROYUKI_TEXT, message.clean_content, 100
+                            HIROYUKI_TEXT, message.clean_content[:50], 100
                         ),
                         username="ひろゆき",
                         avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg",
