@@ -93,17 +93,23 @@ export default async function RolePanelPage({
             ];
         }
 
-        const components = [
-            {
-                type: 1,
-                components: roles.map((id) => ({
-                    type: 2,
-                    style: 1,
-                    label: RoleMap.get(id) ?? `ロール: ${id}`,
-                    custom_id: `rolepanel_v1+${id}`,
-                })),
-            },
-        ];
+        function chunk<T>(arr: T[], size: number): T[][] {
+            const chunks = [];
+            for (let i = 0; i < arr.length; i += size) {
+                chunks.push(arr.slice(i, i + size));
+            }
+            return chunks;
+        }
+
+        const components = chunk(roles, 5).map(chunkedIds => ({
+            type: 1,
+            components: chunkedIds.map(id => ({
+                type: 2,
+                style: 1,
+                label: RoleMap.get(id) ?? `ロール: ${id}`,
+                custom_id: `rolepanel_v1+${id}`,
+            }))
+        }));
 
         await sendMessage(channel, {
             embeds: [embed],
