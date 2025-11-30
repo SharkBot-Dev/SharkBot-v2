@@ -61,6 +61,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/poll`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🗳️投票
           </a>
+          <a href={`/dashboard/settings/${guildid}/translate`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🔠翻訳
+          </a>
           <a href={`/dashboard/settings/${guildid}/logging`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🪵ログ
           </a>
