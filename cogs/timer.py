@@ -133,8 +133,8 @@ class TimerCog(commands.Cog):
         await db.delete_one({"_id": doc["_id"]})
 
         await interaction.response.send_message(
-            embed=make_embed.error_embed(
-                title="タイマーを削除しました。", description=""
+            embed=make_embed.success_embed(
+                title="タイマーを削除しました。", description="このチャンネルのタイマーが削除されました。"
             ),
             ephemeral=True,
         )
