@@ -447,6 +447,8 @@ class MovieGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def sea(self, interaction: discord.Interaction, 画像: discord.Attachment):
+        return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="現在メンテナンス中です。", description="よろしくお願いします。"))
+
         MAX_IMAGE_SIZE = 5 * 1024 * 1024
         if 画像.size > MAX_IMAGE_SIZE:
             await interaction.response.send_message(
