@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import LineAndtextLayout from "@/app/components/LineAndTextLayout";
 
 export default function ClientLayout({
   children,
@@ -31,6 +32,7 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/commands`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             💬コマンド一覧
           </a>
+          <LineAndtextLayout text="サーバー管理" />
           <a href={`/dashboard/settings/${guildid}/join-message`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🤝よろしくメッセージ
           </a>
@@ -55,11 +57,15 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/autoreact`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             😆自動リアクション
           </a>
-          <a href={`/dashboard/settings/${guildid}/expand`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
-            💬メッセージ展開
+          <a href={`/dashboard/settings/${guildid}/logging`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🪵ログ
           </a>
+          <LineAndtextLayout text="ツール" />
           <a href={`/dashboard/settings/${guildid}/embed`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🟫埋め込み作成
+          </a>
+          <a href={`/dashboard/settings/${guildid}/expand`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            💬メッセージ展開
           </a>
           <a href={`/dashboard/settings/${guildid}/poll`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🗳️投票
@@ -67,9 +73,10 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/translate`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🔠翻訳
           </a>
-          <a href={`/dashboard/settings/${guildid}/logging`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
-            🪵ログ
+          <a href={`/dashboard/settings/${guildid}/search`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🔎なんでも検索
           </a>
+          <LineAndtextLayout text="面白い・楽しい" />
           <a href={`/dashboard/settings/${guildid}/level`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🏆レベル
           </a>
@@ -78,9 +85,6 @@ export default function ClientLayout({
           </a>
           <a href={`/dashboard/settings/${guildid}/starboard`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             ⭐スターボード
-          </a>
-          <a href={`/dashboard/settings/${guildid}/search`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
-            🔎なんでも検索
           </a>
           <a href={`/dashboard/settings/${guildid}/music`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🎵音楽
