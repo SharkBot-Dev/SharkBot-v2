@@ -54,6 +54,7 @@ export default function embedBuilder({ guild, channels, sendData }: embedBuilder
                     onChange={(e) => setThumb(e.target.value)}
                 />
 
+                <h2 className="text-xl font-bold mt-6">チャンネル選択・送信</h2>
                 <select
                     name="channel"
                     className="border p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-black-500"
