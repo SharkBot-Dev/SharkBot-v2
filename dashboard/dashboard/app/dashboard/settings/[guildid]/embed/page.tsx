@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { getGuild, getChannels, sendMessage } from "@/lib/discord/fetch";
 import ColorPalette from "@/app/components/ColorPicker";
+import EmbedBuilder from "./EmbedBuilder";
 
 const cooldowns = new Map<string, number>();
 
@@ -83,34 +84,7 @@ export default async function EmbedPage({ params }: { params: { guildid: string 
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} の埋め込み作成</h1>
 
-            <form action={sendData} className="flex flex-col gap-2">
-                <span className="font-semibold mb-1">タイトル・説明</span>
-                <input type="text" name="title" placeholder="タイトル" className="border p-2" />
-                <textarea name="desc" placeholder="説明" className="border p-2" />
-
-                <span className="font-semibold mb-1">色</span>
-                <ColorPalette name="color" />
-
-                <span className="font-semibold mb-1">画像・サムネイル</span>
-                <input type="text" name="image_url" placeholder="画像URL" className="border p-2" />
-                <input type="text" name="thumbnail_url" placeholder="サムネイルURL" className="border p-2" />
-
-                <span className="font-semibold mb-1">送信先チャンネル</span>
-                <select
-                    name="channel"
-                    className="border p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-black-500"
-                >
-                    {channelsData?.filter((ch: any) => ch.type === 0).map((ch: any) => (
-                        <option key={ch.id} value={ch.id}>
-                            {ch.name}
-                        </option>
-                    ))}
-                </select>
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded">
-                    送信する
-                </button>
-            </form>
+            <EmbedBuilder guild={guild} channels={channelsData} sendData={sendData}></EmbedBuilder>
         </div>
     );
 }
