@@ -60,6 +60,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/autoreact`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             😆自動リアクション
           </a>
+          <a href={`/dashboard/settings/${guildid}/report`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🔔サーバー内通報
+          </a>
           <a href={`/dashboard/settings/${guildid}/logging`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🪵ログ
           </a>

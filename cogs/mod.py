@@ -817,23 +817,21 @@ class ModCog(commands.Cog):
         await interaction.response.defer(ephemeral=True)
         db = self.bot.async_db["Main"].ReportChannel
         if チャンネル:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"Guild": interaction.guild.id, "Channel": チャンネル.id},
+                {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
                 upsert=True,
             )
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="通報チャンネルをセットアップしました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="通報チャンネルをセットアップしました。"
                 )
             )
         else:
             await db.delete_one({"Guild": interaction.guild.id})
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="通報チャンネルを無効化しました。",
-                    color=discord.Color.green(),
+                embed=make_embed.success_embed(
+                    title="通報チャンネルを無効化しました。"
                 )
             )
 
