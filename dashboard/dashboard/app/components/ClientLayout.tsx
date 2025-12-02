@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import LineAndtextLayout from "@/app/components/LineAndTextLayout";
+import Badge from "./Badge";
 
 export default function ClientLayout({
   children,
@@ -87,7 +88,7 @@ export default function ClientLayout({
             🏆レベル
           </a>
           <a href={`/dashboard/settings/${guildid}/achievement`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
-            🏅サーバー内実績
+            🏅サーバー内実績 <Badge text="NEW" color="bg-green-600"></Badge>
           </a>
           <a href={`/dashboard/settings/${guildid}/economy`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🪙サーバー内経済
@@ -96,7 +97,7 @@ export default function ClientLayout({
             ⭐スターボード
           </a>
           <a href={`/dashboard/settings/${guildid}/music`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
-            🎵音楽
+            🎵音楽 <Badge text="NEW" color="bg-green-600"></Badge>
           </a>
           <a href={`/dashboard/settings/${guildid}/dice`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🎲ダイス
