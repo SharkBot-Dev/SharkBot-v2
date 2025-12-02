@@ -97,10 +97,15 @@ export default async function RolePanelPage({ params }: { params: { guildid: str
             })),
         }));
 
-        await sendMessage(channel, {
-            embeds: [embed],
-            components,
-        });
+        try {
+            await sendMessage(channel, {
+                embeds: [embed],
+                components,
+            });
+        } catch {
+            return;
+        }
+
     }
 
     // -------------------------------------------------------
