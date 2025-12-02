@@ -891,6 +891,7 @@ class ModCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
         監査ログタイプ=[
+            app_commands.Choice(name="チャンネル削除", value="channel_delete"),
             app_commands.Choice(name="メンバーBan", value="ban"),
             app_commands.Choice(name="メンバーBan解除", value="unban"),
             app_commands.Choice(name="Bot追加", value="bot_add"),
@@ -914,6 +915,11 @@ class ModCog(commands.Cog):
         elif 監査ログタイプ.value == "bot_add":
             async for entry in interaction.guild.audit_logs(
                 action=discord.AuditLogAction.bot_add, limit=50
+            ):
+                text += f"{entry.target.name} - {entry.user.name} .. {entry.reason if entry.reason else 'なし'}\n"
+        elif 監査ログタイプ.value == "channel_delete":
+            async for entry in interaction.guild.audit_logs(
+                action=discord.AuditLogAction.channel_delete, limit=50
             ):
                 text += f"{entry.target.name} - {entry.user.name} .. {entry.reason if entry.reason else 'なし'}\n"
         t = io.StringIO(text)
