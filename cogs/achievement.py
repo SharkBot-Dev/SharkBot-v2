@@ -177,9 +177,9 @@ class AchievementCog(commands.Cog):
     async def achievement_setting(self, interaction: discord.Interaction, 有効か: bool):
         db = self.bot.async_db["Main"].AchievementsSettings
         if 有効か:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"Guild": interaction.guild.id},
+                {'$set': {"Guild": interaction.guild.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
@@ -216,15 +216,15 @@ class AchievementCog(commands.Cog):
             )
 
         db = self.bot.async_db["Main"].Achievements
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id, "Name": 実績名},
-            {
+            {'$set': {
                 "Guild": interaction.guild.id,
                 "Name": 実績名,
                 "Value": 値,
                 "If": をする.value,
                 "Role": ロール.id if ロール else 0,
-            },
+            }},
             upsert=True,
         )
         await interaction.response.send_message(
@@ -267,9 +267,9 @@ class AchievementCog(commands.Cog):
 
         db = self.bot.async_db["Main"].AchievementsChannel
         if チャンネル:
-            await db.replace_one(
+            await db.update_one(
                 {"Guild": interaction.guild.id},
-                {"Guild": interaction.guild.id, "Channel": チャンネル.id},
+                {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
                 upsert=True,
             )
             await interaction.response.send_message(

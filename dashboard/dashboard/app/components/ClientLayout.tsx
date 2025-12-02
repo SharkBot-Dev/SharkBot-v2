@@ -86,6 +86,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/level`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🏆レベル
           </a>
+          <a href={`/dashboard/settings/${guildid}/achievement`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🏅サーバー内実績
+          </a>
           <a href={`/dashboard/settings/${guildid}/economy`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🪙サーバー内経済
           </a>
