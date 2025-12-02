@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long, ObjectId } from "mongodb";
+import LineAndTextLayout from "@/app/components/LineAndTextLayout";
 
 export default async function EconomyPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -120,6 +121,8 @@ export default async function EconomyPage({ params }: { params: { guildid: strin
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} の経済機能</h1>
 
+            <LineAndTextLayout text="通貨名・アイテム設定" />
+
             <div className="mb-6">
                 <h2 className="text-lg font-semibold mb-2">アイテム一覧</h2>
                 {finded_items.length > 0 ? (
@@ -194,6 +197,15 @@ export default async function EconomyPage({ params }: { params: { guildid: strin
                     作成
                 </button>
             </form>
+
+            <LineAndTextLayout text="コマンド設定" />
+            <span className="font-semibold mb-1">以下のボタンのページから設定できます。</span><br /><br />
+            <a
+                href={`/dashboard/settings/${guildid}/commands`}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md"
+            >
+                コマンドの設定に移動する
+            </a>
         </div>
     );
 }
