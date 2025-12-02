@@ -921,7 +921,10 @@ class ModCog(commands.Cog):
             async for entry in interaction.guild.audit_logs(
                 action=discord.AuditLogAction.channel_delete, limit=50
             ):
-                text += f"{entry.target.name} - {entry.user.name} .. {entry.reason if entry.reason else 'なし'}\n"
+                try:
+                    text += f"{entry.before.name} - {entry.user.name} .. {entry.reason if entry.reason else 'なし'}\n"
+                except:
+                    continue
         t = io.StringIO(text)
         await interaction.followup.send(file=discord.File(t, "auditlog.txt"))
         t.close()
