@@ -3,6 +3,8 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
+import Image from "next/image";
+import LineAndTextLayout from "@/app/components/LineAndTextLayout";
 
 export default async function DicePage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -66,10 +68,18 @@ export default async function DicePage({ params }: { params: { guildid: string }
         <h1 className="text-2xl font-bold mb-4">{guild.name} のダイス</h1>
 
         <form action={sendData} className="flex flex-col gap-2">
+            <LineAndTextLayout text="基本設定"></LineAndTextLayout>
             <span className="font-semibold mb-1">機能を有効にする</span>
             <ToggleButton name="checkenable" defaultValue={enabled} /><br />
 
             <div className="font-semibold mb-1">ダイスに反応する言葉の例: 10d8, dd, ダイス, 🎲, チンチロ</div><br />
+
+            <Image
+                src="/images/dice.png"
+                alt="Dice Image"
+                width="310"
+                height="228"
+            /><br/>
 
             <button type="submit" className="bg-blue-500 text-white p-2 rounded">
             設定
