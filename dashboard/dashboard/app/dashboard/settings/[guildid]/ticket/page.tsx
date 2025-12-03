@@ -77,6 +77,24 @@ export default async function TicketPanelPage({
             embeds: [embed],
             components,
         });
+
+        const category = formData.get("category_select")?.toString();
+        if (!category) return;
+
+        if (msg?.data?.id) {
+            const db = await connectDB();
+            await db.db("Main").collection("TicketCategory").updateOne({
+                Message: new Long(msg.data?.id as string)
+            }, {
+                $set: {
+                    Channel: new Long(category),
+                    Message: new Long(msg.data.id as string)
+                }
+            }, {
+                upsert: true
+            })
+            console.log('カテゴリが保存されました。')
+        }
     }
 
     const cookieStore = await cookies();
@@ -122,6 +140,20 @@ export default async function TicketPanelPage({
                         placeholder="説明を入力"
                     />
                 </label>
+
+                <span className="font-semibold mb-1">チケットを作成するカテゴリチャンネル</span>
+                <select
+                    name="category_select"
+                    className="border p-2 rounded bg-gray-800 text-white"
+                >
+                    {channelsData
+                        ?.filter((ch: any) => ch.type === 4)
+                        .map((ch: any) => (
+                            <option key={ch.id} value={ch.id}>
+                                {ch.name}
+                            </option>
+                            ))}
+                </select>
 
                 {/* 送信するチャンネル選択 */}
                 <span className="font-semibold mb-1">パネルを送信するチャンネル</span>
