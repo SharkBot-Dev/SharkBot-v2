@@ -93,7 +93,7 @@ export default async function TicketPanelPage({
             }, {
                 upsert: true
             })
-            console.log('カテゴリが保存されました。')
+            // console.log('カテゴリが保存されました。')
         }
     }
 
