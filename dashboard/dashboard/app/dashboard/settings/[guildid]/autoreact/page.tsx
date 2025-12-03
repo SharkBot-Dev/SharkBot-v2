@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long, ObjectId } from "mongodb";
+import { revalidatePath } from "next/cache";
 
 export default async function AutoReactPage({ params }: { params: { guildid: string } }) {
     async function addAutoReactionforWord(formData: FormData) {
@@ -35,6 +36,8 @@ export default async function AutoReactPage({ params }: { params: { guildid: str
             },
             { upsert: true }
         );
+
+        revalidatePath(`/dashboard/settings/${guildid}/autoreact`);
     }
 
     async function deleteAutoReactionforWord(formData: FormData) {
@@ -59,6 +62,8 @@ export default async function AutoReactPage({ params }: { params: { guildid: str
         await db.db("Main").collection("AutoReactionWord").deleteOne({
             Guild: new Long(guildid), Word: n
         })
+
+        revalidatePath(`/dashboard/settings/${guildid}/autoreact`);
     }
 
     async function addAutoReactionforChannel(formData: FormData) {
@@ -92,6 +97,8 @@ export default async function AutoReactPage({ params }: { params: { guildid: str
             },
             { upsert: true }
         );
+
+        revalidatePath(`/dashboard/settings/${guildid}/autoreact`);
     }
 
     async function deleteAutoReactionforChannel(formData: FormData) {
@@ -116,6 +123,8 @@ export default async function AutoReactPage({ params }: { params: { guildid: str
         await db.db("Main").collection("AutoReactionChannel").deleteOne({
             Guild: new Long(guildid), Channel: new Long(n as string)
         })
+
+        revalidatePath(`/dashboard/settings/${guildid}/autoreact`);
     }
 
     const { guildid } = await params;

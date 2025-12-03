@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long, ObjectId } from "mongodb";
+import { revalidatePath } from "next/cache";
 
 export default async function AutoReplyPage({ params }: { params: { guildid: string } }) {
     async function addAutoreply(formData: FormData) {
@@ -37,6 +38,8 @@ export default async function AutoReplyPage({ params }: { params: { guildid: str
             },
             { upsert: true }
         );
+
+        revalidatePath(`/dashboard/settings/${guildid}/autoreply`);
     }
 
     async function DeleteAutoreply(formData: FormData) {
@@ -61,6 +64,8 @@ export default async function AutoReplyPage({ params }: { params: { guildid: str
         await db.db("Main").collection("AutoReply").deleteOne({
             Guild: new Long(guildid), Word: n
         })
+
+        revalidatePath(`/dashboard/settings/${guildid}/autoreply`);
     }
 
     const { guildid } = await params;

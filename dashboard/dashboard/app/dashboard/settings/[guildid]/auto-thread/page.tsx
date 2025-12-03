@@ -3,6 +3,7 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 export default async function AutoTheradPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -45,7 +46,7 @@ export default async function AutoTheradPage({ params }: { params: { guildid: st
             { upsert: true }
         );
 
-        redirect(`/dashboard/settings/${guildid}/auto-thread`);
+        revalidatePath(`/dashboard/settings/${guildid}/auto-thread`);
     }
 
     async function deleteData(formData: FormData) {
@@ -85,7 +86,7 @@ export default async function AutoTheradPage({ params }: { params: { guildid: st
             { upsert: true }
         );
 
-        redirect(`/dashboard/settings/${guildid}/auto-thread`);
+        revalidatePath(`/dashboard/settings/${guildid}/auto-thread`);
     }
 
     const { guildid } = await params;

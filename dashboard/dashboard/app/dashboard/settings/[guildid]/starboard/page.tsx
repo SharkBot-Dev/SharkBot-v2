@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
+import { revalidatePath } from "next/cache";
 
 export default async function StarBoardPage({ params }: { params: { guildid: string } }) {
     async function addStarBoard(formData: FormData) {
@@ -38,6 +39,8 @@ export default async function StarBoardPage({ params }: { params: { guildid: str
                 },
                 { upsert: true }
             );
+
+        revalidatePath(`/dashboard/settings/${guildid}/starboard`);
     }
 
     async function deleteStarBoard(formData: FormData) {
@@ -63,6 +66,8 @@ export default async function StarBoardPage({ params }: { params: { guildid: str
                 Guild: Long.fromString(guildid),
                 Channel: Long.fromString(channel),
             });
+
+        revalidatePath(`/dashboard/settings/${guildid}/starboard`);
     }
 
     const { guildid } = await params;

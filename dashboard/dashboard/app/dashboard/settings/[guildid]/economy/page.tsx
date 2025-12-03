@@ -3,6 +3,7 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long, ObjectId } from "mongodb";
 import LineAndTextLayout from "@/app/components/LineAndTextLayout";
+import { revalidatePath } from "next/cache";
 
 export default async function EconomyPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -32,6 +33,8 @@ export default async function EconomyPage({ params }: { params: { guildid: strin
             },
             { upsert: true }
         );
+
+        revalidatePath(`/dashboard/settings/${guildid}/economy`);
     }
 
     async function sendShopData(formData: FormData) {
@@ -66,6 +69,8 @@ export default async function EconomyPage({ params }: { params: { guildid: strin
         }}, {
             upsert: true
         })
+
+        revalidatePath(`/dashboard/settings/${guildid}/economy`);
     }
 
     async function deleteData(formData: FormData) {
@@ -90,6 +95,8 @@ export default async function EconomyPage({ params }: { params: { guildid: strin
         if (!item) return;
 
         find_item.deleteOne({Guild: new Long(guildid), ItemName: item})
+
+        revalidatePath(`/dashboard/settings/${guildid}/economy`);
     }
 
     const { guildid } = await params;

@@ -3,6 +3,7 @@ import { getGuild, getChannels, getRoles } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
+import { revalidatePath } from "next/cache";
 
 export default async function LevelPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -80,6 +81,8 @@ export default async function LevelPage({ params }: { params: { guildid: string 
                 },
                 { upsert: true }
             );
+
+            revalidatePath(`/dashboard/settings/${guildid}/level`);
         } catch {
             return;
         }
@@ -107,6 +110,8 @@ export default async function LevelPage({ params }: { params: { guildid: string 
         if (!level) return;
 
         find_item.deleteOne({Guild: new Long(guildid), Level: Long.fromString(level as any)})
+
+        revalidatePath(`/dashboard/settings/${guildid}/level`);
     }
 
     const { guildid } = await params;

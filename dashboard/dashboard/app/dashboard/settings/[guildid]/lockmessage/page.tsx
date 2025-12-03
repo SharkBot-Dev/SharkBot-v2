@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { getGuild, getChannels, sendMessage } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
+import { revalidatePath } from "next/cache";
 
 const cooldowns = new Map<string, number>();
 
@@ -82,6 +83,8 @@ export default async function LockMessagePage({ params }: { params: { guildid: s
                 },
                 { upsert: true }
             );
+
+            revalidatePath(`/dashboard/settings/${guildid}/lockmessage`);
         } catch {
             return;
         }
@@ -112,6 +115,8 @@ export default async function LockMessagePage({ params }: { params: { guildid: s
                 Title: name
             }
         )
+
+        revalidatePath(`/dashboard/settings/${guildid}/lockmessage`);
     }
 
     const { guildid } = await params;

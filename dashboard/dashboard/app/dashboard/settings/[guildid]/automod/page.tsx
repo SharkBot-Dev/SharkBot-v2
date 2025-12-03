@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
 import LineAndTextLayout from "@/app/components/LineAndTextLayout";
+import { revalidatePath } from "next/cache";
 
 export default async function AutoModerationPage({ params }: { params: { guildid: string } }) {
     async function setAutoMod(formData: FormData) {
@@ -53,6 +54,8 @@ export default async function AutoModerationPage({ params }: { params: { guildid
                 { upsert: true }
             );
         }
+
+        revalidatePath(`/dashboard/settings/${guildid}/automod`);
     }
 
     async function setWhiteListChannel(formData: FormData) {
@@ -85,6 +88,8 @@ export default async function AutoModerationPage({ params }: { params: { guildid
             },
             { upsert: true }
         );
+
+        revalidatePath(`/dashboard/settings/${guildid}/automod`);
     }
 
     async function deleteWhiteListChannel(formData: FormData) {
@@ -108,6 +113,8 @@ export default async function AutoModerationPage({ params }: { params: { guildid
             Guild: Long.fromString(guildid),
             Channel: Long.fromString(channel as string)
         });
+
+        revalidatePath(`/dashboard/settings/${guildid}/automod`);
     }
 
     const { guildid } = await params;

@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Long, ObjectId } from "mongodb";
 import LineAndTextLayout from "@/app/components/LineAndTextLayout";
 import ToggleButton from "@/app/components/ToggleButton";
+import { revalidatePath } from "next/cache";
 
 const events = {
     "say": "回話すと",
@@ -31,6 +32,8 @@ export default async function AchievementPage({ params }: { params: { guildid: s
             { $set: { Guild: new Long(guildid), Enabled: enable } },
             { upsert: true }
         );
+
+        revalidatePath(`/dashboard/settings/${guildid}/achievement`);
     }
 
     async function addData(formData: FormData) {
@@ -67,6 +70,8 @@ export default async function AchievementPage({ params }: { params: { guildid: s
         }}, {
             upsert: true
         })
+
+        revalidatePath(`/dashboard/settings/${guildid}/achievement`);
     }
 
     async function deleteData(formData: FormData) {
@@ -91,6 +96,8 @@ export default async function AchievementPage({ params }: { params: { guildid: s
             Guild: new Long(guildid),
             Name: item
         });
+
+        revalidatePath(`/dashboard/settings/${guildid}/achievement`);
     }
 
     const { guildid } = await params;
