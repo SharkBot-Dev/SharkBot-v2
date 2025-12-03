@@ -469,8 +469,8 @@ class AdminCog(commands.Cog):
 
         db = self.bot.async_db["Main"].PremiumUser
         if 操作.value == "add":
-            await db.replace_one(
-                {"User": ユーザー.id}, {"User": ユーザー.id}, upsert=True
+            await db.update_one(
+                {"User": ユーザー.id}, {'$set': {"User": ユーザー.id}}, upsert=True
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
