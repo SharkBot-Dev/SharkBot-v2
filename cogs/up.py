@@ -7,7 +7,7 @@ import asyncio
 from discord import app_commands
 from models import command_disable, make_embed
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 class UpCog(commands.Cog):
     def __init__(self, bot):
@@ -86,7 +86,7 @@ class UpCog(commands.Cog):
                 remaining = exists["NotifyAt"] - now
                 minutes = remaining.seconds // 60
                 seconds = remaining.seconds % 60
-                cooldown.append(f"{services_name.get(service_id)} （あと {minutes}分{seconds}秒）")
+                cooldown.append(f"{services_name.get(service_id)}（あと {discord.utils.format_dt(discord.utils.utcnow() + timedelta(seconds=seconds, minutes=minutes), 'R')}）")
             else:
                 possible.append(f"{services_name.get(service_id)} {services_to_slash.get(service_id, 'スラッシュコマンド取得失敗')}")
 
@@ -106,7 +106,7 @@ class UpCog(commands.Cog):
                 remaining = exists["NotifyAt"] - now
                 minutes = remaining.seconds // 60
                 seconds = remaining.seconds % 60
-                cooldown.append(f"SharkBot （あと {minutes}分{seconds}秒）")
+                cooldown.append(f"SharkBot（あと {discord.utils.format_dt(discord.utils.utcnow() + timedelta(seconds=seconds, minutes=minutes), 'R')}）")
             else:
                 possible.append(f"Sharkbot {services_to_slash.get('sharkbot', 'スラッシュコマンド取得失敗')}")
 
