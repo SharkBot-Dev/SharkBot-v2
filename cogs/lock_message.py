@@ -115,6 +115,17 @@ class LockMessageCog(commands.Cog):
             "sharkbot": "</global up:1408658655532023855>"
         }
 
+        services_name = {
+            "dicoall": "Dicoall",
+            "distopia": "Distopia",
+            "sabachan": "鯖チャンネル",
+            "dissoku": "ディス速",
+            "disboard": "ディスボード",
+            "discafe": "DCafe",
+            "discadia": "Discadia",
+            "sharkbot": "SharkBot"
+        }
+
         alert_db = db_main["AlertQueue"]
 
         async def find_channel(collection):
@@ -149,9 +160,9 @@ class LockMessageCog(commands.Cog):
                 remaining = exists["NotifyAt"] - now
                 minutes = remaining.seconds // 60
                 seconds = remaining.seconds % 60
-                cooldown.append(f"{service_id} （あと {minutes}分{seconds}秒）")
+                cooldown.append(f"{services_name.get(service_id)} （あと {minutes}分{seconds}秒）")
             else:
-                possible.append(f"{service_id} {services_to_slash.get(service_id, 'スラッシュコマンド取得失敗')}")
+                possible.append(f"{services_name.get(service_id)} {services_to_slash.get(service_id, 'スラッシュコマンド取得失敗')}")
 
         collection = db_maintwo["SharkBotChannel"]
         config = await find_channel(collection)
@@ -168,9 +179,9 @@ class LockMessageCog(commands.Cog):
                 remaining = exists["NotifyAt"] - now
                 minutes = remaining.seconds // 60
                 seconds = remaining.seconds % 60
-                cooldown.append(f"sharkbot （あと {minutes}分{seconds}秒）")
+                cooldown.append(f"Sharkbot （あと {minutes}分{seconds}秒）")
             else:
-                possible.append(f"sharkbot {services_to_slash.get('sharkbot', 'スラッシュコマンド取得失敗')}")
+                possible.append(f"Sharkbot {services_to_slash.get('sharkbot', 'スラッシュコマンド取得失敗')}")
 
         embed = discord.Embed(
             title="Bump 状況一覧",
