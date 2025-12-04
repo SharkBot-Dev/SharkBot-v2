@@ -230,7 +230,7 @@ class LockMessageCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot:
+        if message.author.id == self.bot.user.id:
             return
         if "!." in message.content:
             return
