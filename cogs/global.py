@@ -972,6 +972,21 @@ class GlobalCog(commands.Cog):
             "Description", "説明なし"
         )
 
+    async def mention_get(self, interaction: discord.Interaction):
+        db = self.bot.async_db["Main"].BumpUpMention
+        try:
+            dbfind = await db.find_one({"Channel": interaction.channel.id}, {"_id": False})
+        except:
+            return "メンションするロールがありません。"
+        if dbfind is None:
+            return "メンションするロールがありません。"
+
+        try:
+            role = interaction.guild.get_role(dbfind.get("Role", None))
+            return role.mention
+        except:
+            return "メンションするロールがありません。"
+
     @globalchat.command(name="up", description="サーバー掲示板でUpします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -1025,6 +1040,31 @@ class GlobalCog(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
+
+        db = self.bot.async_db["MainTwo"].SharkBotChannel
+        try:
+            dbfind = await db.find_one(
+                {"Channel": interaction.channel.id}, {"_id": False}
+            )
+        except:
+            return
+        if dbfind is None:
+            return
+        
+        await asyncio.sleep(1)
+        try:
+            await self.bot.alert_add(
+                "sharkbot",
+                interaction.channel_id,
+                await self.mention_get(interaction),
+                "SharkBotの掲示板をUpしてね！",
+                "</global up:1408658655532023855> でUp。",
+                7200,
+            )
+
+            await interaction.channel.send(embed=make_embed.success_embed(title="Upを検知しました。", description="2時間後に通知します。"))
+        except:
+            return
 
     @globalchat.command(
         name="sites", description="このサーバーを紹介するサイトを作成します。"

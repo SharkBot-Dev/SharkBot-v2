@@ -99,7 +99,8 @@ class LockMessageCog(commands.Cog):
             "DissokuChannel": "dissoku",
             "DisboardChannel": "disboard",
             "DiscafeChannel": "discafe",
-            "DisCadiaChannel": "discadia"
+            "DisCadiaChannel": "discadia",
+            "SharkBotChannel": "sharkbot"
         }
 
         services_to_slash = {
@@ -109,7 +110,8 @@ class LockMessageCog(commands.Cog):
             "dissoku": "</up:1363739182672904354>",
             "disboard": "</bump:947088344167366698>",
             "discafe": "</up:980136954169536525>",
-            "discadia": "</bump:1225075208394768496>"
+            "discadia": "</bump:1225075208394768496>",
+            "sharkbot": "</global up:1408658655532023855>"
         }
 
         alert_db = db_main["AlertQueue"]

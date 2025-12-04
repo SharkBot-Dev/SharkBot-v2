@@ -25,7 +25,8 @@ class UpCog(commands.Cog):
             "DissokuChannel": "dissoku",
             "DisboardChannel": "disboard",
             "DiscafeChannel": "discafe",
-            "DisCadiaChannel": "discadia"
+            "DisCadiaChannel": "discadia",
+            "SharkBotChannel": "sharkbot"
         }
 
         services_to_slash = {
@@ -35,7 +36,8 @@ class UpCog(commands.Cog):
             "dissoku": "</up:1363739182672904354>",
             "disboard": "</bump:947088344167366698>",
             "discafe": "</up:980136954169536525>",
-            "discadia": "</bump:1225075208394768496>"
+            "discadia": "</bump:1225075208394768496>",
+            "sharkbot": "</global up:1408658655532023855>"
         }
 
         alert_db = db_main["AlertQueue"]
@@ -712,6 +714,30 @@ class UpCog(commands.Cog):
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
                 embed=make_embed.success_embed(title="Discadiaの通知をOFFにしました。")
+            )
+
+    @bump.command(name="sharkbot", description="SharkBotのUp通知をします。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def sharkbot_up(self, interaction: discord.Interaction, onか: bool):
+        db = self.bot.async_db["MainTwo"].SharkBotChannel
+        if onか:
+            await db.update_one(
+                {"Channel": interaction.channel.id},
+                {"$set": {"Channel": interaction.channel.id}},
+                upsert=True,
+            )
+            await interaction.response.send_message(
+                embed=make_embed.success_embed(
+                    title="SharkBotの通知をONにしました。",
+                    description="チャンネルごとにOnにする必要があります。",
+                )
+            )
+        else:
+            await db.delete_one({"Channel": interaction.channel.id})
+            await interaction.response.send_message(
+                embed=make_embed.success_embed(title="SharkBotの通知をOFFにしました。")
             )
 
     @bump.command(name="mention", description="Bump・Up通知時にメンションをします。")
