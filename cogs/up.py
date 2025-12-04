@@ -734,6 +734,21 @@ class UpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def bump_pin(self, interaction: discord.Interaction):
+        db = self.bot.async_db["Main"].LockMessage
+
+        dbfind = await db.find_one(
+            {"Channel": interaction.channel.id}, {"_id": False}
+        )
+
+        if dbfind:
+            await db.delete_one(
+                {
+                    "Channel": interaction.channel.id,
+                }
+            )
+            await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="ピン止めメッセージを削除しました。"))
+            return
+
         view = discord.ui.View()
         view.add_item(discord.ui.Button(
             style=discord.ButtonStyle.red,
@@ -747,7 +762,6 @@ class UpCog(commands.Cog):
 
         msg = await interaction.channel.send(embed=embed, view=view)
 
-        db = self.bot.async_db["Main"].LockMessage
         await db.update_one(
             {
                 "Channel": interaction.channel.id,
