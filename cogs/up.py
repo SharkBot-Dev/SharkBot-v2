@@ -17,6 +17,7 @@ class UpCog(commands.Cog):
     async def get_bump_status_embed(self, interaction):
         now = datetime.now()
         db_main = self.bot.async_db["Main"]
+        db_maintwo = self.bot.async_db["MainTwo"]
 
         services = {
             "Dicoall": "dicoall",
@@ -77,6 +78,26 @@ class UpCog(commands.Cog):
                 cooldown.append(f"{service_id} （あと {minutes}分{seconds}秒）")
             else:
                 possible.append(f"{service_id} {services_to_slash.get(service_id, 'スラッシュコマンド取得失敗')}")
+
+        collection = db_maintwo["SharkBotChannel"]
+        config = await find_channel(collection)
+
+        if config:
+                
+
+            exists = await alert_db.find_one({
+                "Channel": interaction.channel.id,
+                "ID": "sharkbot",
+                "NotifyAt": {"$gt": now}
+            })
+
+            if exists:
+                remaining = exists["NotifyAt"] - now
+                minutes = remaining.seconds // 60
+                seconds = remaining.seconds % 60
+                cooldown.append(f"sharkbot （あと {minutes}分{seconds}秒）")
+            else:
+                possible.append(f"sharkbot {services_to_slash.get('sharkbot', 'スラッシュコマンド取得失敗')}")
 
         embed = discord.Embed(
             title="Bump 状況一覧",
