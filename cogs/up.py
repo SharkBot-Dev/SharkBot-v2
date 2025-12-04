@@ -1,3 +1,4 @@
+import math
 from discord.ext import commands
 import discord
 import time
@@ -317,15 +318,25 @@ class UpCog(commands.Cog):
                         )
                     )
                     await self.add_money(message)
-                    await asyncio.sleep(int(next) - time.time())
-                    await message.channel.send(
-                        embed=discord.Embed(
-                            title="鯖チャンネルをVoteしてね！",
-                            description="</vote:1233256792507682860> でVote。",
-                            color=discord.Color.green(),
-                        ),
-                        content=ment,
+
+                    await self.bot.alert_add(
+                        "sabachan",
+                        message.channel.id,
+                        ment,
+                        "鯖チャンネルをVoteしてね！",
+                        "</vote:1233256792507682860> でVote。",
+                        math.ceil(int(next) - time.time()),
                     )
+
+                    # await asyncio.sleep()
+                    # await message.channel.send(
+                    #     embed=discord.Embed(
+                    #         title="鯖チャンネルをVoteしてね！",
+                    #         description="</vote:1233256792507682860> でVote。",
+                    #         color=discord.Color.green(),
+                    #     ),
+                    #     content=ment,
+                    # )
             except:
                 return
 
