@@ -6,11 +6,83 @@ import asyncio
 from discord import app_commands
 from models import command_disable, make_embed
 
+from datetime import datetime, timezone
 
 class UpCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         print("init -> UpCog")
+
+    async def get_bump_status_embed(self, interaction):
+        now = datetime.now()
+        db_main = self.bot.async_db["Main"]
+
+        services = {
+            "Dicoall": "dicoall",
+            "Distopia": "distopia",
+            "SabaChannel": "sabachan",
+            "DissokuChannel": "dissoku",
+            "DisboardChannel": "disboard",
+            "DiscafeChannel": "discafe",
+            "DisCadiaChannel": "discadia"
+        }
+
+        services_to_slash = {
+            "dicoall": "</up:935190259111706754>",
+            "distopia": "</bump:1309070135360749620>",
+            "sabachan": "</vote:1233256792507682860>",
+            "dissoku": "</up:1363739182672904354>",
+            "disboard": "</bump:947088344167366698>",
+            "discafe": "</up:980136954169536525>",
+            "discadia": "</bump:1225075208394768496>"
+        }
+
+        alert_db = db_main["AlertQueue"]
+
+        async def find_channel(collection):
+            try:
+                data = await collection.find_one(
+                    {"Channel": interaction.channel.id},
+                    {"_id": False}
+                )
+                return data or False
+            except Exception:
+                return False
+
+        possible = []      # Bump可能
+        cooldown = []      # クールタイム中
+        disabled = []      # 未設定
+
+        for db_name, service_id in services.items():
+            collection = db_main[db_name]
+            config = await find_channel(collection)
+
+            if not config:
+                disabled.append(service_id)
+                continue
+
+            exists = await alert_db.find_one({
+                "Channel": interaction.channel.id,
+                "ID": service_id,
+                "NotifyAt": {"$gt": now}
+            })
+
+            if exists:
+                remaining = exists["NotifyAt"] - now
+                minutes = remaining.seconds // 60
+                seconds = remaining.seconds % 60
+                cooldown.append(f"{service_id} （あと {minutes}分{seconds}秒）")
+            else:
+                possible.append(f"{service_id} {services_to_slash.get(service_id, 'スラッシュコマンド取得失敗')}")
+
+        embed = discord.Embed(
+            title="Bump 状況一覧",
+            description="🟢 Bump可能:\n{}\n\n🟡 クールダウン中:\n{}".format("\n".join(possible) if possible else "なし", "\n".join(cooldown) if cooldown else "なし"),
+            color=discord.Color.green()
+        )
+
+        return embed
+
 
     async def add_money(self, message: discord.Message):
         return
@@ -656,6 +728,45 @@ class UpCog(commands.Cog):
                 title="Up・Bump通知時にロールを\n通知するようにしました。"
             )
         )
+
+    @bump.command(name="pin", description="Bumpなどがあと何分後にできるかをチャンネルの下にピン止めします。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def bump_pin(self, interaction: discord.Interaction):
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(
+            style=discord.ButtonStyle.red,
+            label="削除",
+            custom_id="lockmessage_delete+"
+        ))
+
+        await interaction.response.defer(ephemeral=True)
+
+        embed = await self.get_bump_status_embed(interaction)
+
+        msg = await interaction.channel.send(embed=embed, view=view)
+
+        db = self.bot.async_db["Main"].LockMessage
+        await db.update_one(
+            {
+                "Channel": interaction.channel.id,
+                "Guild": interaction.guild.id,
+            },
+            {
+                "$set": {
+                    "Channel": interaction.channel.id,
+                    "Guild": interaction.guild.id,
+                    "Title": embed.title,
+                    "Desc": embed.description,
+                    "MessageID": msg.id,
+                    "Service": "bump_pin"
+                }
+            },
+            upsert=True,
+        )
+
+        await interaction.followup.send(embed=make_embed.success_embed(title="ピン止めメッセージを作成しました。"), ephemeral=True)
 
 
 async def setup(bot):
