@@ -6,6 +6,30 @@ import { revalidatePath } from "next/cache";
 
 const cooldowns = new Map<string, number>();
 
+export async function reminderCreate(
+    timeMs: number,
+    event: string,
+    args: any[] = [],
+    kwargs: Record<string, any> = {}
+): Promise<void> {
+    const client = await connectDB();
+
+    const notifyTime = new Date(Date.now() + timeMs);
+
+    await client.db("MainTwo").collection("ReminderQueue").updateOne(
+        { Event: event, Args: args },
+        {
+            $set: {
+                NotifyAt: notifyTime,
+                Event: event,
+                Args: args,
+                Kwargs: kwargs,
+            },
+        },
+        { upsert: true }
+    );
+}
+
 export default async function StarBoardPage({ params }: { params: { guildid: string } }) {
     async function createTimer(formData: FormData) {
         "use server";
@@ -82,6 +106,14 @@ export default async function StarBoardPage({ params }: { params: { guildid: str
                     },
                     { upsert: true }
                 );
+
+            await reminderCreate(interval * 60 * 1000, "timer_event", [
+                Long.fromString(guildid),
+                Long.fromString(channel),
+                wh?.data?.url,
+                message,
+                interval
+            ])
 
             revalidatePath(`/dashboard/settings/${guildid}/timer`);
         } catch (e) {
