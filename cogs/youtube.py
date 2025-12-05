@@ -90,7 +90,7 @@ class YoutubeCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_channels=True)
     async def youtube_list_alert(self, interaction: discord.Interaction):
         db = interaction.client.async_db["MainTwo"].YoutubeAlert
-        items = await db.find().to_list(length=None)
+        items = await db.find({"guild_id": interaction.guild.id}).to_list(length=None)
         text = "\n".join(f"- {item['channel_id']}" for item in items) or "なし"
         await interaction.response.send_message(embed=make_embed.success_embed(title="登録チャンネル一覧", description=text))
 
