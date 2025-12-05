@@ -1,3 +1,4 @@
+import re
 from discord.ext import commands
 import discord
 import random
@@ -6,6 +7,8 @@ from discord import app_commands
 from models import make_embed
 import aiohttp
 from youtube import settings
+
+CHANNEL_REGEX = re.compile(r"^UC[0-9A-Za-z_-]{22}$")
 
 async def subscribe_channel(channel_id, callback_url):
     topic = f"https://www.youtube.com/xml/feeds/videos.xml?channel_id={channel_id}"
@@ -38,6 +41,9 @@ class YoutubeCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def youtube_add_alert(self, interaction: discord.Interaction, youtubeチャンネルid: str):
+        if not CHANNEL_REGEX.match(youtubeチャンネルid):
+            return await interaction.response.send_message(embed=make_embed.error_embed(title="不正なYoutubeチャンネルidです。", description="正しいYoutubeチャンネルIDを入れてください。"))
+
         db = interaction.client.async_db["MainTwo"].YoutubeAlert
         if await db.find_one({"channel_id": youtubeチャンネルid, "guild_id": interaction.guild.id}):
             return await interaction.response.send_message(embed=make_embed.error_embed(title="すでに登録されています。"))
@@ -45,7 +51,7 @@ class YoutubeCog(commands.Cog):
         await interaction.response.defer()
 
         count = await db.count_documents({"guild_id": interaction.guild_id})
-        if count > 4:
+        if count >= 3:
             return await interaction.followup.send(embed=make_embed.error_embed(title="三つまでしか登録できません。", description="不要なYoutube通知を削除してください。"))
 
         wh = await interaction.channel.create_webhook(name="SharkBot-Youtube")
@@ -76,7 +82,7 @@ class YoutubeCog(commands.Cog):
         if not data:
             return await interaction.followup.send(embed=make_embed.error_embed(title="そのチャンネルは登録されていません。"))
 
-        data.delete_one({"channel_id": youtubeチャンネルid, "guild_id": interaction.guild.id})
+        await db.delete_one({"channel_id": youtubeチャンネルid, "guild_id": interaction.guild.id})
 
         await interaction.followup.send(
             embed=make_embed.success_embed(title="登録を解除しました。")
