@@ -5,10 +5,19 @@ import { randomUUID } from "crypto";
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const code = searchParams.get("code");
+  const state = searchParams.get("state");
 
   const redirect_url_base = "https://dashboard.sharkbot.xyz";
 
-  if (!code) return NextResponse.redirect(`${redirect_url_base}/`);
+  if (!code || !state) {
+    return NextResponse.redirect(`${redirect_url_base}/`);
+  }
+
+  const storedState = request.cookies.get("oauth_state")?.value;
+
+  if (storedState !== state) {
+    return NextResponse.redirect(`${redirect_url_base}/`);
+  }
 
   const tokenData = new URLSearchParams({
     client_id: process.env.DISCORD_CLIENT_ID!,
@@ -25,7 +34,9 @@ export async function GET(request: NextRequest) {
   });
 
   const token = await tokenResponse.json();
-  if (!token.access_token) return NextResponse.redirect(new URL("/error", request.url));
+  if (!token.access_token) {
+    return NextResponse.redirect(new URL("/error", request.url));
+  }
 
   const userRes = await fetch("https://discord.com/api/users/@me", {
     headers: { Authorization: `${token.token_type} ${token.access_token}` },
@@ -47,14 +58,15 @@ export async function GET(request: NextRequest) {
     createdAt: new Date(),
   });
 
-  const origin = request.nextUrl.origin;
   const response = NextResponse.redirect(`${redirect_url_base}/dashboard`);
   response.cookies.set("session_id", sessionId, {
     path: "/",
     httpOnly: true,
     sameSite: "lax",
+    secure: true,
     maxAge: 60 * 60 * 24,
   });
+  response.cookies.set("oauth_state", "", { maxAge: 0 });
 
   return response;
 }
