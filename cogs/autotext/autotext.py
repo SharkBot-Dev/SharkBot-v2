@@ -21,7 +21,7 @@ class AutoTextCog(commands.Cog):
         return f"{vc.name}-聞き専".lower()
 
     autotext = app_commands.Group(
-        name="autotext", description="自動聞き専作成機能です。"
+        name="autotext", description="自動聞き専作成機能です。", allowed_installs=app_commands.AppInstallationType(guild=True, user=False)
     )
 
     @autotext.command(name="setting", description="自動聞き専作成機能を設定します。")
