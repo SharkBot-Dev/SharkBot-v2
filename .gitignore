@@ -263,3 +263,5 @@ next-env.d.ts
 .next
 node_modules
 dashboard/dashboard/public
+
+youtube/settings.py
