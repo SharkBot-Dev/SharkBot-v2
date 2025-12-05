@@ -151,6 +151,7 @@ export default async function StarBoardPage({ params }: { params: { guildid: str
 
     return (
         <div className="flex flex-col gap-5">
+            <h1 className="text-2xl font-bold mb-4">{guild.name} のタイマー</h1>
 
             {/* timer create form */}
             <form action={createTimer} className="p-4 border rounded-lg flex flex-col gap-3">
