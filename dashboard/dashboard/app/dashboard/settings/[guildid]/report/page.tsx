@@ -28,6 +28,19 @@ export default async function ReportPage({ params }: { params: { guildid: string
 
         const channel = formData.get("channel") as string;
 
+        const guild_channels = await getChannels(guildid);
+        const channelsData =
+            Array.isArray((guild_channels as any).data)
+                ? (guild_channels as any).data
+                : guild_channels;
+
+        const exists = channelsData.some((c: any) => c.id === channel);
+
+        if (!exists) {
+            console.error("チャンネルが存在しません");
+            return;
+        }
+
         await db.db("Main").collection("ReportChannel").updateOne(
             { Guild: new Long(guildid) },
             {

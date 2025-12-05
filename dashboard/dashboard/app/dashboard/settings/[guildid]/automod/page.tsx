@@ -74,6 +74,13 @@ export default async function AutoModerationPage({ params }: { params: { guildid
         const channel = formData.get("channel");
         if (!channel) return;
 
+        const exists = channelsData.some((c: any) => c.id === channel);
+
+        if (!exists) {
+            console.error("チャンネルが存在しません");
+            return;
+        }
+
         const db = await connectDB();
         const col = db.db("Main").collection("UnBlockChannel");
 

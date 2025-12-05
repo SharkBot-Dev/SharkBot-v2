@@ -32,6 +32,13 @@ export default async function LeaveMessagePage({ params }: { params: { guildid: 
 
         if (!title || !desc || !channel) return;
 
+        const exists = channelsData.some((c: any) => c.id === channel);
+
+        if (!exists) {
+            console.error("チャンネルが存在しません");
+            return;
+        }
+
         await db.db("Main").collection("GoodByeMessage").updateOne(
             { Guild: new Long(guildid), Channel: new Long(channel) },
             {

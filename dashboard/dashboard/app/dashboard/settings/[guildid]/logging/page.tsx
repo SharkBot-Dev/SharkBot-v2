@@ -36,6 +36,12 @@ export default async function LoggingPage({ params }: { params: { guildid: strin
     const db = await connectDB();
     const col = db.db("Main").collection("EventLoggingChannel");
 
+    const guild_channels = await getChannels(guildid);
+    const channelsData =
+            Array.isArray((guild_channels as any).data)
+                ? (guild_channels as any).data
+                : guild_channels;
+
     for (const event of events) {
       const enabled = formData.get(event.value) === "true";
       const channel = formData.get("channel_" + event.value);
@@ -45,6 +51,12 @@ export default async function LoggingPage({ params }: { params: { guildid: strin
       });
 
       if (enabled && channel) {
+        const exists = channelsData.some((c: any) => c.id === channel);
+        if (!exists) {
+          console.error("チャンネルが存在しません");
+          return;
+        }
+
         const updateData: any = {
           Guild: Long.fromString(guildid),
           Channel: Long.fromString(channel as string),

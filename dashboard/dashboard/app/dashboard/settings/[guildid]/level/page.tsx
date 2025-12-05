@@ -21,6 +21,19 @@ export default async function LevelPage({ params }: { params: { guildid: string 
         const channel = formData.get("levelupchannel") as string;
         const levelupmessage = formData.get("levelupmessage") as string;
 
+        const guild_channels = await getChannels(guildid);
+        const channelsData =
+            Array.isArray((guild_channels as any).data)
+                ? (guild_channels as any).data
+                : guild_channels;
+
+        const exists = channelsData.some((c: any) => c.id === channel);
+
+        if (!exists) {
+            console.error("チャンネルが存在しません");
+            return;
+        }
+
         const db = await connectDB();
 
         if (checkenable) {
