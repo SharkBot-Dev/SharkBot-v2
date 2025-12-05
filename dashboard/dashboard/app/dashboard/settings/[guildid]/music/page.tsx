@@ -3,6 +3,8 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
+import ItemBox from "@/app/components/ItemBox";
+import ItemRow from "@/app/components/ItemRow";
 
 export default async function MusicPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -63,24 +65,35 @@ export default async function MusicPage({ params }: { params: { guildid: string 
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} の音楽設定</h1>
 
-            <form action={sendData} className="flex flex-col gap-3">
-                <span className="font-semibold mb-1">音楽を再生可能か (/music play)</span>
-                <ToggleButton name="play" defaultValue={!disabled_commands.includes('music play')} />
+            <form action={sendData} className="flex flex-col gap-6">
 
-                <span className="font-semibold mb-1">音楽を停止可能か (/music stop)</span>
-                <ToggleButton name="stop" defaultValue={!disabled_commands.includes('music stop')} />
+                <ItemRow>
 
-                <span className="font-semibold mb-1">音楽をスキップ可能か (/music skip)</span>
-                <ToggleButton name="skip" defaultValue={!disabled_commands.includes('music skip')} />
+                    <ItemBox title="音楽を再生可能か (/music play)">
+                        <ToggleButton name="play" defaultValue={!disabled_commands.includes('music play')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">音楽のキューを確認可能か (/music queue)</span>
-                <ToggleButton name="queue" defaultValue={!disabled_commands.includes('music queue')} />
+                    <ItemBox title="音楽を停止可能か (/music stop)">
+                        <ToggleButton name="stop" defaultValue={!disabled_commands.includes('music stop')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">音楽の音量を調節可能か (/music volume)</span>
-                <ToggleButton name="volume" defaultValue={!disabled_commands.includes('music volume')} />
+                    <ItemBox title="音楽をスキップ可能か (/music skip)">
+                        <ToggleButton name="skip" defaultValue={!disabled_commands.includes('music skip')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">音楽の低音ブースト可能か (/music boost)</span>
-                <ToggleButton name="boost" defaultValue={!disabled_commands.includes('music boost')} />
+                    <ItemBox title="音楽のキューを確認可能か (/music queue)">
+                        <ToggleButton name="queue" defaultValue={!disabled_commands.includes('music queue')} />
+                    </ItemBox>
+
+                    <ItemBox title="音量の調節が可能か (/music volume)">
+                        <ToggleButton name="volume" defaultValue={!disabled_commands.includes('music volume')} />
+                    </ItemBox>
+
+                    <ItemBox title="低音ブーストが可能か (/music boost)">
+                        <ToggleButton name="boost" defaultValue={!disabled_commands.includes('music boost')} />
+                    </ItemBox>
+
+                </ItemRow>
 
                 <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                     設定を保存
@@ -88,4 +101,5 @@ export default async function MusicPage({ params }: { params: { guildid: string 
             </form>
         </div>
     );
+
 }

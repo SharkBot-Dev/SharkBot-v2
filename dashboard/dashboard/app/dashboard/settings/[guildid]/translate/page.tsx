@@ -3,6 +3,9 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
+import ItemRow from "@/app/components/ItemRow";
+import ItemBox from "@/app/components/ItemBox";
+import LineAndTextLayout from "@/app/components/LineAndTextLayout";
 
 export default async function SearchPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -54,8 +57,12 @@ export default async function SearchPage({ params }: { params: { guildid: string
             <h1 className="text-2xl font-bold mb-4">{guild.name} の翻訳</h1>
 
             <form action={sendData} className="flex flex-col gap-3">
-                <span className="font-semibold mb-1">翻訳コマンドを使用可能か (/search web translate)</span>
-                <ToggleButton name="translate" defaultValue={!disabled_commands.includes('search web translate')} />
+                <LineAndTextLayout text="コマンド設定" />
+                <ItemRow>
+                    <ItemBox title="翻訳コマンドを使用可能か (/search web translate)">
+                        <ToggleButton name="translate" defaultValue={!disabled_commands.includes('search web translate')} />
+                    </ItemBox>
+                </ItemRow>
 
                 <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                     設定を保存

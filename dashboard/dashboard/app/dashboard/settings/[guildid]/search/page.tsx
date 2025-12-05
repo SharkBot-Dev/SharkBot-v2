@@ -3,6 +3,8 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
+import ItemBox from "@/app/components/ItemBox";
+import ItemRow from "@/app/components/ItemRow";
 
 export default async function SearchPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -81,51 +83,69 @@ export default async function SearchPage({ params }: { params: { guildid: string
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} のなんでも検索設定</h1>
 
-            <form action={sendData} className="flex flex-col gap-3">
-                <span className="font-semibold mb-1">まとめてDiscord上のアイテムを検索 (/search multi)</span>
-                <ToggleButton name="multi" defaultValue={!disabled_commands.includes('search multi')} />
+            <form action={sendData} className="flex flex-col gap-6">
 
-                <span className="font-semibold mb-1">Discordユーザーを検索 (/search user)</span>
-                <ToggleButton name="user" defaultValue={!disabled_commands.includes('search user')} />
+                <ItemRow>
+                    <ItemBox title="まとめてDiscord上のアイテムを検索 (/search multi)">
+                        <ToggleButton name="multi" defaultValue={!disabled_commands.includes('search multi')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">{guild.name}を検索 (/search server)</span>
-                <ToggleButton name="server" defaultValue={!disabled_commands.includes('search server')} />
+                    <ItemBox title="Discordユーザーを検索 (/search user)">
+                        <ToggleButton name="user" defaultValue={!disabled_commands.includes('search user')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">サーバータグを検索 (/search tag)</span>
-                <ToggleButton name="tag" defaultValue={!disabled_commands.includes('search tag')} />
+                    <ItemBox title="{guild.name}を検索 (/search server)">
+                        <ToggleButton name="server" defaultValue={!disabled_commands.includes('search server')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">サーバーチャンネルを検索 (/search channel)</span>
-                <ToggleButton name="channel" defaultValue={!disabled_commands.includes('search channel')} />
+                    <ItemBox title="サーバータグを検索 (/search tag)">
+                        <ToggleButton name="tag" defaultValue={!disabled_commands.includes('search tag')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">このサーバーでBanされた人を検索 (/search ban)</span>
-                <ToggleButton name="ban" defaultValue={!disabled_commands.includes('search ban')} />
+                    <ItemBox title="サーバーチャンネルを検索 (/search channel)">
+                        <ToggleButton name="channel" defaultValue={!disabled_commands.includes('search channel')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">このサーバーにいるBotを検索 (/search bot)</span>
-                <ToggleButton name="bot" defaultValue={!disabled_commands.includes('search bot')} />
+                    <ItemBox title="Banされた人を検索 (/search ban)">
+                        <ToggleButton name="ban" defaultValue={!disabled_commands.includes('search ban')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">サーバーの招待リンクを検索 (/search invite)</span>
-                <ToggleButton name="invite" defaultValue={!disabled_commands.includes('search invite')} />
+                    <ItemBox title="Botを検索 (/search bot)">
+                        <ToggleButton name="bot" defaultValue={!disabled_commands.includes('search bot')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">ユーザーのアバターを検索 (/search avatar)</span>
-                <ToggleButton name="avatar" defaultValue={!disabled_commands.includes('search avatar')} />
+                    <ItemBox title="招待リンクを検索 (/search invite)">
+                        <ToggleButton name="invite" defaultValue={!disabled_commands.includes('search invite')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">ユーザーのバナーを検索 (/search banner)</span>
-                <ToggleButton name="banner" defaultValue={!disabled_commands.includes('search banner')} />
+                    <ItemBox title="アバターを検索 (/search avatar)">
+                        <ToggleButton name="avatar" defaultValue={!disabled_commands.includes('search avatar')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">様々なサーバーの絵文字検索 (/search emoji)</span>
-                <ToggleButton name="emoji" defaultValue={!disabled_commands.includes('search emoji')} />
+                    <ItemBox title="バナーを検索 (/search banner)">
+                        <ToggleButton name="banner" defaultValue={!disabled_commands.includes('search banner')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">メンバーの聞いている曲を取得 (/search spotify)</span>
-                <ToggleButton name="spotify" defaultValue={!disabled_commands.includes('search spotify')} />
+                    <ItemBox title="絵文字検索 (/search emoji)">
+                        <ToggleButton name="emoji" defaultValue={!disabled_commands.includes('search emoji')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">SnowFlakeを検索する (/search snowflake)</span>
-                <ToggleButton name="snowflake" defaultValue={!disabled_commands.includes('search snowflake')} />
+                    <ItemBox title="Spotifyの曲を取得 (/search spotify)">
+                        <ToggleButton name="spotify" defaultValue={!disabled_commands.includes('search spotify')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">Wikipediaを検索する (/search web wikipedia)</span>
-                <ToggleButton name="wikipedia" defaultValue={!disabled_commands.includes('search web wikipedia')} />
+                    <ItemBox title="SnowFlakeを検索 (/search snowflake)">
+                        <ToggleButton name="snowflake" defaultValue={!disabled_commands.includes('search snowflake')} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">気になったアニメを検索する (/search web anime)</span>
-                <ToggleButton name="anime" defaultValue={!disabled_commands.includes('search web anime')} />
+                    <ItemBox title="Wikipediaを検索 (/search web wikipedia)">
+                        <ToggleButton name="wikipedia" defaultValue={!disabled_commands.includes('search web wikipedia')} />
+                    </ItemBox>
+
+                    <ItemBox title="アニメを検索 (/search web anime)">
+                        <ToggleButton name="anime" defaultValue={!disabled_commands.includes('search web anime')} />
+                    </ItemBox>
+                </ItemRow>
 
                 <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                     設定を保存
@@ -133,4 +153,5 @@ export default async function SearchPage({ params }: { params: { guildid: string
             </form>
         </div>
     );
+
 }
