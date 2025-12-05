@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LineAndtextLayout from "@/app/components/LineAndTextLayout";
 import Badge from "./Badge";
 
@@ -11,16 +11,22 @@ export default function ClientLayout({
   children: React.ReactNode;
   guildid: string;
 }) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (window.innerWidth >= 768) setIsOpen(true);
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-gray-100 text-white">
-      {/* サイドバー */}
+
       <aside
-        className={`fixed top-0 left-0 h-screen bg-black border-r border-gray-800 p-4 overflow-y-auto transform transition-transform duration-300 ease-in-out
-        ${isOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"}`}
+        className={`fixed top-0 left-0 h-screen bg-black border-r border-gray-800 p-4 overflow-y-auto 
+        transform transition-transform duration-300 ease-in-out
+        w-64 z-40
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
+        md:translate-x-0 md:w-64`}
       >
-        {/* ロゴを少し右に寄せる */}
         <h1 className="text-2xl mt-3 ml-10">SharkBot</h1>
 
         <nav className="space-y-2 mt-6">
@@ -30,10 +36,13 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🏠ホーム
           </a>
+
           <a href={`/dashboard/settings/${guildid}/commands`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             💬コマンド一覧
           </a>
+
           <LineAndtextLayout text="サーバー管理" />
+
           <a href={`/dashboard/settings/${guildid}/join-message`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🤝よろしくメッセージ
           </a>
@@ -41,7 +50,7 @@ export default function ClientLayout({
             👋さようならメッセージ
           </a>
           <a href={`/dashboard/settings/${guildid}/automod`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
-            🤖自動モデレート <Badge text="NEW" color="bg-green-600"></Badge>
+            🤖自動モデレート <Badge text="NEW" color="bg-green-600" />
           </a>
           <a href={`/dashboard/settings/${guildid}/moderation`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🔨モデレーション
@@ -70,7 +79,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/logging`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🪵ログ
           </a>
+
           <LineAndtextLayout text="ツール" />
+
           <a href={`/dashboard/settings/${guildid}/embed`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🟫埋め込み作成
           </a>
@@ -92,12 +103,14 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/search`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🔎なんでも検索
           </a>
+
           <LineAndtextLayout text="面白い・楽しい" />
+
           <a href={`/dashboard/settings/${guildid}/level`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🏆レベル
           </a>
           <a href={`/dashboard/settings/${guildid}/achievement`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
-            🏅サーバー内実績 <Badge text="NEW" color="bg-green-600"></Badge>
+            🏅サーバー内実績 <Badge text="NEW" color="bg-green-600" />
           </a>
           <a href={`/dashboard/settings/${guildid}/economy`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🪙サーバー内経済
@@ -106,7 +119,7 @@ export default function ClientLayout({
             ⭐スターボード
           </a>
           <a href={`/dashboard/settings/${guildid}/music`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
-            🎵音楽 <Badge text="NEW" color="bg-green-600"></Badge>
+            🎵音楽 <Badge text="NEW" color="bg-green-600" />
           </a>
           <a href={`/dashboard/settings/${guildid}/dice`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🎲ダイス
@@ -114,20 +127,23 @@ export default function ClientLayout({
         </nav>
       </aside>
 
-      {/* ハンバーガーボタン */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 bg-gray-800 p-2 rounded-md hover:bg-gray-700 transition"
-        style={{ zIndex: 100 }}
+        className="fixed top-4 left-4 bg-gray-800 p-2 rounded-md hover:bg-gray-700 transition z-50 md:hidden"
       >
         {isOpen ? "❌" : "☰"}
       </button>
 
-      {/* メイン */}
       <main
-        className={`flex-1 p-6 bg-black min-h-screen transition-all duration-300 ${
-          isOpen ? "ml-64" : "ml-0"
-        }`}
+        className={`flex-1 p-6 bg-black min-h-screen transition-all duration-300
+          ${isOpen ? "md:ml-64" : "md:ml-64"}`}
       >
         {children}
       </main>
