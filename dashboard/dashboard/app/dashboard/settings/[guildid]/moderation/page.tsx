@@ -4,6 +4,8 @@ import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
 import LineAndTextLayout from "@/app/components/LineAndTextLayout";
+import ItemRow from "@/app/components/ItemRow";
+import ItemBox from "@/app/components/ItemBox";
 
 export default async function ModerationPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -65,23 +67,32 @@ export default async function ModerationPage({ params }: { params: { guildid: st
             <h1 className="text-2xl font-bold mb-4">{guild.name} のモデレーション設定</h1>
 
             <form action={sendData} className="flex flex-col gap-3">
-                <LineAndTextLayout text="キック"></LineAndTextLayout>
-                <span className="font-semibold mb-1">Kickコマンドを使えるか (/moderation kick)</span>
-                <ToggleButton name="kick" defaultValue={!disabled_commands.includes('moderation kick')} />
+                <LineAndTextLayout text="コマンド設定" />
+                <ItemRow>
+                    <ItemBox title="Kickコマンドを使えるか (/moderation kick)">
+                        <ToggleButton name="kick" defaultValue={!disabled_commands.includes('moderation kick')} />
+                    </ItemBox>
 
-                <LineAndTextLayout text="タイムアウト"></LineAndTextLayout>
-                <span className="font-semibold mb-1">タイムアウトコマンドが使えるか (/moderation timeout)</span>
-                <ToggleButton name="timeout" defaultValue={!disabled_commands.includes('moderation timeout')} />
-                <span className="font-semibold mb-1">タイムアウト解除コマンドが使えるか (/moderation untimeout)</span>
-                <ToggleButton name="untimeout" defaultValue={!disabled_commands.includes('moderation untimeout')} />
+                    <ItemBox title="タイムアウトコマンドが使えるか (/moderation timeout)">
+                        <ToggleButton name="timeout" defaultValue={!disabled_commands.includes('moderation timeout')} />
+                    </ItemBox>
 
-                <LineAndTextLayout text="ユーザーBan"></LineAndTextLayout>
-                <span className="font-semibold mb-1">ユーザーBanコマンドが使えるか (/moderation ban ban)</span>
-                <ToggleButton name="ban" defaultValue={!disabled_commands.includes('moderation ban ban')} />
-                <span className="font-semibold mb-1">ユーザー複数Banコマンドが使えるか (/moderation ban massban)</span>
-                <ToggleButton name="massban" defaultValue={!disabled_commands.includes('moderation ban massban')} />
-                <span className="font-semibold mb-1">ユーザーBan解除コマンドが使えるか (/moderation ban unban)</span>
-                <ToggleButton name="unban" defaultValue={!disabled_commands.includes('moderation ban unban')} />
+                    <ItemBox title="タイムアウト解除コマンドが使えるか (/moderation untimeout)">
+                        <ToggleButton name="untimeout" defaultValue={!disabled_commands.includes('moderation untimeout')} />
+                    </ItemBox>
+
+                    <ItemBox title="ユーザーBanコマンドが使えるか (/moderation ban ban)">
+                        <ToggleButton name="ban" defaultValue={!disabled_commands.includes('moderation ban ban')} />
+                    </ItemBox>
+
+                    <ItemBox title="ユーザー複数Banコマンドが使えるか (/moderation ban massban)">
+                        <ToggleButton name="massban" defaultValue={!disabled_commands.includes('moderation ban massban')} />
+                    </ItemBox>
+
+                    <ItemBox title="ユーザーBan解除コマンドが使えるか (/moderation ban unban)">
+                        <ToggleButton name="unban" defaultValue={!disabled_commands.includes('moderation ban unban')} />
+                    </ItemBox>
+                </ItemRow>
 
                 <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                     設定を保存

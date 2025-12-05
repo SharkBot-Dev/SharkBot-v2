@@ -5,6 +5,8 @@ import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
 import LineAndTextLayout from "@/app/components/LineAndTextLayout";
 import { revalidatePath } from "next/cache";
+import ItemBox from "@/app/components/ItemBox";
+import ItemRow from "@/app/components/ItemRow";
 
 export default async function AutoModerationPage({ params }: { params: { guildid: string } }) {
     async function setAutoMod(formData: FormData) {
@@ -168,16 +170,25 @@ export default async function AutoModerationPage({ params }: { params: { guildid
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} の自動モデレート機能</h1>
 
+            <LineAndTextLayout text="基本的な設定" />
+
             <form action={setAutoMod} className="flex flex-col gap-3">
-                <LineAndTextLayout text="基本的な設定" />
-                <span className="font-semibold mb-1">招待リンクブロック</span>
-                <ToggleButton name="invite" defaultValue={EnabledInviteBlock} />
+                <ItemRow>
+                    <ItemBox title="招待リンクブロック">
+                        <p className="text-sm text-gray-400 mt-1">自動的に招待リンク(discord.ggなど)を削除します。</p><br/>
+                        <ToggleButton name="invite" defaultValue={EnabledInviteBlock} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">Tokenブロック</span>
-                <ToggleButton name="token" defaultValue={EnabledTokenBlock} />
+                    <ItemBox title="Tokenブロック">
+                        <p className="text-sm text-gray-400 mt-1">自動的にTokenを削除します。</p><br/>
+                        <ToggleButton name="token" defaultValue={EnabledTokenBlock} />
+                    </ItemBox>
 
-                <span className="font-semibold mb-1">10個以上の絵文字ブロック</span>
-                <ToggleButton name="emojis" defaultValue={EnabledEmojisBlock as boolean} />
+                    <ItemBox title="10個以上の絵文字ブロック">
+                        <p className="text-sm text-gray-400 mt-1">自動的に10個以上の絵文字を削除します。</p><br/>
+                        <ToggleButton name="emojis" defaultValue={EnabledEmojisBlock as boolean} />
+                    </ItemBox>
+                </ItemRow>
 
                 <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                     設定を保存

@@ -3,6 +3,9 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
+import ItemRow from "@/app/components/ItemRow";
+import ItemBox from "@/app/components/ItemBox";
+import LineAndTextLayout from "@/app/components/LineAndTextLayout";
 
 export default async function PollPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -56,9 +59,14 @@ export default async function PollPage({ params }: { params: { guildid: string }
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} の投票設定</h1>
 
+            <LineAndTextLayout text="コマンド設定" />
+
             <form action={sendData} className="flex flex-col gap-3">
-                <span className="font-semibold mb-1">機能を有効にする</span>
-                <ToggleButton name="checkenable" defaultValue={!disabled_commands.includes('panel poll')} />
+                <ItemRow>
+                    <ItemBox title="投票コマンドを有効化する (/panel poll)">
+                        <ToggleButton name="checkenable" defaultValue={!disabled_commands.includes('panel poll')} />
+                    </ItemBox>
+                </ItemRow>
 
                 <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                     設定を保存
