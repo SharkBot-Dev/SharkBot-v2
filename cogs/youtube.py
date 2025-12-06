@@ -24,6 +24,21 @@ async def subscribe_channel(channel_id, callback_url):
     async with aiohttp.ClientSession() as session:
         async with session.post("https://pubsubhubbub.appspot.com/subscribe", data=data) as response:
             return response.status
+        
+async def unsubscribe_channel(channel_id, callback_url):
+    topic = f"https://www.youtube.com/xml/feeds/videos.xml?channel_id={channel_id}"
+
+    data = {
+        "hub.mode": "unsubscribe",
+        "hub.topic": topic,
+        "hub.callback": callback_url,
+        "hub.verify": "async",
+        "hub.secret": settings.HMAC_SECRET
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post("https://pubsubhubbub.appspot.com/subscribe", data=data) as response:
+            return response.status
 
 class YoutubeCog(commands.Cog):
     def __init__(self, bot):
@@ -92,8 +107,10 @@ class YoutubeCog(commands.Cog):
 
         await db.delete_one({"channel_id": youtubeチャンネルid, "guild_id": interaction.guild.id})
 
+        res = await unsubscribe_channel(youtubeチャンネルid, settings.CALLBACK)
+
         await interaction.followup.send(
-            embed=make_embed.success_embed(title="登録を解除しました。")
+            embed=make_embed.success_embed(title="登録を解除しました。", description=f"ステータスコード: {res}")
         )
 
     @youtube.command(
