@@ -54,20 +54,30 @@ class YoutubeCog(commands.Cog):
         if count >= 3:
             return await interaction.followup.send(embed=make_embed.error_embed(title="三つまでしか登録できません。", description="不要なYoutube通知を削除してください。"))
 
-        wh = await interaction.channel.create_webhook(name="SharkBot-Youtube")
+        channel: discord.TextChannel = interaction.channel
+        webhooks = await channel.webhooks()
+
+        webhook = None
+        for wh in webhooks:
+            if wh.name == "SharkBot-Youtube":
+                webhook = wh
+                break
+
+        if webhook is None:
+            webhook = await channel.create_webhook(name="SharkBot-Youtube")
 
         if メンション:
             await db.insert_one({
                 "channel_id": youtubeチャンネルid,
                 "guild_id": interaction.guild_id,
-                "webhook_url": wh.url,
+                "webhook_url": webhook.url,
                 "role_mention": メンション.mention
             })
         else:
             await db.insert_one({
                 "channel_id": youtubeチャンネルid,
                 "guild_id": interaction.guild_id,
-                "webhook_url": wh.url
+                "webhook_url": webhook.url
             })
 
         res = await subscribe_channel(youtubeチャンネルid, settings.CALLBACK)
