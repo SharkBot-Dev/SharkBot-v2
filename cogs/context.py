@@ -527,8 +527,8 @@ async def setup(bot: commands.Bot):
                             return
 
                         try:
-                            translator = GoogleTranslator(source="auto", target="ja")
-                            translated_text = translator.translate(
+                            translator = await asyncio.to_thread(GoogleTranslator, source="auto", target="ja")
+                            translated_text = await asyncio.to_thread(translator.translate, 
                                 message.embeds[0].description
                             )
 
@@ -547,8 +547,8 @@ async def setup(bot: commands.Bot):
                         return
 
                     try:
-                        translator = GoogleTranslator(source="auto", target="ja")
-                        translated_text = translator.translate(message.content)
+                        translator = await asyncio.to_thread(GoogleTranslator, source="auto", target="ja")
+                        translated_text = await asyncio.to_thread(translator.translate, message.content)
 
                         embed = discord.Embed(
                             title="翻訳 (日本語 へ)",
@@ -581,8 +581,8 @@ async def setup(bot: commands.Bot):
                             return
 
                         try:
-                            translator = GoogleTranslator(source="auto", target="en")
-                            translated_text = translator.translate(
+                            translator = await asyncio.to_thread(GoogleTranslator, source="auto", target="en")
+                            translated_text = await asyncio.to_thread(translator.translate, 
                                 message.embeds[0].description
                             )
 
@@ -601,8 +601,8 @@ async def setup(bot: commands.Bot):
                         return
 
                     try:
-                        translator = GoogleTranslator(source="auto", target="en")
-                        translated_text = translator.translate(message.content)
+                        translator = await asyncio.to_thread(GoogleTranslator, source="auto", target="en")
+                        translated_text = await asyncio.to_thread(translator.translate, message.content)
 
                         embed = discord.Embed(
                             title="翻訳 (英語 へ)",
