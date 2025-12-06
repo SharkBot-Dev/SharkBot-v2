@@ -56,8 +56,9 @@ def notification():
     for item in cursor:
         webhook = item.get("webhook_url")
         if webhook:
+            role = item.get('role_mention', "新しい動画が投稿されました！")
             requests.post(webhook, json={
-                "content": item.get('message', f"{title}\n\n{url}"), "username": "SharkBot Youtube", "avatar_url": "https://yt3.googleusercontent.com/vE6aoNnj0dvL-8sPUMwJ5hQOwsjGhP6q3_MmuwyAc36Jous6GSWVgPnOqKN2KoGsaES8pBKrKA=s900-c-k-c0x00ffffff-no-rj"
+                "content": item.get('message', f"{role}\n{title}\n\n{url}"), "username": "SharkBot Youtube", "avatar_url": "https://yt3.googleusercontent.com/vE6aoNnj0dvL-8sPUMwJ5hQOwsjGhP6q3_MmuwyAc36Jous6GSWVgPnOqKN2KoGsaES8pBKrKA=s900-c-k-c0x00ffffff-no-rj"
             })
 
     return "OK"

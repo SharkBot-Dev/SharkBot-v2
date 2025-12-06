@@ -40,7 +40,7 @@ class YoutubeCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
-    async def youtube_add_alert(self, interaction: discord.Interaction, youtubeチャンネルid: str):
+    async def youtube_add_alert(self, interaction: discord.Interaction, youtubeチャンネルid: str, メンション: discord.Role = None):
         if not CHANNEL_REGEX.match(youtubeチャンネルid):
             return await interaction.response.send_message(embed=make_embed.error_embed(title="不正なYoutubeチャンネルidです。", description="正しいYoutubeチャンネルIDを入れてください。"))
 
@@ -56,11 +56,19 @@ class YoutubeCog(commands.Cog):
 
         wh = await interaction.channel.create_webhook(name="SharkBot-Youtube")
 
-        await db.insert_one({
-            "channel_id": youtubeチャンネルid,
-            "guild_id": interaction.guild_id,
-            "webhook_url": wh.url
-        })
+        if メンション:
+            await db.insert_one({
+                "channel_id": youtubeチャンネルid,
+                "guild_id": interaction.guild_id,
+                "webhook_url": wh.url,
+                "role_mention": メンション.mention
+            })
+        else:
+            await db.insert_one({
+                "channel_id": youtubeチャンネルid,
+                "guild_id": interaction.guild_id,
+                "webhook_url": wh.url
+            })
 
         res = await subscribe_channel(youtubeチャンネルid, settings.CALLBACK)
 
