@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import datetime
 
 import requests
-from models import make_embed, miq
+from models import make_embed, miq, web_translate
 from models.permissions_text import PERMISSION_TRANSLATIONS
 import asyncio
 
@@ -527,14 +527,11 @@ async def setup(bot: commands.Bot):
                             return
 
                         try:
-                            translator = await asyncio.to_thread(GoogleTranslator, source="auto", target="ja")
-                            translated_text = await asyncio.to_thread(translator.translate, 
-                                message.embeds[0].description
-                            )
+                            translated_text = await web_translate.translate(web_translate.targetToSource("ja"), "ja", message.embeds[0].description)
 
                             embed = discord.Embed(
                                 title="翻訳 (日本語 へ)",
-                                description=f"{translated_text}",
+                                description=f"{translated_text.get('text')}",
                                 color=discord.Color.green(),
                             )
                             await message.reply(embed=embed)
@@ -547,12 +544,11 @@ async def setup(bot: commands.Bot):
                         return
 
                     try:
-                        translator = await asyncio.to_thread(GoogleTranslator, source="auto", target="ja")
-                        translated_text = await asyncio.to_thread(translator.translate, message.content)
+                        translated_text = await web_translate.translate(web_translate.targetToSource("ja"), "ja", message.clean_content)
 
                         embed = discord.Embed(
                             title="翻訳 (日本語 へ)",
-                            description=f"{translated_text}",
+                            description=f"{translated_text.get('text')}",
                             color=discord.Color.green(),
                         )
                         await message.reply(embed=embed)
@@ -581,14 +577,11 @@ async def setup(bot: commands.Bot):
                             return
 
                         try:
-                            translator = await asyncio.to_thread(GoogleTranslator, source="auto", target="en")
-                            translated_text = await asyncio.to_thread(translator.translate, 
-                                message.embeds[0].description
-                            )
+                            translated_text = await web_translate.translate(web_translate.targetToSource("en"), "en", message.embeds[0].description)
 
                             embed = discord.Embed(
                                 title="翻訳 (英語 へ)",
-                                description=f"{translated_text}",
+                                description=f"{translated_text.get('text')}",
                                 color=discord.Color.green(),
                             )
                             await message.reply(embed=embed)
@@ -601,12 +594,11 @@ async def setup(bot: commands.Bot):
                         return
 
                     try:
-                        translator = await asyncio.to_thread(GoogleTranslator, source="auto", target="en")
-                        translated_text = await asyncio.to_thread(translator.translate, message.content)
+                        translated_text = await web_translate.translate(web_translate.targetToSource("en"), "en", message.clean_content)
 
                         embed = discord.Embed(
                             title="翻訳 (英語 へ)",
-                            description=f"{translated_text}",
+                            description=f"{translated_text.get('text')}",
                             color=discord.Color.green(),
                         )
                         await message.reply(embed=embed)

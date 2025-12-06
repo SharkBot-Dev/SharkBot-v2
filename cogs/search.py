@@ -14,7 +14,7 @@ import datetime
 
 import requests
 from discord import app_commands
-from models import command_disable, make_embed
+from models import command_disable, make_embed, web_translate
 
 import pytesseract
 from PIL import Image
@@ -162,17 +162,11 @@ class WebGroup(app_commands.Group):
                         return
 
             try:
-                loop = asyncio.get_running_loop()
-                translator = await loop.run_in_executor(
-                    None, partial(GoogleTranslator, source="auto", target=翻訳先.value)
-                )
-                translated_text = await loop.run_in_executor(
-                    None, partial(translator.translate, テキスト)
-                )
+                translated_text = await web_translate.translate(web_translate.targetToSource(翻訳先.value), 翻訳先.value, テキスト)
 
                 embed = make_embed.success_embed(
                     title=f"翻訳 ({翻訳先.value} へ)",
-                    description=f"```{translated_text}```",
+                    description=f"```{translated_text.get('text')}```",
                 )
                 await interaction.followup.send(embed=embed)
 
@@ -228,23 +222,17 @@ class WebGroup(app_commands.Group):
                         return
 
             try:
-                loop = asyncio.get_running_loop()
-                translator = await loop.run_in_executor(
-                    None, partial(GoogleTranslator, source="auto", target=翻訳先.value)
-                )
-                translated_text = await loop.run_in_executor(
-                    None, partial(translator.translate, text_ocrd)
-                )
+                translated_text = await web_translate.translate(web_translate.targetToSource(翻訳先.value), 翻訳先.value, text_ocrd)
 
                 embed = make_embed.success_embed(
                     title=f"翻訳 ({翻訳先.value} へ)",
-                    description=f"```{translated_text}```",
+                    description=f"```{translated_text.get('text')}```",
                 )
                 await interaction.followup.send(embed=embed)
 
             except Exception as e:
                 embed = make_embed.error_embed(
-                    title="翻訳に失敗しました", description=f"エラーコード: {e}"
+                    title="翻訳に失敗しました"
                 )
                 await interaction.followup.send(embed=embed)
 
