@@ -80,6 +80,13 @@ class LoopCog(commands.Cog):
             args = doc.get("Args", [])
             kwargs = doc.get("Kwargs", {})
 
+            if event == "auto_reset_event":
+                guild_id = doc.get("Guild")
+                channel_id = doc.get("Channel")
+                hour = doc.get("Hour")
+
+                args = [guild_id, channel_id, hour]
+
             self.bot.dispatch(event, *args, **kwargs)
 
             # await db.delete_one({"_id": doc["_id"]})
