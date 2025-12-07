@@ -2349,11 +2349,6 @@ class PanelCog(commands.Cog):
         選択肢4: str = None,
         選択肢5: str = None,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer(ephemeral=True)
         if not 選択肢2 and not 選択肢3 and not 選択肢4 and not 選択肢5:
             msg_ = await interaction.channel.send(
@@ -2420,12 +2415,11 @@ class PanelCog(commands.Cog):
         msg_ = await interaction.channel.send(
             embed=discord.Embed(
                 title=f"{タイトル}", description=f"{text}", color=discord.Color.blue()
-            )
+            ).set_author(name=f"{interaction.user.name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url)
         )
         await msg_.add_reaction("1️⃣")
         if 選択肢2 != None:
             await msg_.add_reaction("2️⃣")
-        await asyncio.sleep(1)
         if 選択肢3 != None:
             await msg_.add_reaction("3️⃣")
         if 選択肢4 != None:
@@ -2433,7 +2427,7 @@ class PanelCog(commands.Cog):
         if 選択肢5 != None:
             await msg_.add_reaction("5️⃣")
         await interaction.followup.send(
-            embed=discord.Embed(title="作成しました。", color=discord.Color.green()),
+            embed=make_embed.success_embed(title="作成しました。"),
             ephemeral=True,
         )
 
