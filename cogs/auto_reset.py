@@ -93,7 +93,7 @@ class AutoResetCog(commands.Cog):
         )
 
         await self.bot.loop_create(
-            datetime.timedelta(minutes=hour),
+            datetime.timedelta(hour=hour),
             "auto_reset_event",
             guild_id,
             new_ch.id,
