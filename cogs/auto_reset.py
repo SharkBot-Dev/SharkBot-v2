@@ -63,27 +63,26 @@ class AutoResetCog(commands.Cog):
         
         db = self.bot.async_db["MainTwo"].AutoResetChannelBeta
 
+        exists = await db.find_one(
+            {"Guild": guild_id, "Channel": channel_id}
+        )
+        if not exists:
+            return
+
         new_ch = await channel.clone(reason="Auto reset")
         await new_ch.edit(position=channel.position + 1)
         await channel.delete(reason="Auto reset")
 
         await new_ch.send(
             embed=make_embed.success_embed(
-                title="チャンネルがリセットされました。"
+                title="チャンネルがリセットされました。",
+                description="これは定期リセットです。"
             )
         )
 
         await db.update_one(
             {"Guild": guild.id, "Channel": channel_id},
             {"$set": {"Guild": guild.id, "Channel": new_ch.id, "Reminder": hour}},
-        )
-
-        await self.bot.reminder_create(
-            datetime.timedelta(hours=hour),
-            "auto_reset_event",
-            guild.id,
-            new_ch.id,
-            hour
         )
 
     autoreset = app_commands.Group(
@@ -100,17 +99,20 @@ class AutoResetCog(commands.Cog):
         self, interaction: discord.Interaction, チャンネル: discord.TextChannel, 何時間間隔か: int = 3
     ):
         await interaction.response.defer()
+        if 何時間間隔か < 1:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="時間指定は1以上でお願いします。"))
+
         db = self.bot.async_db["MainTwo"].AutoResetChannelBeta
         await db.update_one(
             {"Guild": interaction.guild.id, "Channel": チャンネル.id},
             {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id, "Reminder": 何時間間隔か}},
             upsert=True,
         )
-        await interaction.client.reminder_create(
+        await interaction.client.loop_create(
             datetime.timedelta(hours=何時間間隔か),
             "auto_reset_event",
             interaction.guild.id,
-            interaction.channel_id,
+            チャンネル.id,
             何時間間隔か
         )
 

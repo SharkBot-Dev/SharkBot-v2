@@ -54,7 +54,7 @@ class TimerSetModal(discord.ui.Modal):
             upsert=True,
         )
 
-        await interaction.client.reminder_create(
+        await interaction.client.loop_create(
             datetime.timedelta(minutes=self.time),
             "timer_event",
             interaction.guild.id,
@@ -193,7 +193,7 @@ class TimerCog(commands.Cog):
             ):
                 pass
 
-        await self.bot.reminder_create(
+        await self.bot.loop_create(
             datetime.timedelta(minutes=interval),
             "timer_event",
             guild_id,
