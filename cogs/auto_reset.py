@@ -64,7 +64,7 @@ class AutoResetCog(commands.Cog):
         db = self.bot.async_db["MainTwo"].AutoResetChannelBeta
 
         exists = await db.find_one(
-            {"Guild": guild_id, "Channel": channel_id}
+            {"Guild": guild_id, "Channel": channel_id, "Reminder": hour}
         )
         if not exists:
             return
