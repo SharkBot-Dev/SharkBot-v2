@@ -53,7 +53,7 @@ class AutoResetCog(commands.Cog):
     ):
         db = self.bot.async_db["MainTwo"].LoopQueue
 
-        await db.delete_one(
+        await db.delete_many(
             {"Event": event, "Args": args}
         )
 
@@ -79,6 +79,13 @@ class AutoResetCog(commands.Cog):
         if not exists:
             return
 
+        await self.loop_delete(
+            "auto_reset_event",
+            guild_id,
+            channel_id,
+            hour
+        )
+
         new_ch = await channel.clone(reason="Auto reset")
         await new_ch.edit(position=channel.position + 1)
         await channel.delete(reason="Auto reset")
@@ -100,14 +107,6 @@ class AutoResetCog(commands.Cog):
             "auto_reset_event",
             guild_id,
             new_ch.id,
-            hour
-        )
-
-        # ここで前のループを削除
-        await self.loop_delete(
-            "auto_reset_event",
-            guild_id,
-            channel_id,
             hour
         )
 
@@ -162,6 +161,18 @@ class AutoResetCog(commands.Cog):
         await db.delete_one({"Guild": interaction.guild.id, "Channel": チャンネル.id})
 
         db = self.bot.async_db["MainTwo"].AutoResetChannelBeta
+
+        record = await db.find_one({"Guild": interaction.guild.id, "Channel": チャンネル.id})
+        if record:
+            hour = record.get("Reminder", 3)
+
+            await self.loop_delete(
+                "auto_reset_event",
+                interaction.guild.id,
+                チャンネル.id,
+                hour
+            )
+
         await db.delete_one({"Guild": interaction.guild.id, "Channel": チャンネル.id})
 
         await interaction.followup.send(
