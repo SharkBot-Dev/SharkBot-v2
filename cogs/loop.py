@@ -9,6 +9,7 @@ class LoopCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.bot.loop_create = self.loop_create
+        self.bot.loop_delete = self.loop_delete
         self.check_loop.start()
 
     async def cog_unload(self):
