@@ -15,10 +15,37 @@ class LoopCog(commands.Cog):
         self.check_loop.cancel()
 
     async def loop_create(
-        self, time: timedelta, event: str, /, *args: Any, **kwargs: Any
+        self,
+        time: timedelta,
+        event: str,
+        /,
+        *args: Any,
+        **kwargs: Any
     ):
         notify_time = datetime.now(timezone.utc) + time
         db = self.bot.async_db["MainTwo"].LoopQueue
+
+        if event == "auto_reset_event":
+            guild_id = args[0]
+            channel_id = args[1]
+            hour = args[2]
+
+            new_doc = {
+                "NotifyAt": notify_time,
+                "Event": event,
+                "Guild": guild_id,
+                "Channel": channel_id,
+                "Hour": hour,
+                "Args": [],
+                "Kwargs": {},
+            }
+
+            await db.update_one(
+                {"Event": event, "Guild": guild_id},
+                {"$set": new_doc},
+                upsert=True,
+            )
+            return
 
         await db.update_one(
             {"Event": event, "Args": args},
@@ -32,6 +59,16 @@ class LoopCog(commands.Cog):
             },
             upsert=True,
         )
+
+    async def loop_delete(self, event: str, /, *args: Any, **kwargs: Any):
+        db = self.bot.async_db["MainTwo"].LoopQueue
+
+        if event == "auto_reset_event":
+            guild_id = args[0]
+            await db.delete_many({"Event": event, "Guild": guild_id, "Channel": args[1]})
+            return
+
+        await db.delete_many({"Event": event, "Args": args})
 
     @tasks.loop(seconds=15)
     async def check_loop(self):

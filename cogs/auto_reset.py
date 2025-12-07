@@ -48,15 +48,6 @@ class AutoResetCog(commands.Cog):
         self.auto_reset_loop.stop()
         return
 
-    async def loop_delete(
-        self, event: str, /, *args: Any, **kwargs: Any
-    ):
-        db = self.bot.async_db["MainTwo"].LoopQueue
-
-        await db.delete_many(
-            {"Event": event, "Args": args}
-        )
-
     @commands.Cog.listener()
     async def on_auto_reset_event(
         self,
@@ -79,11 +70,10 @@ class AutoResetCog(commands.Cog):
         if not exists:
             return
 
-        await self.loop_delete(
+        await self.bot.loop_delete(
             "auto_reset_event",
             guild_id,
-            channel_id,
-            hour
+            channel_id
         )
 
         new_ch = await channel.clone(reason="Auto reset")
@@ -166,11 +156,10 @@ class AutoResetCog(commands.Cog):
         if record:
             hour = record.get("Reminder", 3)
 
-            await self.loop_delete(
+            await self.bot.loop_delete(
                 "auto_reset_event",
                 interaction.guild.id,
-                チャンネル.id,
-                hour
+                チャンネル.id
             )
 
         await db.delete_one({"Guild": interaction.guild.id, "Channel": チャンネル.id})
