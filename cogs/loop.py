@@ -41,7 +41,7 @@ class LoopCog(commands.Cog):
             }
 
             await db.update_one(
-                {"Event": event, "Guild": guild_id},
+                {"Event": event, "Guild": guild_id, "Channel": channel_id},
                 {"$set": new_doc},
                 upsert=True,
             )
