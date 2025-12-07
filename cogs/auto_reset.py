@@ -85,6 +85,14 @@ class AutoResetCog(commands.Cog):
             {"$set": {"Guild": guild.id, "Channel": new_ch.id, "Reminder": hour}},
         )
 
+        await self.bot.loop_create(
+            datetime.timedelta(minutes=hour),
+            "auto_reset_event",
+            guild_id,
+            channel_id,
+            hour
+        )
+
     autoreset = app_commands.Group(
         name="autoreset", description="チャンネルの自動リセット関連のコマンドです。"
     )
