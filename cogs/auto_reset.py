@@ -1,4 +1,5 @@
 import datetime
+from typing import Any
 from discord.ext import commands, tasks
 import discord
 import asyncio
@@ -47,6 +48,15 @@ class AutoResetCog(commands.Cog):
         self.auto_reset_loop.stop()
         return
 
+    async def loop_delete(
+        self, event: str, /, *args: Any, **kwargs: Any
+    ):
+        db = self.bot.async_db["MainTwo"].LoopQueue
+
+        await db.delete_one(
+            {"Event": event, "Args": args}
+        )
+
     @commands.Cog.listener()
     async def on_auto_reset_event(
         self,
@@ -87,6 +97,14 @@ class AutoResetCog(commands.Cog):
 
         await self.bot.loop_create(
             datetime.timedelta(minutes=hour),
+            "auto_reset_event",
+            guild_id,
+            new_ch.id,
+            hour
+        )
+
+        # ここで前のループを削除
+        await self.loop_delete(
             "auto_reset_event",
             guild_id,
             channel_id,
