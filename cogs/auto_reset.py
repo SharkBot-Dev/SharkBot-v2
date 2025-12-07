@@ -1,8 +1,10 @@
+import datetime
 from discord.ext import commands, tasks
 import discord
 import asyncio
 from discord import app_commands
 from consts import mongodb
+from models import make_embed
 
 
 class AutoResetCog(commands.Cog):
@@ -19,9 +21,9 @@ class AutoResetCog(commands.Cog):
                 if not ch:
                     continue
                 ch_ = await ch.clone()
-                await db.replace_one(
+                await db.update_one(
                     {"Guild": ch_.guild.id, "Channel": ch_.id},
-                    {"Guild": ch_.guild.id, "Channel": ch_.id},
+                    {'$set': {"Guild": ch_.guild.id, "Channel": ch_.id}},
                     upsert=True,
                 )
                 await asyncio.sleep(1)
@@ -29,9 +31,8 @@ class AutoResetCog(commands.Cog):
                 await asyncio.sleep(1)
                 await ch.delete()
                 await ch_.send(
-                    embed=discord.Embed(
-                        title="チャンネルがリセットされました。",
-                        color=discord.Color.red(),
+                    embed=make_embed.success_embed(
+                        title="チャンネルがリセットされました。"
                     )
                 )
                 await asyncio.sleep(1)
@@ -46,6 +47,45 @@ class AutoResetCog(commands.Cog):
         self.auto_reset_loop.stop()
         return
 
+    @commands.Cog.listener()
+    async def on_auto_reset_event(
+        self,
+        guild_id: int,
+        channel_id: int,
+        hour: int
+    ):
+        guild = self.bot.get_guild(guild_id)
+        if not guild:
+            return
+        channel = guild.get_channel(channel_id)
+        if not channel:
+            return
+        
+        db = self.bot.async_db["MainTwo"].AutoResetChannelBeta
+
+        new_ch = await channel.clone(reason="Auto reset")
+        await new_ch.edit(position=channel.position + 1)
+        await channel.delete(reason="Auto reset")
+
+        await new_ch.send(
+            embed=make_embed.success_embed(
+                title="チャンネルがリセットされました。"
+            )
+        )
+
+        await db.update_one(
+            {"Guild": guild.id, "Channel": channel_id},
+            {"$set": {"Guild": guild.id, "Channel": new_ch.id, "Reminder": hour}},
+        )
+
+        await self.bot.reminder_create(
+            datetime.timedelta(hours=hour),
+            "auto_reset_event",
+            guild.id,
+            new_ch.id,
+            hour
+        )
+
     autoreset = app_commands.Group(
         name="autoreset", description="チャンネルの自動リセット関連のコマンドです。"
     )
@@ -57,19 +97,26 @@ class AutoResetCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def _auto_reset_setting(
-        self, interaction: discord.Interaction, チャンネル: discord.TextChannel
+        self, interaction: discord.Interaction, チャンネル: discord.TextChannel, 何時間間隔か: int = 3
     ):
         await interaction.response.defer()
-        db = self.bot.async_db["Main"].AutoResetChannel
-        await db.replace_one(
+        db = self.bot.async_db["MainTwo"].AutoResetChannelBeta
+        await db.update_one(
             {"Guild": interaction.guild.id, "Channel": チャンネル.id},
-            {"Guild": interaction.guild.id, "Channel": チャンネル.id},
+            {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id, "Reminder": 何時間間隔か}},
             upsert=True,
         )
+        await interaction.client.reminder_create(
+            datetime.timedelta(hours=何時間間隔か),
+            "auto_reset_event",
+            interaction.guild.id,
+            interaction.channel_id,
+            何時間間隔か
+        )
+
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="自動リセットするチャンネルを設定しました。",
-                color=discord.Color.green(),
+            embed=make_embed.success_embed(
+                title=f"チャンネルの自動リセットを{何時間間隔か}時間ごとに設定しました。"
             )
         )
 
@@ -85,58 +132,15 @@ class AutoResetCog(commands.Cog):
         await interaction.response.defer()
         db = self.bot.async_db["Main"].AutoResetChannel
         await db.delete_one({"Guild": interaction.guild.id, "Channel": チャンネル.id})
+
+        db = self.bot.async_db["MainTwo"].AutoResetChannelBeta
+        await db.delete_one({"Guild": interaction.guild.id, "Channel": チャンネル.id})
+
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="自動リセットを無効化しました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="自動リセットを無効化しました。"
             )
         )
-
-    @autoreset.command(
-        name="now", description="チャンネルの自動リセットを今実行します。"
-    )
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.checks.has_permissions(manage_channels=True)
-    async def _auto_reset_now(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        channels = [
-            b
-            async for b in self.bot.async_db["Main"].AutoResetChannel.find(
-                {"Guild": interaction.guild.id}
-            )
-        ]
-        for ch in channels:
-            try:
-                channel = interaction.guild.get_channel(ch.get("Channel"))
-                if channel.id == interaction.channel.id:
-                    return await interaction.followup.send(
-                        embed=discord.Embed(
-                            title="自動リセットの設定されているチャンネルでは\nリセットコマンドを実行できません。",
-                            color=discord.Color.red(),
-                        )
-                    )
-                ch_ = await channel.clone()
-                await self.bot.async_db["Main"].AutoResetChannel.replace_one(
-                    {"Guild": interaction.guild.id, "Channel": ch.get("Channel")},
-                    {"Guild": interaction.guild.id, "Channel": ch_.id},
-                    upsert=True,
-                )
-                await asyncio.sleep(1)
-                await ch_.edit(position=channel.position + 1)
-                await asyncio.sleep(1)
-                await channel.delete()
-                await ch_.send(
-                    embed=discord.Embed(
-                        title="チャンネルがリセットされました。",
-                        color=discord.Color.red(),
-                    )
-                )
-            except:
-                continue
-        await interaction.followup.send(
-            embed=discord.Embed(title="リセットしました。", color=discord.Color.green())
-        )
-
 
 async def setup(bot):
     await bot.add_cog(AutoResetCog(bot))
