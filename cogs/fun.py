@@ -751,6 +751,51 @@ class TextGroup(app_commands.Group):
 
         await interaction.response.send_modal(send())
 
+    @app_commands.command(name="oldtext", description="文字列を旧字体に変換します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        変換方法=[
+            app_commands.Choice(name="新しくする", value="new"),
+            app_commands.Choice(name="古くする", value="old"),
+        ]
+    )
+    async def oldtext_convert(self, interaction: discord.Interaction, テキスト: str, 変換方法: app_commands.Choice[str]):
+        New = "亜悪圧囲為医壱逸稲飲隠羽営栄衛益駅悦謁円園縁艶塩奥応横欧殴鴎黄温穏仮価禍画会回壊悔懐海絵慨概拡殻覚学岳楽喝渇褐勧巻寛歓漢缶観間関陥館巌顔器既帰気祈亀偽戯犠却糾旧拠挙虚峡挟教狭郷響尭暁勤謹区駆駆勲薫群径恵掲携渓経継茎蛍軽鶏芸撃欠倹券剣圏検権献研県険顕験厳効広恒晃鉱高号国穀黒済砕斎剤冴崎桜冊殺雑参惨桟蚕賛残祉糸視飼歯児辞湿実舎写煮社者釈寿収臭従渋獣縦祝粛処暑渚緒署諸叙奨将床渉焼祥称証乗剰壌嬢条浄状畳穣譲醸嘱触寝慎晋真神刃尽図粋酔随髄数枢瀬晴清精声青静斉跡摂窃節専戦浅潜繊践銭禅曽祖僧双壮層捜挿巣争痩窓総聡荘装騒増憎臓蔵贈即属続堕体対帯滞台滝択沢琢単嘆担胆団壇弾断痴遅昼虫鋳猪著庁徴懲聴勅鎮塚禎逓鉄転点伝都党島盗灯当祷闘闘徳独読突届縄難弐妊祢粘悩脳覇廃拝杯梅売麦発髪抜繁飯晩蛮卑碑秘桧浜賓頻敏瓶富侮福払仏併塀並変辺辺勉弁弁弁舗歩穂宝峰萌褒豊墨没翻毎槙万満免麺黙餅戻野弥薬訳薮祐予余与誉揺様謡遥欲来頼乱欄覧略隆竜虜両涼猟緑隣塁涙類励礼隷霊齢暦歴恋練錬炉労廊朗楼郎禄録亘湾渕瑶凜閲鎌強呉娯歳産姉尚税説絶痩双脱彦姫"
+
+        Old = "亞惡壓圍爲醫壹逸稻飮隱羽營榮衞益驛悅謁圓薗緣艷鹽奧應橫歐毆鷗黃溫穩假價禍畫會囘壞悔懷海繪慨槪擴殼覺學嶽樂喝渴褐勸卷寬歡漢罐觀閒關陷館巖顏器既歸氣祈龜僞戲犧卻糺舊據擧虛峽挾敎狹鄕響堯曉勤謹區驅駈勳薰羣徑惠揭攜溪經繼莖螢輕鷄藝擊缺儉劵劍圈檢權獻硏縣險顯驗嚴效廣恆晄鑛髙號國穀黑濟碎齋劑冱﨑櫻册殺雜參慘棧蠶贊殘祉絲視飼齒兒辭濕實舍寫煮社者釋壽收臭從澁獸縱祝肅處暑渚緖署諸敍奬將牀涉燒祥稱證乘剩壤孃條淨狀疊穰讓釀囑觸寢愼晉眞神刄盡圖粹醉隨髓數樞瀨晴淸精聲靑靜齊蹟攝竊節專戰淺潛纖踐錢禪曾祖僧雙壯層搜插巢爭瘦窗總聰莊裝騷增憎臟藏贈卽屬續墮體對帶滯臺瀧擇澤琢單嘆擔膽團檀彈斷癡遲晝蟲鑄猪著廳徵懲聽敕鎭塚禎遞鐵轉點傳都黨嶋盜燈當禱鬪鬭德獨讀突屆繩難貳姙禰黏惱腦霸廢拜盃梅賣麥發髮拔繁飯晚蠻卑碑祕檜濱賓頻敏甁冨侮福拂佛倂塀竝變邊邉勉辨辯瓣舖步穗寶峯萠襃豐墨沒飜毎槇萬滿免麵默餠戾埜彌藥譯藪祐豫餘與譽搖樣謠遙慾來賴亂欄覽畧隆龍虜兩凉獵綠鄰壘淚類勵禮隸靈齡曆歷戀練鍊爐勞廊朗樓郞祿錄亙灣淵瑤凛閱鐮强吳娛歲產姊尙稅說絕瘦雙脫彥姬"
+
+        def N2O(text, flag):
+            result = ""
+            for ch in text:
+                found = False
+                code = ord(ch)
+
+                if 0x4E00 <= code <= 0x9FFF:
+                    for j in range(len(New)):
+                        if flag:
+                            if ch == New[j]:
+                                result += Old[j]
+                                found = True
+                                break
+                        else:
+                            if ch == Old[j]:
+                                result += New[j]
+                                found = True
+                                break
+
+                if not found:
+                    result += ch
+
+            return result
+        
+        if 変換方法.value == "old":
+            result = N2O(テキスト, True)
+            await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="旧字体に変換しました。", description=result))
+        else:
+            result = N2O(テキスト, False)
+            await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="新字体に変換しました。", description=result))
+
     @app_commands.command(name="morse", description="モールス信号に変換します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
