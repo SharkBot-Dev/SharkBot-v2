@@ -75,8 +75,8 @@ async def setup_hook() -> None:
     await load_cogs(bot)
     try:
         await bot.tree.sync()
-    except:
-        print("スラッシュコマンドの同期に失敗しました。")
+    except Exception as e:
+        print(f"スラッシュコマンドの同期に失敗しました。: {e}")
 
 
 if os.environ.get("Token") is not None:

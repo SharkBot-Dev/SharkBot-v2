@@ -1,3 +1,4 @@
+import json
 import re
 from discord.ext import commands
 import discord
@@ -7,8 +8,10 @@ from discord import app_commands
 from models import make_embed
 import aiohttp
 from youtube import settings
+from yt_dlp import YoutubeDL
 
 CHANNEL_REGEX = re.compile(r"^UC[0-9A-Za-z_-]{22}$")
+YOUTUBE_ID_REGEX = re.compile(r".*(?:youtu\.be\/|v\/|vi\/|e\/|embed\/|watch\?v=|watch\?.+&v=)([^#&?]{11}).*")
 
 async def subscribe_channel(channel_id, callback_url):
     topic = f"https://www.youtube.com/xml/feeds/videos.xml?channel_id={channel_id}"
@@ -119,6 +122,43 @@ class YoutubeCog(commands.Cog):
         items = await db.find({"guild_id": interaction.guild.id}).to_list(length=None)
         text = "\n".join(f"- {item['channel_id']}" for item in items) or "なし"
         await interaction.response.send_message(embed=make_embed.success_embed(title="登録チャンネル一覧", description=text))
+
+    @youtube.command(
+        name="thumbnail", description="Youtube動画のサムネを取得します。"
+    )
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def youtube_thumbnail(self, interaction: discord.Interaction, 動画のurl: str):
+        await interaction.response.defer()
+        match = YOUTUBE_ID_REGEX.search(動画のurl)
+        v_id = match.group(1)
+        async with aiohttp.ClientSession() as session:
+            async with session.post('https://www.youtube.com/youtubei/v1/player', headers={
+                "Content-Type": "application/json"
+            }, data=json.dumps({
+                "context":{
+                    "client":{
+                    "clientName": "WEB",
+                    "clientVersion": "2.20210721.00.00",
+                    }
+                },
+                "videoId": v_id
+            })) as response:
+                data = await response.json()
+
+        try:
+            thumbnails = data["videoDetails"]["thumbnail"]["thumbnails"]
+        except KeyError:
+            return await interaction.followup.send("サムネイル情報を取得できませんでした。")
+
+        best_thumb = thumbnails[-1]["url"]
+
+        embed = make_embed.success_embed(
+            title="サムネイルを取得しました。",
+            description=f"動画ID: `{v_id}`"
+        ).set_image(url=best_thumb)
+
+        await interaction.followup.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(YoutubeCog(bot))
