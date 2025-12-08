@@ -68,7 +68,9 @@ class BotCog(commands.Cog):
         await interaction.response.defer()
         guild = self.bot.get_guild(1343124570131009579)
         await guild.get_channel(1419883503365128212).follow(destination=interaction.channel, reason="Botのアナウンスをフォロー")
+        await asyncio.sleep(1)
         await guild.get_channel(1347451795978453052).follow(destination=interaction.channel, reason="Botのアナウンスをフォロー")
+        await asyncio.sleep(1)
         await guild.get_channel(1361173338763956284).follow(destination=interaction.channel, reason="Botのアナウンスをフォロー")
         await interaction.followup.send(embed=make_embed.success_embed(title="アナウンスチャンネルを追加しました。", description="このチャンネルでBOTをお知らせを受け取ることができます。"))
 
