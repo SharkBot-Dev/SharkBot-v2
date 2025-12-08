@@ -2354,7 +2354,7 @@ class PanelCog(commands.Cog):
             msg_ = await interaction.channel.send(
                 embed=discord.Embed(
                     title=タイトル, description=選択肢1, color=discord.Color.blue()
-                )
+                ).set_author(name=f"{interaction.user.name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url)
             )
             await msg_.add_reaction("👍")
             await msg_.add_reaction("👎")
@@ -2371,7 +2371,7 @@ class PanelCog(commands.Cog):
                     title=タイトル,
                     description="🇦 " + 選択肢1 + f"\n🇧 {選択肢2}",
                     color=discord.Color.blue(),
-                )
+                ).set_author(name=f"{interaction.user.name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url)
             )
             await msg_.add_reaction("🇦")
             await msg_.add_reaction("🇧")
