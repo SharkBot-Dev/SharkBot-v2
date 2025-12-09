@@ -1,13 +1,74 @@
+import signal
 from flask import Flask, request, send_file, jsonify
 import matplotlib.pyplot as plt
 import matplotlib
+import sympy as sp
+import numpy as np
 import io
 
 matplotlib.use("Agg")
 
 app = Flask(__name__)
 
+class TimeoutError(Exception):
+    pass
 
+def handler(signum, frame):
+    raise TimeoutError("計算がタイムアウトしました")
+
+def evaluate_formula_with_timeout(expr, X, timeout_sec=1):
+    signal.signal(signal.SIGALRM, handler)
+    signal.alarm(timeout_sec)
+
+    try:
+        f = sp.lambdify(sp.symbols("x"), expr, modules=["numpy"])
+        Y = f(X)
+    finally:
+        signal.alarm(0)
+
+    return Y
+
+
+@app.route("/formula", methods=["POST"])
+def formula_plot():
+    try:
+        body = request.get_json()
+
+        formula = body.get("formula")
+        xmin = body.get("xmin", -10)
+        xmax = body.get("xmax", 10)
+
+        x = sp.symbols("x")
+        try:
+            expr = sp.sympify(formula)
+        except Exception:
+            return jsonify({"error": "invalid formula"}), 400
+
+        X = np.linspace(xmin, xmax, 500)
+
+        try:
+            Y = evaluate_formula_with_timeout(expr, X, timeout_sec=1)
+        except TimeoutError:
+            return jsonify({"error": "formula timeout"}), 408
+        except Exception as e:
+            print(f"Error: {e}")
+            return jsonify({"error": "Error."}), 500
+
+        buf = io.BytesIO()
+        plt.figure(figsize=(6, 4))
+        plt.plot(X, Y)
+        plt.title(f"y = {formula}")
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig(buf, format="png")
+        plt.close()
+        buf.seek(0)
+
+        return send_file(buf, mimetype="image/png")
+
+    except Exception as e:
+        return jsonify({"error": "Error!"}), 500
+    
 @app.route("/piechart", methods=["POST"])
 def create_pie_chart():
     data = request.json
@@ -71,6 +132,4 @@ def create_plot():
 
     return send_file(buf, mimetype="image/png")
 
-
-if __name__ == "__main__":
-    app.run(port=3067, host="0.0.0.0")
+# app.run("0.0.0.0", port=3067)

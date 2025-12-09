@@ -1,0 +1,1 @@
+sudo docker run -d -p 8000:8000 --cpus="1.0" -m="512m" -p 3067:8000 --name chart-api chart-api
