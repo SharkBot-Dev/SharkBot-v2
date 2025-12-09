@@ -437,6 +437,106 @@ class WebGroup(app_commands.Group):
                     .set_image(url=posterImage)
                 )
 
+    @app_commands.command(name="discord", description="Discordのステータスやバグ情報を取得します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def discord_status_search_web(self, interaction: discord.Interaction):
+
+        await interaction.response.defer()
+
+        status_url = "https://discordstatus.com/api/v2/status.json"
+        incidents_url = "https://discordstatus.com/api/v2/incidents/unresolved.json"
+
+        async with aiohttp.ClientSession() as session:
+
+            async with session.get(status_url) as resp:
+                if resp.status != 200:
+                    return await interaction.followup.send(embed=make_embed.error_embed(title="ステータスAPIにアクセスできませんでした。"))
+                status_data = await resp.json()
+
+            async with session.get(incidents_url) as resp2:
+                if resp2.status != 200:
+                    return await interaction.followup.send(embed=make_embed.error_embed(title="障害情報APIにアクセスできませんでした。"))
+                incidents_data = await resp2.json()
+
+        embed_resp = make_embed.success_embed(title="Discordのステータスを取得しました。", description="以下がステータス情報です。")
+
+        indicator = status_data["status"]["indicator"]
+        description = status_data["status"]["description"]
+
+        color = (
+            discord.Color.green() if indicator == "none" else
+            discord.Color.orange() if indicator in ["minor", "major"] else
+            discord.Color.red()
+        )
+
+        embed = discord.Embed(
+            title="📡 Discord Status",
+            description=description,
+            color=color
+        )
+        embed.add_field(name="レベル", value=indicator)
+
+        incidents = incidents_data.get("incidents", [])
+
+        if len(incidents) == 0:
+            embed.add_field(
+                name="🟢 現在の障害",
+                value="現在発生中の障害はありません。",
+                inline=False
+            )
+        else:
+            text = ""
+            for inc in incidents:
+                name = inc["name"]
+                impact = inc["impact"]
+                updates = inc["incident_updates"]
+                latest_update = updates[0]["body"] if updates else "更新情報なし"
+
+                text += f"● **{name}**（影響度: `{impact}`）\n{latest_update}\n\n"
+
+            embed.add_field(
+                name="🔴 発生中の障害",
+                value=text,
+                inline=False
+            )
+
+        embed.set_footer(text="ソース: discordstatus.com")
+
+        await interaction.followup.send(embeds=[embed_resp, embed])
+
+    @app_commands.command(name="iss", description="国際宇宙ステーションの位置を検索します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def iss_search_web(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+        url = "http://api.open-notify.org/iss-now.json"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status != 200:
+                    return await interaction.followup.send(embed=make_embed.error_embed(title="取得に失敗しました。", description="しばらく待ってから再度お試しください。"))
+
+                data = await resp.json()
+
+        position = data["iss_position"]
+        latitude = position["latitude"]
+        longitude = position["longitude"]
+
+        embed = make_embed.success_embed(
+            title="国際宇宙ステーション 現在位置"
+        )
+        embed.add_field(name="緯度 (Latitude)", value=latitude, inline=True)
+        embed.add_field(name="経度 (Longitude)", value=longitude, inline=True)
+
+        embed.add_field(
+            name="地図リンク",
+            value=f"https://www.google.com/maps?q={latitude},{longitude}",
+            inline=False
+        )
+
+        await interaction.followup.send(embed=embed)
 
 class SearchCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
