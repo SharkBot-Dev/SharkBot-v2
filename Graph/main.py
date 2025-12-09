@@ -5,6 +5,11 @@ import matplotlib
 import sympy as sp
 import numpy as np
 import io
+from sympy.parsing.sympy_parser import (
+    parse_expr,
+    standard_transformations,
+    implicit_multiplication_application
+)
 
 matplotlib.use("Agg")
 
@@ -28,6 +33,61 @@ def evaluate_formula_with_timeout(expr, X, timeout_sec=1):
 
     return Y
 
+transformations = standard_transformations + (implicit_multiplication_application,)
+
+x, y = sp.symbols("x y")
+
+ALLOWED_SYMBOLS = {
+    "x": x,
+    "y": y
+}
+
+ALLOWED_FUNCTIONS = {
+    "sin": sp.sin,
+    "cos": sp.cos,
+    "tan": sp.tan,
+    "asin": sp.asin,
+    "acos": sp.acos,
+    "atan": sp.atan,
+
+    "log": sp.log,
+    "ln": sp.log,
+
+    "sqrt": sp.sqrt,
+    "abs": sp.Abs,
+
+    "floor": sp.floor,
+    "ceil": sp.ceiling,
+    
+    "exp": sp.exp
+}
+
+SAFE_DICT = {
+    **ALLOWED_SYMBOLS,
+    **ALLOWED_FUNCTIONS
+}
+
+
+def safe_parse_formula(formula: str):
+    try:
+        expr = parse_expr(
+            formula,
+            transformations=transformations,
+            local_dict=SAFE_DICT,
+            evaluate=False
+        )
+        return expr
+    except Exception:
+        raise ValueError("invalid or forbidden formula")
+
+DANGEROUS_WORDS = [
+    "__", "import", "exec", "eval", "open", "os", "sys",
+    "subprocess", "socket", "shutil", "pathlib"
+]
+
+def contains_dangerous(expr_str):
+    lower = expr_str.lower()
+    return any(word in lower for word in DANGEROUS_WORDS)
 
 @app.route("/formula", methods=["POST"])
 def formula_plot():
@@ -40,9 +100,12 @@ def formula_plot():
 
         x = sp.symbols("x")
         try:
-            expr = sp.sympify(formula)
-        except Exception:
+            expr = safe_parse_formula(formula)
+        except ValueError:
             return jsonify({"error": "invalid formula"}), 400
+
+        if contains_dangerous(formula):
+            return jsonify({"error": "forbidden expression"}), 400
 
         X = np.linspace(xmin, xmax, 500)
 
