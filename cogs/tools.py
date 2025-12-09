@@ -1253,12 +1253,47 @@ class ToolsCog(commands.Cog):
         else:
             await interaction.response.send_modal(EmbedMake())
 
+    @commands.Cog.listener(name="on_interaction")
+    async def on_interaction_button_redirect(self, interaction: discord.Interaction):
+        try:
+            if interaction.data["component_type"] == 2:
+                try:
+                    custom_id = interaction.data["custom_id"]
+                except:
+                    return
+                if custom_id == "button_redirect+":
+                    try:
+                        await interaction.response.defer(ephemeral=True, thinking=True)
+                        msg_id = interaction.message.id
+                        db = interaction.client.async_db["MainTwo"].ButtonRedirect
+                        docs = await db.find_one({"guild_id": interaction.guild_id, "message_id": msg_id})
+
+                        view = discord.ui.View()
+                        view.add_item(discord.ui.Button(label="アクセスする", url=docs.get('url', "https://example.com/")))
+
+                        await interaction.followup.send(embed=discord.Embed(title="説明", description="以下のボタンを押すことで先ほどの\nボタンのページに飛ぶことができます。", color=discord.Color.green())
+                                                        .add_field(name="ボタンのページのURL", value=docs.get('url', "https://example.com/"), inline=False), view=view)
+                    except Exception as e:
+                        return await interaction.followup.send(embed=make_embed.error_embed(title="エラーが発生しました。", description=f"```{e}```"))
+        except:
+            return
+
     @tools.command(name="button", description="ボタンを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        ボタンの種類=[
+            app_commands.Choice(name="URLボタン", value="url"),
+            app_commands.Choice(name="グレーボタン", value="gray"),
+            app_commands.Choice(name="緑ボタン", value="green"),
+            app_commands.Choice(name="赤ボタン", value="red"),
+            app_commands.Choice(name="青ボタン", value="blue"),
+            app_commands.Choice(name="押せないボタン", value="none"),
+        ]
+    )
     async def tools_button(
-        self, interaction: discord.Interaction, ラベル: str, url: str
+        self, interaction: discord.Interaction, ラベル: str, url: str, ボタンの種類: app_commands.Choice[str]
     ):
         for b in badword.badwords:
             if b in ラベル:
@@ -1271,9 +1306,32 @@ class ToolsCog(commands.Cog):
                 ephemeral=True, content="URLを入力してください。"
             )
 
+        view = discord.ui.View()
+        if ボタンの種類.value == "url":
+            view.add_item(discord.ui.Button(label=ラベル, url=url))
+        elif ボタンの種類.value == "gray":
+            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.gray))
+        elif ボタンの種類.value == "green":
+            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.green))
+        elif ボタンの種類.value == "red":
+            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.red))
+        elif ボタンの種類.value == "blue":
+            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.blurple))
+        elif ボタンの種類.value == "none":
+            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.gray, disabled=True))
+
         await interaction.response.send_message(
-            view=discord.ui.View().add_item(discord.ui.Button(label=ラベル, url=url))
+            view=view
         )
+
+        if ボタンの種類.value != "url":
+
+            fet_message = await interaction.original_response()
+            await interaction.client.async_db["MainTwo"].ButtonRedirect.update_one(
+                {"guild_id": interaction.guild.id, "channel_id": interaction.channel_id, "message_id": fet_message.id},
+                {'$set': {"guild_id": interaction.guild.id, "channel_id": interaction.channel_id, "message_id": fet_message.id, "url": url}},
+                upsert=True,
+            )
 
     @tools.command(
         name="choice", description="自分だけが見えるようにBotが選んでくれます。"
