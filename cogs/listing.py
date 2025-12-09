@@ -5,6 +5,8 @@ import datetime
 import aiohttp
 from discord import app_commands
 
+from models import make_embed
+
 
 class Paginator(discord.ui.View):
     def __init__(self, embeds: list[discord.Embed]):
@@ -823,122 +825,26 @@ class ListingCog(commands.Cog):
     @listing.command(name="graph", description="グラフを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.choices(
-        内容=[
-            app_commands.Choice(name="円グラフ", value="pie"),
-            app_commands.Choice(name="折れ線グラフ", value="line"),
-        ]
-    )
     async def graph_make(
         self,
-        interaction_: discord.Interaction,
-        内容: app_commands.Choice[str],
-        タイトル: str = "Graph",
+        interaction: discord.Interaction,
+        数式: str
     ):
-        if 内容.value == "pie":
+        await interaction.response.defer()
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "http://localhost:3067/formula", json={
+                    'formula': 数式
+                }
+            ) as response:
+                if response.status != 200:
+                    return await interaction.followup.send(embed=make_embed.error_embed(title="グラフの作成に失敗しました。"))
+                
+                i = io.BytesIO(await response.read())
+                file = discord.File(i, filename="graph.png")
 
-            class send(discord.ui.Modal):
-                def __init__(self) -> None:
-                    super().__init__(title="円グラフの設定", timeout=None)
-                    self.datas = discord.ui.TextInput(
-                        label="データ (「ラベル|データ」 と入力)",
-                        placeholder="タイトルを入力",
-                        style=discord.TextStyle.long,
-                        required=True,
-                    )
-                    self.add_item(self.datas)
-
-                async def on_submit(self, interaction: discord.Interaction) -> None:
-                    await interaction.response.defer(ephemeral=True)
-                    try:
-                        data = self.datas.value.split("\n")
-                        labels = []
-                        values = []
-                        for d in data:
-                            label, value = d.split("|")
-                            labels.append(label)
-                            values.append(int(value))
-                        if len(labels) != len(values):
-                            raise ValueError("ラベルとデータの数が一致しません。")
-                    except Exception:
-                        return await interaction.followup.send(
-                            ephemeral=True, content="エラーが発生しました。"
-                        )
-                    json_data = {"labels": labels, "values": values, "title": タイトル}
-                    async with aiohttp.ClientSession() as session:
-                        async with session.post(
-                            "http://localhost:3067/piechart", json=json_data
-                        ) as response:
-                            io_ = io.BytesIO(await response.read())
-                            await interaction.followup.send(
-                                file=discord.File(io_, filename="piechart.png")
-                            )
-                            io_.close()
-
-            await interaction_.response.send_modal(send())
-        elif 内容.value == "line":
-
-            class send(discord.ui.Modal):
-                def __init__(self) -> None:
-                    super().__init__(title="折れ線グラフの設定", timeout=None)
-                    self.xdatas = discord.ui.TextInput(
-                        label="Xのデータ (,で区切る)",
-                        placeholder="1,2,3",
-                        style=discord.TextStyle.long,
-                        required=True,
-                    )
-                    self.add_item(self.xdatas)
-                    self.ydatas = discord.ui.TextInput(
-                        label="Yのデータ (,で区切る)",
-                        placeholder="1,2,3",
-                        style=discord.TextStyle.long,
-                        required=True,
-                    )
-                    self.add_item(self.ydatas)
-
-                async def on_submit(self, interaction: discord.Interaction) -> None:
-                    await interaction.response.defer(ephemeral=True)
-                    try:
-                        x = []
-                        y = []
-                        xdata = self.xdatas.value.split(",")
-                        for d in xdata:
-                            if not d.isdigit():
-                                return await interaction.followup.send(
-                                    ephemeral=True,
-                                    content="Xのデータは数字でなければなりません。",
-                                )
-                            x.append(int(d))
-                        ydata = self.ydatas.value.split(",")
-                        for d in ydata:
-                            if not d.isdigit():
-                                return await interaction.followup.send(
-                                    ephemeral=True,
-                                    content="Yのデータは数字でなければなりません。",
-                                )
-                            y.append(int(d))
-                        if len(x) != len(y):
-                            return await interaction.followup.send(
-                                ephemeral=True,
-                                content="XとYのデータの数が一致しません。",
-                            )
-                    except Exception:
-                        return await interaction.followup.send(
-                            ephemeral=True, content="エラーが発生しました。"
-                        )
-                    json_data = {"xvalues": x, "yvalues": y, "title": タイトル}
-                    async with aiohttp.ClientSession() as session:
-                        async with session.post(
-                            "http://localhost:3067/plot", json=json_data
-                        ) as response:
-                            io_ = io.BytesIO(await response.read())
-                            await interaction.followup.send(
-                                file=discord.File(io_, filename="plot.png")
-                            )
-                            io_.close()
-
-            await interaction_.response.send_modal(send())
-
+                await interaction.followup.send(file=file, embed=make_embed.success_embed(title="グラフを作成しました。", description=f"数式: `{数式}`"))
+                i.close()
 
 async def setup(bot):
     await bot.add_cog(ListingCog(bot))
