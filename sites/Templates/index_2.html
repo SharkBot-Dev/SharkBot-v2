@@ -26,6 +26,7 @@
       position: sticky;
       top: 0;
       box-shadow: 0 2px 12px rgba(0,0,0,0.6);
+      z-index: 500;
     }
     header .logo {
       font-size: 1.3rem;
@@ -33,11 +34,19 @@
       letter-spacing: 1px;
       text-shadow: 0 0 8px rgba(88,101,242,0.8);
     }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
     nav a {
       color: #bfcaff;
-      margin-left: 20px;
       text-decoration: none;
+      padding: 8px 10px;
       transition: 0.3s;
+      font-size: 0.95rem;
+      white-space: nowrap;
     }
     nav a:hover {
       color: white;
@@ -110,6 +119,11 @@
 <body>
     <header>
         <div class="logo">SharkBot</div>
+        <nav>
+          <a href="/">ホーム</a>
+          <a href="javascript:void(0)" onclick="openModal('termsModal')">利用規約</a>
+          <a href="javascript:void(0)" onclick="openModal('privacyModal')">プライバシー</a>
+        </nav>
     </header>
 
     <main>
@@ -163,7 +177,32 @@
         </section>
     </main>
 
+    <div id="termsModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:9999;">
+    <div style="background:#0f142b; border:1px solid rgba(255,255,255,0.1); padding:25px; width:90%; max-width:600px; max-height:80vh; overflow-y:auto; border-radius:12px; color:#e0e6ff; box-shadow:0 0 20px rgba(80,100,255,0.4);">
+    <h2 style="margin-top:0;">利用規約</h2>
+    <p>ここに利用規約の内容を記述してください。</p>
+    <button onclick="closeModal('termsModal')" style="margin-top:20px; padding:10px 18px; background:#5865f2; border:none; border-radius:8px; color:white; cursor:pointer;">閉じる</button>
+    </div>
+    </div>
+
+    <div id="privacyModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); justify-content:center; align-items:center; z-index:9999;">
+    <div style="background:#0f142b; border:1px solid rgba(255,255,255,0.1); padding:25px; width:90%; max-width:600px; max-height:80vh; overflow-y:auto; border-radius:12px; color:#e0e6ff; box-shadow:0 0 20px rgba(80,100,255,0.4);">
+    <h2 style="margin-top:0;">プライバシーポリシー</h2>
+    <p>ここにプライバシーポリシーの内容を記述してください。</p>
+    <button onclick="closeModal('privacyModal')" style="margin-top:20px; padding:10px 18px; background:#5865f2; border:none; border-radius:8px; color:white; cursor:pointer;">閉じる</button>
+    </div>
+    </div>
+
     <script>
+        function openModal(id) {
+          return_terms();
+          return_privacy();
+          document.getElementById(id).style.display = 'flex';
+        }
+        function closeModal(id) {
+          document.getElementById(id).style.display = 'none';
+        }
+
         function redirect_invite() {
             location.href = "https://discord.com/oauth2/authorize?client_id=1322100616369147924&permissions=8&integration_type=0&scope=bot+applications.commands";
         }
@@ -174,6 +213,81 @@
 
         function redirect_shb_red() {
             location.href = "https://shb.red/";
+        }
+
+        function return_terms() {
+          document.getElementById('termsModal').getElementsByTagName("p")[0].innerText = `
+SharkBotの利用規約
+
+この利用規約で使用する言葉についての説明。
+
+語句の解説
+・「Bot」とは、本サービスのSharkBotのことを表す。
+
+使用者は以下の行為をしないものとする。
+
+    ・犯罪行為に関連する行為
+    ・サーバーまたはネットワークの機能を破壊したり、妨害したりする行為
+　・Botに攻撃をすること。
+    ・運営を妨害するおそれのある行為
+    ・他のユーザーに関する個人情報等を収集または蓄積する行為
+    ・公式のコマンドを悪用する行為
+    ・Botの機能を悪用する行為
+
+以下に当てはまる使用者は使用してはならないものとする。
+
+    ・荒らしに関与している使用者である場合
+    ・当運営が利用することを相当でないと判断した場合
+    ・Botの機能を悪用する目的である場合
+
+運営は以下の理由の場合、サービスを一時的、または永久的に停止してよいものとする。また、責任は取らないものとする。
+
+    ・地震、落雷、火災、停電または天災などの不可抗力により、本サービスの提供が困難となった場合
+    ・コンピュータシステムの保守点検または更新を行う上でやむを得ないとき
+    ・電気通信事業者の都合により本サービス用通信回線の使用が不能なとき
+    ・オーナーの資金が尽きたとき。
+    ・データベースが壊れた場合。
+
+運営はユーザーの許可なしに利用規約を変更できるものとする。
+本規約の解釈にあたっては、日本法を準拠法とする。
+
+運営の故意や重大な過失でない場合、責任は負わない。
+
+以上のことに同意できない場合は、
+サービスを使用できないものとする。また、サービスを使用したら、
+この利用規約を読んでいなくてもこの利用規約に同意したこととなる。
+          `
+        }
+
+        function return_privacy() {
+          document.getElementById('privacyModal').getElementsByTagName("p")[0].innerText = `
+SharkBotのプライバシーポリシー
+
+この利用規約で使用する言葉についての説明。
+
+語句の解説
+・「Bot」とは、本サービスのSharkBotのことを表す。
+
+保存するデータ
+本Botでは、以下のデータを保存・もしくは使用します。
+・メッセージ
+・ユーザー、サーバー、メンバーの情報
+・ロールの情報
+・送信されたファイル内容
+・サーバーのWebHookの情報
+
+データの収集方法・保存方法
+データは、Botがそのデータを必要とする場合に収集、または保存します。
+保存場所は、MongoDBを用いて、本Botを運用しているサーバーに保存されます。
+
+データの削除
+データの削除は、Botのコマンドなどを用いて行うことができます。
+
+本ポリシーの変更
+運営者はBotの更新・法律の変更を反映するために、本ポリシーを変更することがあります。
+いかなる変更も、運営者はユーザーに通知義務がないこととします。
+本ポリシーを更新した時点で変更後のポリシーが有効となります。
+          `
         }
     </script>
 </body>
