@@ -67,7 +67,7 @@ def formula_plot():
         return send_file(buf, mimetype="image/png")
 
     except Exception as e:
-        return jsonify({"error": "Error!"}), 500
+        return jsonify({"error": f"{e}"}), 500
     
 @app.route("/piechart", methods=["POST"])
 def create_pie_chart():
