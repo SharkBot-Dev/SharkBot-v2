@@ -838,7 +838,8 @@ class ListingCog(commands.Cog):
                 }
             ) as response:
                 if response.status != 200:
-                    return await interaction.followup.send(embed=make_embed.error_embed(title="グラフの作成に失敗しました。"))
+                    e = await response.json()
+                    return await interaction.followup.send(embed=make_embed.error_embed(title="グラフの作成に失敗しました。", description=f"```{e.get('error', 'エラーの取得失敗')}```"))
                 
                 i = io.BytesIO(await response.read())
                 file = discord.File(i, filename="graph.png")
