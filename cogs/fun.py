@@ -967,6 +967,17 @@ class AnimalGroup(app_commands.Group):
                     ).set_image(url=f"{json.loads(await dog_.text())['url']}")
                 )
 
+    @app_commands.command(name="lizard", description="トカゲの画像を生成します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def lizard(self, interaction: discord.Interaction):
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://nekos.life/api/v2/img/lizard") as lizard:
+                await interaction.response.send_message(
+                    embed=make_embed.success_embed(
+                        title="トカゲの画像を生成しました。"
+                    ).set_image(url=f"{json.loads(await lizard.text())['url']}")
+                )
 
 class ImageGroup(app_commands.Group):
     def __init__(self):
@@ -1159,6 +1170,17 @@ class ImageGroup(app_commands.Group):
         embed = (
             discord.Embed(title="HTTPCat", color=discord.Color.blue())
             .set_image(url=f"https://http.cat/{ステータスコード}")
+            .set_footer(text="Httpcat", icon_url="https://i.imgur.com/6mKRXgR.png")
+        )
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(name="httpdog", description="httpドッグを取得します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def httpdog(self, interaction: discord.Interaction, ステータスコード: int):
+        embed = (
+            discord.Embed(title="HTTPDog", color=discord.Color.blue())
+            .set_image(url=f"https://http.dog/{ステータスコード}.jpg")
             .set_footer(text="Httpcat", icon_url="https://i.imgur.com/6mKRXgR.png")
         )
         await interaction.response.send_message(embed=embed)
