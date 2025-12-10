@@ -25,8 +25,27 @@ def error_embed(title: str, description: str = None, url: str = None):
 
 dotenv.load_dotenv()
 
+class CustomTree(discord.app_commands.CommandTree):
+    def _from_interaction(self, interaction: discord.Interaction) -> None:
+        async def wrapper():
+            try:
+                if not interaction.guild:
+                    return await interaction.response.send_message(
+                        embed=error_embed(
+                            title="DMではスラッシュコマンドを実行できません。"
+                        ),
+                        ephemeral=True,
+                    )
+
+                await self._call(interaction)
+
+            except discord.app_commands.AppCommandError as e:
+                await self._dispatch_error(interaction, e)
+
+        self.client.loop.create_task(wrapper(), name="CommandTree-invoker")
+
 intents = discord.Intents.default()
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents, tree_cls=CustomTree)
 
 YOUTUBE_RE = r"(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+"
 
@@ -104,7 +123,7 @@ async def loop_pres():
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
-    
+
     await bot.tree.sync()
     print("Commands synced.")
 
@@ -147,7 +166,7 @@ async def skip(interaction: discord.Interaction):
         return await interaction.response.send_message(embed=error_embed(title="再生中ではありません。"))
 
     vc.stop()
-    await interaction.response.send_message(embed=success_embed(title="スキップしたよ！"))
+    await interaction.response.send_message(embed=success_embed(title="スキップしました。"))
 
 @bot.tree.command(name="queue", description="再生キューを表示します")
 async def queue_cmd(interaction: discord.Interaction):
@@ -173,7 +192,7 @@ async def stop(interaction: discord.Interaction):
 
 @bot.tree.command(name="help", description="ヘルプを表示します。")
 async def help(interaction: discord.Interaction):
-    await interaction.response.send_message(embed=error_embed(
+    await interaction.response.send_message(embed=success_embed(
         title="Shark DJのヘルプ",
         description="""
 /play 音楽を再生します。
