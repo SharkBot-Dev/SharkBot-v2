@@ -1181,7 +1181,7 @@ class ImageGroup(app_commands.Group):
         embed = (
             discord.Embed(title="HTTPDog", color=discord.Color.blue())
             .set_image(url=f"https://http.dog/{ステータスコード}.jpg")
-            .set_footer(text="Httpcat", icon_url="https://i.imgur.com/6mKRXgR.png")
+            .set_footer(text="Httpdog")
         )
         await interaction.response.send_message(embed=embed)
 
