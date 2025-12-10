@@ -1,0 +1,1 @@
+sudo docker run -d --cpus="0.3" -m="512m" --name shark-dj shark-dj
