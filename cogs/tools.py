@@ -485,6 +485,14 @@ class CalcGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def calculator_(self, interaction: discord.Interaction):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
         def safe_calculator(expression: str):
             expression = expression.replace(" ", "")
 
@@ -1195,7 +1203,7 @@ class ToolsCog(commands.Cog):
                 )
                 return
 
-    tools = app_commands.Group(name="tools", description="ツール系のコマンドです。")
+    tools = app_commands.Group(name="tools", description="ツール系のコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True))
 
     tools.add_command(CalcGroup())
     tools.add_command(OcrGroup())
@@ -1217,6 +1225,14 @@ class ToolsCog(commands.Cog):
         interaction: discord.Interaction,
         操作モード: app_commands.Choice[str] = None,
     ):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
         async def send_pc_embed_builder():
             await interaction.response.send_message(
                 ephemeral=True,
@@ -1295,6 +1311,14 @@ class ToolsCog(commands.Cog):
     async def tools_button(
         self, interaction: discord.Interaction, ラベル: str, url: str, ボタンの種類: app_commands.Choice[str]
     ):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
         for b in badword.badwords:
             if b in ラベル:
                 return await interaction.response.send_message(
@@ -1363,6 +1387,14 @@ class ToolsCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tools_timestamp(self, interaction: discord.Interaction, 時間: str):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
         def parse_time(timestr: str):
             match = TIMESTAMP_REGEX.fullmatch(timestr.strip().lower())
             if not match:
@@ -1609,6 +1641,14 @@ class ToolsCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def todo(self, interaction: discord.Interaction, タイトル: str):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
         view = discord.ui.View()
         view.add_item(
             discord.ui.Button(
@@ -1634,6 +1674,14 @@ class ToolsCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def invite(self, interaction: discord.Interaction):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
         if not interaction.guild.vanity_url:
             inv = await interaction.channel.create_invite()
             inv = inv.url
@@ -1739,9 +1787,9 @@ class ToolsCog(commands.Cog):
     ):
         await interaction.response.defer()
         database = self.bot.async_db["Main"].AFK
-        await database.replace_one(
+        await database.update_one(
             {"User": interaction.user.id},
-            {"User": interaction.user.id, "Reason": 理由, "End": 終わったらやること},
+            {'$set': {"User": interaction.user.id, "Reason": 理由, "End": 終わったらやること}},
             upsert=True,
         )
         embed = make_embed.success_embed(title="AFKを設定しました。", description=理由)
@@ -1751,6 +1799,14 @@ class ToolsCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def timer(self, interaction: discord.Interaction, 秒数: int):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
         if 秒数 > 600:
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -1890,6 +1946,15 @@ class ToolsCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True, manage_guild=True)
     async def reminder(self, interaction: discord.Interaction, 要件: str, 時間: str):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
+
         def parse_time(timestr: str) -> int:
             pattern = r"((?P<days>\d+)d)?((?P<hours>\d+)h)?((?P<minutes>\d+)m)?((?P<seconds>\d+)s)?"
             match = re.fullmatch(pattern, timestr)
