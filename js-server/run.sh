@@ -1,0 +1,1 @@
+sudo docker run -d -p 3320:3320 --rm js-server

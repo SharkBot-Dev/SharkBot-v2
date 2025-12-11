@@ -3,6 +3,7 @@ const router = express.Router();
 
 const homo = require("../lib/homo");
 
+// /api/homo
 router.get('/homo', (req, res) => {
     try{
         const input = req.query.input;
