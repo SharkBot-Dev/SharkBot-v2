@@ -677,6 +677,32 @@ class CalcGroup(app_commands.Group):
         await interaction.response.send_message(content="0", view=CalculatorView())
 
     @app_commands.command(
+        name="rule-calc", description="ある法則に基づいた計算をします。"
+    )
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        法則=[
+            app_commands.Choice(name="114514になる計算式", value="homo"),
+        ]
+    )
+    async def rule_calc(
+        self,
+        interaction: discord.Interaction,
+        法則: app_commands.Choice[str],
+        入力: str
+    ):
+        await interaction.response.defer()
+        if 法則.value == "homo":
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    "http://localhost:3320/api/homo", params={
+                        "input": int(入力)
+                    }
+                ) as response:
+                    await interaction.followup.send(embed=make_embed.success_embed(title="変換しました。", description=f"```{await response.text()}```"))
+            
+    @app_commands.command(
         name="size-converter", description="ファイルの容量の単位を変換します。"
     )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
