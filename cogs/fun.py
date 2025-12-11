@@ -992,31 +992,20 @@ class ImageGroup(app_commands.Group):
         上: str,
         下: str,
         noアルファ: bool = None,
+        虹色にするか: bool = False
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
+        def make_5000(up: str, down: str, noa: bool = None, rainbow: bool = False):
+            text = f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(up)}&bottom={urllib.parse.quote(down)}"
+            if noa:
+                text += "&noalpha=true"
+            if rainbow:
+                text += "&rainbow=true"
+            return text
+        msg = await interaction.response.send_message(
+            embed=make_embed.success_embed(title="5000兆円ほしい！").set_image(
+                url=make_5000(上, 下, noアルファ, 虹色にするか)
             )
-
-        if noアルファ:
-            if noアルファ == False:
-                msg = await interaction.response.send_message(
-                    embed=make_embed.success_embed(title="5000兆円ほしい！").set_image(
-                        url=f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(上)}&bottom={urllib.parse.quote(下)}"
-                    )
-                )
-            else:
-                msg = await interaction.response.send_message(
-                    embed=make_embed.success_embed(title="5000兆円ほしい！").set_image(
-                        url=f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(上)}&bottom={urllib.parse.quote(下)}&noalpha=true"
-                    )
-                )
-        else:
-            msg = await interaction.response.send_message(
-                embed=make_embed.success_embed(title="5000兆円ほしい！").set_image(
-                    url=f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(上)}&bottom={urllib.parse.quote(下)}"
-                )
-            )
+        )
 
     @app_commands.command(name="emoji-kitchen", description="絵文字を合体させます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
