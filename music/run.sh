@@ -1,1 +1,1 @@
-sudo docker run -d --cpus="0.3" -m="512m" --name shark-dj shark-dj
+sudo docker run -d --dns 8.8.8.8 --dns 1.1.1.1 --cpus="0.3" -m="512m" --name shark-dj shark-dj
