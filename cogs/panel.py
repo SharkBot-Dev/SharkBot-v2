@@ -2444,10 +2444,6 @@ class PanelCog(commands.Cog):
         実績チャンネル: discord.TextChannel = None,
         メンションするロール: discord.Role = None,
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
         msg = await interaction.channel.send(
             embed=discord.Embed(
                 title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
@@ -2481,6 +2477,70 @@ class PanelCog(commands.Cog):
             embed=discord.Embed(title="作成しました。", color=discord.Color.green()),
             ephemeral=True,
         )
+
+    @panel.command(name="thread-ticket", description="スレッドを使ったチケットパネルを作成します。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def panel_ticket_thread(
+        self,
+        interaction: discord.Interaction,
+        タイトル: str,
+        説明: str,
+        メンションするロール: discord.Role = None,
+    ):
+        await interaction.response.defer(ephemeral=True)
+        msg = await interaction.channel.send(
+            embed=discord.Embed(
+                title=f"{タイトル}", description=f"{説明}", color=discord.Color.green()
+            ),
+            view=discord.ui.View().add_item(
+                discord.ui.Button(label="チケットを作成", custom_id="ticket_thread")
+            ),
+        )
+        if メンションするロール:
+            db = self.bot.async_db["Main"].TicketRole
+            await db.update_one(
+                {"Role": メンションするロール.id, "Message": msg.id},
+                {"$set": {"Role": メンションするロール.id, "Message": msg.id}},
+                upsert=True,
+            )
+        await interaction.followup.send(
+            embed=make_embed.success_embed(title="作成しました。"),
+            ephemeral=True,
+        )
+
+    @commands.Cog.listener(name="on_interaction")
+    async def on_interaction_panel_thread(self, interaction: discord.Interaction):
+        try:
+            if interaction.data["component_type"] == 2:
+                try:
+                    custom_id = interaction.data["custom_id"]
+                except:
+                    return
+                if "ticket_thread" == custom_id:
+                    await interaction.response.defer(ephemeral=True)
+                    th = await interaction.channel.create_thread(name=f"{interaction.user.display_name} のチケット", type=discord.ChannelType.private_thread)
+
+                    view = discord.ui.View()
+                    view.add_item(
+                        discord.ui.Button(
+                            label="閉じる",
+                            custom_id="close_thread_ticket",
+                            style=discord.ButtonStyle.red,
+                        )
+                    )
+
+                    men = await self.get_ticket_mention(interaction.message)
+
+                    await th.send(embed=discord.Embed(title=f"`{interaction.user.name}` のチケット", color=discord.Color.green()), view=view, content=men + f" {interaction.user.mention}" if men else interaction.user.mention)
+                    await interaction.followup.send(ephemeral=True, content=f"チケットを作成しました。\n{th.mention}")
+                elif "close_thread_ticket" == custom_id:
+                    await interaction.response.defer(ephemeral=True)
+
+                    await interaction.channel.edit(archived=True, locked=True, name=f"{interaction.user.display_name} の閉じられたチケット")
+        except:
+            return
 
     @panel.command(
         name="quick-ticket",
