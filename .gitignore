@@ -266,3 +266,5 @@ dashboard/dashboard/public
 
 youtube/settings.py
 Graph/chart.png
+
+node_modules
