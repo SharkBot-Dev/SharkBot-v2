@@ -22,6 +22,119 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 from ossapi import OssapiAsync
 
+from models.akinator import characters, questions
+
+import math
+
+def entropy(feature, probabilities, characters):
+    yes = 0
+    no = 0
+    unk = 0
+
+    for char, prob in probabilities.items():
+        val = characters[char].get(feature, None)
+        if val is True:
+            yes += prob
+        elif val is False:
+            no += prob
+        else:
+            unk += prob
+
+    def h(p):
+        return -p * math.log2(p) if p > 0 else 0
+
+    return h(yes) + h(no) + h(unk)
+
+def choose_best_question(prob, asked_questions):
+    best_q = None
+    best_entropy = -1
+
+    for q in questions:
+        if q["id"] in asked_questions:
+            continue
+
+        e = entropy(q["id"], prob, characters)
+        if e > best_entropy:
+            best_entropy = e
+            best_q = q
+
+    return best_q
+
+def bayesian_update(prob, feature, answer):
+    for char in prob:
+        char_value = characters[char].get(feature, None)
+
+        if answer == "yes":
+            likelihood = 0.9 if char_value is True else (0.1 if char_value is False else 0.5)
+        elif answer == "no":
+            likelihood = 0.9 if char_value is False else (0.1 if char_value is True else 0.5)
+        else:
+            likelihood = 0.5
+
+        prob[char] *= likelihood
+
+    total = sum(prob.values())
+    for c in prob:
+        prob[c] /= total
+
+    return prob
+
+class AkiView(discord.ui.View):
+    def __init__(self, interaction: discord.Interaction, probabilities, asked):
+        super().__init__(timeout=180)
+        self.interaction = interaction
+        self.prob = probabilities
+        self.asked = asked
+
+        self.current_q = choose_best_question(self.prob, self.asked)
+
+    async def ask_new_question(self, interaction):
+        self.current_q = choose_best_question(self.prob, self.asked)
+
+        if not self.current_q:
+            best = max(self.prob, key=self.prob.get)
+            await interaction.response.edit_message(
+                embed=make_embed.success_embed(title="アキネーターの推理", description=f"多分… **{best}** だと思います！"),
+                view=None
+            )
+            return
+
+        await interaction.response.edit_message(
+            embed=discord.Embed(title="アキネーターからの質問", description=self.current_q["text"], color=discord.Color.blue()),
+            view=self
+        )
+
+    async def process_answer(self, interaction, answer):
+        if self.interaction.user.id != interaction.user.id:
+            return
+
+        f = self.current_q["id"]
+        self.asked.append(f)
+
+        self.prob = bayesian_update(self.prob, f, answer)
+
+        best = max(self.prob, key=self.prob.get)
+        if self.prob[best] >= 0.80:
+            await interaction.response.edit_message(
+                embed=make_embed.success_embed(title="アキネーターの推理", description=f"あなたのキャラは **{best}** ですね？"),
+                view=None
+            )
+            return
+
+        await self.ask_new_question(interaction)
+
+    @discord.ui.button(label="はい", style=discord.ButtonStyle.green)
+    async def yes(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.process_answer(interaction, "yes")
+
+    @discord.ui.button(label="いいえ", style=discord.ButtonStyle.red)
+    async def no(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.process_answer(interaction, "no")
+
+    @discord.ui.button(label="わからない", style=discord.ButtonStyle.grey)
+    async def unknown(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.process_answer(interaction, "unknown")
+
 cooldown_shiritori = {}
 
 villagers = {
@@ -1286,6 +1399,15 @@ class GameCog(commands.Cog):
 
         await interaction.followup.send(view=QuestView())
 
+    @game.command(name="akinator", description="アキネーターをプレイします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def akinator_game(self, interaction: discord.Interaction):
+        prob = {c: 1 / len(characters) for c in characters}
+        asked = []
+
+        view = AkiView(interaction, prob, asked)
+        await interaction.response.send_message(embed=discord.Embed(title="アキネーターからの質問", description=view.current_q["text"], color=discord.Color.blue()), view=view)
 
 async def setup(bot):
     await bot.add_cog(GameCog(bot))
