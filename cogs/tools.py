@@ -692,15 +692,14 @@ class CalcGroup(app_commands.Group):
         法則: app_commands.Choice[str],
         入力: str
     ):
-        await interaction.response.defer()
         if 法則.value == "homo":
             async with aiohttp.ClientSession() as session:
-                async with session.post(
+                async with session.get(
                     "http://localhost:3320/api/homo", params={
                         "input": int(入力)
                     }
                 ) as response:
-                    await interaction.followup.send(embed=make_embed.success_embed(title="変換しました。", description=f"```{await response.text()}```"))
+                    await interaction.response.send_message(embed=make_embed.success_embed(title="変換しました。", description=f"```{await response.text()}```"), ephemeral=True)
             
     @app_commands.command(
         name="size-converter", description="ファイルの容量の単位を変換します。"
