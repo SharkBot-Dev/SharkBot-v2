@@ -75,6 +75,58 @@ COMBINED_EMOJI_RE = re.compile(
     flags=re.UNICODE | re.DOTALL,
 )
 
+class StatSettingsGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="stat", description="統計情報の取得・設定をします。")
+
+    @app_commands.command(name="show", description="統計情報を表示します。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def stat_show(self, interaction: discord.Interaction):
+        db = interaction.client.async_db["MainTwo"].ServerStat
+        try:
+            dbfind = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
+        except Exception:
+            return
+        if not dbfind:
+            return await interaction.response.send_message(embed=make_embed.error_embed(title="統計情報の収集が無効化されています。"))
+        if not dbfind.get('Enabled'):
+            return await interaction.response.send_message(embed=make_embed.error_embed(title="統計情報の収集が無効化されています。"))
+        
+        message = dbfind.get('Message')
+        now_message = dbfind.get('NowMessage')
+
+        embed = make_embed.success_embed(title="統計情報を表示しました。")
+        embed.add_field(name="合計メッセージ数", value=f"{message}個")
+        embed.add_field(name="今日のメッセージ数", value=f"{now_message}個")
+
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(name="setting", description="統計情報を収集していいか設定します。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def stat_settings(self, interaction: discord.Interaction):
+        db = interaction.client.async_db["MainTwo"].ServerStat
+        try:
+            dbfind = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
+        except Exception:
+            return
+        if not dbfind:
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$set": {"Enabled": True}},
+                upsert=True,
+            )
+            return await interaction.response.send_message(embed=make_embed.success_embed(title="統計情報の収集を有効化しました。"))
+        else:
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$set": {"Enabled": False}},
+                upsert=True,
+            )
+            return await interaction.response.send_message(embed=make_embed.success_embed(title="統計情報の収集を無効化しました。"))
 
 class DiceSettingGroup(app_commands.Group):
     def __init__(self):
@@ -581,6 +633,45 @@ class SettingCog(commands.Cog):
         self.bot.remove_check(self.ban_user_block)
         self.bot.remove_check(self.ban_guild_block)
         self.bot.remove_check(self.disable_channel)
+
+    @commands.Cog.listener("on_message")
+    async def on_message_stat(self, message: discord.Message):
+        if not message.guild:
+            return
+        db = self.bot.async_db["MainTwo"].ServerStat
+
+        try:
+            dbfind = await db.find_one({"Guild": message.guild.id}, {"_id": False})
+        except:
+            return
+
+        if dbfind is None:
+            return
+        
+        if not dbfind.get("Enabled"):
+            return
+
+        now = datetime.datetime.now().strftime("%Y-%m-%d")
+        stored_day = dbfind.get("Now")
+
+        if stored_day != now:
+            await db.update_one(
+                {"Guild": message.guild.id},
+                {"$set": {
+                    "Now": now,
+                    "NowMessage": 1
+                }, "$inc": {
+                    "Message": 1
+                }}
+            )
+        else:
+            await db.update_one(
+                {"Guild": message.guild.id},
+                {"$inc": {
+                    "NowMessage": 1,
+                    "Message": 1
+                }}
+            )
 
     @commands.Cog.listener("on_member_join")
     async def on_member_join_auto_role(self, member: discord.Member):
@@ -1911,6 +2002,7 @@ class SettingCog(commands.Cog):
     settings.add_command(DiceSettingGroup())
     settings.add_command(WelcomeCommands())
     settings.add_command(CommandsManageGroup())
+    settings.add_command(StatSettingsGroup())
 
     @settings.command(name="lock-message", description="メッセージを固定します。")
     @app_commands.checks.has_permissions(manage_channels=True)
