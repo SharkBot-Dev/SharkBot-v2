@@ -809,6 +809,69 @@ class LoggingCog(commands.Cog):
         )
         return
 
+    @commands.Cog.listener("on_app_command_completion")
+    async def on_app_command_completion_log(self, interaction: discord.Interaction, command):
+        db = self.bot.async_db["MainTwo"].LoggingCommands
+        try:
+            dbfind = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
+        except Exception:
+            return
+        if not dbfind:
+            return
+        
+        guild = interaction.guild
+        if not guild:
+            return
+        channel = guild.get_channel(dbfind.get('Channel'))
+        if not channel:
+            return
+        
+        try:
+            if isinstance(command, app_commands.Command):
+                await channel.send(embed=make_embed.success_embed(title="コマンドが実行されました。")
+                                .add_field(name="コマンド名", value=command.qualified_name)
+                                .set_footer(text=interaction.user.name, icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url))
+            elif isinstance(command, app_commands.ContextMenu):
+                await channel.send(embed=make_embed.success_embed(title="コマンドが実行されました。")
+                                .add_field(name="コマンド名", value=command.name)
+                                .set_footer(text=interaction.user.name, icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url))
+        except:
+            return
+
+    @log.command(name="commands", description="このサーバーで実行したコマンドをログに送信します。")
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def log_commands(
+        self,
+        interaction: discord.Interaction
+    ):
+        if interaction.channel.type != discord.ChannelType.text:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="テキストチャンネルのみを指定できます。",
+                    description="指定できるのはテキストチャンネルのみです。",
+                ),
+            )
+
+        db = self.bot.async_db["MainTwo"].LoggingCommands
+        try:
+            dbfind = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
+        except Exception:
+            return
+        if not dbfind:
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$set": {"Channel": interaction.channel.id}},
+                upsert=True,
+            )
+            return await interaction.response.send_message(embed=make_embed.success_embed(title="コマンドログを設定しました。", description=f"次からコマンドの実行ログが\n{interaction.channel.mention} に送信されます。"))
+        else:
+            await db.delete_one(
+                {"Guild": interaction.guild.id}
+            )
+            return await interaction.response.send_message(embed=make_embed.success_embed(title="コマンドログを無効化しました。"))
 
 async def setup(bot):
     await bot.add_cog(LoggingCog(bot))
