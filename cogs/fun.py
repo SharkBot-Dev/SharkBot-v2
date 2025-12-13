@@ -1082,6 +1082,7 @@ class ImageGroup(app_commands.Group):
             app_commands.Choice(name="赤", value="FF0000"),
             app_commands.Choice(name="青", value="1111FF"),
             app_commands.Choice(name="黄", value="FFFF00"),
+            app_commands.Choice(name="緑", value="32A852"),
             app_commands.Choice(name="黒", value="000000"),
         ]
     )
@@ -1090,6 +1091,7 @@ class ImageGroup(app_commands.Group):
             app_commands.Choice(name="Discordフォント", value="discordfont"),
             app_commands.Choice(name="ガマフォント", value="gamafont"),
             app_commands.Choice(name="クラフト明朝", value="craft"),
+            app_commands.Choice(name="Minecraftフォント", value="minecraft"),
         ]
     )
     async def textmoji(
@@ -1109,6 +1111,8 @@ class ImageGroup(app_commands.Group):
                 font = ImageFont.truetype("data/GamaFont.ttf", 50)
             elif font == "craft":
                 font = ImageFont.truetype("data/CraftFont.otf", 50)
+            elif font == "minecraft":
+                font = ImageFont.truetype("data/MinecraftFont.ttf", 50)
             else:
                 font = ImageFont.truetype("data/DiscordFont.ttf", 50)
 
