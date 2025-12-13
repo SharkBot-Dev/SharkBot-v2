@@ -1743,7 +1743,7 @@ class FunCog(commands.Cog):
             def __init__(self):
                 super().__init__(timeout=180)
 
-            @discord.ui.button(label="ぐー", style=discord.ButtonStyle.blurple)
+            @discord.ui.button(label="ぐー", style=discord.ButtonStyle.blurple, emoji="🪨")
             async def goo(
                 self, interaction: discord.Interaction, button: discord.ui.Button
             ):
@@ -1762,7 +1762,7 @@ class FunCog(commands.Cog):
                     ),
                 )
 
-            @discord.ui.button(label="ちょき", style=discord.ButtonStyle.blurple)
+            @discord.ui.button(label="ちょき", style=discord.ButtonStyle.blurple, emoji="✂️")
             async def choki(
                 self, interaction: discord.Interaction, button: discord.ui.Button
             ):
@@ -1781,7 +1781,7 @@ class FunCog(commands.Cog):
                     ),
                 )
 
-            @discord.ui.button(label="ぱー", style=discord.ButtonStyle.blurple)
+            @discord.ui.button(label="ぱー", style=discord.ButtonStyle.blurple, emoji="📜")
             async def par(
                 self, interaction: discord.Interaction, button: discord.ui.Button
             ):
