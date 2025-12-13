@@ -518,12 +518,12 @@ class OsuGroup(app_commands.Group):
             avatar = user.avatar_url
         except:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="ユーザーが見つかりません。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="ユーザーが見つかりません。"
                 )
             )
         await interaction.followup.send(
-            embed=discord.Embed(title="Osuのユーザー検索", color=discord.Color.blue())
+            embed=make_embed.success_embed(title="Osuのユーザー検索")
             .add_field(name="ユーザー名", value=name, inline=False)
             .add_field(name="遊ぶモード", value=user.playmode, inline=False)
             .set_thumbnail(url=avatar)
@@ -561,10 +561,9 @@ class PokemonGroup(app_commands.Group):
                 )
                 sprite = data["sprites"]["front_default"]
 
-                embed = discord.Embed(
+                embed = make_embed.success_embed(
                     title=f"{poke_name} (#{poke_id})",
-                    description=f"**タイプ:** {types}",
-                    color=discord.Color.blue(),
+                    description=f"**タイプ:** {types}"
                 )
                 embed.add_field(name="高さ", value=f"{height} m")
                 embed.add_field(name="重さ", value=f"{weight} kg")
@@ -613,14 +612,13 @@ class FortniteGroup(app_commands.Group):
                     image = data["data"]["image"]
                 except:
                     return await interaction.response.send_message(
-                        embed=discord.Embed(
-                            title="プレイヤーが見つかりませんでした。",
-                            color=discord.Color.red(),
+                        embed=make_embed.error_embed(
+                            title="プレイヤーが見つかりませんでした。"
                         )
                     )
                 await interaction.response.send_message(
-                    embed=discord.Embed(
-                        title=user + " の実績", color=discord.Color.green()
+                    embed=make_embed.success_embed(
+                        title=user + " の実績"
                     )
                     .add_field(name="バトルパスレベル", value=f"{level}")
                     .add_field(name="勝利数", value=f"{wins}")
@@ -654,10 +652,9 @@ class MinecraftGroup(app_commands.Group):
                         ) as rs:
                             jj = json.loads(await rs.text())
                             await interaction.followup.send(
-                                embed=discord.Embed(
+                                embed=make_embed.success_embed(
                                     title="Minecraftのユーザー情報",
-                                    description=f"ID: {j['id']}\nName: {j['name']}",
-                                    color=discord.Color.green(),
+                                    description=f"ID: {j['id']}\nName: {j['name']}"
                                 )
                                 .set_thumbnail(
                                     url=f"{jj['decoded']['textures']['SKIN']['url']}"
@@ -668,9 +665,8 @@ class MinecraftGroup(app_commands.Group):
                             )
         except:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="ユーザー情報の取得に失敗しました。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="ユーザー情報の取得に失敗しました。"
                 )
             )
 
@@ -688,9 +684,8 @@ class MinecraftGroup(app_commands.Group):
                 ) as response:
                     if response.status == 200:
                         j = json.loads(await response.text())
-                        embed = discord.Embed(
-                            title=f"「{j['motd']['clean'][0]}」\nの情報",
-                            color=discord.Color.green(),
+                        embed = make_embed.success_embed(
+                            title=f"「{j['motd']['clean'][0]}」\nの情報"
                         )
                         pl = j.get("players", {}).get("list", [])
                         embed.add_field(
@@ -720,6 +715,7 @@ class MinecraftGroup(app_commands.Group):
                                 await interaction.followup.send(
                                     embed=embed, file=discord.File(ii, "f.png")
                                 )
+                                ii.close()
                             except Exception:
                                 await interaction.followup.send(
                                     embed=embed,
@@ -753,7 +749,7 @@ class MinecraftGroup(app_commands.Group):
         シード値: str,
     ):
         await interaction.response.send_message(
-            embed=discord.Embed(title="シードマップ", color=discord.Color.green())
+            embed=make_embed.success_embed(title="シードマップ")
             .add_field(name="シード値", value=シード値, inline=False)
             .add_field(name="バージョン", value=バージョン.name, inline=False),
             view=discord.ui.View().add_item(
