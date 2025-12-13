@@ -1595,7 +1595,11 @@ class PanelCog(commands.Cog):
                                 )
 
                         async def on_submit(self, interaction: discord.Interaction):
-                            embed = self.message.embeds[0]
+                            await interaction.response.defer(ephemeral=True)
+
+                            msg = await interaction.channel.fetch_message(interaction.message.id)
+
+                            embed = msg.embeds[0]
                             new_embed = discord.Embed(
                                 title=embed.title, color=embed.color
                             )
@@ -1624,8 +1628,8 @@ class PanelCog(commands.Cog):
                                         name=field.name, value=field.value, inline=False
                                     )
 
-                            await self.message.edit(embed=new_embed)
-                            await interaction.response.send_message(
+                            await msg.edit(embed=new_embed)
+                            await interaction.followup.send(
                                 "回答を記録しました", ephemeral=True
                             )
 
