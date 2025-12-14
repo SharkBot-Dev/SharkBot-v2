@@ -24,7 +24,7 @@ class DictGroup(app_commands.Group):
     async def dict_add(
         self, interaction: discord.Interaction, ワード: str, 置き換えるワード: str
     ):
-        ttsdict = self.bot.async_db["Main"].TTSWord
+        ttsdict = interaction.client.async_db["Main"].TTSWord
         await ttsdict.update_one(
             {"Guild": interaction.guild.id},
             {
@@ -46,7 +46,7 @@ class DictGroup(app_commands.Group):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def dict_remove(self, interaction: discord.Interaction, ワード: str):
-        ttsdict = self.bot.async_db["Main"].TTSWord
+        ttsdict = interaction.client.async_db["Main"].TTSWord
         await ttsdict.delete_one({"Guild": interaction.guild.id, "Word": ワード})
         await interaction.response.send_message(
             embed=discord.Embed(
@@ -57,8 +57,8 @@ class DictGroup(app_commands.Group):
     @app_commands.command(name="list", description="読み上げの辞書をリスト化します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
-    async def dict_list(self, interaction: discord.Interaction, ワード: str):
-        ttsdict = self.bot.async_db["Main"].TTSWord
+    async def dict_list(self, interaction: discord.Interaction):
+        ttsdict = interaction.client.async_db["Main"].TTSWord
         r = (
             await ttsdict.find({"Guild": interaction.guild.id})
             .limit(30)
