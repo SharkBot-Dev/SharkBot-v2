@@ -2,7 +2,7 @@ from discord.ext import commands
 import discord
 from consts import settings
 from discord import app_commands
-from models import command_disable, make_embed
+from models import command_disable, make_embed, help_views
 
 HELP_TREE = {
     "管理機能": {
@@ -1145,14 +1145,17 @@ class HelpCog(commands.Cog):
             await interaction.followup.send(embed=pages[0], view=view)
             return
 
-        await interaction.followup.send(
-            content="**カテゴリを選択してください**",
-            view=CategoryView(HELP_TREE, ["ヘルプ"]),
-        )
-        await interaction.followup.send(
-            ephemeral=True,
-            content="従来のヘルプを表示するには、\n/helpでカテゴリ別のヘルプを選択してください。",
-        )
+        # await interaction.followup.send(
+        #     content="**カテゴリを選択してください**",
+        #     view=CategoryView(HELP_TREE, ["ヘルプ"]),
+        # )
+        # await interaction.followup.send(
+        #     ephemeral=True,
+        #     content="従来のヘルプを表示するには、\n/helpでカテゴリ別のヘルプを選択してください。",
+        # )
+
+        view = help_views.HelpView(self.bot, user_=interaction.user)
+        await interaction.followup.send(view=view, embed=await view.build_embed())
 
     @app_commands.command(
         name="dashboard", description="ダッシュボードのリンクを取得します。"
