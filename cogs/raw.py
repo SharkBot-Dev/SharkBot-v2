@@ -86,6 +86,23 @@ class Raw:
                     )
                 return await response.json()
 
+    async def get_guild_role_member_counts(
+        self,
+        guildId: str
+    ):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"{self.api_base}/guilds/{guildId}/roles/member-counts",
+                headers={"Authorization": f"Bot {self.token}"}
+            ) as response:
+                if response.status == 400:
+                    raise discord.RateLimited(30.0)
+                if response.status != 200:
+                    text = await response.text()
+                    raise RuntimeError(
+                        f"Failed to modify member: {response.status} {text}"
+                    )
+                return await response.json()
 
 class RawCog(commands.Cog):
     def __init__(self, bot):
