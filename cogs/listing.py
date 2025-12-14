@@ -119,7 +119,7 @@ class ListingCog(commands.Cog):
 
         r = []
         for r_id, count in roles.items():
-            r.append(f"<@&{r_id}> .. {count}")
+            r.append(f"<@&{r_id}> .. {count}人")
 
         if len(r) == 0:
             return await interaction.followup.send(embed=make_embed.error_embed(title="ロールが見つかりません。"))
