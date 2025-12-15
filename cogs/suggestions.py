@@ -162,7 +162,8 @@ class SuggestionsCog(commands.Cog):
             return
 
     suggestions = app_commands.Group(
-        name="suggestions", description="提案関連のコマンドです。"
+        name="suggestions", description="提案関連のコマンドです。",
+        allowed_installs=app_commands.AppInstallationType(guild=True, user=False),
     )
 
     @suggestions.command(name="send", description="提案を送信します。")
