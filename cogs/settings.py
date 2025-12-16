@@ -2644,7 +2644,7 @@ class SettingCog(commands.Cog):
         await interaction.response.defer()
         db = self.bot.async_db["MainTwo"].AnnounceAutoReplace
         if not 有効にするか:
-            return await db.delete_one({"Guild": interaction.guild.id, "Channel": チャンネル.id})
+            await db.delete_one({"Guild": interaction.guild.id, "Channel": チャンネル.id})
         else:
             await db.update_one(
                 {"Guild": interaction.guild.id, "Channel": チャンネル.id},
