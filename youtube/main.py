@@ -61,6 +61,18 @@ def notification():
                 "content": item.get('message', f"{role}\n{title}\n\n{url}"), "username": "SharkBot Youtube", "avatar_url": "https://yt3.googleusercontent.com/vE6aoNnj0dvL-8sPUMwJ5hQOwsjGhP6q3_MmuwyAc36Jous6GSWVgPnOqKN2KoGsaES8pBKrKA=s900-c-k-c0x00ffffff-no-rj"
             })
 
+    topic = f"https://www.youtube.com/xml/feeds/videos.xml?channel_id={channel_id}"
+
+    data = {
+        "hub.mode": "subscribe",
+        "hub.topic": topic,
+        "hub.callback": settings.CALLBACK,
+        "hub.verify": "async",
+        "hub.secret": settings.HMAC_SECRET
+    }
+
+    requests.post('https://pubsubhubbub.appspot.com/subscribe', data=data)
+
     return "OK"
 
 asgi_app = WSGIMiddleware(app)
