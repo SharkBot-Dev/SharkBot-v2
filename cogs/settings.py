@@ -2623,6 +2623,40 @@ class SettingCog(commands.Cog):
                     description="権限エラーです。",
                 )
             )
+        
+    @settings.command(name="auto-replace-reply", description="アナウンスチャンネルで返信をすると自動的にBotのメッセージになる設定をします。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_messages=True)
+    async def auto_replace_reply(
+        self,
+        interaction: discord.Interaction,
+        チャンネル: discord.TextChannel,
+        有効にするか: bool,
+    ):
+        if not チャンネル.is_news():
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="設定できませんでした。",
+                    description="アナウンスチャンネルを指定して下さい。",
+                ), ephemeral=True
+            )
+        
+        await interaction.response.defer()
+        db = self.bot.async_db["MainTwo"].AnnounceAutoReplace
+        if not 有効にするか:
+            return await db.delete_one({"Guild": interaction.guild.id, "Channel": チャンネル.id})
+        else:
+            await db.update_one(
+                {"Guild": interaction.guild.id, "Channel": チャンネル.id},
+                {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
+                upsert=True,
+            )
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="自動アナウンスチャンネルでの\n返信メッセージ置き換えを設定しました。",
+                description=f"{チャンネル.mention} で {'有効' if 有効にするか else '無効'} にしました。",
+            )
+        )
 
     @settings.command(
         name="file-deletor", description="自動的に削除するファイル形式を設定します。"
