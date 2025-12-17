@@ -796,6 +796,41 @@ class TextGroup(app_commands.Group):
             result = N2O(テキスト, False)
             await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="新字体に変換しました。", description=result))
 
+    @app_commands.command(name="parse", description="かっこが閉じられているかを検証します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def text_parse(self, interaction: discord.Interaction, テキスト: str):
+        def check_brackets(text):
+            mapping = {')': '(', ']': '[', '}': '{'}
+            stack = []
+            
+            for index, char in enumerate(text, start=1):
+                if char in mapping.values():
+                    stack.append((char, index))
+                    
+                elif char in mapping.keys():
+                    if not stack:
+                        return f"{index}文字目の '{char}' に対応する開き括弧がありません。", True
+                    
+                    last_bracket, last_index = stack.pop()
+                    if last_bracket != mapping[char]:
+                        return f"{index}文字目の '{char}' は、{last_index}文字目の '{last_bracket}' と一致しません。", True
+                        
+            if stack:
+                last_bracket, last_index = stack.pop()
+                return f"{last_index}文字目の '{last_bracket}' が閉じられていません。", True
+                
+            return "すべての括弧が正しく閉じられています。", False
+        
+        text, is_error = check_brackets(テキスト)
+
+        if is_error:
+            embed = make_embed.error_embed(title="検証しました。", description=text)
+        else:
+            embed = make_embed.success_embed(title="検証しました。", description=text)
+
+        await interaction.response.send_message(ephemeral=True, embed=embed)
+
     @app_commands.command(name="morse", description="モールス信号に変換します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
