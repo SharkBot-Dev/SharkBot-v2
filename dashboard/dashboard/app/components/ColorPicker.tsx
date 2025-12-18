@@ -1,7 +1,6 @@
-// components/FormColorPalette.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 interface FormColorPaletteProps {
   name: string;
@@ -17,25 +16,35 @@ export default function ColorPalette({
   onChange
 }: FormColorPaletteProps) {
   const [selected, setSelected] = useState(defaultValue || colors[0]);
+  const hiddenInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSelect = (color: string) => {
+  const notifyChange = (color: string) => {
     setSelected(color);
     if (onChange) onChange(color);
+
+    if (hiddenInputRef.current) {
+      hiddenInputRef.current.value = color;
+      hiddenInputRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  };
+
+  const handleSelect = (color: string) => {
+    notifyChange(color);
   };
 
   const handleCustomColor = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const color = e.target.value;
-    setSelected(color);
-    if (onChange) onChange(color);
+    notifyChange(e.target.value);
   };
 
   return (
     <div className="flex items-center gap-3">
+      <input 
+        ref={hiddenInputRef} 
+        type="hidden" 
+        name={name} 
+        value={selected} 
+      />
 
-      {/* hidden input */}
-      <input type="hidden" name={name} value={selected} />
-
-      {/* パレットボタン */}
       {colors.map((color) => (
         <button
           key={color}
@@ -43,24 +52,27 @@ export default function ColorPalette({
           onClick={() => handleSelect(color)}
           style={{ backgroundColor: color }}
           className={`w-8 h-8 rounded-full border-2 ${
-            selected === color ? "border-black" : "border-transparent"
+            selected.toLowerCase() === color.toLowerCase() ? "border-black shadow-md" : "border-transparent"
           }`}
         />
       ))}
 
-      {/* 自由色選択 */}
       <label className="relative w-8 h-8 cursor-pointer">
         <input
           type="color"
           value={selected}
           onChange={handleCustomColor}
-          className="w-full h-full p-0 border-2 rounded-full cursor-pointer appearance-none"
-          style={{ borderColor: selected === selected ? "black" : "transparent" }}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
+        <div 
+          style={{ backgroundColor: selected }}
+          className="w-full h-full rounded-full border-2 border-gray-300 flex items-center justify-center text-xs"
+        >
+          ＋
+        </div>
       </label>
 
-      {/* 選択中の色コード */}
-      <span>{selected}</span>
+      <span className="font-mono text-sm">{selected.toUpperCase()}</span>
     </div>
   );
 }

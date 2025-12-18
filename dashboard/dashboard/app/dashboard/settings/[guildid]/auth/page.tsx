@@ -3,6 +3,7 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
+import Form from "@/app/components/Form";
 
 export default async function AuthPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -57,7 +58,7 @@ export default async function AuthPage({ params }: { params: { guildid: string }
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} の認証設定</h1>
 
-            <form action={sendData} className="flex flex-col gap-3">
+            <Form action={sendData} buttonlabel="設定を保存">
                 <span className="font-semibold mb-1">ワンクリック認証 (/panel auth auth)</span>
                 <ToggleButton name="auth" defaultValue={!disabled_commands.includes('panel auth auth')} />
 
@@ -66,11 +67,7 @@ export default async function AuthPage({ params }: { params: { guildid: string }
 
                 <span className="font-semibold mb-1">Web認証 (/panel auth webauth)</span>
                 <ToggleButton name="webauth" defaultValue={!disabled_commands.includes('panel auth webauth')} />
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    設定を保存
-                </button>
-            </form>
+            </Form>
         </div>
     );
 }

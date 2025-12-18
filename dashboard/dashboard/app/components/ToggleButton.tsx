@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function ToggleButton({
   name,
@@ -9,12 +9,23 @@ export default function ToggleButton({
   defaultValue?: boolean;
 }) {
   const [isOn, setIsOn] = useState(defaultValue);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const toggle = () => {
+    const nextValue = !isOn;
+    setIsOn(nextValue);
+
+    if (inputRef.current) {
+      inputRef.current.value = String(nextValue);
+      inputRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  };
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setIsOn(!isOn)}
+        onClick={toggle}
         className={`relative inline-flex items-center h-6 w-12 rounded-full transition-colors duration-300 ${
           isOn ? "bg-green-500" : "bg-gray-400"
         }`}
@@ -25,7 +36,12 @@ export default function ToggleButton({
           }`}
         />
       </button>
-      <input type="hidden" name={name} value={String(isOn)} />
+      <input 
+        ref={inputRef} 
+        type="hidden" 
+        name={name} 
+        value={String(isOn)} 
+      />
     </>
   );
 }

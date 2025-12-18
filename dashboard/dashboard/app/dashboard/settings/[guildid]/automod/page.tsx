@@ -7,6 +7,7 @@ import LineAndTextLayout from "@/app/components/LineAndTextLayout";
 import { revalidatePath } from "next/cache";
 import ItemBox from "@/app/components/ItemBox";
 import ItemRow from "@/app/components/ItemRow";
+import Form from "@/app/components/Form";
 
 export default async function AutoModerationPage({ params }: { params: { guildid: string } }) {
     async function setAutoMod(formData: FormData) {
@@ -179,7 +180,7 @@ export default async function AutoModerationPage({ params }: { params: { guildid
 
             <LineAndTextLayout text="基本的な設定" />
 
-            <form action={setAutoMod} className="flex flex-col gap-3">
+            <Form action={setAutoMod} buttonlabel="設定を保存">
                 <ItemRow>
                     <ItemBox title="招待リンクブロック">
                         <p className="text-sm text-gray-400 mt-1">自動的に招待リンク(discord.ggなど)を削除します。</p><br/>
@@ -196,11 +197,7 @@ export default async function AutoModerationPage({ params }: { params: { guildid
                         <ToggleButton name="emojis" defaultValue={EnabledEmojisBlock as boolean} />
                     </ItemBox>
                 </ItemRow>
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    設定を保存
-                </button>
-            </form>
+            </Form>
 
             <LineAndTextLayout text="ホワイトリストのチャンネル" />
 
