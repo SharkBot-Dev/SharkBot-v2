@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Long, ObjectId } from "mongodb";
 import LineAndTextLayout from "@/app/components/LineAndTextLayout";
 import { revalidatePath } from "next/cache";
+import Form from "@/app/components/Form";
 
 export default async function EconomyPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -128,7 +129,23 @@ export default async function EconomyPage({ params }: { params: { guildid: strin
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} の経済機能</h1>
 
-            <LineAndTextLayout text="通貨名・アイテム設定" />
+            <LineAndTextLayout text="通貨名設定" />
+
+            <Form action={sendData} buttonlabel="設定を保存">
+                <label className="flex flex-col">
+                    <span className="font-semibold mb-1">通貨名</span>
+                    <input
+                        type="text"
+                        name="c_name"
+                        className="border border-gray-700 bg-gray-800 text-white p-2 rounded"
+                        placeholder="通貨名を入力"
+                        defaultValue={c_name}
+                        required
+                    />
+                </label>
+            </Form><br/>
+
+            <LineAndTextLayout text="アイテム設定" />
 
             <div className="mb-6">
                 <h2 className="text-lg font-semibold mb-2">アイテム一覧</h2>
@@ -159,25 +176,7 @@ export default async function EconomyPage({ params }: { params: { guildid: strin
                 )}
             </div>
 
-            <form action={sendData} className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow">
-                <label className="flex flex-col">
-                    <span className="font-semibold mb-1">通貨名</span>
-                    <input
-                        type="text"
-                        name="c_name"
-                        className="border border-gray-700 bg-gray-800 text-white p-2 rounded"
-                        placeholder="通貨名を入力"
-                        defaultValue={c_name}
-                        required
-                    />
-                </label>
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    設定を保存
-                </button>
-            </form><br/>
-
-            <form action={sendShopData} className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow">
+            <Form action={sendShopData} buttonlabel="アイテムを作成">
                 <label className="flex flex-col">
                     <span className="font-semibold mb-1">アイテム名</span>
                     <input
@@ -199,11 +198,7 @@ export default async function EconomyPage({ params }: { params: { guildid: strin
                         required
                     />
                 </label>
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    作成
-                </button>
-            </form>
+            </Form>
 
             <LineAndTextLayout text="コマンド設定" />
             <span className="font-semibold mb-1">以下のボタンのページから設定できます。</span><br /><br />
