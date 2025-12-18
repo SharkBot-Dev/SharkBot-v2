@@ -1,7 +1,7 @@
 import time
 import discord
 
-from models import command_disable, channel_command_disable, bot_ban, translate
+from models import command_disable, channel_command_disable, bot_ban, translate, make_embed
 
 cooldown_check = {}
 
@@ -12,34 +12,33 @@ class CustomTree(discord.app_commands.CommandTree):
             try:
                 if not interaction.guild:
                     return await interaction.response.send_message(
-                        embed=discord.Embed(
-                            title="DMではスラッシュコマンドを実行できません。",
-                            color=discord.Color.red(),
+                        embed=make_embed.error_embed(
+                            title="DMではスラッシュコマンドを実行できません。"
                         ),
                         ephemeral=True,
                     )
 
                 if not await command_disable.command_enabled_check(interaction):
                     return await interaction.response.send_message(
-                        ephemeral=True, content="そのコマンドは無効化されています。"
+                        ephemeral=True, embed=make_embed.error_embed(title="そのコマンドは使用できません。", description="そのコマンドは**サーバー管理者**により\n無効化されています。")
                     )
 
                 if not await channel_command_disable.disable_channel(interaction):
                     return await interaction.response.send_message(
                         ephemeral=True,
-                        content="このチャンネルではコマンドを使用できません。",
+                        embed=make_embed.error_embed(title="コマンドを使用できません。", description="このチャンネルではコマンドを使用できません。"),
                     )
 
                 if not await bot_ban.ban_user_block(interaction):
                     return await interaction.response.send_message(
                         ephemeral=True,
-                        content="あなた、もしくはサーバーがBotからBanされています。",
+                        embed=make_embed.error_embed(title="コマンドを使用できません。",description="あなた、もしくはサーバーがBotからBanされています。"),
                     )
 
                 if not await bot_ban.ban_guild_block(interaction):
                     return await interaction.response.send_message(
                         ephemeral=True,
-                        content="あなた、もしくはサーバーがBotからBanされています。",
+                        embed=make_embed.error_embed(title="コマンドを使用できません。",description="あなた、もしくはサーバーがBotからBanされています。"),
                     )
 
                 interaction.extras["lang"] = await translate.get_guild_lang(
