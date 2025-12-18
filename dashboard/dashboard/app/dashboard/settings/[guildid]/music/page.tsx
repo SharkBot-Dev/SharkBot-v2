@@ -5,6 +5,7 @@ import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
 import ItemBox from "@/app/components/ItemBox";
 import ItemRow from "@/app/components/ItemRow";
+import Form from "@/app/components/Form";
 
 export default async function MusicPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -65,7 +66,7 @@ export default async function MusicPage({ params }: { params: { guildid: string 
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} の音楽設定</h1>
 
-            <form action={sendData} className="flex flex-col gap-6">
+            <Form action={sendData} buttonlabel="設定を保存">
 
                 <ItemRow>
 
@@ -94,11 +95,7 @@ export default async function MusicPage({ params }: { params: { guildid: string 
                     </ItemBox>
 
                 </ItemRow>
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    設定を保存
-                </button>
-            </form>
+            </Form>
         </div>
     );
 

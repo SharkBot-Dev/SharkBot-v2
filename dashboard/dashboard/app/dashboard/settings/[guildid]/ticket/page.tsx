@@ -3,6 +3,7 @@ import { getGuild, getChannels, getRoles, sendMessage } from "@/lib/discord/fetc
 import ToggleButton from "@/app/components/ToggleButton";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
+import Form from "@/app/components/Form";
 
 const cooldowns = new Map<string, number>();
 
@@ -118,7 +119,7 @@ export default async function TicketPanelPage({
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} のチケット</h1>
 
-            <form action={createTicketPanel} className="flex flex-col gap-3">
+            <Form action={createTicketPanel} buttonlabel="チケットパネルを送信する">
 
                 {/* タイトル */}
                 <label>
@@ -171,11 +172,7 @@ export default async function TicketPanelPage({
                             </option>
                             ))}
                 </select>
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded">
-                    チケットパネルを送信する
-                </button>
-            </form>
+            </Form>
         </div>
     );
 }

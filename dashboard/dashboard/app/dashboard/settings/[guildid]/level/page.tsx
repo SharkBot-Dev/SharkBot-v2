@@ -4,6 +4,8 @@ import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
 import { revalidatePath } from "next/cache";
+import Form from "@/app/components/Form";
+import LineAndTextLayout from "@/app/components/LineAndTextLayout";
 
 export default async function LevelPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -173,9 +175,11 @@ export default async function LevelPage({ params }: { params: { guildid: string 
 
     return (
         <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">{guild.name} のレベルアップ設定</h1>
+            <h1 className="text-2xl font-bold mb-4">{guild.name} のレベル</h1>
 
-            <form action={sendData} className="flex flex-col gap-3">
+            <LineAndTextLayout text="メイン設定"/>
+
+            <Form action={sendData} buttonlabel="設定を保存">
                 <span className="font-semibold mb-1">機能を有効にする</span>
                 <ToggleButton name="checkenable" defaultValue={enabled} />
 
@@ -200,11 +204,9 @@ export default async function LevelPage({ params }: { params: { guildid: string 
                         </option>
                     ))}
                 </select>
+            </Form><br/>
 
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    設定を保存
-                </button>
-            </form><br/>
+            <LineAndTextLayout text="レベルアップ時に追加するロール"/>
 
             <div className="mb-6">
                 <h2 className="text-lg font-semibold mb-2">
@@ -254,7 +256,7 @@ export default async function LevelPage({ params }: { params: { guildid: string 
 
             <div className="mb-6">
 
-                <form action={leveluprole_set} className="flex flex-col gap-3">
+                <Form action={leveluprole_set} buttonlabel="追加する">
                     <span className="font-semibold mb-1">ロールを選択</span>
                     <select
                         name="role"
@@ -274,10 +276,7 @@ export default async function LevelPage({ params }: { params: { guildid: string 
                     className="border p-2"
                     />
 
-                    <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                        追加
-                    </button>
-                </form>
+                </Form>
             </div>
         </div>
     );

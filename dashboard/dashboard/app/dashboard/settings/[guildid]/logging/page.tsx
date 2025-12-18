@@ -3,6 +3,7 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
+import Form from "@/app/components/Form";
 
 export default async function LoggingPage({ params }: { params: { guildid: string } }) {
   const events = [
@@ -118,7 +119,7 @@ export default async function LoggingPage({ params }: { params: { guildid: strin
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">{guild.name} のログ設定</h1>
 
-      <form action={sendData} className="flex flex-col gap-5">
+      <Form action={sendData} buttonlabel="設定を保存">
         <div>
           <h2 className="text-xl font-semibold text-white mt-6 mb-2 border-b border-gray-700 pb-1">
             イベント一覧
@@ -166,14 +167,7 @@ export default async function LoggingPage({ params }: { params: { guildid: strin
             ))}
           </div>
         </div>
-
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-4"
-        >
-          設定を保存
-        </button>
-      </form>
+      </Form>
     </div>
   );
 }

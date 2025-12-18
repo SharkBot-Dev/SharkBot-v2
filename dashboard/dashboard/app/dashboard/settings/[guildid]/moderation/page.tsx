@@ -6,6 +6,7 @@ import ToggleButton from "@/app/components/ToggleButton";
 import LineAndTextLayout from "@/app/components/LineAndTextLayout";
 import ItemRow from "@/app/components/ItemRow";
 import ItemBox from "@/app/components/ItemBox";
+import Form from "@/app/components/Form";
 
 export default async function ModerationPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -66,7 +67,7 @@ export default async function ModerationPage({ params }: { params: { guildid: st
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} のモデレーション設定</h1>
 
-            <form action={sendData} className="flex flex-col gap-3">
+            <Form action={sendData} buttonlabel="設定を保存">
                 <LineAndTextLayout text="コマンド設定" />
                 <ItemRow>
                     <ItemBox title="Kickコマンドを使えるか (/moderation kick)">
@@ -93,11 +94,7 @@ export default async function ModerationPage({ params }: { params: { guildid: st
                         <ToggleButton name="unban" defaultValue={!disabled_commands.includes('moderation ban unban')} />
                     </ItemBox>
                 </ItemRow>
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    設定を保存
-                </button>
-            </form>
+            </Form>
         </div>
     );
 }

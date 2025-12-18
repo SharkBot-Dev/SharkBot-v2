@@ -3,6 +3,7 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import { revalidatePath } from "next/cache";
+import Form from "@/app/components/Form";
 
 export default async function StarBoardPage({ params }: { params: { guildid: string } }) {
     async function addStarBoard(formData: FormData) {
@@ -147,7 +148,7 @@ export default async function StarBoardPage({ params }: { params: { guildid: str
             </div>
 
             {/* 新規登録 */}
-            <form action={addStarBoard} className="flex flex-col gap-3">
+            <Form action={addStarBoard} buttonlabel="スターボードを作成する">
                 <span className="font-semibold mb-1">チャンネルを選択</span>
 
                 <select
@@ -167,13 +168,8 @@ export default async function StarBoardPage({ params }: { params: { guildid: str
                     name="emoji"
                     className="border p-2"
                     placeholder="⭐"
-                    defaultValue="⭐"
                 />
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    設定を保存
-                </button>
-            </form>
+            </Form>
         </div>
     );
 }

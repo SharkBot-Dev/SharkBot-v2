@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import Form from "@/app/components/Form";
 
 export default async function AutoTheradPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -151,7 +152,7 @@ export default async function AutoTheradPage({ params }: { params: { guildid: st
                 )}
             </div>
 
-            <form action={sendData} className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow">
+            <Form action={sendData} buttonlabel="追加する">
                 <label className="flex flex-col">
                     <span className="font-semibold mb-1">スレッド名</span>
                     <input
@@ -177,14 +178,7 @@ export default async function AutoTheradPage({ params }: { params: { guildid: st
                         ))}
                     </select>
                 </label>
-
-                <button
-                    type="submit"
-                    className="bg-blue-600 hover:bg-blue-500 transition text-white font-semibold py-2 rounded"
-                >
-                    追加
-                </button>
-            </form>
+            </Form>
         </div>
     );
 }

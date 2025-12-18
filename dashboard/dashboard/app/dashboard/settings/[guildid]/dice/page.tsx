@@ -5,6 +5,7 @@ import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
 import Image from "next/image";
 import LineAndTextLayout from "@/app/components/LineAndTextLayout";
+import Form from "@/app/components/Form";
 
 export default async function DicePage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -67,7 +68,7 @@ export default async function DicePage({ params }: { params: { guildid: string }
         <div className="p-4">
         <h1 className="text-2xl font-bold mb-4">{guild.name} のダイス</h1>
 
-        <form action={sendData} className="flex flex-col gap-2">
+        <Form action={sendData} buttonlabel="設定">
             <LineAndTextLayout text="基本設定"></LineAndTextLayout>
             <span className="font-semibold mb-1">機能を有効にする</span>
             <ToggleButton name="checkenable" defaultValue={enabled} /><br />
@@ -80,11 +81,7 @@ export default async function DicePage({ params }: { params: { guildid: string }
                 width="310"
                 height="228"
             /><br/>
-
-            <button type="submit" className="bg-blue-500 text-white p-2 rounded">
-            設定
-            </button>
-        </form>
+        </Form>
         </div>
     );
 }

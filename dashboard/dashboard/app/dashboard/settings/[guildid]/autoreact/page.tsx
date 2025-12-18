@@ -3,6 +3,7 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long, ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
+import Form from "@/app/components/Form";
 
 export default async function AutoReactPage({ params }: { params: { guildid: string } }) {
     async function addAutoReactionforWord(formData: FormData) {
@@ -200,7 +201,7 @@ export default async function AutoReactPage({ params }: { params: { guildid: str
                 )}
             </div>
 
-            <form action={addAutoReactionforWord} className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow">
+            <Form action={addAutoReactionforWord} buttonlabel="追加する">
                 <label className="flex flex-col">
                     <span className="font-semibold mb-1">反応する条件</span>
                     <input
@@ -222,11 +223,7 @@ export default async function AutoReactPage({ params }: { params: { guildid: str
                         required
                     />
                 </label>
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    追加する
-                </button>
-            </form>
+            </Form>
 
             <br/>
             <hr/>
@@ -252,7 +249,7 @@ export default async function AutoReactPage({ params }: { params: { guildid: str
                 ) : <p className="text-gray-400">設定がまだありません。</p>}
             </div>
 
-            <form action={addAutoReactionforChannel} className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow">
+            <Form action={addAutoReactionforChannel} buttonlabel="追加する">
                 <label className="flex flex-col">
                     <span className="font-semibold mb-1">反応するチャンネル</span>
                     <select name="channel" className="border p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-black-500">
@@ -274,11 +271,7 @@ export default async function AutoReactPage({ params }: { params: { guildid: str
                         required
                     />
                 </label>
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    追加する
-                </button>
-            </form>
+            </Form>
         </div>
     );
 }

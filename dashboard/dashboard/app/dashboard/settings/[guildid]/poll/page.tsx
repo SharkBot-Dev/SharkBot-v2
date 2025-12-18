@@ -6,6 +6,7 @@ import ToggleButton from "@/app/components/ToggleButton";
 import ItemRow from "@/app/components/ItemRow";
 import ItemBox from "@/app/components/ItemBox";
 import LineAndTextLayout from "@/app/components/LineAndTextLayout";
+import Form from "@/app/components/Form";
 
 export default async function PollPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -61,17 +62,13 @@ export default async function PollPage({ params }: { params: { guildid: string }
 
             <LineAndTextLayout text="コマンド設定" />
 
-            <form action={sendData} className="flex flex-col gap-3">
+            <Form action={sendData} buttonlabel="設定を保存">
                 <ItemRow>
                     <ItemBox title="投票コマンドを有効化する (/panel poll)">
                         <ToggleButton name="checkenable" defaultValue={!disabled_commands.includes('panel poll')} />
                     </ItemBox>
                 </ItemRow>
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    設定を保存
-                </button>
-            </form>
+            </Form>
         </div>
     );
 }

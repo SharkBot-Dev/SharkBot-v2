@@ -3,6 +3,7 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long, ObjectId } from "mongodb";
 import { revalidatePath } from "next/cache";
+import Form from "@/app/components/Form";
 
 export default async function AutoReplyPage({ params }: { params: { guildid: string } }) {
     async function addAutoreply(formData: FormData) {
@@ -116,7 +117,7 @@ export default async function AutoReplyPage({ params }: { params: { guildid: str
                 )}
             </div>
 
-            <form action={addAutoreply} className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow">
+            <Form action={addAutoreply} buttonlabel="追加する">
                 <label className="flex flex-col">
                     <span className="font-semibold mb-1">反応する条件</span>
                     <input
@@ -138,11 +139,7 @@ export default async function AutoReplyPage({ params }: { params: { guildid: str
                         required
                     />
                 </label>
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    追加する
-                </button>
-            </form>
+            </Form>
         </div>
     );
 }

@@ -5,6 +5,7 @@ import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
 import ItemBox from "@/app/components/ItemBox";
 import ItemRow from "@/app/components/ItemRow";
+import Form from "@/app/components/Form";
 
 export default async function SearchPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -83,7 +84,7 @@ export default async function SearchPage({ params }: { params: { guildid: string
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} のなんでも検索設定</h1>
 
-            <form action={sendData} className="flex flex-col gap-6">
+            <Form action={sendData} buttonlabel="設定を保存">
 
                 <ItemRow>
                     <ItemBox title="まとめてDiscord上のアイテムを検索 (/search multi)">
@@ -146,11 +147,7 @@ export default async function SearchPage({ params }: { params: { guildid: string
                         <ToggleButton name="anime" defaultValue={!disabled_commands.includes('search web anime')} />
                     </ItemBox>
                 </ItemRow>
-
-                <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                    設定を保存
-                </button>
-            </form>
+            </Form>
         </div>
     );
 

@@ -3,6 +3,7 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
+import Form from "@/app/components/Form";
 
 export default async function ReportPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -87,7 +88,7 @@ export default async function ReportPage({ params }: { params: { guildid: string
         <div className="p-4">
         <h1 className="text-2xl font-bold mb-4">{guild.name} の通報機能</h1>
 
-        <form action={sendData} className="flex flex-col gap-2">
+        <Form action={sendData} buttonlabel="設定">
             <span className="font-semibold mb-1">機能を有効にする</span>
             <ToggleButton name="checkenable" defaultValue={enabled} />
 
@@ -108,11 +109,7 @@ export default async function ReportPage({ params }: { params: { guildid: string
                         </option>
                     ))}
             </select>
-
-            <button type="submit" className="bg-blue-500 text-white p-2 rounded">
-            設定
-            </button>
-        </form>
+        </Form>
         </div>
     );
 }
