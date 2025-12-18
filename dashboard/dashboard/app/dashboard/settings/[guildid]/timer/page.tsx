@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 const cooldowns = new Map<string, number>();
 
-export async function reminderCreate(
+export async function loopCreate(
     timeMs: number,
     event: string,
     args: any[] = [],
@@ -16,7 +16,7 @@ export async function reminderCreate(
 
     const notifyTime = new Date(Date.now() + timeMs);
 
-    await client.db("MainTwo").collection("ReminderQueue").updateOne(
+    await client.db("MainTwo").collection("LoopQueue").updateOne(
         { Event: event, Args: args },
         {
             $set: {
@@ -107,7 +107,7 @@ export default async function StarBoardPage({ params }: { params: { guildid: str
                     { upsert: true }
                 );
 
-            await reminderCreate(interval * 60 * 1000, "timer_event", [
+            await loopCreate(interval * 60 * 1000, "timer_event", [
                 Long.fromString(guildid),
                 Long.fromString(channel),
                 wh?.data?.url,
