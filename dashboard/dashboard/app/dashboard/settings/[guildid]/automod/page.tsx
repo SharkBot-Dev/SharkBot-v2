@@ -163,8 +163,12 @@ export default async function AutoModerationPage({ params }: { params: { guildid
     let EnabledEmojisBlock: Boolean | undefined = undefined;
 
     if (emojiDocCheck) {
-        if (emojisDoc.AutoMods.includes('emojis')) {
-            EnabledEmojisBlock = true;
+        if (emojisDoc.AutoMods) {
+            if (emojisDoc.AutoMods.includes('emojis')) {
+                EnabledEmojisBlock = true;
+            } else {
+                EnabledEmojisBlock = false;
+            }
         } else {
             EnabledEmojisBlock = false;
         }
