@@ -75,10 +75,15 @@ export default async function AutoModerationPage({ params }: { params: { guildid
         const channel = formData.get("channel");
         if (!channel) return;
 
+        const guild_channels = await getChannels(guildid);
+        const channelsData =
+            Array.isArray((guild_channels as any).data)
+                ? (guild_channels as any).data
+                : guild_channels;
+
         const exists = channelsData.some((c: any) => c.id === channel);
 
         if (!exists) {
-            console.error("チャンネルが存在しません");
             return;
         }
 
