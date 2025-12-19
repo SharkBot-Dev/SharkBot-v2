@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
 import Form from "@/app/components/Form";
+import { revalidatePath } from "next/cache";
 
 export default async function JoinMessagePage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -22,17 +23,9 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
 
         const db = await connectDB();
 
-        const guild_channels = await getChannels(guildid);
-
-        const channelsData = (() => {
-            if (!guild_channels) return null;
-            if (Array.isArray((guild_channels as any).data)) return (guild_channels as any).data;
-            if (Array.isArray(guild_channels)) return guild_channels as any;
-            return null;
-        })();
-
         if (!checkenable) {
             await db.db("Main").collection("WelcomeMessage").deleteOne({ Guild: Long.fromString(guildid) });
+            revalidatePath(`/dashboard/settings/${guildid}/join-message`);
             return;
         }
 
@@ -42,9 +35,19 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
 
         if (!title || !desc || !channel) return;
 
+        const guild_channels = await getChannels(guildid);
+
+        const channelsData = (() => {
+            if (!guild_channels) return null;
+            if (Array.isArray((guild_channels as any).data)) return (guild_channels as any).data;
+            if (Array.isArray(guild_channels)) return guild_channels as any;
+            return null;
+        })();
+
         const exists = channelsData.some((c: any) => c.id === channel);
 
         if (!exists) {
+            console.log("チャンネルが存在しません。")
             return;
         }
 
@@ -61,6 +64,8 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
             },
             { upsert: true }
         );
+
+        revalidatePath(`/dashboard/settings/${guildid}/join-message`);
     }
 
     const { guildid } = await params;

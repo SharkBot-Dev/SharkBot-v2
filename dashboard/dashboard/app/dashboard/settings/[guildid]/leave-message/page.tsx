@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
 import Form from "@/app/components/Form";
+import { revalidatePath } from "next/cache";
 
 export default async function LeaveMessagePage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -23,7 +24,8 @@ export default async function LeaveMessagePage({ params }: { params: { guildid: 
         const db = await connectDB();
 
         if (!checkenable) {
-            await db.db("Main").collection("GoodByeMessage").deleteOne({ Guild: Long.fromString(guildid) })
+            await db.db("Main").collection("GoodByeMessage").deleteOne({ Guild: Long.fromString(guildid) });
+            revalidatePath(`/dashboard/settings/${guildid}/leave-message`);
             return;
         }
 
@@ -61,6 +63,8 @@ export default async function LeaveMessagePage({ params }: { params: { guildid: 
             },
             { upsert: true }
         );
+        
+        revalidatePath(`/dashboard/settings/${guildid}/leave-message`);
     }
 
     const { guildid } = await params;
