@@ -69,7 +69,7 @@ export default async function LockMessagePage({ params }: { params: { guildid: s
                     {
                         type: 2,
                         style: 1,
-                        label: "削除",
+                        label: "編集",
                         custom_id: `lockmessage_edit+`,
                     },
                 ]
