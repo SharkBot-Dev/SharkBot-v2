@@ -33,10 +33,18 @@ export default async function LeaveMessagePage({ params }: { params: { guildid: 
 
         if (!title || !desc || !channel) return;
 
+        const guild_channels = await getChannels(guildid);
+
+        const channelsData = (() => {
+            if (!guild_channels) return null;
+            if (Array.isArray((guild_channels as any).data)) return (guild_channels as any).data;
+            if (Array.isArray(guild_channels)) return guild_channels as any;
+            return null;
+        })();
+
         const exists = channelsData.some((c: any) => c.id === channel);
 
         if (!exists) {
-            console.error("チャンネルが存在しません");
             return;
         }
 

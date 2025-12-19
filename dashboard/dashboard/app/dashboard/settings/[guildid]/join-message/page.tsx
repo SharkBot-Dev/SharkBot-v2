@@ -22,6 +22,15 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
 
         const db = await connectDB();
 
+        const guild_channels = await getChannels(guildid);
+
+        const channelsData = (() => {
+            if (!guild_channels) return null;
+            if (Array.isArray((guild_channels as any).data)) return (guild_channels as any).data;
+            if (Array.isArray(guild_channels)) return guild_channels as any;
+            return null;
+        })();
+
         if (!checkenable) {
             await db.db("Main").collection("WelcomeMessage").deleteOne({ Guild: Long.fromString(guildid) });
             return;
@@ -36,7 +45,6 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
         const exists = channelsData.some((c: any) => c.id === channel);
 
         if (!exists) {
-            console.error("チャンネルが存在しません");
             return;
         }
 
