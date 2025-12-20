@@ -196,8 +196,8 @@ class BanGroup(app_commands.Group):
     ):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="自分自身はBanできません。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="自分自身はBanできません。"
                 ),
                 ephemeral=True,
             )
@@ -210,8 +210,7 @@ class BanGroup(app_commands.Group):
             return await interaction.followup.send(
                 embed=discord.Embed(
                     title="Banに失敗しました。",
-                    description="権限が足りないかも！？",
-                    color=discord.Color.red(),
+                    description="権限が足りないかも！？"
                 )
             )
         return await interaction.followup.send(
@@ -233,8 +232,8 @@ class BanGroup(app_commands.Group):
     ):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="自分自身のBanは解除できません。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="自分自身のBanは解除できません。"
                 ),
                 ephemeral=True,
             )
@@ -245,10 +244,9 @@ class BanGroup(app_commands.Group):
             )
         except:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="Ban解除に失敗しました。",
-                    description="権限が足りないかも！？",
-                    color=discord.Color.red(),
+                    description="権限が足りないかも！？"
                 )
             )
         return await interaction.followup.send(
@@ -261,6 +259,177 @@ class BanGroup(app_commands.Group):
             )
         )
 
+    @app_commands.command(name="silentban", description="メッセージを削除せずにメンバーをbanをします。")
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def silentban(
+        self, interaction: discord.Interaction, メンバー: discord.User, 理由: str
+    ):
+        if not interaction.guild.get_member(メンバー.id):
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="このサーバーにいない人はbanできません。"
+                ),
+                ephemeral=True,
+            )
+        if メンバー.id == interaction.user.id:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="自分自身はBanできません。"
+                ),
+                ephemeral=True,
+            )
+        await interaction.response.defer()
+        try:
+            await interaction.guild.ban(メンバー, reason=理由 + f"\n{interaction.user.id} によってBAN", delete_message_days=0)
+        except discord.Forbidden:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="Botに権限がありません。", description="Banの権限が必要です。"))
+        return await interaction.followup.send(
+            embed=make_embed.success_embed(title=f"{メンバー.name}をBanしました。", description="メッセージは削除されません。")
+            .add_field(name="理由", value=理由 + f"\n{interaction.user.id} によってBAN", inline=False)
+        )
+    
+    @app_commands.command(name="reverseban", description="Ban解除条件を与えてメンバーをbanします。")
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def reverseban(
+        self, interaction: discord.Interaction, メンバー: discord.User, 理由: str, 解除条件: str
+    ):
+        guild = interaction.guild
+        member = guild.get_member(メンバー.id)
+
+        if not member:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed("このサーバーにいない人はBANできません。"),
+                ephemeral=True
+            )
+
+        if member.id == interaction.user.id:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed("自分自身はBANできません。"),
+                ephemeral=True
+            )
+
+        await interaction.response.defer()
+
+        try:
+            await member.send(
+                embed=discord.Embed(
+                    title=f"{guild.name} からBANされました",
+                    description="BAN解除には以下の条件を満たしてください。\n条件を満たしたらBanされた\nサーバーのオーナーに連絡してください。",
+                    color=discord.Color.green()
+                ).add_field(name="解除条件", value=解除条件)
+            )
+        except discord.Forbidden:
+            pass
+
+        await interaction.client.async_db["MainTwo"].ReverseBan.update_one({
+            "guild_id": guild.id,
+            "user_id": member.id
+        }, {
+            "$set": {
+                "reason": 理由,
+                "condition": 解除条件,
+                "moderator_id": interaction.user.id,
+                "banned_at": datetime.datetime.utcnow()
+            }
+        },upsert=True)
+
+        await guild.ban(
+            member,
+            reason=f"{理由} | ReverseBan by {interaction.user} ({interaction.user.id})"
+        )
+
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title=f"{member.name} を ReverseBan しました"
+            )
+            .add_field(name="理由", value=理由, inline=False)
+            .add_field(name="解除条件", value=解除条件, inline=False)
+        )
+
+    @app_commands.command(name="remove-reverseban", description="Ban条件付きのBanを解除します。")
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def remove_reverseban(
+        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
+    ):
+        await interaction.response.defer()
+        db = interaction.client.async_db["MainTwo"].ReverseBan
+
+        async def check_reverseban_condition(guild_id: int, user_id: int):
+            data = await db.find_one({
+                "guild_id": guild_id,
+                "user_id": user_id
+            })
+            return data
+
+        data = await check_reverseban_condition(
+            interaction.guild.id,
+            ユーザー.id
+        )
+
+        if not data:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(title="そのユーザーはReverseBanされていません。")
+            )
+        
+        try:
+            await interaction.guild.unban(ユーザー, reason=理由)
+        except:
+            pass
+
+        await db.delete_one({
+            "guild_id": interaction.guild.id,
+            "user_id": ユーザー.id
+        })
+
+        embed = make_embed.success_embed(
+            title="ReverseBan を解除しました。"
+        )
+        embed.add_field(name="理由", value=理由, inline=False)
+        embed.add_field(name="解除条件", value=data["condition"], inline=False)
+
+        await interaction.followup.send(embed=embed)
+
+    @app_commands.command(name="info-reverseban", description="BanをしたユーザーのBan解除条件を確認します。")
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def check_reverseban(
+        self, interaction: discord.Interaction, ユーザー: discord.User
+    ):
+        await interaction.response.defer()
+        db = interaction.client.async_db["MainTwo"].ReverseBan
+
+        async def check_reverseban_condition(guild_id: int, user_id: int):
+            data = await db.find_one({
+                "guild_id": guild_id,
+                "user_id": user_id
+            })
+            return data
+
+        data = await check_reverseban_condition(
+            interaction.guild.id,
+            ユーザー.id
+        )
+
+        if not data:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(title="このユーザーに ReverseBan はありません。")
+            )
+
+        embed = make_embed.success_embed(
+            title="ReverseBan 条件確認"
+        )
+        embed.add_field(name="理由", value=data["reason"], inline=False)
+        embed.add_field(name="解除条件", value=data["condition"], inline=False)
+
+        await interaction.followup.send(embed=embed)
+
     @app_commands.command(name="softban", description="ユーザーをSoftBanします。")
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -270,8 +439,8 @@ class BanGroup(app_commands.Group):
     ):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="自分自身はSoftBanできません。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="自分自身はSoftBanできません。"
                 ),
                 ephemeral=True,
             )
@@ -287,10 +456,9 @@ class BanGroup(app_commands.Group):
             )
         except:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="SoftBanに失敗しました。",
-                    description="権限が足りないかも！？",
-                    color=discord.Color.red(),
+                    description="権限が足りないかも！？"
                 )
             )
         return await interaction.followup.send(
