@@ -148,9 +148,15 @@ def invite_auth_backend():
 
         authorization_code = data.get("code")
         state = data.get("state")
+        turnstile_token = data.get("turnstile_token")
 
         if not authorization_code or not state:
             return jsonify({"status": "error", "reason": "不正なURLです。"}), 400
+
+        if not turnstile_token:
+            return jsonify(
+                {"status": "error", "reason": "キャプチャが確認できません。"}
+            ), 400
 
         db = client["Main"].MemberAddAuthRole
         usermoney = db.find_one({"Code": state}, {"_id": False})
@@ -158,6 +164,21 @@ def invite_auth_backend():
             return jsonify(
                 {"status": "error", "reason": "一度認証に使われたようです。"}
             ), 400
+
+        ts_verify = requests.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data={
+                "secret": settings.CAPTURE_KEY,
+                "response": turnstile_token,
+                "remoteip": request.remote_addr,
+            },
+            timeout=5,
+        ).json()
+
+        if not ts_verify.get("success"):
+            return jsonify(
+                {"status": "error", "reason": "キャプチャ認証に失敗しました。"}
+            ), 403
 
         request_postdata = {
             "client_id": settings.CLIENT_ID,
