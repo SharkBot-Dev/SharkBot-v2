@@ -1,8 +1,5 @@
-import datetime
 from discord.ext import commands, tasks
 import discord
-import aiohttp
-from discord import Webhook
 import asyncio
 from discord import app_commands
 
@@ -15,6 +12,32 @@ class ServerStats(commands.Cog):
         self.batch_update_stat_channel.start()
         print("init -> ServerStats")
 
+    async def get_messages(self, guild: discord.Guild):
+        db = self.bot.async_db["MainTwo"].ServerStat
+        try:
+            dbfind = await db.find_one({"Guild": guild.id}, {"_id": False})
+        except Exception:
+            return
+        if not dbfind:
+            return False
+        if not dbfind.get('Enabled'):
+            return False
+        message = dbfind.get('Message')
+        return message
+    
+    async def get_now_messages(self, guild: discord.Guild):
+        db = self.bot.async_db["MainTwo"].ServerStat
+        try:
+            dbfind = await db.find_one({"Guild": guild.id}, {"_id": False})
+        except Exception:
+            return
+        if not dbfind:
+            return False
+        if not dbfind.get('Enabled'):
+            return False
+        message = dbfind.get('NowMessage')
+        return message
+
     @tasks.loop(minutes=5)
     async def batch_update_stat_channel(self):
         db = self.bot.async_db["MainTwo"].ServerStatus
@@ -24,21 +47,51 @@ class ServerStats(commands.Cog):
                 continue
             member_channel = db_find.get("Members", None)
             humans_channel = db_find.get("Humans", None)
+            messages_channel = db_find.get("Messages", None)
+            now_messages_channel = db_find.get("NowMessages", None)
             if member_channel:
                 channel = guild.get_channel(member_channel)
                 if channel:
                     if type(channel) != discord.VoiceChannel:
                         continue
-                    await channel.edit(name=f"メンバー数: {guild.member_count}人")
+                    new_name = f"メンバー数: {guild.member_count}人"
+                    if channel.name != new_name:
+                        await channel.edit(name=new_name)
             if humans_channel:
                 channel = guild.get_channel(humans_channel)
                 if channel:
                     if type(channel) != discord.VoiceChannel:
                         continue
-                    await channel.edit(
-                        name=f"人間数: {len(list(filter(lambda m: not m.bot, guild.members)))}人"
-                    )
+                    new_name = f"人間数: {len(list(filter(lambda m: not m.bot, guild.members)))}人"
+                    if channel.name != new_name:
+                        await channel.edit(
+                            name=new_name
+                        )
             await asyncio.sleep(1)
+            if messages_channel:
+                channel = guild.get_channel(messages_channel)
+                if channel:
+                    if type(channel) != discord.VoiceChannel:
+                        continue
+                    msg = await self.get_messages(guild)
+                    if msg:
+                        new_name = f"メッセージ数: {msg}個"
+                        if channel.name != new_name:
+                            await channel.edit(
+                                name=new_name
+                            )
+            if now_messages_channel:
+                channel = guild.get_channel(now_messages_channel)
+                if channel:
+                    if type(channel) != discord.VoiceChannel:
+                        continue
+                    nmsg = await self.get_now_messages(guild)
+                    if nmsg:
+                        new_name = f"今日のメッセージ数: {nmsg}個"
+                        if channel.name != new_name:
+                            await channel.edit(
+                                name=new_name
+                            )
 
     server_status = app_commands.Group(
         name="server-status",
@@ -54,6 +107,8 @@ class ServerStats(commands.Cog):
         何を表示するか=[
             app_commands.Choice(name="メンバー数", value="members"),
             app_commands.Choice(name="人間数", value="humans"),
+            app_commands.Choice(name="今までのメッセージ数", value="messages"),
+            app_commands.Choice(name="今日のメッセージ数", value="now_messages"),
             app_commands.Choice(name="招待リンク", value="invite"),
         ]
     )
@@ -84,6 +139,30 @@ class ServerStats(commands.Cog):
             await db.update_one(
                 {"Guild": interaction.guild.id},
                 {"$set": {"Guild": interaction.guild.id, "Humans": ch.id}},
+                upsert=True,
+            )
+        elif 何を表示するか.value == "messages":
+            msg = await self.get_messages(interaction.guild)
+            if not msg:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="統計情報の収集が無効化されています。", description="/settings stat setting で有効にして下さい。"))
+            ch = await カテゴリー.create_voice_channel(
+                name=f"メッセージ数: {msg}個"
+            )
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$set": {"Guild": interaction.guild.id, "Messages": ch.id}},
+                upsert=True,
+            )
+        elif 何を表示するか.value == "now_messages":
+            nmsg = await self.get_now_messages(interaction.guild)
+            if not nmsg:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="統計情報の収集が無効化されています。", description="/settings stat setting で有効にして下さい。"))
+            ch = await カテゴリー.create_voice_channel(
+                name=f"今日のメッセージ数: {nmsg}個"
+            )
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$set": {"Guild": interaction.guild.id, "NowMessages": ch.id}},
                 upsert=True,
             )
         elif 何を表示するか.value == "invite":
