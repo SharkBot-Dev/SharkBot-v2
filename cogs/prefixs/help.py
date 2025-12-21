@@ -49,7 +49,7 @@ class Prefixs_HelpCog(commands.Cog):
 
         ems = []
 
-        for start in range(0, len(list(self.bot.commands)), 10):
+        for start in range(0, len(list(self.bot.commands)), 20):
             embed = make_embed.success_embed(
                 title="SharkBotのヘルプ (頭文字バージョン)",
                 description="頭文字バージョンです。\nスラッシュコマンド用ヘルプは、\n`/help`を使用してください。\n\nちなみに、頭文字コマンドは、\n`[頭文字]コマンド名`と送信することで機能します。\n\n標準頭文字: `!.`",
@@ -61,7 +61,7 @@ class Prefixs_HelpCog(commands.Cog):
                 inline=False,
             )
 
-            for cmd in list(self.bot.commands)[start : start + 10]:
+            for cmd in list(self.bot.commands)[start : start + 20]:
                 if "load" in cmd.name:
                     continue
                 if "jishaku" in cmd.name:
@@ -81,8 +81,7 @@ class Prefixs_HelpCog(commands.Cog):
 
                 embed.add_field(
                     name=cmd.name,
-                    value=cmd.description + f"\n別名: " + al,
-                    inline=False,
+                    value=cmd.description + f"\n別名: " + al
                 )
 
             ems.append(embed)
