@@ -263,6 +263,13 @@ class AICog(commands.Cog):
             )
             return await interaction.response.send_message(embed=make_embed.success_embed(title="AIチャットを有効化しました。"))
         else:
+            if not dbfind.get('Enabled'):
+                await db.update_one(
+                    {"Guild": interaction.guild.id},
+                    {"$set": {"Enabled": True, "Channel": interaction.channel.id}},
+                    upsert=True,
+                )
+                return await interaction.response.send_message(embed=make_embed.success_embed(title="AIチャットを有効化しました。"))
             await db.update_one(
                 {"Guild": interaction.guild.id},
                 {"$set": {"Enabled": False}},
