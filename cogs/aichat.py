@@ -203,9 +203,11 @@ class AICog(commands.Cog):
         except:
             return
 
-        a_c, ti = await self.add_cooldown(message.author, "aichat", 1800)
-        if not a_c:
-            return await message.reply(embed=make_embed.error_embed(title="AIChatは一人当たり30分当たり1回までです！"))
+        check = await self.is_premium(message.author)
+        if not check:
+            a_c, ti = await self.add_cooldown(message.author, "aichat", 1800)
+            if not a_c:
+                return await message.reply(embed=make_embed.error_embed(title="AIChatは一人当たり30分当たり1回までです！"))
 
         api_key = settings.GEMINI_APIKEY
         if not api_key:
