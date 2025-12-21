@@ -70,6 +70,7 @@ class EmojisCog(commands.Cog):
                     i.close()
                     await interaction.followup.send(embed=make_embed.success_embed(title="絵文字をコピーしました。", description=em.__str__()))
             return
+        await interaction.followup.send(embed=make_embed.error_embed(title="絵文字が見つかりませんでした。", description="有効な絵文字を入力してください。"))
 
     @emojis.command(name="create", description="絵文字を作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
