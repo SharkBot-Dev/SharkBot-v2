@@ -5,6 +5,8 @@ from discord import app_commands
 
 from models import make_embed
 
+def floor10(n: int) -> int:
+    return n // 10 * 10
 
 class ServerStats(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -75,7 +77,7 @@ class ServerStats(commands.Cog):
                         continue
                     msg = await self.get_messages(guild)
                     if msg:
-                        new_name = f"メッセージ数: {msg}個"
+                        new_name = f"メッセージ数: {floor10(msg)}個"
                         if channel.name != new_name:
                             await channel.edit(
                                 name=new_name
@@ -87,11 +89,12 @@ class ServerStats(commands.Cog):
                         continue
                     nmsg = await self.get_now_messages(guild)
                     if nmsg:
-                        new_name = f"今日のメッセージ数: {nmsg}個"
+                        new_name = f"今日のメッセージ数: {floor10(nmsg)}個"
                         if channel.name != new_name:
                             await channel.edit(
                                 name=new_name
                             )
+            await asyncio.sleep(1)
 
     server_status = app_commands.Group(
         name="server-status",
@@ -146,7 +149,7 @@ class ServerStats(commands.Cog):
             if not msg:
                 return await interaction.followup.send(embed=make_embed.error_embed(title="統計情報の収集が無効化されています。", description="/settings stat setting で有効にして下さい。"))
             ch = await カテゴリー.create_voice_channel(
-                name=f"メッセージ数: {msg}個"
+                name=f"メッセージ数: {floor10(msg)}個"
             )
             await db.update_one(
                 {"Guild": interaction.guild.id},
@@ -158,7 +161,7 @@ class ServerStats(commands.Cog):
             if not nmsg:
                 return await interaction.followup.send(embed=make_embed.error_embed(title="統計情報の収集が無効化されています。", description="/settings stat setting で有効にして下さい。"))
             ch = await カテゴリー.create_voice_channel(
-                name=f"今日のメッセージ数: {nmsg}個"
+                name=f"今日のメッセージ数: {floor10(nmsg)}個"
             )
             await db.update_one(
                 {"Guild": interaction.guild.id},
