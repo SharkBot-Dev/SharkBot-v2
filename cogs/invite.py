@@ -2,8 +2,6 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 from models import make_embed
-import io
-
 
 class InviteCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -190,6 +188,16 @@ class InviteCog(commands.Cog):
                     title="招待リンクを追跡します",
                     description="再度実行すると無効化できます"
                 )
+            )
+
+            invites = await interaction.guild.invites()
+            after = {i.code: i.uses for i in invites}
+            self.invite_cache[guild_id] = after
+
+            await col.update_one(
+                {"guild_id": guild_id},
+                {"$set": {"invites": after}},
+                upsert=True
             )
         else:
             await col.delete_one({"guild_id": guild_id})
