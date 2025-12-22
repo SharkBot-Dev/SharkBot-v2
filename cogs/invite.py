@@ -51,28 +51,72 @@ class InviteCog(commands.Cog):
             upsert=True
         )
 
-    async def send_invite_log(self, guild: discord.Guild, member: discord.Member, invite_code: str):
+    async def send_invite_log(
+        self,
+        guild: discord.Guild,
+        member: discord.Member,
+        invite: discord.Invite
+    ):
         col = self.bot.async_db["MainTwo"].InviteTrackerLog
 
         doc = await col.find_one({"guild_id": guild.id})
-        if doc is None:
+        if not doc:
             return
 
-        channel = guild.get_channel(doc.get('channel_id', 0))
+        channel = guild.get_channel(doc.get("channel_id"))
         if not channel:
             return
-        
-        try:
-            
-            await channel.send(embed=discord.Embed(title="招待リンクが使用されました。", color=discord.Color.green())
-                            .add_field(name="使用された招待リンク", value=invite_code, inline=False)
-                            .set_author(name=member.name, icon_url=member.avatar.url if member.avatar else member.default_avatar.url)
-                            .set_footer(text=guild.name, icon_url=guild.icon.url if guild.icon else None))
-        except:
-            return
 
-    async def execute_invite_track(self, guild: discord.Guild, member: discord.Member, invite_code: str):
-        await self.send_invite_log(guild, member, invite_code)
+        embed = discord.Embed(
+            title="招待リンクが使用されました",
+            color=discord.Color.green()
+        )
+
+        embed.add_field(
+            name="参加したユーザー",
+            value=f"{member.mention} (`{member.id}`)",
+            inline=False
+        )
+
+        embed.add_field(
+            name="使用された招待リンク",
+            value=f"`{invite.url}`",
+            inline=False
+        )
+
+        if invite.inviter:
+            embed.add_field(
+                name="招待したユーザー",
+                value=f"{invite.inviter.mention} (`{invite.inviter.id}`)",
+                inline=False
+            )
+        else:
+            embed.add_field(
+                name="招待したユーザー",
+                value="不明",
+                inline=False
+            )
+
+        embed.add_field(
+            name="使用回数",
+            value=f"{invite.uses} 回",
+            inline=False
+        )
+
+        embed.set_author(
+            name=member.name,
+            icon_url=member.display_avatar.url
+        )
+
+        embed.set_footer(
+            text=guild.name,
+            icon_url=guild.icon.url if guild.icon else None
+        )
+
+        await channel.send(embed=embed)
+
+    async def execute_invite_track(self, guild: discord.Guild, member: discord.Member, invite: discord.Invite):
+        await self.send_invite_log(guild, member, invite)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
@@ -90,13 +134,13 @@ class InviteCog(commands.Cog):
         after = {i.code: i.uses for i in invites}
 
         used_code = None
-        for code, uses in after.items():
-            if uses > before.get(code, 0):
-                used_code = code
-                break
+        used_invite = None
 
-        if used_code is None:
-            return
+        for invite in invites:
+            if invite.uses > before.get(invite.code, 0):
+                used_code = invite.code
+                used_invite = invite
+                break
 
         self.invite_cache[guild_id] = after
 
@@ -109,16 +153,20 @@ class InviteCog(commands.Cog):
             upsert=True
         )
 
-        if used_code:
-            inviter_id = next(i.inviter.id for i in invites if i.code == used_code)
+        if used_code is None or used_invite is None:
+            return
 
+        if used_invite.inviter:
             await stats.update_one(
-                {"guild_id": guild_id, "inviter_id": inviter_id},
+                {
+                    "guild_id": guild_id,
+                    "inviter_id": used_invite.inviter.id
+                },
                 {"$inc": {"count": 1}},
                 upsert=True
             )
 
-            await self.execute_invite_track(member.guild, member, used_code)
+        await self.execute_invite_track(member.guild, member, used_invite)
 
     invite = app_commands.Group(name="invite", description="招待リンク関連のコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=False))
 
