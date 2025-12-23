@@ -9,6 +9,11 @@ class InviteCog(commands.Cog):
         self.invite_cache = {}
         print("init -> InviteCog")
 
+    async def cog_load(self):
+        col = self.bot.async_db["MainTwo"].InviteTracker
+        async for doc in col.find({}, {"_id": False}):
+            self.invite_cache[doc["guild_id"]] = doc.get("invites", {})
+
     @commands.Cog.listener()
     async def on_ready(self):
         col = self.bot.async_db["MainTwo"].InviteTracker
@@ -118,6 +123,9 @@ class InviteCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
+        if member.bot:
+            return
+
         guild_id = member.guild.id
 
         col = self.bot.async_db["MainTwo"].InviteTracker
