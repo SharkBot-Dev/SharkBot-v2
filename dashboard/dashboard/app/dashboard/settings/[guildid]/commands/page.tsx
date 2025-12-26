@@ -3,6 +3,7 @@ import { getGuild, getChannels } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long, ObjectId } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
+import CommandList from "./CommandList";
 
 export default async function CommandPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -80,34 +81,10 @@ export default async function CommandPage({ params }: { params: { guildid: strin
             <h1 className="text-3xl font-bold mb-6 text-white">{guild.name} のコマンド設定</h1>
 
             <form action={sendData} className="grid grid-cols-1 gap-4">
-                {(Object.entries(groupedCommands) as [string, any[]][]).map(([category, cmds]) => (
-                    <div key={category} className="mb-8">
-                        <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-1">
-                            {category}
-                        </h2>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {cmds.map((cmd: any, idx: number) => (
-                                <div
-                                    key={idx}
-                                    className="flex flex-col justify-between bg-gray-900 p-4 rounded-lg shadow-md border border-gray-700"
-                                >
-                                    <div>
-                                        <h3 className="text-lg font-semibold text-white">{cmd.name}</h3>
-                                        <p className="text-sm text-gray-400 mt-1">{cmd.description}</p>
-                                    </div>
-
-                                    <div className="flex justify-end mt-3">
-                                        <ToggleButton
-                                            name={cmd.name}
-                                            defaultValue={!disabled_commands.includes(cmd.name)}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ))}
+                <CommandList
+                    commands={commands}
+                    disabledCommands={disabled_commands}
+                />
 
                 <div className="col-span-full flex justify-end mt-4">
                     <button

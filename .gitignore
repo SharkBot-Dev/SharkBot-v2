@@ -268,3 +268,6 @@ youtube/settings.py
 Graph/chart.png
 
 node_modules
+
+env.py
+/web
