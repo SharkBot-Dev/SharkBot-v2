@@ -121,7 +121,7 @@ export default async function CountPage({ params }: { params: { guildid: string 
                             return (
                                 <li key={item.Channel.toString()} className="p-3 flex justify-between items-center">
                                     <span>
-                                        {channel ? channel.name : "不明なチャンネル"}（{item.Count}回のカウント）
+                                        {channel ? channel.name : "不明なチャンネル"}（{item.Now}回のカウント）
                                     </span>
 
                                     <form action={deleteCount}>
