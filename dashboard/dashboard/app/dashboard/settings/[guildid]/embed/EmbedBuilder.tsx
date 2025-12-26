@@ -10,7 +10,7 @@ interface embedBuilder {
   sendData: any
 }
 
-export default function embedBuilder({ guild, channels, sendData }: embedBuilder) {
+export default function EmbedBuilder({ guild, channels, sendData }: embedBuilder) {
     const [title, setTitle] = useState("");
     const [desc, setDesc] = useState("");
     const [color, setColor] = useState("#57f287");
@@ -18,19 +18,21 @@ export default function embedBuilder({ guild, channels, sendData }: embedBuilder
     const [thumb, setThumb] = useState("");
 
     return (
-        <div className="p-4">
+        <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-8">
             <form action={sendData} className="flex flex-col gap-2">
                 <h2 className="text-xl font-bold mt-6">タイトル・説明</h2>
                 <input
                     name="title"
                     placeholder="タイトル"
-                    className="border p-2"
+                    className="border p-2 bg-gray-50 text-black"
+                    value={title}
                     onChange={(e) => setTitle(e.target.value)}
                 />
                 <textarea
                     name="desc"
                     placeholder="説明"
-                    className="border p-2"
+                    className="border p-2 bg-gray-50 text-black"
+                    value={desc}
                     onChange={(e) => setDesc(e.target.value)}
                 />
 
@@ -44,13 +46,15 @@ export default function embedBuilder({ guild, channels, sendData }: embedBuilder
                 <input
                     name="image_url"
                     placeholder="画像URL"
-                    className="border p-2"
+                    className="border p-2 bg-gray-50 text-black"
+                    value={image}
                     onChange={(e) => setImage(e.target.value)}
                 />
                 <input
                     name="thumbnail_url"
                     placeholder="サムネイルURL"
-                    className="border p-2"
+                    className="border p-2 bg-gray-50 text-black"
+                    value={thumb}
                     onChange={(e) => setThumb(e.target.value)}
                 />
 
@@ -63,25 +67,30 @@ export default function embedBuilder({ guild, channels, sendData }: embedBuilder
                         .filter((c: any) => c.type === 0)
                         .map((ch: any) => (
                             <option key={ch.id} value={ch.id}>
-                                {ch.name}
+                                #{ch.name}
                             </option>
                         ))}
                 </select>
 
-                <button className="bg-blue-500 text-white p-2 rounded">
+                <button className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded transition mt-4">
                     送信する
                 </button>
             </form>
 
-            {/* プレビュー */}
-            <h2 className="text-xl font-bold mt-6">プレビュー</h2>
-            <EmbedPreview
-                title={title}
-                description={desc}
-                color={color}
-                image={image}
-                thumbnail={thumb}
-            />
+            <div>
+                <h2 className="text-xl font-bold mt-6 mb-4">プレビュー</h2>
+                <EmbedPreview
+                    title={title}
+                    description={desc}
+                    color={color}
+                    image={image}
+                    thumbnail={thumb}
+                    onTitleChange={setTitle}
+                    onDescChange={setDesc}
+                    onImageChange={setImage}
+                    onThumbChange={setThumb}
+                />
+            </div>
         </div>
     );
 }
