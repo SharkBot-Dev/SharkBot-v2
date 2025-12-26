@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     const redirect_url_base = "https://dashboard.sharkbot.xyz";
 
-    const response = NextResponse.redirect(`${redirect_url_base}/dashboard`);
+    const response = NextResponse.redirect(redirect_url_base);
     response.cookies.delete("session_id");
     response.cookies.delete("oauth_state");
 
