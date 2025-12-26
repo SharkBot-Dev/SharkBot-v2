@@ -46,7 +46,15 @@ export default async function DashboardPage() {
             </li>
           ) : null
         ))}
-      </ul>
+      </ul><br/>
+
+      <h2 className="text-xl mb-4">その他の手続き</h2>
+      <a
+        href="/api/auth/logout"
+        className="bg-blue-600 text-white px-4 py-2 rounded-md"
+      >
+        ログアウト
+      </a><br></br>
     </main>
   );
 }
