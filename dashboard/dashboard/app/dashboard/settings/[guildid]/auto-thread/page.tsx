@@ -130,20 +130,17 @@ export default async function AutoTheradPage({ params }: { params: { guildid: st
                         {entries.map(([channelId, info]: [string, { ThreadName: string }]) => (
                             <li key={channelId} className="p-3 flex justify-between items-center">
                                 <span>
-                                    <strong>{info.ThreadName}</strong>
-                                    <span className="text-gray-400 text-sm ml-2">
-                                        <form action={deleteData}>
-                                            <button
-                                                type="submit"
-                                                className="bg-red-600 hover:bg-red-500 text-white font-semibold py-1 px-3 rounded"
-                                            >
-                                                ❌
-                                            </button>
-                                            <input name="channel" defaultValue={channelId} hidden></input>
-                                            {channelsData.map((ch: any) => ch.id === channelId ? `${ch.name}` : '')}
-                                        </form>
-                                    </span>
+                                    <strong>{info.ThreadName} - {channelsData.map((ch: any) => ch.id === channelId ? `${ch.name}` : '')}</strong>
                                 </span>
+                                <form action={deleteData}>
+                                    <input name="channel" defaultValue={channelId} hidden></input>
+                                    <button
+                                        type="submit"
+                                        className="bg-red-600 hover:bg-red-500 text-white font-semibold py-1 px-3 rounded"
+                                    >
+                                        ❌
+                                    </button>
+                                </form>
                             </li>
                         ))}
                     </ul>
