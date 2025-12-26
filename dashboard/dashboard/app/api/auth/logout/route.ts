@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 
 export async function GET(request: NextRequest) {
-    const session_id = request.cookies.get("oauth_state")?.value;
+    const session_id = request.cookies.get("session_id")?.value;
 
     const db = await connectDB();
     await db.db("Dashboard").collection("Sessions").deleteOne({

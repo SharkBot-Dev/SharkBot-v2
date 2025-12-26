@@ -51,11 +51,17 @@ export async function GET(request: NextRequest) {
   const db = await connectDB();
   const sessionId = randomUUID();
 
-  await db.db("Dashboard").collection("Sessions").insertOne({
-    session_id: sessionId,
-    user,
-    guilds,
-    createdAt: new Date(),
+  await db.db("Dashboard").collection("Sessions").updateOne({
+    user_id: user.id
+  } , {
+    $set: {
+      session_id: sessionId,
+      user,
+      guilds,
+      createdAt: new Date(),
+    }
+  }, {
+    upsert: true
   });
 
   const response = NextResponse.redirect(`${redirect_url_base}/dashboard`);
