@@ -3,13 +3,30 @@ import { useState, useEffect, useRef } from "react";
 
 export default function ToggleButton({
   name,
+  value,
   defaultValue = false,
+  onChange,
 }: {
   name: string;
+  value?: boolean;
   defaultValue?: boolean;
+  onChange?: (v: boolean) => void;
 }) {
   const [isOn, setIsOn] = useState(defaultValue);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (typeof value === "boolean") {
+      setIsOn(value);
+
+      if (inputRef.current) {
+        inputRef.current.value = String(value);
+        inputRef.current.dispatchEvent(
+          new Event("input", { bubbles: true })
+        );
+      }
+    }
+  }, [value]);
 
   const toggle = () => {
     const nextValue = !isOn;
@@ -17,8 +34,12 @@ export default function ToggleButton({
 
     if (inputRef.current) {
       inputRef.current.value = String(nextValue);
-      inputRef.current.dispatchEvent(new Event("input", { bubbles: true }));
+      inputRef.current.dispatchEvent(
+        new Event("input", { bubbles: true })
+      );
     }
+
+    onChange?.(nextValue);
   };
 
   return (
@@ -36,11 +57,12 @@ export default function ToggleButton({
           }`}
         />
       </button>
-      <input 
-        ref={inputRef} 
-        type="hidden" 
-        name={name} 
-        value={String(isOn)} 
+
+      <input
+        ref={inputRef}
+        type="hidden"
+        name={name}
+        value={String(isOn)}
       />
     </>
   );

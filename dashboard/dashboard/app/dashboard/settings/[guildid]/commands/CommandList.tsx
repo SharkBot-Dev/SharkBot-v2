@@ -17,6 +17,7 @@ export default function CommandList({
     disabledCommands: string[];
 }) {
     const [query, setQuery] = useState("");
+    const [disabled, setDisabled] = useState<string[]>(disabledCommands);
 
     const filtered = useMemo(() => {
         const q = query.toLowerCase();
@@ -35,6 +36,24 @@ export default function CommandList({
         }, {});
     }, [filtered]);
 
+    function disableCategory(is_disable: boolean, category: string, cmds: Command[]) {
+        const names = cmds.map(c => c.name);
+
+        if (is_disable) {
+            setDisabled(prev => {
+                const set = new Set(prev);
+                names.forEach(n => set.add(n));
+                return Array.from(set);
+            });
+        } else {
+            setDisabled(prev => {
+                const set = new Set(prev);
+                names.forEach(n => set.delete(n));
+                return Array.from(set);
+            });
+        }
+    }
+
     return (
         <>
             <input
@@ -45,11 +64,48 @@ export default function CommandList({
                 className="mb-6 w-full rounded bg-gray-800 text-white px-4 py-2 outline-none border border-gray-700 focus:border-blue-500"
             />
 
+            <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-1">
+                グローバル設定
+            </h2>
+
+            <h2 className="text-xl font-bold text-white mb-4">
+                <button
+                    type="button"
+                    className="ml-4 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                    onClick={() => disableCategory(true, "", commands)}
+                >
+                    すべて無効化
+                </button>
+                <button
+                    type="button"
+                    className="ml-4 bg-green-500 text-white rounded hover:bg-green-600 transition"
+                    onClick={() => disableCategory(false, "", commands)}
+                >
+                    すべて有効化
+                </button>
+            </h2>
+
             {(Object.entries(grouped) as [string, Command[]][]).map(
                 ([category, cmds]) => (
                     <div key={category} className="mb-8">
                         <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-1">
                             {category}
+
+                            <button
+                                type="button"
+                                className="ml-4 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                                onClick={() => disableCategory(true, category, cmds)}
+                            >
+                                無効化
+                            </button>
+                            <button
+                                type="button"
+                                className="ml-4 bg-green-500 text-white rounded hover:bg-green-600 transition"
+                                onClick={() => disableCategory(false, category, cmds)}
+                            >
+                                有効化
+                            </button>
+
                         </h2>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -70,9 +126,15 @@ export default function CommandList({
                                     <div className="flex justify-end mt-3">
                                         <ToggleButton
                                             name={cmd.name}
-                                            defaultValue={
-                                                !disabledCommands.includes(cmd.name)
-                                            }
+                                            value={!disabled.includes(cmd.name)}
+                                            defaultValue={!disabled.includes(cmd.name)}
+                                            onChange={(v) => {
+                                                setDisabled(prev =>
+                                                    v
+                                                        ? prev.filter(n => n !== cmd.name)
+                                                        : [...prev, cmd.name]
+                                                );
+                                            }}
                                         />
                                     </div>
                                 </div>
