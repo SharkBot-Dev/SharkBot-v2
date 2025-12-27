@@ -900,16 +900,10 @@ class GlobalCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_server(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.send_message(
-            embed=discord.Embed(
+            embed=make_embed.success_embed(
                 title="サーバー掲示板",
-                description="以下のurlからアクセスできます。\nhttps://www.sharkbot.xyz/server",
-                color=discord.Color.blue(),
+                description="以下のurlからアクセスできます。\nhttps://dashboard.sharkbot.xyz/servers"
             )
         )
 
