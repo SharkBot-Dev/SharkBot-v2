@@ -78,7 +78,9 @@ export default async function CommandPage({ params }: { params: { guildid: strin
 
     return (
         <div className="p-6">
-            <h1 className="text-3xl font-bold mb-6 text-white">{guild.name} のコマンド設定</h1>
+            <h1 className="text-3xl font-bold mb-6 text-white">
+                {guild.name} のコマンド設定
+            </h1>
 
             <form action={sendData} className="grid grid-cols-1 gap-4">
                 <CommandList
@@ -86,10 +88,10 @@ export default async function CommandPage({ params }: { params: { guildid: strin
                     disabledCommands={disabled_commands}
                 />
 
-                <div className="col-span-full flex justify-end mt-4">
+                <div className="sticky bottom-4 flex justify-end">
                     <button
                         type="submit"
-                        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
+                        className="bg-blue-500 text-white px-6 py-2 rounded shadow-lg hover:bg-blue-600 transition"
                     >
                         設定を保存
                     </button>
