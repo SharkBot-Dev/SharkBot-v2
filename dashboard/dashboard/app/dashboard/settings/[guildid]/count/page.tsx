@@ -79,7 +79,7 @@ export default async function CountPage({ params }: { params: { guildid: string 
                 Channel: Long.fromString(channel),
             });
 
-        revalidatePath(`/dashboard/settings/${guildid}/starboard`);
+        revalidatePath(`/dashboard/settings/${guildid}/tags`);
     }
 
     const { guildid } = await params;
