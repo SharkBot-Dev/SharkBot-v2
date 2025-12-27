@@ -3,6 +3,7 @@
 import { useState } from "react";
 import EmbedPreview from "./EmbedPreview";
 import ColorPalette from "@/app/components/ColorPicker";
+import { useToast } from "@/app/components/ToastProvider";
 
 interface embedBuilder {
   guild: any,
@@ -16,6 +17,8 @@ export default function EmbedBuilder({ guild, channels, sendData }: embedBuilder
     const [color, setColor] = useState("#57f287");
     const [image, setImage] = useState("");
     const [thumb, setThumb] = useState("");
+
+    const { push } = useToast();
 
     return (
         <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -72,7 +75,7 @@ export default function EmbedBuilder({ guild, channels, sendData }: embedBuilder
                         ))}
                 </select>
 
-                <button className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded transition mt-4">
+                <button className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded transition mt-4" onClick={() => push("埋め込みを送信しました。", "再度送信するには10秒間待つ必要があります。")}>
                     送信する
                 </button>
             </form>
