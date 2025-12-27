@@ -1,3 +1,4 @@
+import asyncio
 import time
 import discord
 from discord.ext import commands
@@ -188,6 +189,8 @@ class TagsCog(commands.Cog):
                     try:
                         role = interaction.guild.get_role(int(role_id))
                         await interaction.user.add_roles(role, reason="tagの実行のため。")
+
+                        await asyncio.sleep(1)
                     except:
                         pass
 
@@ -296,6 +299,8 @@ class TagsCog(commands.Cog):
                     try:
                         role = message.guild.get_role(int(role_id))
                         await message.author.add_roles(role, reason="tagの実行のため。")
+
+                        await asyncio.sleep(1)
                     except:
                         pass
 
