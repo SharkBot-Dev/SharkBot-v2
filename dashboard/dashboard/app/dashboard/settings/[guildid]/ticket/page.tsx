@@ -3,7 +3,7 @@ import { getGuild, getChannels, getRoles, sendMessage } from "@/lib/discord/fetc
 import ToggleButton from "@/app/components/ToggleButton";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
-import Form from "@/app/components/Form";
+import TickerMaker from "./TicketMaker";
 
 const cooldowns = new Map<string, number>();
 
@@ -54,11 +54,20 @@ export default async function TicketPanelPage({
             return;
         }
 
+        const is_thread_create = formData.get("thread_create") === "true" || formData.get("thread_create") === "on";
+
         const embed: any = {
             title,
             description,
             color: 0x57f287,
         };
+
+        let custom_id: string | undefined = undefined;
+        if (is_thread_create) {
+            custom_id = "ticket_thread"
+        } else {
+            custom_id = "ticket_v1"
+        }
 
         const components = [
             {
@@ -68,7 +77,7 @@ export default async function TicketPanelPage({
                         type: 2,
                         style: 1,
                         label: "チケットを作成",
-                        custom_id: "ticket_v1",
+                        custom_id: custom_id,
                     },
                 ],
             },
@@ -78,6 +87,8 @@ export default async function TicketPanelPage({
             embeds: [embed],
             components,
         });
+
+        if (is_thread_create) return;
 
         const category = formData.get("category_select")?.toString();
         if (!category) return;
@@ -119,60 +130,7 @@ export default async function TicketPanelPage({
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} のチケット</h1>
 
-            <Form action={createTicketPanel} buttonlabel="チケットパネルを送信する">
-
-                {/* タイトル */}
-                <label>
-                    タイトル
-                    <input
-                        name="title"
-                        className="border p-2 w-full bg-gray-800 text-white"
-                        placeholder="タイトルを入力"
-                        required
-                    />
-                </label>
-
-                {/* 説明 */}
-                <label>
-                    説明
-                    <textarea
-                        name="description"
-                        className="border p-2 w-full bg-gray-800 text-white"
-                        placeholder="説明を入力"
-                    />
-                </label>
-
-                <span className="font-semibold mb-1">チケットを作成するカテゴリチャンネル</span>
-                <select
-                    name="category_select"
-                    className="border p-2 rounded bg-gray-800 text-white"
-                >
-                    {channelsData
-                        ?.filter((ch: any) => ch.type === 4)
-                        .map((ch: any) => (
-                            <option key={ch.id} value={ch.id}>
-                                {ch.name}
-                            </option>
-                            ))}
-                </select>
-
-                {/* 送信するチャンネル選択 */}
-                <span className="font-semibold mb-1">パネルを送信するチャンネル</span>
-
-                <select
-                    name="channel_select"
-                    className="border p-2 rounded bg-gray-800 text-white"
-                    required
-                >
-                    {channelsData
-                        ?.filter((ch: any) => ch.type === 0)
-                        .map((ch: any) => (
-                            <option key={ch.id} value={ch.id}>
-                                {ch.name}
-                            </option>
-                            ))}
-                </select>
-            </Form>
+            <TickerMaker channelsData={channelsData} createTicketPanel={createTicketPanel} />
         </div>
     );
 }
