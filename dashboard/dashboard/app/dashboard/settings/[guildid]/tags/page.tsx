@@ -131,13 +131,20 @@ export default async function TagsPage({ params }: { params: { guildid: string }
                 />
 
                 <span className="font-semibold mb-1">返信する内容</span>
-                <input
-                    type="text"
+                <textarea
                     name="tagscript"
                     className="border p-2"
                     placeholder="(╯°□°)╯︵ ┻━┻"
                 />
             </Form>
+
+            <span className="font-semibold mb-1">使える関数</span>
+            <div className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow">
+                {"{args} .. コマンドの引数を埋め込みます。"}<br/>
+                {"{author} .. コマンド実行者を埋め込めます。"}<br/>
+                {"{author_id} .. コマンド実行者のidを埋め込みます。"}<br/>
+                {"{addrole:ロールid} .. コマンド実行時にロールを付与するようにします。"}<br/>
+            </div>
         </div>
     );
 }

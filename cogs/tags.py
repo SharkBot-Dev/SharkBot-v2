@@ -7,6 +7,8 @@ from discord import app_commands
 from consts import badword
 import io
 
+import re
+
 from models import make_embed
 
 cooldown_tags = {}
@@ -52,7 +54,7 @@ class TagsCog(commands.Cog):
 
     # ---------- タグ作成 ----------
     @tag.command(name="create", description="tagを作成します。")
-    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tag_create(self, interaction: discord.Interaction, 名前: str):
@@ -103,7 +105,7 @@ class TagsCog(commands.Cog):
 
     # ---------- タグ削除 ----------
     @tag.command(name="delete", description="tagを削除します。")
-    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def tag_delete(self, interaction: discord.Interaction, 名前: str):
@@ -179,8 +181,20 @@ class TagsCog(commands.Cog):
         if doc:
             try:
                 ts_script = doc["tagscript"]
+
+                pattern = r"\{addrole:([^}]+)\}"
+                role_ids = set(re.findall(pattern, ts_script))
+                for role_id in role_ids:
+                    try:
+                        role = interaction.guild.get_role(int(role_id))
+                        await interaction.user.add_roles(role, reason="tagの実行のため。")
+                    except:
+                        pass
+
+                cleaned_text = re.sub(r"\{addrole:[^}]+\}", "", ts_script)
+
                 await interaction.followup.send(
-                    self.replace_tag(ts_script, 引数, interaction.user)
+                    self.replace_tag(cleaned_text, 引数, interaction.user)
                     + "\n-# これはタグからのメッセージです。"
                 )
             except Exception as e:
@@ -275,8 +289,20 @@ class TagsCog(commands.Cog):
                 cooldown_tags[message.guild.id] = current_time
 
                 ts_script = doc["tagscript"]
+
+                pattern = r"\{addrole:([^}]+)\}"
+                role_ids = set(re.findall(pattern, ts_script))
+                for role_id in role_ids:
+                    try:
+                        role = message.guild.get_role(int(role_id))
+                        await message.author.add_roles(role, reason="tagの実行のため。")
+                    except:
+                        pass
+
+                cleaned_text = re.sub(r"\{addrole:[^}]+\}", "", ts_script)
+
                 await message.channel.send(
-                    self.replace_tag(ts_script, args, message.author)
+                    self.replace_tag(cleaned_text, args, message.author)
                     + "\n-# これはタグからのメッセージです。"
                 )
             except Exception as e:
