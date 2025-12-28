@@ -1163,13 +1163,9 @@ class HelpCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def dashboard(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.send_message(
-            f"現在はダッシュボードにアクセスできません。",
+            f"以下からアクセスできます。\n-# ダッシュボードはベータ版です。",
+            view=discord.ui.View().add_item(discord.ui.Button(label="アクセスする", url="https://dashboard.sharkbot.xyz/")),
             ephemeral=True,
         )
 
