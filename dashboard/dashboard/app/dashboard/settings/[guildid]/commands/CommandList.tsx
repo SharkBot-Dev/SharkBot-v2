@@ -64,26 +64,43 @@ export default function CommandList({
                 className="mb-6 w-full rounded bg-gray-800 text-white px-4 py-2 outline-none border border-gray-700 focus:border-blue-500"
             />
 
-            <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-1">
-                グローバル設定
-            </h2>
+            <div className="mb-8">
+                <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-1">
+                    グローバル設定
+                </h2>
 
-            <h2 className="text-xl font-bold text-white mb-4">
-                <button
-                    type="button"
-                    className="ml-4 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                    onClick={() => disableCategory(true, "", commands)}
-                >
-                    すべて無効化
-                </button>
-                <button
-                    type="button"
-                    className="ml-4 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                    onClick={() => disableCategory(false, "", commands)}
-                >
-                    すべて有効化
-                </button>
-            </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    
+                    <div className="flex flex-col justify-between bg-gray-900 p-5 rounded-xl border border-gray-700 shadow-sm">
+                        <div>
+                            <h3 className="text-lg font-semibold text-white">
+                                グローバルな無効化
+                            </h3>
+                            <p className="text-sm text-gray-400 mt-2 leading-relaxed">
+                                ボタンひとつですべてのコマンドを一括で有効化、または無効化できます。
+                            </p>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-3 mt-6">
+                            <button
+                                type="button"
+                                onClick={() => disableCategory(true, "", commands)}
+                                className="px-4 py-2 text-sm font-medium bg-red-600/90 text-white rounded-md hover:bg-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                            >
+                            すべて無効
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => disableCategory(false, "", commands)}
+                                className="px-4 py-2 text-sm font-medium bg-green-600/90 text-white rounded-md hover:bg-green-500 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                            >
+                            すべて有効
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
 
             {(Object.entries(grouped) as [string, Command[]][]).map(
                 ([category, cmds]) => (
