@@ -121,6 +121,13 @@ class StatSettingsGroup(app_commands.Group):
             )
             return await interaction.response.send_message(embed=make_embed.success_embed(title="統計情報の収集を有効化しました。"))
         else:
+            if not dbfind.get('Enabled'):
+                await db.update_one(
+                    {"Guild": interaction.guild.id},
+                    {"$set": {"Enabled": True}},
+                    upsert=True,
+                )
+                return await interaction.response.send_message(embed=make_embed.success_embed(title="統計情報の収集を有効化しました。"))
             await db.update_one(
                 {"Guild": interaction.guild.id},
                 {"$set": {"Enabled": False}},
