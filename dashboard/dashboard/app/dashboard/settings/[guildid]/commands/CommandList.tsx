@@ -36,6 +36,10 @@ export default function CommandList({
         }, {});
     }, [filtered]);
 
+    function isCategoryEnabled(categoryCmds: Command[], disabled: string[]) {
+        return categoryCmds.some(cmd => !disabled.includes(cmd.name));
+    }
+
     function disableCategory(is_disable: boolean, category: string, cmds: Command[]) {
         const names = cmds.map(c => c.name);
 
@@ -103,62 +107,59 @@ export default function CommandList({
             </div>
 
             {(Object.entries(grouped) as [string, Command[]][]).map(
-                ([category, cmds]) => (
-                    <div key={category} className="mb-8">
-                        <h2 className="text-xl font-bold text-white mb-4 border-b border-gray-700 pb-1">
-                            {category}
+                ([category, cmds]) => {
+                    const categoryEnabled = isCategoryEnabled(cmds, disabled);
 
-                            <button
-                                type="button"
-                                className="ml-4 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                                onClick={() => disableCategory(true, category, cmds)}
-                            >
-                                無効化
-                            </button>
-                            <button
-                                type="button"
-                                className="ml-4 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                                onClick={() => disableCategory(false, category, cmds)}
-                            >
-                                有効化
-                            </button>
+                    return (
+                        <div key={category} className="mb-8">
+                            <div className="flex items-center justify-between mb-4 border-b border-gray-700 pb-1">
+                                <h2 className="text-xl font-bold text-white">
+                                    {category}
+                                </h2>
 
-                        </h2>
+                                <ToggleButton
+                                    name={`category-${category}`}
+                                    value={categoryEnabled}
+                                    defaultValue={categoryEnabled}
+                                    onChange={(v) => disableCategory(!v, category, cmds)}
+                                />
+                            </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {cmds.map((cmd) => (
-                                <div
-                                    key={cmd.name}
-                                    className="flex flex-col justify-between bg-gray-900 p-4 rounded-lg border border-gray-700"
-                                >
-                                    <div>
-                                        <h3 className="text-lg font-semibold text-white">
-                                            {cmd.name}
-                                        </h3>
-                                        <p className="text-sm text-gray-400 mt-1">
-                                            {cmd.description}
-                                        </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {cmds.map((cmd) => (
+                                    <div
+                                        key={cmd.name}
+                                        className="flex flex-row items-center justify-between bg-gray-900 p-4 rounded-lg border border-gray-700"
+                                    >
+                                        <div className="flex-1 pr-4">
+                                            <h3 className="text-lg font-semibold text-white">
+                                                {cmd.name}
+                                            </h3>
+                                            <p className="text-sm text-gray-400 mt-1">
+                                                {cmd.description}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex-shrink-0">
+                                            <ToggleButton
+                                                name={cmd.name}
+                                                value={!disabled.includes(cmd.name)}
+                                                defaultValue={!disabled.includes(cmd.name)}
+                                                onChange={(v) => {
+                                                    setDisabled(prev =>
+                                                        v
+                                                            ? prev.filter(n => n !== cmd.name)
+                                                            : [...prev, cmd.name]
+                                                    );
+                                                }}
+                                            />
+                                        </div>
                                     </div>
-
-                                    <div className="flex justify-end mt-3">
-                                        <ToggleButton
-                                            name={cmd.name}
-                                            value={!disabled.includes(cmd.name)}
-                                            defaultValue={!disabled.includes(cmd.name)}
-                                            onChange={(v) => {
-                                                setDisabled(prev =>
-                                                    v
-                                                        ? prev.filter(n => n !== cmd.name)
-                                                        : [...prev, cmd.name]
-                                                );
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                )
+                    );
+                }
             )}
         </>
     );
