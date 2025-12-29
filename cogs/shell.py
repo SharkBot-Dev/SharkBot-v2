@@ -498,6 +498,107 @@ class ShellCog(commands.Cog):
                     avatar_url="https://images.icon-icons.com/112/PNG/512/python_18894.png",
                 )
                 return
+            
+    @commands.Cog.listener("on_message")
+    async def on_message_nodejs_shell(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+        db = self.bot.async_db["MainTwo"].NodeJsShell
+        try:
+            dbfind = await db.find_one({"Channel": message.channel.id}, {"_id": False})
+        except:
+            return
+        if dbfind is None:
+            return
+        
+        current_time = time.time()
+        last_message_time = cooldown_python_shell.get(message.channel.id, 0)
+        if current_time - last_message_time < 5:
+            return
+        cooldown_python_shell[message.channel.id] = current_time
+
+        headers = {
+            "accept": "*/*",
+            "accept-language": "ja,en-US;q=0.9,en;q=0.8",
+            "authorization": "Bearer undefined",
+            "content-type": "application/json",
+            "origin": "https://onecompiler.com",
+            "priority": "u=1, i",
+            "referer": "https://onecompiler.com/nodejs",
+            "sec-ch-ua": '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+        }
+
+        json_data = {
+            "name": "NodeJS",
+            "title": "NodeJS Hello World",
+            "version": "12.13",
+            "mode": "javascript",
+            "description": None,
+            "extension": "js",
+            "languageType": "programming",
+            "active": True,
+            "properties": {
+                "language": "nodejs",
+                "docs": True,
+                "tutorials": True,
+                "cheatsheets": True,
+                "filesEditable": True,
+                "filesDeletable": True,
+                "files": [
+                    {
+                        "name": "index.js",
+                        "content": message.clean_content,
+                    },
+                ],
+                "newFileOptions": [
+                    {
+                        "helpText": "New JS file",
+                        "name": "script${i}.js",
+                        "content": "/**\n *  In main file\n *  let script${i} = require('./script${i}');\n *  console.log(script${i}.sum(1, 2));\n */\n\nfunction sum(a, b) {\n    return a + b;\n}\n\nmodule.exports = { sum };",
+                    },
+                    {
+                        "helpText": "Add Dependencies",
+                        "name": "package.json",
+                        "content": '{\n  "name": "main_app",\n  "version": "1.0.0",\n  "description": "",\n  "main": "HelloWorld.js",\n  "dependencies": {\n    "lodash": "^4.17.21"\n  }\n}',
+                    },
+                ],
+            },
+            "visibility": "public",
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "https://onecompiler.com/api/code/exec", headers=headers, json=json_data
+            ) as response:
+                data = await response.json()
+                webhook_ = Webhook.from_url(dbfind.get("WebHook"), session=session)
+                if data.get("exception", None):
+                    return await webhook_.send(
+                        embed=discord.Embed(
+                            title="NodeJS実行結果",
+                            description=f"```{data.get('exception', '出力なし')}```",
+                            color=discord.Color.red(),
+                        ),
+                        username="NodeJsShell",
+                        avatar_url="https://images-cdn.openxcell.com/wp-content/uploads/2024/07/25090553/nodejs-inner.webp",
+                    )
+                await webhook_.send(
+                    embed=discord.Embed(
+                        title="NodeJS実行結果",
+                        description=f"```{data.get('stdout', '出力なし')}```",
+                        color=discord.Color.blue(),
+                    ),
+                    username="NodeJsShell",
+                    avatar_url="https://images-cdn.openxcell.com/wp-content/uploads/2024/07/25090553/nodejs-inner.webp",
+                )
+                return
 
     shell = app_commands.Group(name="shell", description="プログラム系のコマンドです。")
 
@@ -505,11 +606,6 @@ class ShellCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def python_shell(self, interaction: discord.Interaction, 有効化するか: bool):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         db = self.bot.async_db["Main"].PythonShell
         if 有効化するか:
             web = await interaction.channel.create_webhook(name="PythonShell")
@@ -539,6 +635,41 @@ class ShellCog(commands.Cog):
                 )
             return await interaction.response.send_message(
                 embed=make_embed.success_embed(title="Pythonシェルを無効化しました。")
+            )
+        
+    @shell.command(name="nodejs", description="nodejsシェルを使用します。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def nodejs_shell(self, interaction: discord.Interaction, 有効化するか: bool):
+        db = self.bot.async_db["MainTwo"].NodeJsShell
+        if 有効化するか:
+            web = await interaction.channel.create_webhook(name="NodeJsShell")
+            await db.update_one(
+                {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+                {
+                    "$set": {
+                        "Guild": interaction.guild.id,
+                        "Channel": interaction.channel.id,
+                        "WebHook": web.url,
+                    }
+                },
+                upsert=True,
+            )
+            return await interaction.response.send_message(
+                embed=make_embed.success_embed(title="NodeJSシェルを有効化しました。")
+            )
+        else:
+            result = await db.delete_one(
+                {"Guild": interaction.guild.id, "Channel": interaction.channel.id}
+            )
+            if result.deleted_count == 0:
+                return await interaction.response.send_message(
+                    embed=make_embed.error_embed(
+                        title="NodeJSシェルは有効ではありません。"
+                    )
+                )
+            return await interaction.response.send_message(
+                embed=make_embed.success_embed(title="NodeJSシェルを無効化しました。")
             )
 
     @shell.command(name="math", description="計算式を計算します。")
