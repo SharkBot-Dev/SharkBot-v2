@@ -221,9 +221,12 @@ class GlobalCog(commands.Cog):
                 if not target_channel:
                     continue
 
-                new_thread = await target_channel.create_thread(
-                    name=thread_name, type=discord.ChannelType.public_thread
-                )
+                try:
+                    new_thread = await target_channel.create_thread(
+                        name=thread_name, type=discord.ChannelType.public_thread
+                    )
+                except:
+                    continue
 
                 webhook = Webhook.from_url(ch["webhook_url"], session=session)
 
