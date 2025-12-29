@@ -54,6 +54,12 @@ export default async function DashboardPage() {
         className="bg-blue-600 text-white px-4 py-2 rounded-md"
       >
         ログアウト
+      </a>　
+      <a
+        href="/dashboard/userinstall"
+        className="bg-blue-600 text-white px-4 py-2 rounded-md"
+      >
+        ユーザーインストールアプリを作成
       </a><br></br>
     </main>
   );
