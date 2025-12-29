@@ -688,11 +688,6 @@ class GlobalCog(commands.Cog):
             else:
                 continue
 
-            count += 1
-            if count > 3:
-                await asyncio.sleep(1)
-                count = 0
-
     async def send_one_globalchat_selectbot(self, webhook: str, bot: discord.User):
         async with aiohttp.ClientSession() as session:
             webhook_ = Webhook.from_url(webhook, session=session)
@@ -733,8 +728,6 @@ class GlobalCog(commands.Cog):
                     await self.send_one_globalchat(channel["Webhook"], message, ref_msg)
             else:
                 continue
-
-            await asyncio.sleep(1)
 
     async def globalchat_room_check(self, ctx: discord.Interaction):
         db = self.bot.async_db["Main"].NewGlobalChatRoom
@@ -1415,10 +1408,6 @@ class GlobalCog(commands.Cog):
                         )
                     except:
                         continue
-                    count += 1
-                    if count > 3:
-                        await asyncio.sleep(1)
-                        count = 0
 
     async def super_join_global_chat(self, interaction: discord.Interaction):
         wh = await interaction.channel.create_webhook(name="SharkBot-Global")
@@ -1595,7 +1584,6 @@ class GlobalCog(commands.Cog):
                         )
                     except:
                         continue
-                    await asyncio.sleep(1)
         await message.add_reaction("✅")
 
     @commands.Cog.listener("on_message")
@@ -1895,8 +1883,6 @@ class GlobalCog(commands.Cog):
             else:
                 continue
 
-            await asyncio.sleep(1)
-
     @globalchat.command(name="ads", description="グローバル宣伝に参加します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -2174,8 +2160,6 @@ r18やグロ関連のものを貼らない
             else:
                 continue
 
-            await asyncio.sleep(1)
-
     @commands.Cog.listener("on_message")
     async def on_message_global_shiritori(self, message: discord.Message):
         if message.author.bot:
@@ -2420,10 +2404,6 @@ r18やグロ関連のものを貼らない
                         username="SharkBot-SGC",
                         avatar_url=self.bot.user.avatar.url,
                     )
-                    count += 1
-                    if count > 3:
-                        await asyncio.sleep(1)
-                        count = 0
 
     @commands.Cog.listener("on_message")
     async def on_message_super_global_debug(self, message: discord.Message):
@@ -2597,7 +2577,6 @@ r18やグロ関連のものを貼らない
                         username="SharkBot-SGC",
                         avatar_url=self.bot.user.avatar.url,
                     )
-                    await asyncio.sleep(1)
         await message.add_reaction("✅")
 
     @globalchat.command(
