@@ -776,7 +776,7 @@ async def setup(bot: commands.Bot):
 
         await interaction.response.defer(ephemeral=True)
 
-        embed = make_embed.success_embed(title="🔍 インタラクション詳細情報")
+        embed = make_embed.success_embed(title="インタラクション詳細情報")
         
         if meta.user:
             user_info = f"{meta.user.mention}\nID: `{meta.user.id}`"
