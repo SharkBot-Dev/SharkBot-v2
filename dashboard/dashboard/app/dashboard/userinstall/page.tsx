@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connectDB } from "@/lib/mongodb";
 import { encrypt } from "@/lib/crypto";
+import css from "styled-jsx/css";
 
 export const runtime = "nodejs";
 
@@ -30,28 +31,30 @@ export default async function UserInstall() {
         cooldowns.set(sessionId, now);
 
         const body = new URLSearchParams({
-        grant_type: "client_credentials",
-        scope: "applications.commands.update identify",
+            grant_type: "client_credentials",
+            scope: "applications.commands.update identify",
         });
 
         const res = await fetch("https://discord.com/api/v10/oauth2/token", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            Authorization:
-            "Basic " +
-            Buffer.from(`${cid}:${csc}`).toString("base64"),
-        },
-        body,
-        cache: "no-store",
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                Authorization:
+                "Basic " +
+                Buffer.from(`${cid}:${csc}`).toString("base64"),
+            },
+            body,
+            cache: "no-store",
         });
 
         if (!res.ok) {
-        console.error("Discord OAuth Error:", res.status, await res.text());
-        return;
+            console.error("Discord OAuth Error:", res.status, await res.text());
+            return;
         }
 
         const json = await res.json();
+
+        const expiresAt = new Date(Date.now() + json.expires_in * 1000);
 
         const db = await connectDB();
         await db
@@ -64,8 +67,10 @@ export default async function UserInstall() {
                 User: user.id,
                 AppID: cid,
                 Token: encrypt(json.access_token),
+                ClientSecret: encrypt(csc),
                 PublicKey: pubk,
                 UpdatedAt: new Date(),
+                TokenExpiresAt: expiresAt
             },
             $setOnInsert: {
                 CreatedAt: new Date(),
