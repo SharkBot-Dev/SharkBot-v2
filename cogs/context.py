@@ -756,11 +756,59 @@ async def setup(bot: commands.Bot):
                 )
             )
 
+    @app_commands.context_menu(name="インタラクション情報")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    async def interaction_info(
+        interaction: discord.Interaction, message: discord.Message
+    ):
+        meta = message.interaction_metadata
+        
+        if not meta:
+            await interaction.response.send_message(
+                ephemeral=True, 
+                embed=make_embed.error_embed(
+                    title="情報が見つかりません", 
+                    description="このメッセージはインタラクション（コマンド等）によって送信されたものではありません。"
+                )
+            )
+            return
+
+        await interaction.response.defer(ephemeral=True)
+
+        embed = make_embed.success_embed(title="🔍 インタラクション詳細情報")
+        
+        if meta.user:
+            user_info = f"{meta.user.mention}\nID: `{meta.user.id}`"
+            embed.add_field(name="実行者", value=user_info, inline=True)
+            
+            avatar_url = meta.user.display_avatar.url
+            embed.set_thumbnail(url=avatar_url)
+
+        cmd_type = str(meta.type).split('.')[-1].replace('_', ' ').title()
+        embed.add_field(name="種類", value=f"`{cmd_type}`", inline=True)
+        
+        embed.add_field(name="インタラクションID", value=f"`{meta.id}`", inline=False)
+
+        embed.add_field(
+            name="実行日時", 
+            value=f"{discord.utils.format_dt(message.created_at, 'F')} ({discord.utils.format_dt(message.created_at, 'R')})", 
+            inline=False
+        )
+
+        embed.add_field(name="BotID", value=f"{message.author.mention}\nID: `{message.author.id}`", inline=True)
+
+        if hasattr(meta, 'target_user') and meta.target_user:
+            embed.add_field(name="ターゲット", value=f"{meta.target_user.mention}", inline=True)
+
+        await interaction.followup.send(embed=embed)
+
     # メッセージに使うコマンド
     bot.tree.add_command(make_it_a_quote)
     bot.tree.add_command(report)
     bot.tree.add_command(message_pin)
     bot.tree.add_command(message_translate)
+    bot.tree.add_command(interaction_info)
 
     # ユーザーに使うコマンド
     bot.tree.add_command(user_info)
