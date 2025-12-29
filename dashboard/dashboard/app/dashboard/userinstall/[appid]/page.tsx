@@ -38,7 +38,7 @@ export default async function CommandsPage({ params }: PageProps) {
         注意！<br/>
         このサービスを使ってコマンドを実行する際には、<br/>
         以下のURLを、「Interactions Endpoint URL」に<br/>登録する必要があります。<br/>
-        {`https://dashboard.sharkbot.xyz/api/usi/1345306706757943296`}<br/>
+        {`https://dashboard.sharkbot.xyz/api/usi/${appid}`}<br/>
       </div>
     </div>
   );

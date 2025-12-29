@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/mongodb";
 import { getLoginUser } from "@/lib/discord/fetch";
 import { decrypt } from "@/lib/crypto";
 import { revalidatePath } from "next/cache";
+import CreateSlashCommand from "./CreateSlashCommand"
 
 export const runtime = "nodejs";
 
@@ -68,18 +69,69 @@ export default async function CommandsPage({ params }: PageProps) {
 
     const json = await res.json()
 
+    const buttons: string[] = [];
+    for (let i = 1; i <= 10; i++) {
+      const id = formData.get(`button${i}`)?.toString();
+      if (id) buttons.push(id);
+    }
+
+    const buttons_finded = (
+      await Promise.all(
+        buttons.map(async (b) => {
+          let btn: any = null;
+          if (!b.startsWith("http")) {
+            btn = await db
+              .db("UserInstall")
+              .collection("Buttons")
+              .findOne({
+                User: user.id,
+                AppID: appid,
+                customid: b,
+              });
+          } else {
+            btn = await db
+              .db("UserInstall")
+              .collection("Buttons")
+              .findOne({
+                User: user.id,
+                AppID: appid,
+                url: b,
+              });
+          }
+
+          if (!btn) return null;
+
+          return {
+            customid: btn.customid ?? null,
+            url: btn.url ?? null,
+            style: btn.style,
+            label: btn.label,
+            emoji: btn.emoji ?? null,
+            disabled: btn.disabled ?? false,
+          };
+        })
+      )
+    ).filter(Boolean);
+
     await db
       .db("UserInstall")
-      .collection("Commands").updateOne({
-        commandId: json.id
-      }, {$set: {
-        commandId: json.id,
-        replyText: replyText,
-        name: name,
-        AppID: appid
-      }}, {
-        upsert: true
-      })
+      .collection("Commands")
+      .updateOne(
+        {
+          commandId: json.id,
+          AppID: appid,
+        },
+        {
+          $set: {
+            commandId: json.id,
+            replyText,
+            name,
+            AppID: appid,
+            Buttons: buttons_finded,
+          },
+        },
+        { upsert: true }
+      );
 
     revalidatePath(`/dashboard/userinstall/${appid}/commands`);
   }
@@ -176,6 +228,22 @@ export default async function CommandsPage({ params }: PageProps) {
     );
   }
 
+  const buttonsRaw = await db
+    .db("UserInstall")
+    .collection("Buttons")
+    .find({ User: user.id, AppID: appid })
+    .toArray();
+
+  const buttons = buttonsRaw.map((b) => ({
+    id: b._id.toString(),
+    style: b.style,
+    label: b.label,
+    customid: b.customid ?? null,
+    url: b.url ?? null,
+    disabled: b.disabled ?? false,
+    replyText: b.replyText,
+  }));
+
   return (
     <div className="p-6 space-y-6 max-w-xl">
       <h1 className="text-2xl font-bold">
@@ -214,44 +282,7 @@ export default async function CommandsPage({ params }: PageProps) {
         ))}
       </ul>
 
-      <form action={createCommand} className="space-y-4">
-        <div>
-          <label className="font-semibold">コマンド名</label>
-          <input
-            name="name"
-            placeholder="ping"
-            className="border p-2 w-full"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="font-semibold">説明</label>
-          <input
-            name="description"
-            placeholder="Botの応答を確認します"
-            className="border p-2 w-full"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="font-semibold">返信内容</label>
-          <textarea
-            name="replytext"
-            placeholder="Botの応答を確認します"
-            className="border p-2 w-full"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          登録
-        </button>
-      </form>
+      <CreateSlashCommand createCommand={createCommand} buttons={buttons} />
     </div>
   );
 }

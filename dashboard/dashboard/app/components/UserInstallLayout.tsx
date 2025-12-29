@@ -39,6 +39,9 @@ export default function ClientLayout({
           <a href={`/dashboard/userinstall/${clientid}/commands`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             💬コマンド作成
           </a>
+          <a href={`/dashboard/userinstall/${clientid}/buttons`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🔳ボタン作成
+          </a>
         </nav>
       </aside>
 

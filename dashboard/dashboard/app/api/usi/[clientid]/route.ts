@@ -5,6 +5,7 @@ import {
   verifyKey,
 } from "discord-interactions";
 import { connectDB } from "@/lib/mongodb";
+import { buttonsToComponents } from "@/lib/discord/buttons";
 
 export async function POST(
   req: Request,
@@ -71,11 +72,35 @@ export async function POST(
       });
     }
 
+    const components = buttonsToComponents(command.Buttons);
+
     return NextResponse.json({
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        content: command.replyText,
-      },
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+            content: command.replyText,
+            components,
+        },
+    });
+  } else if (interaction.type === InteractionType.MESSAGE_COMPONENT) {
+    const button = await db
+    .db("UserInstall")
+    .collection("Buttons")
+    .findOne({
+        AppID: clientid,
+        customid: interaction.data.custom_id,
+    });
+
+    if (!button) return NextResponse.json(
+        { error: "Error." },
+        { status: 400 }
+    );
+
+    return NextResponse.json({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+            content: button.replyText,
+            flags: 64,
+        },
     });
   }
 
