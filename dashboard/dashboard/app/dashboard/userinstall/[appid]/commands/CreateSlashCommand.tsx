@@ -40,7 +40,7 @@ export default function CreateSlashCommand({
 
   return (
     <form action={createCommand} className="space-y-4">
-      <span className="font-semibold mb-1">コマンド名</span>
+      <span className="font-semibold mb-1">コマンド名 (小文字のみ)</span>
       <input name="name" required className="border p-2 w-full" />
 
       <span className="font-semibold mb-1">説明</span>

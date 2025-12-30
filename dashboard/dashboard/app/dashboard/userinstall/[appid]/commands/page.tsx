@@ -47,6 +47,10 @@ export default async function CommandsPage({ params }: PageProps) {
 
     if (!name || !description || !replyType) return;
 
+    if (!/^[a-z]+$/.test(name)) {
+      return;
+    }
+
     if (replyType === "text" && !replyText) return;
     if (replyType === "modal" && !modal) return;
 
