@@ -133,6 +133,12 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/dice`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🎲ダイス
           </a>
+
+          <LineAndtextLayout text="Bot作成" />
+
+          <a href={`/dashboard/userinstall`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            👻ユーザー用アプリ
+          </a>
         </nav>
       </aside>
 

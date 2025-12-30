@@ -32,18 +32,20 @@ export default async function DashboardPage() {
       <ul className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {guilds.map((g: any) => (
           g.owner ? (
-            <li key={g.id} className="bg-gray-800 text-white p-4 rounded-lg">
-              <a href={`/dashboard/settings/${g.id}/`}>
-                <img
-                  src={g.icon
-                    ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png`
-                    : "https://cdn.discordapp.com/embed/avatars/0.png"}
-                  alt="guild"
-                  className="w-16 h-16 rounded-full mx-auto"
-                />
-                <p className="mt-2 text-center">{g.name}</p>
-              </a>
-            </li>
+            <a href={`/dashboard/settings/${g.id}/`} className="bg-gray-800 text-white p-4 rounded-lg">
+              <li key={g.id}>
+                
+                  <img
+                    src={g.icon
+                      ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png`
+                      : "https://cdn.discordapp.com/embed/avatars/0.png"}
+                    alt="guild"
+                    className="w-16 h-16 rounded-full mx-auto"
+                  />
+                  <p className="mt-2 text-center">{g.name}</p>
+                
+              </li>
+            </a>
           ) : null
         ))}
       </ul><br/>
@@ -51,16 +53,11 @@ export default async function DashboardPage() {
       <h2 className="text-xl mb-4">その他の手続き</h2>
       <a
         href="/api/auth/logout"
-        className="bg-blue-600 text-white px-4 py-2 rounded-md"
+        className="bg-red-600 text-white px-4 py-2 rounded-md"
       >
         ログアウト
-      </a>　
-      <a
-        href="/dashboard/userinstall"
-        className="bg-blue-600 text-white px-4 py-2 rounded-md"
-      >
-        ユーザーインストールアプリを作成
-      </a><br></br>
+      </a>
+      <br></br>
     </main>
   );
 }
