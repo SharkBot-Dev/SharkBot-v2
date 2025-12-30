@@ -21,7 +21,7 @@ export default function ClientLayout({
     <div className="flex min-h-screen bg-gray-100 text-white">
 
       <aside
-        className={`fixed top-0 left-0 h-screen bg-black border-r border-gray-800 p-4 overflow-y-auto 
+        className={`fixed top-0 left-0 h-screen bg-[#272727] border-r border-gray-800 p-4 overflow-y-auto 
         transform transition-transform duration-300 ease-in-out
         w-64 z-40
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
@@ -139,6 +139,9 @@ export default function ClientLayout({
           <a href={`/dashboard/userinstall`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             👻ユーザー用アプリ
           </a>
+          <a href={`/dashboard/settings/${guildid}/appmaker/miq`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            😎名言Botを自作
+          </a>
         </nav>
       </aside>
 
@@ -157,7 +160,7 @@ export default function ClientLayout({
       </button>
 
       <main
-        className={`flex-1 p-6 bg-black min-h-screen transition-all duration-300
+        className={`flex-1 p-6 bg-[#272727] min-h-screen transition-all duration-300
           ${isOpen ? "md:ml-64" : "md:ml-64"}`}
       >
         {children}

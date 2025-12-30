@@ -32,8 +32,8 @@ export default async function DashboardPage() {
       <ul className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {guilds.map((g: any) => (
           g.owner ? (
-            <a href={`/dashboard/settings/${g.id}/`} className="bg-gray-800 text-white p-4 rounded-lg">
-              <li key={g.id}>
+            <a href={`/dashboard/settings/${g.id}/`} className="bg-gray-800 text-white p-4 rounded-lg" key={`${g.id}_`}>
+              <li key={`${g.id}_`}>
                 
                   <img
                     src={g.icon
