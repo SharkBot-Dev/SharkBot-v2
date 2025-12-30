@@ -29,8 +29,26 @@ export default async function CommandsPage({ params }: PageProps) {
 
     const name = formData.get("name")?.toString();
     const description = formData.get("description")?.toString();
-    const replyText = formData.get("replytext")?.toString();
-    if (!name || !description || !replyText) return;
+    const replyType = formData.get("replytype")?.toString() as
+      | "text"
+      | "modal";
+
+    const modal =
+      replyType === "modal"
+        ? {
+            customId: formData.get("opensModal")?.toString()
+          }
+        : null;
+
+    const replyText =
+      replyType === "text"
+        ? formData.get("replytext")?.toString()
+        : null;
+
+    if (!name || !description || !replyType) return;
+
+    if (replyType === "text" && !replyText) return;
+    if (replyType === "modal" && !modal) return;
 
     const db = await connectDB();
     const app = await db
@@ -63,41 +81,32 @@ export default async function CommandsPage({ params }: PageProps) {
       }
     );
 
-    if (!res.ok) {
-      return;
-    }
+    if (!res.ok) return;
 
-    const json = await res.json()
+    const json = await res.json();
 
-    const buttons: string[] = [];
-    for (let i = 1; i <= 10; i++) {
+    const buttonIds: string[] = [];
+    for (let i = 1; i <= 5; i++) {
       const id = formData.get(`button${i}`)?.toString();
-      if (id) buttons.push(id);
+      if (!id || id === "none") continue;
+      buttonIds.push(id);
     }
 
     const buttons_finded = (
       await Promise.all(
-        buttons.map(async (b) => {
-          let btn: any = null;
-          if (!b.startsWith("http")) {
-            btn = await db
-              .db("UserInstall")
-              .collection("Buttons")
-              .findOne({
-                User: user.id,
-                AppID: appid,
-                customid: b,
-              });
-          } else {
-            btn = await db
-              .db("UserInstall")
-              .collection("Buttons")
-              .findOne({
-                User: user.id,
-                AppID: appid,
-                url: b,
-              });
-          }
+        buttonIds.map(async (b) => {
+          const query = b.startsWith("http")
+            ? { url: b }
+            : { customid: b };
+
+          const btn = await db
+            .db("UserInstall")
+            .collection("Buttons")
+            .findOne({
+              User: user.id,
+              AppID: appid,
+              ...query,
+            });
 
           if (!btn) return null;
 
@@ -113,6 +122,7 @@ export default async function CommandsPage({ params }: PageProps) {
       )
     ).filter(Boolean);
 
+    // DB保存
     await db
       .db("UserInstall")
       .collection("Commands")
@@ -124,9 +134,11 @@ export default async function CommandsPage({ params }: PageProps) {
         {
           $set: {
             commandId: json.id,
-            replyText,
-            name,
             AppID: appid,
+            name,
+            replyType,
+            replyText,
+            modal,
             Buttons: buttons_finded,
           },
         },
@@ -244,6 +256,17 @@ export default async function CommandsPage({ params }: PageProps) {
     replyText: b.replyText,
   }));
 
+  const modalsRaw = await db
+    .db("UserInstall")
+    .collection("Modals")
+    .find({ User: user.id, AppID: appid, disabled: { $ne: true } })
+    .toArray();
+
+  const modals = modalsRaw.map((m) => ({
+    customid: m.customid,
+    title: m.title,
+  }));
+
   return (
     <div className="p-6 space-y-6 max-w-xl">
       <h1 className="text-2xl font-bold">
@@ -282,7 +305,7 @@ export default async function CommandsPage({ params }: PageProps) {
         ))}
       </ul>
 
-      <CreateSlashCommand createCommand={createCommand} buttons={buttons} />
+      <CreateSlashCommand createCommand={createCommand} buttons={buttons} modals={modals} />
     </div>
   );
 }

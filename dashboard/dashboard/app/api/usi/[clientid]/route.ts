@@ -6,6 +6,7 @@ import {
 } from "discord-interactions";
 import { connectDB } from "@/lib/mongodb";
 import { buttonsToComponents } from "@/lib/discord/buttons";
+import { ComponentType, TextInputStyle } from "discord-api-types/v10";
 
 export async function POST(
   req: Request,
@@ -72,6 +73,46 @@ export async function POST(
       });
     }
 
+    if (command.replyType === "modal") {
+      const modal = await db
+        .db("UserInstall")
+        .collection("Modals")
+        .findOne({
+          AppID: clientid,
+          customid: command.modal?.customId,
+        });
+
+      if (!modal) {
+        return NextResponse.json({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            content: "設定されているモーダルが見つかりません。",
+            flags: 64,
+          },
+        });
+      }
+      
+      return NextResponse.json({
+        type: InteractionResponseType.MODAL,
+        data: {
+          custom_id: modal.customid, 
+          title: modal.title,
+          components: modal.inputs.map((input: any) => ({
+            type: 1,
+            components: [
+              {
+                type: 4,
+                custom_id: input.customid, 
+                label: input.label,
+                style: input.style,
+                required: input.required ?? false
+              },
+            ],
+          })),
+        },
+      });
+    }
+
     const components = buttonsToComponents(command.Buttons);
 
     return NextResponse.json({
@@ -101,6 +142,36 @@ export async function POST(
             content: button.replyText,
             flags: 64,
         },
+    });
+  } else if (interaction.type === InteractionType.MODAL_SUBMIT) {
+    const values = interaction.data.components.map((row: { components: any[]; }) =>
+      row.components[0]
+    );
+
+    // values[i].custom_id
+    // values[i].value
+
+    const replytext = await db.db("UserInstall").collection("Modals").findOne({
+      AppID: clientid,
+      customid: interaction.data.custom_id,
+    })
+
+    if (!replytext) {
+      return NextResponse.json({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: "モーダルが見つかりません。",
+          flags: 64,
+        },
+      });
+    }
+
+    return NextResponse.json({
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        content: replytext.replyText,
+        flags: 64,
+      },
     });
   }
 

@@ -1,8 +1,6 @@
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { connectDB } from "@/lib/mongodb";
 import { getLoginUser } from "@/lib/discord/fetch";
-import { decrypt } from "@/lib/crypto";
 import { revalidatePath } from "next/cache";
 
 export const runtime = "nodejs";
@@ -13,7 +11,7 @@ type PageProps = {
 
 const cooldowns = new Map<string, number>();
 
-export default async function CommandsPage({ params }: PageProps) {
+export default async function ButtonsPage({ params }: PageProps) {
   const { appid } = await params;
 
   async function createCommand(formData: FormData) {

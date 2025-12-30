@@ -42,6 +42,9 @@ export default function ClientLayout({
           <a href={`/dashboard/userinstall/${clientid}/buttons`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🔳ボタン作成
           </a>
+          <a href={`/dashboard/userinstall/${clientid}/modal`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🖊️モーダル作成
+          </a>
         </nav>
       </aside>
 
