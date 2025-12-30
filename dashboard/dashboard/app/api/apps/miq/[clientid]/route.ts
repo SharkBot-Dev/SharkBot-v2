@@ -87,9 +87,7 @@ export async function POST(
           }
         );
 
-      } catch (error) {
-        console.error("Deferred Task Error:", error);
-      }
+      } catch (error) {}
     })();
 
     return NextResponse.json({
