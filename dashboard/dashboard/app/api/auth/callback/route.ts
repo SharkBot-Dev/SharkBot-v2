@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import { randomUUID } from "crypto";
+import { randomBytes } from "crypto";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
   const guilds = await guildRes.json();
 
   const db = await connectDB();
-  const sessionId = randomUUID();
+  const sessionId = randomBytes(64).toString("base64url");
 
   await db.db("Dashboard").collection("Sessions").updateOne({
     user_id: user.id
