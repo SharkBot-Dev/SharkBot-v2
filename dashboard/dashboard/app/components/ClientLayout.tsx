@@ -142,6 +142,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/appmaker/miq`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             😎名言Botを自作
           </a>
+          <a href={`/dashboard/settings/${guildid}/appmaker/roleplay`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            😉ロールプレイ <Badge text="NEW" color="bg-green-600" />
+          </a>
         </nav>
       </aside>
 

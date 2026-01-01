@@ -20,6 +20,34 @@ function isTokenExpired(expiresAt?: Date) {
 export default async function MiqMainPage({ params }: PageProps) {
     const { appid } = await params;
 
+    async function setPrompt(formData: FormData) {
+        "use server";
+
+        const cookieStore = await cookies();
+        const sessionId = cookieStore.get("session_id")?.value;
+        if (!sessionId) return;
+
+        const user = await getLoginUser(sessionId);
+        if (!user) return;
+
+        const prompt = formData.get("prompt")?.toString();
+        if (!prompt) return;
+
+        const db = await connectDB();
+        await db
+        .db("UserInstall")
+        .collection("RolePlayApps")
+        .updateOne(
+            { User: user.id, AppID: appid },
+            {
+            $set: {
+                Prompt: prompt
+            },
+            },
+            { upsert: true }
+        );
+    }
+
     const cookieStore = await cookies();
     const sessionId = cookieStore.get("session_id")?.value;
     if (!sessionId) return <p>ログイン情報がありません。</p>;
@@ -30,7 +58,7 @@ export default async function MiqMainPage({ params }: PageProps) {
     const db = await connectDB();
     const app = await db
         .db("UserInstall")
-        .collection("MiqApps")
+        .collection("RolePlayApps")
         .findOne({ User: user.id, AppID: appid });
 
     if (!app) return <p>アプリが見つかりません。</p>;
@@ -61,7 +89,7 @@ export default async function MiqMainPage({ params }: PageProps) {
 
         const json = await res.json();
 
-        await db.db("UserInstall").collection("MiqApps").updateOne(
+        await db.db("UserInstall").collection("RolePlayApps").updateOne(
             { User: user.id, AppID: appid },
             {
                 $set: {
@@ -82,8 +110,26 @@ export default async function MiqMainPage({ params }: PageProps) {
             注意！<br/>
             このサービスを使ってコマンドを実行する際には、<br/>
             以下のURLを、「Interactions Endpoint URL」に<br/>登録する必要があります。<br/>
-            {`https://dashboard.sharkbot.xyz/api/apps/miq/${appid}`}<br/>
+            {`https://dashboard.sharkbot.xyz/api/apps/roleplay/${appid}`}<br/>
         </div>
+
+        <form action={setPrompt} className="space-y-3 max-w-md">
+            <span className="font-semibold mb-1">AIプロンプト</span>
+            <textarea
+                name="prompt"
+                required={true}
+                className="border p-2 w-full disabled:bg-gray-100"
+                defaultValue={app.Prompt}
+                placeholder="ここにプロンプトを入れる"
+            />
+
+            <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+            >
+            保存
+            </button>
+        </form>
         </div>
     );
 }
