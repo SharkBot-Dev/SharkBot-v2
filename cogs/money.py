@@ -149,6 +149,23 @@ class Money:
         self.bot = bot
         pass
 
+    async def clear_cooldown(
+        self,
+        guild: discord.Guild,
+        author: discord.User,
+        cooldown_type: str = "work",
+    ):
+        db = self.bot.async_db["Main"].ServerMoneyCooldwon
+        key = f"{guild.id}-{author.id}-{cooldown_type}"
+
+        await db.delete_one(
+            {
+                "_id": key,
+            }
+        )
+
+        return True, 0
+
     async def add_cooldown(
         self,
         guild: discord.Guild,
@@ -333,15 +350,15 @@ class Money:
         dm: str = None,
     ):
         db = self.bot.async_db["Main"].ServerMoneyItems
-        await db.replace_one(
+        await db.update_one(
             {"Guild": guild.id, "ItemName": itemname},
-            {
+            {'$set': {
                 "Guild": guild.id,
                 "ItemName": itemname,
                 "Role": role.id if role else 0,
                 "DM": dm if dm else "なし",
                 "Money": money,
-            },
+            }},
             upsert=True,
         )
 
@@ -978,6 +995,29 @@ class ManageGroup(app_commands.Group):
             )
         )
 
+    @app_commands.command(
+        name="clear-cooldown", description="指定ユーザーのクールダウンをリセットします。"
+    )
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        種類=[
+            app_commands.Choice(name="仕事", value="work"),
+            app_commands.Choice(name="犯罪", value="crime"),
+            app_commands.Choice(name="物乞い", value="beg")
+        ]
+    )
+    async def economy_manage_clear_cooldown(
+        self, interaction: discord.Interaction, ユーザー: discord.User, 種類: app_commands.Choice[str]
+    ):
+        await Money(interaction.client).clear_cooldown(interaction.guild, ユーザー, 種類.value)
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title="クールダウンをリセットしました。",
+                description=f"{ユーザー.mention} の {種類.name} のクールダウンをリセットしました。",
+            )
+        )
 
 class ItemGroup(app_commands.Group):
     def __init__(self):
