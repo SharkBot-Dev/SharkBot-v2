@@ -165,10 +165,10 @@ class TTSCog(commands.Cog):
                     title="読み上げの声一覧",
                     description="""
 ID | 説明
+メイ メイの声で読み上げます。(標準)
 ミク 初音ミクの声で読み上げます
 緋惺 緋惺の声で読み上げます。
 句音 句音コノの声で読み上げます。
-霊夢 霊夢の声で読み上げます。
 """,
                     color=discord.Color.green(),
                 )
@@ -176,7 +176,16 @@ ID | 説明
             return
         else:
             ttscheck = self.bot.async_db["Main"].TTSVoiceBeta
-            if 声 == "ミク":
+            if 声 == "メイ":
+                await ttscheck.update_one(
+                    {"User": interaction.user.id},
+                    {"$set": {"User": interaction.user.id, "Voice": "mei"}},
+                    upsert=True,
+                )
+                await interaction.response.send_message(
+                    content=f"声を {声} に変更しました。", ephemeral=True
+                )
+            elif 声 == "ミク":
                 await ttscheck.update_one(
                     {"User": interaction.user.id},
                     {"$set": {"User": interaction.user.id, "Voice": "miku"}},
@@ -375,6 +384,7 @@ ID | 説明
 
     async def get_voice_file(self, author: discord.User):
         voices = {
+            "mei": "htsvoice/mei_normal.htsvoice",
             "miku": "htsvoice/miku.htsvoice",
             "akesato": "htsvoice/akesato.htsvoice",
             "kuon": "htsvoice/kono.htsvoice"
@@ -384,13 +394,13 @@ ID | 説明
         try:
             ttscheckfind = await ttscheck.find_one({"User": author.id}, {"_id": False})
         except:
-            return "htsvoice/miku.htsvoice"
+            return "htsvoice/mei_normal.htsvoice"
         if ttscheckfind is None:
-            return "htsvoice/miku.htsvoice"
+            return "htsvoice/mei_normal.htsvoice"
         v = ttscheckfind.get("Voice", None)
         if v is None:
-            return "htsvoice/miku.htsvoice"
-        return voices.get(v, "htsvoice/miku.htsvoice")
+            return "htsvoice/mei_normal.htsvoice"
+        return voices.get(v, "htsvoice/mei_normal.htsvoice")
 
     async def generate_voice_bytes(self, author: discord.User, text: str) -> bytes:
         v = await self.get_voice_file(author)
@@ -400,6 +410,8 @@ ID | 説明
             "/var/lib/mecab/dic/open-jtalk/naist-jdic",
             "-m",
             v,
+            "-r",
+            "1.1",
             "-ow",
             "/dev/stdout",
             stdin=asyncio.subprocess.PIPE,
