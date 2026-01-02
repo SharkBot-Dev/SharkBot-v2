@@ -204,13 +204,8 @@ ID | 説明
                     content=f"声を {声} に変更しました。", ephemeral=True
                 )
             elif 声 == "霊夢":
-                await ttscheck.update_one(
-                    {"User": interaction.user.id},
-                    {"$set": {"User": interaction.user.id, "Voice": "reimu"}},
-                    upsert=True,
-                )
                 await interaction.response.send_message(
-                    content=f"声を {声} に変更しました。", ephemeral=True
+                    content=f"ゆっくり霊夢の声は廃止されました。", ephemeral=True
                 )
             else:
                 await interaction.response.send_message(
@@ -382,8 +377,7 @@ ID | 説明
         voices = {
             "miku": "htsvoice/miku.htsvoice",
             "akesato": "htsvoice/akesato.htsvoice",
-            "kuon": "htsvoice/kono.htsvoice",
-            "reimu": "reimu",
+            "kuon": "htsvoice/kono.htsvoice"
         }
 
         ttscheck = self.bot.async_db["Main"].TTSVoiceBeta
@@ -400,12 +394,6 @@ ID | 説明
 
     async def generate_voice_bytes(self, author: discord.User, text: str) -> bytes:
         v = await self.get_voice_file(author)
-        if v == "reimu":
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"https://www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f1&kanji={urllib.parse.quote(text)}"
-                ) as response:
-                    return await response.read()
         process = await asyncio.create_subprocess_exec(
             "open_jtalk",
             "-x",
@@ -461,7 +449,7 @@ ID | 説明
                 queue.task_done()
 
             except Exception as e:
-                print(f"[TTS Error] {e}")
+                # print(f"[TTS Error] {e}")
                 queue.task_done()
 
     @commands.Cog.listener(name="on_message")

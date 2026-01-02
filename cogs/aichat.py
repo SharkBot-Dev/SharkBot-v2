@@ -252,6 +252,15 @@ class AICog(commands.Cog):
         self,
         interaction: discord.Interaction
     ):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
+
         db = interaction.client.async_db["MainTwo"].AIChat
         try:
             dbfind = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
