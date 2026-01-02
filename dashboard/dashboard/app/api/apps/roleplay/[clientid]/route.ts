@@ -6,6 +6,7 @@ import {
 } from "discord-interactions";
 import { connectDB } from "@/lib/mongodb";
 import { decrypt } from "@/lib/crypto";
+import { is_cooldown } from "@/lib/ai_cooldown";
 
 export async function POST(
   req: Request,
@@ -42,6 +43,19 @@ export async function POST(
   }
 
   if (interaction.type === InteractionType.APPLICATION_COMMAND) {
+    const userId = interaction.member?.user?.id || interaction.user?.id;
+    const is_c = await is_cooldown(userId, "roleplay", 3000);
+
+    if (!is_c) {
+      return NextResponse.json({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+          content: "AIには、3秒間のクールダウンがあります。",
+          flags: 64,
+        }
+      });
+    }
+
     const processGemini = async () => {
       try {
         const MODEL_NAME = "gemma-3-27b-it"; 
