@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 from discord.ext import commands
 import discord
@@ -43,6 +44,52 @@ def calculate_score(hand):
         aces -= 1
     return score
 
+class ScratchCardview(discord.ui.View):
+    def __init__(self, player: discord.User, coin: int):
+        super().__init__(timeout=60)
+        self.player = player
+        self.game_over = False
+        self.coin = coin
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.player.id:
+            await interaction.response.send_message(
+                "このゲームはあなたのものではありません！", ephemeral=True
+            )
+            return False
+        return True
+    
+    async def end_game(self, interaction: discord.Interaction, hit_id: int):
+        await interaction.response.defer(ephemeral=True)
+        await interaction.message.edit(embed=discord.Embed(title="スクラッチカードを削っています・・", color=discord.Color.green()), view=None)
+        await asyncio.sleep(3)
+
+        rand = random.randint(1, 3)
+        if rand == hit_id:
+            await Money(interaction.client).add_server_money(
+                interaction.guild, interaction.user, -self.coin
+            )
+            await Money(interaction.client).add_server_money(
+                interaction.guild, interaction.user, self.coin*2
+            )
+            await interaction.message.edit(embed=make_embed.success_embed(title="当たりました。"))
+        else:
+            await Money(interaction.client).add_server_money(
+                interaction.guild, interaction.user, -self.coin
+            )
+            await interaction.message.edit(embed=make_embed.error_embed(title="外れました・・"))
+
+    @discord.ui.button(label="1つめ", style=discord.ButtonStyle.blurple)
+    async def _1(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.end_game(interaction, 1)
+
+    @discord.ui.button(label="2つめ", style=discord.ButtonStyle.blurple)
+    async def _2(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.end_game(interaction, 2)
+
+    @discord.ui.button(label="3つめ", style=discord.ButtonStyle.blurple)
+    async def _3(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.end_game(interaction, 3)
 
 class BlackjackView(discord.ui.View):
     def __init__(self, player: discord.User, player_hand, dealer_hand, deck, coin: int):
@@ -55,10 +102,9 @@ class BlackjackView(discord.ui.View):
         self.coin = coin
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        """このViewが誰に操作を許可するかを制御"""
         if interaction.user.id != self.player.id:
             await interaction.response.send_message(
-                "❌ このゲームはあなたのものではありません！", ephemeral=True
+                "このゲームはあなたのものではありません！", ephemeral=True
             )
             return False
         return True
@@ -894,15 +940,40 @@ class GamesGroup(app_commands.Group):
 
         await interaction.response.send_message(embed=embed, view=view)
 
+    @app_commands.command(name="scratch-card", description="スクラッチカードを")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    async def economy_games_scratch_card(
+        self, interaction: discord.Interaction, 金額: int
+    ):
+        if 金額 < 100:
+            return await interaction.response.send_message(
+                "金額は100以上で入力してください。", ephemeral=True
+            )
+        
+        m = await Money(interaction.client).get_server_money(
+            interaction.guild, interaction.user
+        )
+        c_n = await Money(interaction.client).get_currency_name(interaction.guild)
+        if m < 金額:
+            return await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="残高が足りません。",
+                    description=f"スクラッチカードをするには100{c_n}以上が必要です。",
+                    color=discord.Color.red(),
+                )
+            )
+        
+        await interaction.response.send_message(embed=discord.Embed(title="スクラッチカード", description="以下の三つのどれかのボタンを押してください。", color=discord.Color.green()), view=ScratchCardview(interaction.user, 金額))
+
     @app_commands.command(name="info", description="ゲームの情報を取得します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_games_info_server(self, interaction: discord.Interaction):
         await interaction.response.defer()
         await interaction.followup.send(
-            embed=discord.Embed(title="ゲームの情報", color=discord.Color.blue())
+            embed=make_embed.success_embed(title="ゲームの情報")
             .add_field(
                 name="/economy games coinflip",
-                value="コインの裏表を予想します。\n勝ったら賭け金 + 5 コインが返ってきます。\n負けたら賭け金を失います。",
+                value="コインの裏表を予想します。\n勝ったら賭け金×2が返ってきます。\n負けたら賭け金を失います。",
                 inline=False,
             )
             .add_field(

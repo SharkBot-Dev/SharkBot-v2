@@ -266,7 +266,7 @@ class AuthGroup(app_commands.Group):
             ephemeral=True,
         )
 
-    @app_commands.command(name="guideline", description="画像認証パネルを作ります。")
+    @app_commands.command(name="guideline", description="ルールに同意するとロールがもらえるパネルを作ります。")
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
