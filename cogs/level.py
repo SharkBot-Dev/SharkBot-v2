@@ -478,38 +478,58 @@ class LevelCog(commands.Cog):
         await interaction.response.defer()
 
         def generate_rank_card(
-            color, username: str, gu_a: bytes, avatar_bytes: bytes, level: int, xp: int
+            color, username: str, gu_a: bytes, avatar_bytes: bytes, level: int, xp: int, next_xp: int = 1000
         ) -> io.BytesIO:
+            W, H = 600, 200
+            base_color = color if isinstance(color, tuple) else (40, 44, 52)
+            
             try:
-                font = ImageFont.truetype("data/DiscordFont.ttf", 20)
+                font_main = ImageFont.truetype("data/DiscordFont.ttf", 28)
+                font_sub = ImageFont.truetype("data/DiscordFont.ttf", 18)
             except:
-                font = ImageFont.load_default()
+                font_main = ImageFont.load_default()
+                font_sub = ImageFont.load_default()
 
-            img = Image.new("RGBA", (500, 150), color)
+            img = Image.new("RGBA", (W, H), (30, 33, 39, 255))
             draw = ImageDraw.Draw(img)
+            
+            draw.rectangle([0, 0, 15, H], fill=base_color)
 
-            draw.text((120, 20), username, "#000000", font=font)
-            draw.text((120, 50), f"レベル: {level}", "#000000", font=font)
-            draw.text((120, 80), f"XP: {xp}", "#000000", font=font)
-            draw.text((150, 110), f"{interaction.guild.name}", "#000000", font=font)
-
-            avatar = (
-                Image.open(io.BytesIO(avatar_bytes)).convert("RGBA").resize((100, 100))
-            )
-
-            mask = Image.new("L", (100, 100), 0)
+            with io.BytesIO(avatar_bytes) as a_v:
+                avatar = Image.open(a_v).convert("RGBA").resize((120, 120))
+            
+            mask = Image.new("L", (120, 120), 0)
             mask_draw = ImageDraw.Draw(mask)
-            mask_draw.ellipse((0, 0, 100, 100), fill=255)
+            mask_draw.ellipse((0, 0, 120, 120), fill=255)
+            
+            draw.ellipse((37, 37, 163, 163), fill=base_color)
+            img.paste(avatar, (40, 40), mask)
 
-            mask_guild = Image.new("L", (20, 20), 0)
-            mask_guild_draw = ImageDraw.Draw(mask_guild)
-            mask_guild_draw.ellipse((0, 0, 20, 20), fill=255)
+            draw.text((180, 40), username, "#FFFFFF", font=font_main)
+            
+            level_text = f"LEVEL {level}"
+            l_w = draw.textlength(level_text, font=font_main)
+            draw.text((W - l_w - 30, 40), level_text, base_color, font=font_main)
 
-            img.paste(avatar, (10, 25), mask)
+            bar_x, bar_y, bar_w, bar_h = 180, 120, 380, 25
+            progress = min(xp / next_xp, 1.0)
+            
+            draw.rounded_rectangle([bar_x, bar_y, bar_x + bar_w, bar_y + bar_h], radius=12, fill=(60, 60, 60))
 
-            g_a = Image.open(io.BytesIO(gu_a)).convert("RGBA").resize((20, 20))
+            if progress > 0:
+                draw.rounded_rectangle([bar_x, bar_y, bar_x + int(bar_w * progress), bar_y + bar_h], radius=12, fill=base_color)
+            
+            xp_text = f"{xp} / {next_xp} XP"
+            draw.text((bar_x, bar_y + 30), xp_text, "#AAAAAA", font=font_sub)
 
-            img.paste(g_a, (120, 115), mask_guild)
+            try:
+                with io.BytesIO(gu_a) as g_a:
+                    guild_icon = Image.open(g_a).convert("RGBA").resize((30, 30))
+                    g_mask = Image.new("L", (30, 30), 0)
+                    ImageDraw.Draw(g_mask).ellipse((0, 0, 30, 30), fill=255)
+                    img.paste(guild_icon, (180, 85), g_mask)
+            except:
+                pass
 
             output = io.BytesIO()
             img.save(output, format="PNG")
@@ -531,6 +551,7 @@ class LevelCog(commands.Cog):
         )
         level = await self.get_level(interaction.guild, target_user)
         xp = await self.get_xp(interaction.guild, target_user)
+        timing = await self.get_timing(interaction.guild)
 
         color = await self.get_user_color(target_user)
 
@@ -543,6 +564,7 @@ class LevelCog(commands.Cog):
             avatar_bytes,
             level,
             xp,
+            timing
         )
 
         await interaction.followup.send(
