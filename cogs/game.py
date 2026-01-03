@@ -971,99 +971,90 @@ class GameCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def geo_quiz(self, interaction: discord.Interaction):
         await interaction.response.defer()
+
         ans = [random.choice(self.geo_s.split(",")) for _ in range(3)]
         r = random.randint(0, 2)
 
         async with aiohttp.ClientSession(
-            headers={"User-Agent": "DiscordBot/1.0"}
+            headers = {"User-Agent": "DiscordBot/1.0 (https://example.com)"}
         ) as session:
-            while True:
-                try:
-                    title = urllib.parse.quote(ans[r])
-                    url = f"https://ja.wikipedia.org/api/rest_v1/page/summary/{title}"
-                    async with session.get(url) as cat:
-                        if cat.status != 200:
-                            raise Exception(f"HTTP {cat.status}")
-                        j = await cat.json()
 
-                        if "originalimage" not in j:
-                            raise Exception("画像が見つかりません")
+            try:
+                title = urllib.parse.quote(ans[r])
+                url = f"https://ja.wikipedia.org/api/rest_v1/page/summary/{title}"
 
-                        class AnsView(discord.ui.View):
-                            def __init__(self):
-                                super().__init__(timeout=180)
+                async with session.get(url) as resp:
+                    if resp.status != 200:
+                        raise Exception(f"HTTP {resp.status}")
 
-                            async def check_answer(
-                                self, interaction_: discord.Interaction, idx: int
-                            ):
-                                await interaction_.response.defer(ephemeral=True)
-                                if interaction.user.id != interaction_.user.id:
-                                    return
-                                await interaction_.edit_original_response(view=None)
-                                if ans[idx] == ans[r]:
-                                    await interaction.followup.send(
-                                        embed=discord.Embed(
-                                            title="正解です！",
-                                            description=f"正解は{ans[r]}です！",
-                                            color=discord.Color.green(),
-                                        )
-                                    )
+                    j = await resp.json()
 
-                                    await asyncio.sleep(1)
-                                    await quest.quest_clear(interaction, "geo")
+                    image_url = None
+                    if "originalimage" in j:
+                        image_url = j["originalimage"]["source"]
+                    elif "thumbnail" in j:
+                        image_url = j["thumbnail"]["source"]
+                    else:
+                        raise Exception("画像がありません")
 
-                                    return
-                                return await interaction.followup.send(
-                                    embed=discord.Embed(
-                                        title="不正解です",
-                                        description=f"正解は{ans[r]}です",
-                                        color=discord.Color.red(),
-                                    )
+                class AnsView(discord.ui.View):
+                    def __init__(self):
+                        super().__init__(timeout=180)
+
+                    async def check_answer(
+                        self, interaction_: discord.Interaction, idx: int
+                    ):
+                        await interaction_.response.defer(ephemeral=True)
+
+                        if interaction.user.id != interaction_.user.id:
+                            return
+
+                        await interaction_.edit_original_response(view=None)
+
+                        if ans[idx] == ans[r]:
+                            await interaction.followup.send(
+                                embed=discord.Embed(
+                                    title="正解です！",
+                                    description=f"正解は **{ans[r]}** です！",
+                                    color=discord.Color.green(),
                                 )
-
-                            @discord.ui.button(
-                                label=ans[0], style=discord.ButtonStyle.gray
                             )
-                            async def ans_1(
-                                self,
-                                interaction_: discord.Interaction,
-                                button: discord.ui.Button,
-                            ):
-                                await self.check_answer(interaction_, 0)
-
-                            @discord.ui.button(
-                                label=ans[1], style=discord.ButtonStyle.gray
+                            await asyncio.sleep(1)
+                            await quest.quest_clear(interaction, "geo")
+                        else:
+                            await interaction.followup.send(
+                                embed=discord.Embed(
+                                    title="不正解です",
+                                    description=f"正解は **{ans[r]}** です",
+                                    color=discord.Color.red(),
+                                )
                             )
-                            async def ans_2(
-                                self,
-                                interaction_: discord.Interaction,
-                                button: discord.ui.Button,
-                            ):
-                                await self.check_answer(interaction_, 1)
 
-                            @discord.ui.button(
-                                label=ans[2], style=discord.ButtonStyle.gray
-                            )
-                            async def ans_3(
-                                self,
-                                interaction_: discord.Interaction,
-                                button: discord.ui.Button,
-                            ):
-                                await self.check_answer(interaction_, 2)
+                    @discord.ui.button(label=ans[0], style=discord.ButtonStyle.gray)
+                    async def ans_1(self, interaction_, button):
+                        await self.check_answer(interaction_, 0)
 
-                        await interaction.followup.send(
-                            embed=discord.Embed(
-                                title="ここはどこ？", color=discord.Color.blue()
-                            ).set_image(url=j["originalimage"]["source"]),
-                            view=AnsView(),
-                        )
-                        return
+                    @discord.ui.button(label=ans[1], style=discord.ButtonStyle.gray)
+                    async def ans_2(self, interaction_, button):
+                        await self.check_answer(interaction_, 1)
 
-                except Exception as e:
-                    print(f"GeoQuizエラー: {e}")
-                    return await interaction.followup.send(
-                        content="画像の取得に失敗しました。"
-                    )
+                    @discord.ui.button(label=ans[2], style=discord.ButtonStyle.gray)
+                    async def ans_3(self, interaction_, button):
+                        await self.check_answer(interaction_, 2)
+
+                await interaction.followup.send(
+                    embed=discord.Embed(
+                        title="ここはどこ？",
+                        color=discord.Color.blue(),
+                    ).set_image(url=image_url),
+                    view=AnsView(),
+                )
+
+            except Exception as e:
+                print(f"GeoQuizエラー: {e}")
+                await interaction.followup.send(
+                    content="画像の取得に失敗しました。別の問題で再試行してください。"
+                )
 
     @game.command(name="math-quiz", description="算数クイズをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
