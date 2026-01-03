@@ -1713,11 +1713,11 @@ class GlobalCog(commands.Cog):
             if m.id == 1343156909242454038:
                 continue
             if rl in m.roles:
-                res += f"{m.display_name} {STATUS_EMOJIS.get(m.status, '❔')} ({m.status})\n"
+                res += f"{STATUS_EMOJIS.get(m.status, '❔')} {'❌**停止中**' if m.status.__str__() == 'offline' else '✅**稼働中**'} **{m.display_name}**\n"
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="SGCのBot情報", color=discord.Color.green(), description=res
-            )
+            embed=make_embed.success_embed(
+                title="スーパーグローバルチャットの情報", description=res
+            ).set_footer(text="Discord上に表示されたステータスで判別しているため、\n一部が正確ではない可能性もあります。")
         )
 
     @globalchat.command(
