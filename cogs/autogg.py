@@ -31,7 +31,6 @@ class AutoGGCog(commands.Cog):
 
         if old_game and not is_now_playing:
             game_name = old_game.name
-            game_icon = old_game.large_image_url
             webhook_url = settings.get("WebHook")
             
             if webhook_url:
@@ -43,7 +42,7 @@ class AutoGGCog(commands.Cog):
                             content=f"GG!", 
                             username=after.display_name, 
                             avatar_url=after.display_avatar.url,
-                            embed=discord.Embed(title="プレイしていたゲーム", color=discord.Color.blue()).add_field(name="ゲーム名", value=game_name).set_thumbnail(url=game_icon)
+                            embed=discord.Embed(title="プレイしていたゲーム", color=discord.Color.blue()).add_field(name="ゲーム名", value=game_name)
                         )
                     except (discord.NotFound, discord.Forbidden):
                         await db.update_one({"Guild": after.guild.id}, {"$set": {"Enabled": False}})
