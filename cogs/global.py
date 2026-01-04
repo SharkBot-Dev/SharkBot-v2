@@ -664,7 +664,7 @@ class GlobalCog(commands.Cog):
                 await webhook_.send(
                     embed=embed,
                     avatar_url=self.bot.user.avatar.url,
-                    username="SharkBot-GlobalRoom",
+                    username="SharkBot-GlobalChat",
                     allowed_mentions=discord.AllowedMentions.none(),
                 )
             except:
