@@ -664,7 +664,7 @@ class GlobalCog(commands.Cog):
                 await webhook_.send(
                     embed=embed,
                     avatar_url=self.bot.user.avatar.url,
-                    username="SharkBot-Global",
+                    username="SharkBot-GlobalRoom",
                     allowed_mentions=discord.AllowedMentions.none(),
                 )
             except:
@@ -745,6 +745,19 @@ class GlobalCog(commands.Cog):
     async def globalchat_room_join(self, ctx: discord.Interaction, roomname: str):
         web = await ctx.channel.create_webhook(name="SharkBot-GlobalRoom")
         db = self.bot.async_db["Main"].NewGlobalChatRoom
+        dbfind = await db.find_one({"Name": roomname}, {"_id": False})
+        if not dbfind:
+            db_setting = self.bot.async_db["MainTwo"].GlobalChatRoomSetting
+            await db_setting.update_one(
+                {"Name": roomname},
+                {
+                    "$set": {
+                        "Name": roomname,
+                        "Owner": ctx.user.id
+                    }
+                },
+                upsert=True,
+            )
         await db.update_one(
             {"Guild": ctx.guild.id, "Channel": ctx.channel.id},
             {
@@ -753,7 +766,7 @@ class GlobalCog(commands.Cog):
                     "Channel": ctx.channel.id,
                     "GuildName": ctx.guild.name,
                     "Webhook": web.url,
-                    "Name": roomname,
+                    "Name": roomname
                 }
             },
             upsert=True,
@@ -772,7 +785,7 @@ class GlobalCog(commands.Cog):
     globalchat.add_command(GlobalThreadGroup())
 
     @globalchat.command(name="join", description="グローバルチャットに参加します。")
-    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_channels=True, manage_webhooks=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def global_join(self, interaction: discord.Interaction, 部屋名: str = None):
@@ -787,40 +800,37 @@ class GlobalCog(commands.Cog):
 
         await interaction.response.defer()
         if not 部屋名:
-            if interaction.guild.member_count < 20:
-                return await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="20人未満のサーバーは参加できません。",
-                        color=discord.Color.red(),
-                    )
-                )
             check_room = await self.globalchat_room_check(interaction)
             if check_room:
                 await self.globalchat_room_leave(interaction)
                 return await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="グローバルチャットから脱退しました。",
-                        color=discord.Color.green(),
+                    embed=make_embed.success_embed(
+                        title="グローバルチャットから脱退しました。"
                     )
                 )
             check = await self.globalchat_check(interaction)
             if check:
                 await self.globalchat_leave(interaction)
                 return await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="グローバルチャットから脱退しました。",
-                        color=discord.Color.green(),
+                    embed=make_embed.success_embed(
+                        title="グローバルチャットから脱退しました。"
                     )
                 )
 
                 await self.send_global_chat_leave(interaction)
             else:
+                if interaction.guild.member_count < 20:
+                    return await interaction.followup.send(
+                        embed=make_embed.success_embed(
+                            title="20人未満のサーバーは参加できません。"
+                        )
+                    )
+
                 await self.globalchat_join(interaction)
                 await interaction.followup.send(
-                    embed=discord.Embed(
+                    embed=make_embed.success_embed(
                         title="グローバルチャットに参加しました。",
                         description="グローバルチャットのルール\n・荒らしをしない\n・宣伝をしない\n・r18やグロ関連のものを貼らない\n・その他運営の禁止したものを貼らない\n以上です。守れない場合は、処罰することもあります。\nご了承ください。",
-                        color=discord.Color.green(),
                     )
                 )
 
@@ -831,19 +841,78 @@ class GlobalCog(commands.Cog):
             if check:
                 await self.globalchat_room_leave(interaction)
                 return await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="グローバルチャットから脱退しました。",
-                        color=discord.Color.green(),
+                    embed=make_embed.success_embed(
+                        title="グローバルチャットから脱退しました。"
                     )
                 )
             else:
-                await self.globalchat_room_join(interaction, 部屋名)
-                await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="グローバルチャットに参加しました。",
-                        color=discord.Color.green(),
+                db = self.bot.async_db["MainTwo"].GlobalChatRoomSetting
+                dbfind = await db.find_one({"Name": 部屋名, "Owner": interaction.user.id}, {"_id": False})
+                if not dbfind:
+                    await self.globalchat_room_join(interaction, 部屋名)
+                    await interaction.followup.send(
+                        embed=make_embed.success_embed(
+                            title="グローバルチャットに参加しました。", description=f"部屋名: {部屋名}"
+                        )
                     )
-                )
+                    return
+                
+                if dbfind.get('Password'):
+                    await interaction.followup.send(embed=make_embed.success_embed(title="DMを確認してください。", description="DMが送られてこない場合は、\n設定を確認してください。"))
+                    ch = await interaction.user.send(embed=discord.Embed(title="パスワードを入力", description="グローバルルームのパスワードを入力してください。", color=discord.Color.blue()))
+                    try:
+                        msg = await self.bot.wait_for("message", check=lambda m: m.channel == ch.channel and not m.author.bot, timeout=30)
+                    except asyncio.TimeoutError:
+                        return await ch.edit(embed=make_embed.error_embed(title="操作がタイムアウトしました。"))
+
+                    if msg.content == dbfind.get('Password'):
+
+                        await self.globalchat_room_join(interaction, 部屋名)
+                        await interaction.edit_original_response(
+                            embed=make_embed.success_embed(
+                                title="グローバルチャットに参加しました。", description=f"部屋名: {部屋名}"
+                            )
+                        )
+                        return await ch.edit(embed=make_embed.success_embed(title="サーバーを確認して下さい。"))
+                    else:
+                        await interaction.edit_original_response(embed=make_embed.error_embed(title="パスワードが違うみたいです。"))
+                        return await ch.edit(embed=make_embed.error_embed(title="パスワードが違います。"))
+                else:
+                    await self.globalchat_room_join(interaction, 部屋名)
+                    await interaction.followup.send(
+                        embed=make_embed.success_embed(
+                            title="グローバルチャットに参加しました。", description=f"部屋名: {部屋名}"
+                        )
+                    )
+                    return
+
+    @globalchat.command(name="setting", description="グローバルルームの設定を確認します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def global_setting(self, interaction: discord.Interaction, 部屋名: str):
+        db = self.bot.async_db["MainTwo"].GlobalChatRoomSetting
+        dbfind = await db.find_one({"Name": 部屋名, "Owner": interaction.user.id}, {"_id": False})
+        if not dbfind:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="あなたはルームのオーナーではありません！", description="オーナーしか設定は変更できません。"))
+
+        await interaction.response.send_message(ephemeral=True, embed=discord.Embed(title="グローバルルームの設定一覧", color=discord.Color.green()).add_field(name="オーナー", value=f"<@{dbfind.get('Owner')}>", inline=False).add_field(name="パスワード", value=f"`{dbfind.get('Password') if dbfind.get('Password') else 'パスワードなし'}`"))
+
+    @globalchat.command(name="set-password", description="パスワードを設定します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def global_setting_password(self, interaction: discord.Interaction, 部屋名: str, パスワード: str = None):
+        db = self.bot.async_db["MainTwo"].GlobalChatRoomSetting
+        dbfind = await db.find_one({"Name": 部屋名, "Owner": interaction.user.id}, {"_id": False})
+        if not dbfind:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="あなたはルームのオーナーではありません！", description="オーナーしか設定は変更できません。"))
+
+        await db.update_one({
+            "Name": 部屋名, "Owner": interaction.user.id
+        }, {'$set': {
+            "Password": パスワード
+        }})
+
+        await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="パスワードを設定しました。", description=f"```{パスワード if パスワード else 'なし'}```"))
 
     async def globalshiritori_leave(self, ctx: discord.Interaction):
         db = self.bot.async_db["Main"].GlobalShiritori
@@ -860,9 +929,8 @@ class GlobalCog(commands.Cog):
         await self.globalchat_room_leave(interaction)
         await self.globalshiritori_leave(interaction)
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="グローバルチャットから脱退しました。",
-                color=discord.Color.green(),
+            embed=make_embed.success_embed(
+                title="グローバルチャットから脱退しました。"
             )
         )
 
@@ -1074,81 +1142,8 @@ class GlobalCog(commands.Cog):
         await interaction.response.send_modal(SitesModal())
 
     @globalchat.command(
-        name="private-create",
-        description="プライベートグローバルチャットを作成します。",
-    )
-    @app_commands.checks.has_permissions(manage_channels=True)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def global_private(self, interaction: discord.Interaction):
-        if interaction.channel.type != discord.ChannelType.text:
-            return await interaction.response.send_message(
-                ephemeral=True,
-                embed=make_embed.error_embed(
-                    title="このチャンネルでは実行できません。",
-                    description="テキストチャンネルでのみグローバルチャットに参加できます。",
-                ),
-            )
-
-        class PrivateGlobalCreate(
-            discord.ui.Modal, title="プライベートグローバルチャットを作成する"
-        ):
-            name = discord.ui.TextInput(
-                label="名前を入力",
-                required=True,
-                style=discord.TextStyle.short,
-                placeholder=f"{interaction.user.name}-global",
-            )
-
-            password = discord.ui.TextInput(
-                label="グローバルチャットのパスワードを入力",
-                required=True,
-                style=discord.TextStyle.short,
-                placeholder="password",
-            )
-
-            async def on_submit(self, interaction: discord.Interaction):
-                await interaction.response.defer(thinking=True)
-                db = interaction.client.async_db["Main"].PrivateGlobal
-                dbfind = await db.find_one({"Name": self.name.value}, {"_id": False})
-                if dbfind is None:
-                    web = await interaction.channel.create_webhook(
-                        name="SharkBot-PrivateGlobal"
-                    )
-                    await db.update_one(
-                        {"Guild": interaction.guild.id, "Name": self.name.value},
-                        {
-                            "$set": {
-                                "Guild": interaction.guild.id,
-                                "Name": self.name.value,
-                                "Password": self.password.value,
-                                "Owner": interaction.user.id,
-                                "Channel": interaction.channel.id,
-                                "Webhook": web.url,
-                            }
-                        },
-                        upsert=True,
-                    )
-                    await interaction.followup.send(
-                        embed=discord.Embed(
-                            title="プライベートグローバルチャットを作成しました。",
-                            color=discord.Color.green(),
-                        )
-                    )
-                else:
-                    await interaction.followup.send(
-                        embed=discord.Embed(
-                            title=f"その名前 `{self.name.value}` は既に使われています！",
-                            description="別の名前を使用してください。",
-                            color=discord.Color.red(),
-                        )
-                    )
-
-        await interaction.response.send_modal(PrivateGlobalCreate())
-
-    @globalchat.command(
         name="private-join",
-        description="プライベートなグローバルチャットに参加します。",
+        description="パスワード付きグローバルチャットに参加します。",
     )
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -1224,7 +1219,7 @@ class GlobalCog(commands.Cog):
 
     @globalchat.command(
         name="private-leave",
-        description="プライベートなグローバルチャットから脱退します。",
+        description="パスワード付きグローバルチャットから脱退します。",
     )
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -1239,37 +1234,6 @@ class GlobalCog(commands.Cog):
                 title="グローバルチャットから脱退しました。", color=discord.Color.red()
             )
         )
-
-    @globalchat.command(
-        name="pass-check",
-        description="プライベートグローバルチャットのパスワードをチェックします。",
-    )
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def global_private_leave(self, interaction: discord.Interaction):
-        db = self.bot.async_db["Main"].PrivateGlobal
-        dbfind = await db.find_one(
-            {"Channel": interaction.channel.id, "Owner": interaction.user.id},
-            {"_id": False},
-        )
-        if dbfind is None:
-            return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="このチャンネルはプライベートグローバルチャットではありません。",
-                    description="または、オーナーではありません。",
-                    color=discord.Color.red(),
-                ),
-                ephemeral=True,
-            )
-        else:
-            return await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="このグローバルチャットのパスワード",
-                    description=f"パスワード: `{dbfind.get('Password', 'エラー')}`",
-                    color=discord.Color.blue(),
-                ),
-                ephemeral=True,
-            )
 
     async def sgc_make_json(self, message: discord.Message):
         dic = {}
