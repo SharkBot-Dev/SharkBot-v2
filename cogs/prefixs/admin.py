@@ -123,11 +123,6 @@ class Prefix_AdminCog(commands.Cog):
                 await save_commands.save_command(cmd)
                 count += 1
 
-            for g in self.bot.guilds:
-                await self.bot.async_db["DashboardBot"].bot_joind_guild.replace_one(
-                    {"Guild": g.id}, {"Guild": g.id}, upsert=True
-                )
-
             await ctx.reply(f"コマンドをセーブしました。\n{count}件。")
 
 
