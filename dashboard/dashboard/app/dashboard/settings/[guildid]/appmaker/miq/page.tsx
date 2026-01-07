@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connectDB } from "@/lib/mongodb";
 import { encrypt } from "@/lib/crypto";
+import { isClientId } from "@/lib/discord/isId";
 
 export const runtime = "nodejs";
 
@@ -34,6 +35,11 @@ export default async function UserInstallMiq({
         const lastTime = cooldowns.get(sessionId) ?? 0;
         if (now - lastTime < 10_000) return;
         cooldowns.set(sessionId, now);
+
+        const isClientid = isClientId(cid);
+        if (!isClientid) {
+          return;
+        }
 
         const body = new URLSearchParams({
             grant_type: "client_credentials",

@@ -7,6 +7,7 @@ import {
 import { connectDB } from "@/lib/mongodb";
 import { decrypt } from "@/lib/crypto";
 import { is_cooldown } from "@/lib/ai_cooldown";
+import { isClientId } from "@/lib/discord/isId";
 
 export async function POST(
   req: Request,
@@ -34,6 +35,11 @@ export async function POST(
   const isValidRequest = await verifyKey(rawBody, signature, timestamp, app.PublicKey);
   if (!isValidRequest) {
     return new NextResponse("Invalid request signature", { status: 401 });
+  }
+
+  const isClientid = isClientId(clientid);
+  if (!isClientid) {
+    return new NextResponse("Invalid application", { status: 401 });
   }
 
   const interaction = JSON.parse(rawBody);
