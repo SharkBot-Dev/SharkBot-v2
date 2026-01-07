@@ -155,7 +155,7 @@
         <div class="feature-item">
             <h3>🔍選ばれる理由と実績</h3>
             <p>
-                導入サーバー数 1100＋<br/>
+                導入サーバー数 1300＋<br/>
                 稼働率 99.9％
             </p>
         </div>
@@ -172,6 +172,7 @@
         <section>
             <div class="hero-title">
                 その他サービス
+                <br><button class="invite_button" onclick="redirect_dashboard()">🛠️ダッシュボード</button>
                 <br><button class="invite_button" onclick="redirect_serverlist()">🐿️サーバーリスト</button>
                 <br/><button class="invite_button" onclick="redirect_shb_red()">🔗短縮URLサービス</button>
             </div>
@@ -206,6 +207,10 @@
 
         function redirect_invite() {
             location.href = "https://discord.com/oauth2/authorize?client_id=1322100616369147924&permissions=8&integration_type=0&scope=bot+applications.commands";
+        }
+
+        function redirect_dashboard() {
+            location.href = "https://dashboard.sharkbot.xyz/";
         }
 
         function redirect_serverlist() {
