@@ -14,6 +14,11 @@ class PremiumCog(commands.Cog):
         self.bot = bot
         self.col = self.bot.async_db["Premium"].Premium
 
+    async def add_premium_command(self, guild: discord.Guild, payload: dict):
+        cmd = await self.bot.http.upsert_guild_command(self.bot.user.id, guild.id, payload=payload)
+        cmd_id = app_commands.AppCommand(data=cmd, state=self.bot.tree._state)
+        return cmd_id
+
     async def is_premium(self, user: discord.User) -> bool:
         find_premium = await self.col.find_one({"user_id": user.id})
 
@@ -51,7 +56,6 @@ class PremiumCog(commands.Cog):
     @premium.command(name="activate", description="寄付者限定プランを有効化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.checks.has_permissions(manage_guild=True)
     async def premium_activate(
         self, interaction: discord.Interaction
     ):
@@ -124,7 +128,7 @@ class PremiumCog(commands.Cog):
                 ephemeral=True,
                 embed=make_embed.error_embed(
                     title="あなたは寄付者ではありません！",
-                    description="寄付をお願いします。",
+                    description="寄付をすることにより使用できます。",
                 ),
             )
 
