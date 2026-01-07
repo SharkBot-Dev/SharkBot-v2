@@ -1,2 +1,1 @@
-sudo docker compose build
-sudo docker compose restart
+sudo docker compose up --build -d
