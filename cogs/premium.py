@@ -55,16 +55,11 @@ class PremiumCog(commands.Cog):
     async def premium_activate(
         self, interaction: discord.Interaction
     ):
-        # 書き途中
-        return
-
-    @premium.command(name="deactivate", description="寄付者限定プランを無効化します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.checks.has_permissions(manage_guild=True)
-    async def premium_deactivate(
-        self, interaction: discord.Interaction
-    ):
+        await interaction.response.defer()
+        is_premium = await self.is_premium(interaction.user)
+        if is_premium:
+            await interaction.followup.send(ephemeral=True, embed=make_embed.error_embed(title="あなたはすでに寄付者です。", description="寄付をしていただきありがとうございます！"))
+            return 
         # 書き途中
         return
         
@@ -111,7 +106,7 @@ class PremiumCog(commands.Cog):
         self, interaction: discord.Interaction,
         アバター: discord.Attachment = None,
         バナー: discord.Attachment = None,
-        説明: str = None,
+        プロフィール説明: str = None,
         名前: str = None,
     ):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
@@ -129,7 +124,7 @@ class PremiumCog(commands.Cog):
                 ephemeral=True,
                 embed=make_embed.error_embed(
                     title="あなたは寄付者ではありません！",
-                    description="サーバーにBotをインストールして使用してください。",
+                    description="寄付をお願いします。",
                 ),
             )
 
@@ -150,7 +145,7 @@ class PremiumCog(commands.Cog):
             banner = None
         try:
             await raw.modify_current_member(
-                str(interaction.guild.id), avatarUri=avatar, bannerUri=banner, nick=名前
+                str(interaction.guild.id), avatarUri=avatar, bannerUri=banner, nick=名前, bio=プロフィール説明
             )
         except Exception as e:
             return await interaction.followup.send(
