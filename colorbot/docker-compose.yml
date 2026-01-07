@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  pinkbot:
+    build: ./bot
+    container_name: pinkbot
+    restart: unless-stopped
+    env_file:
+      - ./env/pinkbot.env
+    environment:
+      MONGO_URI: mongodb://mongo:27017/
+      DB_NAME: PinkBot
+    depends_on:
+      - mongo
+    networks: [internal]
+
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    networks: [internal]
+
+volumes:
+  mongo_data:
+
+networks:
+  internal:
+    driver: bridge

@@ -304,14 +304,6 @@ Sharkアカウント: {sharkaccount_count}人
                 ),
             )
 
-        return await interaction.response.send_message(
-            ephemeral=True,
-            embed=make_embed.error_embed(
-                title="このコマンドは使用できません。",
-                description="このコマンドは一時的に使用できません。",
-            ),
-        )
-
         await interaction.response.defer()
 
         async def check_nsfw(image_bytes):

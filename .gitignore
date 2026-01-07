@@ -271,3 +271,5 @@ node_modules
 
 env.py
 /web
+
+/colorbot/bot/htsvoice
