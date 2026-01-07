@@ -74,13 +74,6 @@ export default async function DicePage({ params }: { params: { guildid: string }
             <ToggleButton name="checkenable" defaultValue={enabled} /><br />
 
             <div className="font-semibold mb-1">ダイスに反応する言葉の例: 10d8, dd, ダイス, 🎲, チンチロ</div><br />
-
-            <Image
-                src="/images/dice.png"
-                alt="Dice Image"
-                width="310"
-                height="228"
-            /><br/>
         </Form>
         </div>
     );
