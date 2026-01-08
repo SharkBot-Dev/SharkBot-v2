@@ -10,6 +10,7 @@ services:
     environment:
       MONGO_URI: mongodb://mongo:27017/
       DB_NAME: PinkBot
+      PREFIX: p.
     depends_on:
       - mongo
     networks: [internal]
@@ -26,6 +27,7 @@ services:
     environment:
       MONGO_URI: mongodb://mongo:27017/
       DB_NAME: YellowBot
+      PREFIX: y.
     depends_on:
       - mongo
     networks: [internal]

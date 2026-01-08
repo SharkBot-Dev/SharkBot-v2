@@ -9,7 +9,7 @@ intent = discord.Intents.all()
 class NewSharkBot(commands.AutoShardedBot):
     def __init__(self):
         super().__init__(
-            command_prefix="p.",
+            command_prefix=os.environ.get("PREFIX"),
             help_command=None,
             intents=intent
         )
