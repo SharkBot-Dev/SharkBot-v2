@@ -1,7 +1,10 @@
+from discord import app_commands
 from discord.ext import commands
 import discord
 import time
 import asyncio
+
+from models import make_embed
 
 class LockMessageEditModal(discord.ui.Modal):
     def __init__(self, msgid: discord.Message):
@@ -195,5 +198,91 @@ class LockMessageCog(commands.Cog):
             self.working.remove(message.channel.id)
 
 
-async def setup(bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(LockMessageCog(bot))
+
+    @app_commands.context_menu(name="メッセージ固定")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def message_pin(interaction: discord.Interaction, message: discord.Message):
+        view = discord.ui.View()
+        view.add_item(
+            discord.ui.Button(
+                style=discord.ButtonStyle.red,
+                label="削除",
+                custom_id="lockmessage_delete+",
+            )
+        )
+
+        view.add_item(
+            discord.ui.Button(
+                style=discord.ButtonStyle.blurple,
+                label="編集",
+                custom_id="lockmessage_edit+",
+            )
+        )
+
+        if not message.content:
+            if not message.embeds:
+                return await interaction.response.send_message(
+                    embed=make_embed.error_embed(
+                        title="メッセージの内容がありません。"
+                    ),
+                    ephemeral=True,
+                )
+            else:
+                msg = await interaction.channel.send(
+                    embed=discord.Embed(
+                        title=message.embeds[0].title,
+                        description=message.embeds[0].description,
+                        color=discord.Color.random(),
+                    ),
+                    view=view,
+                )
+                db = interaction.client.async_db["Main"].LockMessage
+                await db.replace_one(
+                    {"Channel": interaction.channel.id, "Guild": interaction.guild.id},
+                    {
+                        "Channel": interaction.channel.id,
+                        "Guild": interaction.guild.id,
+                        "Title": message.embeds[0].title,
+                        "Desc": message.embeds[0].description,
+                        "MessageID": msg.id,
+                    },
+                    upsert=True,
+                )
+                return await interaction.response.send_message(
+                    embed=make_embed.success_embed(
+                        title="メッセージ固定を有効化しました。"
+                    ),
+                    ephemeral=True,
+                )
+        msg = await interaction.channel.send(
+            embed=discord.Embed(
+                title="固定済みメッセージ",
+                description=message.content[:1500],
+                color=discord.Color.random(),
+            ),
+            view=view,
+        )
+        db = interaction.client.async_db["Main"].LockMessage
+        await db.replace_one(
+            {"Channel": interaction.channel.id, "Guild": interaction.guild.id},
+            {
+                "Channel": interaction.channel.id,
+                "Guild": interaction.guild.id,
+                "Title": "固定済みメッセージ",
+                "Desc": message.content[:1500],
+                "MessageID": msg.id,
+            },
+            upsert=True,
+        )
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title="メッセージ固定を有効化しました。"
+            ),
+            ephemeral=True,
+        )
+    
+    bot.tree.add_command(message_pin)
