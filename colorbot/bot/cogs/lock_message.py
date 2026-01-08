@@ -36,7 +36,7 @@ class LockMessageEditModal(discord.ui.Modal):
         assert isinstance(self.title_.component, discord.ui.TextInput)
         assert isinstance(self.desc.component, discord.ui.TextInput)
 
-        db = interaction.client.async_db["Main"].LockMessage
+        db = interaction.client.async_db.LockMessage
         try:
             dbfind = await db.find_one(
                 {"Channel": interaction.channel.id}, {"_id": False}
@@ -91,7 +91,7 @@ class LockMessageCog(commands.Cog):
                             content="固定メッセージを削除するにはチャンネルの管理権限が必要です。",
                         )
                     await interaction.response.defer(ephemeral=True)
-                    db = interaction.client.async_db["Main"].LockMessage
+                    db = interaction.client.async_db.LockMessage
                     result = await db.delete_one(
                         {
                             "Channel": interaction.channel.id,
