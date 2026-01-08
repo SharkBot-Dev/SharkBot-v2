@@ -13,6 +13,8 @@ services:
     depends_on:
       - mongo
     networks: [internal]
+    volumes:
+      - ./bot/cogs:/app/cogs
 
   mongo:
     image: mongo:7
