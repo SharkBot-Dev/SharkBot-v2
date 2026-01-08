@@ -940,7 +940,7 @@ class GamesGroup(app_commands.Group):
 
         await interaction.response.send_message(embed=embed, view=view)
 
-    @app_commands.command(name="scratch-card", description="スクラッチカードを")
+    @app_commands.command(name="scratch-card", description="スクラッチカードを削ります。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_games_scratch_card(
         self, interaction: discord.Interaction, 金額: int
