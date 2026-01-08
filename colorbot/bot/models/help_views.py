@@ -176,4 +176,4 @@ class HelpOpSelect(discord.ui.Select):
             await interaction.message.edit(view=None)
         elif val == "invite":
             await interaction.followup.send(embed=discord.Embed(title="Botを招待する", color=discord.Color.green(), description="以下のボタンから招待できます。"), view=discord.ui.View()
-                                            .add_item(discord.ui.Button(label="招待リンク", url=f"https://discord.com/oauth2/authorize?client_id={interaction.client.useer}&permissions=8&integration_type=0&scope=bot+applications.commands")),ephemeral=True)
+                                            .add_item(discord.ui.Button(label="招待リンク", url=f"https://discord.com/oauth2/authorize?client_id={interaction.client.user.id}&permissions=8&integration_type=0&scope=bot+applications.commands")),ephemeral=True)
