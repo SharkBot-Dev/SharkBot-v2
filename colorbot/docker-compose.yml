@@ -15,6 +15,7 @@ services:
     networks: [internal]
     volumes:
       - ./bot/cogs:/app/cogs
+      - ./bot/models:/app/models
 
   mongo:
     image: mongo:7
