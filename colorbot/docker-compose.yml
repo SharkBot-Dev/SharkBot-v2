@@ -17,6 +17,22 @@ services:
       - ./bot/cogs:/app/cogs
       - ./bot/models:/app/models
 
+  yellowbot:
+    build: ./bot
+    container_name: yellowbot
+    restart: unless-stopped
+    env_file:
+      - ./env/yellowbot.env
+    environment:
+      MONGO_URI: mongodb://mongo:27017/
+      DB_NAME: YellowBot
+    depends_on:
+      - mongo
+    networks: [internal]
+    volumes:
+      - ./bot/cogs:/app/cogs
+      - ./bot/models:/app/models
+
   mongo:
     image: mongo:7
     container_name: mongo
