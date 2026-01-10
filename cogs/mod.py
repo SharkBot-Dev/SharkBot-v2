@@ -182,6 +182,153 @@ class PauseGroup(app_commands.Group):
                 embed=make_embed.success_embed(title="DMとサーバー招待を再開しました。")
             )
 
+class MuteGroup(app_commands.Group):
+    def __init__(self):
+        super().__init__(name="mute", description="ミュート系のコマンド")
+
+    @app_commands.command(name="add", description="メンバーをミュートします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def muterole_add(
+        self, interaction: discord.Interaction,
+        メンバー: discord.User, 理由: str = "なし"
+    ):
+        await interaction.response.defer()
+        db = interaction.client.async_db["MainTwo"].MuteRole
+        finded = await db.find_one({
+            "guild_id": interaction.guild.id
+        })
+
+        if not finded:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="ミュートロールがありません。", description="/moderation mute create を実行してください。"))
+
+        member = interaction.guild.get_member(メンバー.id)
+        if not member:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="メンバーが見つかりません。", description="サーバーメンバーにのみ使用できます。"))
+
+        role = interaction.guild.get_role(finded.get('role_id'))
+        if not role:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="ミュートロールがありません。", description="/moderation mute create を実行してください。"))
+        
+        await member.add_roles(role, reason=f"{interaction.user.id}により実行: " + 理由)
+
+        await interaction.followup.send(embed=make_embed.success_embed(title="ミュートしました。", description=メンバー.mention + "をミュートしました。"))
+
+    @app_commands.command(name="remove", description="メンバーのミュートを解除します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def muterole_remove(
+        self, interaction: discord.Interaction,
+        メンバー: discord.User, 理由: str = "なし"
+    ):
+        await interaction.response.defer()
+        db = interaction.client.async_db["MainTwo"].MuteRole
+        finded = await db.find_one({
+            "guild_id": interaction.guild.id
+        })
+
+        if not finded:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="ミュートロールがありません。", description="/moderation mute create を実行してください。"))
+
+        member = interaction.guild.get_member(メンバー.id)
+        if not member:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="メンバーが見つかりません。", description="サーバーメンバーにのみ使用できます。"))
+
+        role = interaction.guild.get_role(finded.get('role_id'))
+        if not role:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="ミュートロールがありません。", description="/moderation mute create を実行してください。"))
+        
+        await member.remove_roles(role, reason=f"{interaction.user.id}により実行: " + 理由)
+
+        await interaction.followup.send(embed=make_embed.success_embed(title="ミュートを解除しました。", description=メンバー.mention + "のミュートを解除しました。"))
+
+    @app_commands.command(name="update", description="ミュートロールを更新します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(manage_roles=True, manage_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def muterole_update(
+        self, interaction: discord.Interaction
+    ):
+        await interaction.response.defer()
+
+        db = interaction.client.async_db["MainTwo"].MuteRole
+        finded = await db.find_one({
+            "guild_id": interaction.guild.id
+        })
+
+        if not finded:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="ミュートロールがありません。", description="/moderation mute create を実行してください。"))
+
+        role = interaction.guild.get_role(finded.get("role_id"))
+        if not role:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="ミュートロールがありません。", description="/moderation mute create を実行してください。"))
+
+        guild = interaction.guild
+
+        ch_count = 0
+
+        for channel in guild.channels:
+            if not isinstance(channel, (discord.TextChannel, discord.VoiceChannel)):
+                continue
+
+            try:
+                await channel.set_permissions(
+                    role,
+                    send_messages=False,
+                    speak=False,
+                    add_reactions=False,
+                    reason="ミュートロールの更新のため"
+                )
+            except discord.Forbidden:
+                pass
+            except discord.HTTPException as e:
+                pass
+
+        await interaction.followup.send(embed=make_embed.success_embed(title="ミュートロールを更新しました。", description=f"{ch_count} 個のチャンネルを更新しました。"))
+
+    @app_commands.command(name="create", description="ミュートロールを作成します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(manage_roles=True, manage_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def muterole_create(
+        self, interaction: discord.Interaction, ロール名: str = "ミュート済み"
+    ):
+        await interaction.response.defer()
+
+        mute_role = await interaction.guild.create_role(name=ロール名, reason="ミュートロールの作成のため", colour=discord.Color.dark_red())
+
+        guild = interaction.guild
+
+        for channel in guild.channels:
+            if not isinstance(channel, (discord.TextChannel, discord.VoiceChannel)):
+                continue
+
+            try:
+                await channel.set_permissions(
+                    mute_role,
+                    send_messages=False,
+                    speak=False,
+                    add_reactions=False,
+                    reason="ミュートロールの作成のため"
+                )
+            except discord.Forbidden:
+                pass
+            except discord.HTTPException as e:
+                pass
+
+        await interaction.client.async_db["MainTwo"].MuteRole.update_one({
+            "guild_id": guild.id
+        }, {
+            "$set": {
+                "role_id": mute_role.id,
+                "created_at": datetime.datetime.utcnow()
+            }
+        },upsert=True)
+
+        await interaction.followup.send(embed=make_embed.success_embed(title="ミュートロールを作成しました。", description=mute_role.mention))
+
 
 class BanGroup(app_commands.Group):
     def __init__(self):
@@ -537,6 +684,7 @@ class ModCog(commands.Cog):
     )
 
     moderation.add_command(BanGroup())
+    moderation.add_command(MuteGroup())
     moderation.add_command(PauseGroup())
 
     @moderation.command(name="kick", description="メンバーをキックします。")
