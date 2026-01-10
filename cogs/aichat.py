@@ -238,7 +238,7 @@ class AICog(commands.Cog):
                 chunks.append(text.text[i:i+1000])
 
             for c in chunks:
-                await webhook.send(content=c, username="GoogleのAI", avatar_url=self.bot.user.avatar.url)
+                await webhook.send(content=c, username="GoogleのAI", avatar_url=self.bot.user.avatar.url, allowed_mentions=discord.AllowedMentions.none())
                 await asyncio.sleep(2)
         except Exception as e:
             # print(f"AIChatError: {e}")
