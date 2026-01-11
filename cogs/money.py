@@ -981,6 +981,11 @@ class GamesGroup(app_commands.Group):
                 value="ブラックジャックをします。\n21を超えたらゲームオーバーです。\n勝ったら賭け金が二倍に、\n負けたら賭け金を失います。",
                 inline=False,
             )
+            .add_field(
+                name="/economy games scratch-card",
+                value="スクラッチカードを削ります。\n三つのどれかを削るゲームです。",
+                inline=False,
+            )
         )
 
 
@@ -1109,8 +1114,8 @@ class ItemGroup(app_commands.Group):
         await interaction.response.defer()
         if ロール and not interaction.user.guild_permissions.administrator:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="管理者権限が必要です。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="管理者権限が必要です。"
                 )
             )
 
@@ -1118,8 +1123,8 @@ class ItemGroup(app_commands.Group):
             interaction.guild, 値段, アイテム名, ロール, 使用時にdmに送信するメッセージ
         )
         await interaction.followup.send(
-            embed=discord.Embed(
-                title="アイテムを作成しました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="アイテムを作成しました。"
             ).set_footer(text="/economy items で確認できます。")
         )
 
@@ -1136,14 +1141,14 @@ class ItemGroup(app_commands.Group):
         )
         if b:
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="アイテムを削除しました。", color=discord.Color.green()
+                embed=make_embed.success_embed(
+                    title="アイテムを削除しました。"
                 )
             )
         else:
             await interaction.followup.send(
-                embed=discord.Embed(
-                    title="アイテムが見つかりませんでした。", color=discord.Color.red()
+                embed=make_embed.error_embed(
+                    title="アイテムが見つかりませんでした。"
                 )
             )
 
@@ -1183,9 +1188,8 @@ class ShopPanelGroup(app_commands.Group):
             db = await Money(interaction.client).get_server_items(interaction.guild, i)
             if not db:
                 return await interaction.followup.send(
-                    embed=discord.Embed(
-                        title=f"{i} というアイテムが見つかりません。",
-                        color=discord.Color.red(),
+                    embed=make_embed.error_embed(
+                        title=f"{i} というアイテムが見つかりません。"
                     )
                 )
             embed.add_field(name=i, value=f"{db.get('Money', 0)} {c_n}", inline=False)
