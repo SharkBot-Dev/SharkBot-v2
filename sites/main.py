@@ -26,7 +26,7 @@ client = MongoClient("mongodb://localhost:27017/")
 
 @app.route("/", methods=["GET"])
 def main():
-    return render_template("index_2.html")
+    return render_template("index_3.html")
 
 
 @app.route("/server/<server_id>", methods=["GET"])
