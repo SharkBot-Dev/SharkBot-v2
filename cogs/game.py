@@ -1239,23 +1239,34 @@ class GameCog(commands.Cog):
             )
 
         db = self.bot.async_db["MainTwo"].ShiritoriChannel
-        await db.update_one(
-            {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
-            {
-                "$set": {
-                    "Guild": interaction.guild.id,
-                    "Channel": interaction.channel.id,
-                }
-            },
-            upsert=True,
-        )
 
-        await interaction.response.send_message(
-            embed=make_embed.success_embed(
-                title="しりとりを開始しました。",
-                description="ひらがなのみ使用可能です。\nんで終わるか、同じワードを送信すると負けです。",
+        dbfind = await db.find_one({"Guild": interaction.guild.id, "Channel": interaction.channel.id}, {"_id": False})
+        if dbfind is None:
+            await db.update_one(
+                {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+                {
+                    "$set": {
+                        "Guild": interaction.guild.id,
+                        "Channel": interaction.channel.id,
+                    }
+                },
+                upsert=True,
             )
-        )
+
+            await interaction.response.send_message(
+                embed=make_embed.success_embed(
+                    title="しりとりを開始しました。",
+                    description="ひらがなのみ使用可能です。\nんで終わるか、同じワードを送信すると負けです。",
+                )
+            )
+        else:
+            await db.delete_one({"Guild": interaction.guild.id, "Channel": interaction.channel.id})
+            await interaction.response.send_message(
+                embed=make_embed.success_embed(
+                    title="しりとりを終了しました。",
+                    description="再度始める際は、このコマンドを実行して下さい。",
+                )
+            )
 
     @commands.Cog.listener("on_message")
     async def shiritori_on_message(self, message: discord.Message):
