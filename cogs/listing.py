@@ -5,7 +5,7 @@ import datetime
 import aiohttp
 from discord import app_commands
 
-from models import make_embed
+from models import make_embed, pages
 
 
 class Paginator(discord.ui.View):
@@ -46,63 +46,28 @@ class ListingCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def listing_member(self, interaction: discord.Interaction):
         await interaction.response.defer()
+        
         member_list = interaction.guild.members
-        spliting_member_list = [
-            member_list[i : i + 20] for i in range(0, len(member_list), 20)
+        split_size = 20
+        chunked_members = [
+            member_list[i : i + split_size] for i in range(0, len(member_list), split_size)
         ]
 
-        def return_memberinfos(page: int):
-            return "\n".join(
-                [f"{sm.name}({sm.id})" for sm in spliting_member_list[page - 1]]
-            )
-
-        class send(discord.ui.Modal):
-            def __init__(self) -> None:
-                super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(
-                    label="ページ番号",
-                    placeholder="数字を入力",
-                    style=discord.TextStyle.short,
-                    required=True,
-                )
-                self.add_item(self.page)
-
-            async def on_submit(self, interaction: discord.Interaction) -> None:
-                try:
-                    await interaction.response.defer(ephemeral=True)
-                    test = int(self.page.value)
-                    await interaction.message.edit(
-                        embed=discord.Embed(
-                            title=f"メンバーリスト ({len(member_list)}人)",
-                            description=return_memberinfos(int(self.page.value)),
-                            color=discord.Color.blue(),
-                        ).set_footer(
-                            text=f"{self.page.value}/{len(spliting_member_list)}"
-                        )
-                    )
-                except:
-                    return await interaction.followup.send(
-                        ephemeral=True, content="数字以外を入れないでください。"
-                    )
-
-        class SendModal(discord.ui.View):
-            def __init__(self):
-                super().__init__(timeout=60)
-
-            @discord.ui.button(label="ページ移動", style=discord.ButtonStyle.blurple)
-            async def page_move(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                await interaction.response.send_modal(send())
-
-        await interaction.followup.send(
-            embed=discord.Embed(
+        embeds = []
+        total_pages = len(chunked_members)
+        
+        for i, members in enumerate(chunked_members):
+            embed = discord.Embed(
                 title=f"メンバーリスト ({len(member_list)}人)",
-                description=return_memberinfos(1),
                 color=discord.Color.blue(),
-            ).set_footer(text=f"1/{len(spliting_member_list)}"),
-            view=SendModal(),
-        )
+                description="\n".join([f"{m.name} (`{m.id}`)" for m in members])
+            )
+            embed.set_footer(text=f"Page {i + 1} / {total_pages}")
+            embeds.append(embed)
+
+        view = pages.Pages(embeds=embeds, now_page=0)
+
+        msg = await interaction.followup.send(embed=embeds[0], view=view)
 
     @listing.command(name="role-member", description="ロールとそのメンバー数をリスト化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -115,111 +80,38 @@ class ListingCog(commands.Cog):
         roles = await raw.get_guild_role_member_counts(guildId=str(interaction.guild_id))
 
         if not isinstance(roles, dict):
-            return
+            return await interaction.followup.send("データの取得に失敗しました。")
 
-        r = []
-        for r_id, count in roles.items():
-            r.append(f"<@&{r_id}> .. {count}人")
+        r = [f"<@&{r_id}> .. {count}人" for r_id, count in roles.items()]
 
         if len(r) == 0:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="ロールが見つかりません。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(title="ロールが見つかりません。")
+            )
 
-        spliting_member_list = [
-            r[i : i + 20] for i in range(0, len(r), 20)
+        split_size = 20
+        spliting_roles_list = [
+            r[i : i + split_size] for i in range(0, len(r), split_size)
         ]
 
-        def return_memberinfos(page: int):
-            return "\n".join(
-                [
-                    sm
-                    for sm in spliting_member_list[page - 1]
-                ]
+        embeds = []
+        total_pages = len(spliting_roles_list)
+        for i, role_chunk in enumerate(spliting_roles_list):
+            embed = discord.Embed(
+                title=f"ロールメンバー数一覧 ({len(r)}種類)",
+                description="\n".join(role_chunk),
+                color=discord.Color.blue()
             )
+            embed.set_footer(text=f"Page {i + 1} / {total_pages}")
+            embeds.append(embed)
 
-        class send(discord.ui.Modal):
-            def __init__(self, view: discord.ui.View):
-                super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(
-                    label="ページ番号",
-                    placeholder="数字を入力",
-                    style=discord.TextStyle.short,
-                    required=True,
-                )
-                self.add_item(self.page)
-                self.view_ref = view
+        view = pages.Pages(embeds=embeds, now_page=0)
 
-            async def on_submit(self, interaction: discord.Interaction) -> None:
-                try:
-                    page_number = int(self.page.value)
-                    if not (1 <= page_number <= len(spliting_member_list)):
-                        return await interaction.response.send_message(
-                            "そのページは存在しません。", ephemeral=True
-                        )
-                    self.view_ref.current_page = page_number
-                    embed = discord.Embed(
-                        title=f"ロールリスト ({len(r)}個)",
-                        description=return_memberinfos(page_number),
-                        color=discord.Color.blue(),
-                    ).set_footer(text=f"{page_number}/{len(spliting_member_list)}")
-
-                    await interaction.response.edit_message(
-                        embed=embed, view=self.view_ref, allowed_mentions=discord.AllowedMentions.none()
-                    )
-
-                except ValueError:
-                    await interaction.response.send_message(
-                        "数字以外を入れないでください。", ephemeral=True
-                    )
-
-        class SendModal(discord.ui.View):
-            def __init__(self):
-                super().__init__(timeout=60)
-                self.current_page = 1
-
-            async def update_embed(self, interaction: discord.Interaction):
-                self.previous.disabled = self.current_page <= 1
-                self.next.disabled = self.current_page >= len(spliting_member_list)
-
-                embed = discord.Embed(
-                    title=f"ロールリスト ({len(r)}個)",
-                    description=return_memberinfos(self.current_page),
-                    color=discord.Color.blue(),
-                ).set_footer(text=f"{self.current_page}/{len(spliting_member_list)}")
-                await interaction.response.edit_message(embed=embed, view=self, allowed_mentions=discord.AllowedMentions.none())
-
-            @discord.ui.button(
-                label="⬅️", style=discord.ButtonStyle.green, disabled=True
-            )
-            async def previous(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                self.current_page -= 1
-                await self.update_embed(interaction)
-
-            @discord.ui.button(label="➡️", style=discord.ButtonStyle.green)
-            async def next(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                self.current_page += 1
-                await self.update_embed(interaction)
-
-            @discord.ui.button(label="ページ移動", style=discord.ButtonStyle.blurple)
-            async def page_move(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                await interaction.response.send_modal(send(self))
-
-        view = SendModal()
-        view.previous.disabled = True
-        view.next.disabled = len(spliting_member_list) <= 1
-
-        embed = discord.Embed(
-            title=f"ロールリスト ({len(r)}個)",
-            description=return_memberinfos(1),
-            color=discord.Color.blue(),
-        ).set_footer(text=f"1/{len(spliting_member_list)}")
-
-        await interaction.followup.send(embed=embed, view=view, allowed_mentions=discord.AllowedMentions.none())
+        msg = await interaction.followup.send(
+            embed=embeds[0], 
+            view=view, 
+            allowed_mentions=discord.AllowedMentions.none()
+        )
 
     @listing.command(name="role", description="ロールをリスト化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -227,107 +119,37 @@ class ListingCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_roles=True)
     async def listing_role(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        member_list = interaction.guild.roles
+        
+        role_list = list(reversed(interaction.guild.roles))
 
-        if len(member_list) == 0:
-            return await interaction.followup.send("ロールがありません。")
+        if not role_list:
+            return await interaction.followup.send("ロールが見つかりませんでした。")
 
-        spliting_member_list = [
-            member_list[i : i + 20] for i in range(0, len(member_list), 20)
+        split_size = 20
+        chunked_roles = [
+            role_list[i : i + split_size] for i in range(0, len(role_list), split_size)
         ]
 
-        def return_memberinfos(page: int):
-            return "\n".join(
-                [
-                    f"{sm.name.replace('@', '')} ({sm.id})"
-                    for sm in spliting_member_list[page - 1]
-                ]
+        embeds = []
+        total_pages = len(chunked_roles)
+        for i, roles in enumerate(chunked_roles):
+            description = "\n".join([f"{r.mention} (`{r.id}`)" for r in roles])
+            
+            embed = discord.Embed(
+                title=f"ロールリスト ({len(role_list)}個)",
+                description=description,
+                color=discord.Color.blue()
             )
+            embed.set_footer(text=f"Page {i + 1} / {total_pages}")
+            embeds.append(embed)
 
-        class send(discord.ui.Modal):
-            def __init__(self, view: discord.ui.View):
-                super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(
-                    label="ページ番号",
-                    placeholder="数字を入力",
-                    style=discord.TextStyle.short,
-                    required=True,
-                )
-                self.add_item(self.page)
-                self.view_ref = view
+        view = pages.Pages(embeds=embeds, now_page=0)
 
-            async def on_submit(self, interaction: discord.Interaction) -> None:
-                try:
-                    page_number = int(self.page.value)
-                    if not (1 <= page_number <= len(spliting_member_list)):
-                        return await interaction.response.send_message(
-                            "そのページは存在しません。", ephemeral=True
-                        )
-                    self.view_ref.current_page = page_number
-                    embed = discord.Embed(
-                        title=f"ロールリスト ({len(member_list)}個)",
-                        description=return_memberinfos(page_number),
-                        color=discord.Color.blue(),
-                    ).set_footer(text=f"{page_number}/{len(spliting_member_list)}")
-
-                    await interaction.response.edit_message(
-                        embed=embed, view=self.view_ref
-                    )
-
-                except ValueError:
-                    await interaction.response.send_message(
-                        "数字以外を入れないでください。", ephemeral=True
-                    )
-
-        class SendModal(discord.ui.View):
-            def __init__(self):
-                super().__init__(timeout=60)
-                self.current_page = 1
-
-            async def update_embed(self, interaction: discord.Interaction):
-                self.previous.disabled = self.current_page <= 1
-                self.next.disabled = self.current_page >= len(spliting_member_list)
-
-                embed = discord.Embed(
-                    title=f"ロールリスト ({len(member_list)}個)",
-                    description=return_memberinfos(self.current_page),
-                    color=discord.Color.blue(),
-                ).set_footer(text=f"{self.current_page}/{len(spliting_member_list)}")
-                await interaction.response.edit_message(embed=embed, view=self)
-
-            @discord.ui.button(
-                label="⬅️", style=discord.ButtonStyle.green, disabled=True
-            )
-            async def previous(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                self.current_page -= 1
-                await self.update_embed(interaction)
-
-            @discord.ui.button(label="➡️", style=discord.ButtonStyle.green)
-            async def next(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                self.current_page += 1
-                await self.update_embed(interaction)
-
-            @discord.ui.button(label="ページ移動", style=discord.ButtonStyle.blurple)
-            async def page_move(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                await interaction.response.send_modal(send(self))
-
-        view = SendModal()
-        view.previous.disabled = True
-        view.next.disabled = len(spliting_member_list) <= 1
-
-        embed = discord.Embed(
-            title=f"ロールリスト ({len(member_list)}個)",
-            description=return_memberinfos(1),
-            color=discord.Color.blue(),
-        ).set_footer(text=f"1/{len(spliting_member_list)}")
-
-        await interaction.followup.send(embed=embed, view=view)
+        msg = await interaction.followup.send(
+            embed=embeds[0], 
+            view=view,
+            allowed_mentions=discord.AllowedMentions.none()
+        )
 
     @listing.command(name="emoji", description="サーバー内絵文字をリスト化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -339,89 +161,30 @@ class ListingCog(commands.Cog):
         if len(emoji_list) == 0:
             return await interaction.followup.send("絵文字がありません。")
 
-        spliting_member_list = [
+        chunked_emojis = [
             emoji_list[i : i + 20] for i in range(0, len(emoji_list), 20)
         ]
 
-        def return_memberinfos(page: int):
-            return "\n".join([f"{sm} `{sm}`" for sm in spliting_member_list[page - 1]])
-
-        class send(discord.ui.Modal):
-            def __init__(self, view: discord.ui.View):
-                super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(
-                    label="ページ番号",
-                    placeholder="数字を入力",
-                    style=discord.TextStyle.short,
-                    required=True,
-                )
-                self.add_item(self.page)
-                self.view_ref = view
-
-            async def on_submit(self, interaction: discord.Interaction) -> None:
-                try:
-                    await interaction.response.defer(ephemeral=True)
-                    page_number = int(self.page.value)
-                    if not (1 <= page_number <= len(spliting_member_list)):
-                        return await interaction.followup.send(
-                            ephemeral=True, content="そのページは存在しません。"
-                        )
-                    self.view_ref.current_page = page_number
-                    await self.view_ref.update_embed(interaction)
-                except:
-                    return await interaction.followup.send(
-                        ephemeral=True, content="数字以外を入れないでください。"
-                    )
-
-        class SendModal(discord.ui.View):
-            def __init__(self):
-                super().__init__(timeout=60)
-                self.current_page = 1
-
-            async def update_embed(self, interaction: discord.Interaction):
-                self.previous.disabled = self.current_page <= 1
-                self.next.disabled = self.current_page >= len(spliting_member_list)
-
-                embed = discord.Embed(
-                    title=f"絵文字リスト ({len(emoji_list)}個)",
-                    description=return_memberinfos(self.current_page),
-                    color=discord.Color.blue(),
-                ).set_footer(text=f"{self.current_page}/{len(spliting_member_list)}")
-                await interaction.response.edit_message(embed=embed, view=self)
-
-            @discord.ui.button(
-                label="⬅️", style=discord.ButtonStyle.green, disabled=True
+        embeds = []
+        total_pages = len(chunked_emojis)
+        for i, emojis in enumerate(chunked_emojis):
+            description = "\n".join([f"{r.__str__()} (`{r.id}`)" for r in emojis])
+            
+            embed = discord.Embed(
+                title=f"絵文字リスト ({len(emoji_list)}個)",
+                description=description,
+                color=discord.Color.blue()
             )
-            async def previous(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                self.current_page -= 1
-                await self.update_embed(interaction)
+            embed.set_footer(text=f"Page {i + 1} / {total_pages}")
+            embeds.append(embed)
 
-            @discord.ui.button(label="➡️", style=discord.ButtonStyle.green)
-            async def next(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                self.current_page += 1
-                await self.update_embed(interaction)
+        view = pages.Pages(embeds=embeds, now_page=0)
 
-            @discord.ui.button(label="ページ移動", style=discord.ButtonStyle.blurple)
-            async def page_move(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                await interaction.response.send_modal(send(self))
-
-        view = SendModal()
-        view.previous.disabled = True
-        view.next.disabled = len(spliting_member_list) <= 1
-
-        embed = discord.Embed(
-            title=f"絵文字リスト ({len(emoji_list)}個)",
-            description=return_memberinfos(1),
-            color=discord.Color.blue(),
-        ).set_footer(text=f"1/{len(spliting_member_list)}")
-
-        await interaction.followup.send(embed=embed, view=view)
+        msg = await interaction.followup.send(
+            embed=embeds[0], 
+            view=view,
+            allowed_mentions=discord.AllowedMentions.none()
+        )
 
     @listing.command(
         name="invite", description="サーバー内招待リンクをリスト化します。"
@@ -436,104 +199,41 @@ class ListingCog(commands.Cog):
         if len(invite_list) == 0:
             return await interaction.followup.send("招待リンクがありません。")
 
-        spliting_member_list = [
+        sp_invite_list = [
             invite_list[i : i + 20] for i in range(0, len(invite_list), 20)
         ]
 
-        def return_memberinfos(page: int):
-            return "\n".join(
-                [
-                    f"{sm.inviter.mention} {sm.url}"
-                    for sm in spliting_member_list[page - 1]
-                ]
+        embeds = []
+        total_pages = len(sp_invite_list)
+        for i, invite in enumerate(sp_invite_list):
+            description = "\n".join([f"{i.inviter.mention} {i.url}" for i in invite])
+            
+            embed = discord.Embed(
+                title=f"招待リンクリスト ({len(invite_list)}個)",
+                description=description,
+                color=discord.Color.blue()
             )
+            embed.set_footer(text=f"Page {i + 1} / {total_pages}")
+            embeds.append(embed)
 
-        class send(discord.ui.Modal):
-            def __init__(self, view: discord.ui.View):
-                super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(
-                    label="ページ番号",
-                    placeholder="数字を入力",
-                    style=discord.TextStyle.short,
-                    required=True,
-                )
-                self.add_item(self.page)
-                self.view_ref = view
+        view = pages.Pages(embeds=embeds, now_page=0)
 
-            async def on_submit(self, interaction: discord.Interaction) -> None:
-                try:
-                    await interaction.response.defer(ephemeral=True)
-                    page_number = int(self.page.value)
-                    if not (1 <= page_number <= len(spliting_member_list)):
-                        return await interaction.followup.send(
-                            ephemeral=True, content="そのページは存在しません。"
-                        )
-                    self.view_ref.current_page = page_number
-                    await self.view_ref.update_embed(interaction)
-                except:
-                    return await interaction.followup.send(
-                        ephemeral=True, content="数字以外を入れないでください。"
-                    )
-
-        class SendModal(discord.ui.View):
-            def __init__(self):
-                super().__init__(timeout=60)
-                self.current_page = 1
-
-            async def update_embed(self, interaction: discord.Interaction):
-                self.previous.disabled = self.current_page <= 1
-                self.next.disabled = self.current_page >= len(spliting_member_list)
-
-                embed = discord.Embed(
-                    title=f"招待リスト ({len(invite_list)}個)",
-                    description=return_memberinfos(self.current_page),
-                    color=discord.Color.blue(),
-                ).set_footer(text=f"{self.current_page}/{len(spliting_member_list)}")
-                await interaction.response.edit_message(embed=embed, view=self)
-
-            @discord.ui.button(
-                label="⬅️", style=discord.ButtonStyle.green, disabled=True
-            )
-            async def previous(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                self.current_page -= 1
-                await self.update_embed(interaction)
-
-            @discord.ui.button(label="➡️", style=discord.ButtonStyle.green)
-            async def next(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                self.current_page += 1
-                await self.update_embed(interaction)
-
-            @discord.ui.button(label="ページ移動", style=discord.ButtonStyle.blurple)
-            async def page_move(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                await interaction.response.send_modal(send(self))
-
-        view = SendModal()
-        view.previous.disabled = True
-        view.next.disabled = len(spliting_member_list) <= 1
-
-        embed = discord.Embed(
-            title=f"招待リスト ({len(invite_list)}個)",
-            description=return_memberinfos(1),
-            color=discord.Color.blue(),
-        ).set_footer(text=f"1/{len(spliting_member_list)}")
-
-        await interaction.followup.send(embed=embed, view=view)
+        msg = await interaction.followup.send(
+            embed=embeds[0], 
+            view=view,
+            allowed_mentions=discord.AllowedMentions.none()
+        )
 
     @listing.command(name="inviter", description="招待回数をリスト化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def listing_invite(self, interaction: discord.Interaction):
         await interaction.response.defer()
+        
         invite_list = await interaction.guild.invites()
 
-        if len(invite_list) == 0:
-            return await interaction.followup.send("招待リンクがありません。")
+        if not invite_list:
+            return await interaction.followup.send("有効な招待リンクがありません。")
 
         ranking = {}
         for invite in invite_list:
@@ -542,164 +242,62 @@ class ListingCog(commands.Cog):
 
         sorted_ranking = sorted(ranking.items(), key=lambda x: x[1], reverse=True)
 
-        split_ranking = [
-            sorted_ranking[i : i + 20] for i in range(0, len(sorted_ranking), 20)
+        split_size = 20
+        split_ranking_chunks = [
+            sorted_ranking[i : i + split_size] for i in range(0, len(sorted_ranking), split_size)
         ]
 
-        def return_rankinginfos(page: int):
-            start_rank = (page - 1) * 20
-            lines = []
-            for idx, (mention, uses) in enumerate(
-                split_ranking[page - 1], start=start_rank + 1
-            ):
-                lines.append(f"{idx}位: {mention} — {uses}人招待")
-            return "\n".join(lines)
-
-        class send(discord.ui.Modal):
-            def __init__(self, view: discord.ui.View):
-                super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(
-                    label="ページ番号",
-                    placeholder="数字を入力",
-                    style=discord.TextStyle.short,
-                    required=True,
-                )
-                self.add_item(self.page)
-                self.view_ref = view
-
-            async def on_submit(self, interaction: discord.Interaction) -> None:
-                try:
-                    await interaction.response.defer(ephemeral=True)
-                    page_number = int(self.page.value)
-                    if not (1 <= page_number <= len(split_ranking)):
-                        return await interaction.followup.send(
-                            ephemeral=True, content="そのページは存在しません。"
-                        )
-                    self.view_ref.current_page = page_number
-                    await self.view_ref.update_embed(interaction)
-                except:
-                    return await interaction.followup.send(
-                        ephemeral=True, content="数字以外を入れないでください。"
-                    )
-
-        class SendModal(discord.ui.View):
-            def __init__(self):
-                super().__init__(timeout=60)
-                self.current_page = 1
-
-            async def update_embed(self, interaction: discord.Interaction):
-                self.previous.disabled = self.current_page <= 1
-                self.next.disabled = self.current_page >= len(split_ranking)
-
-                embed = discord.Embed(
-                    title="招待回数ランキング",
-                    description=return_rankinginfos(self.current_page),
-                    color=discord.Color.blue(),
-                ).set_footer(text=f"{self.current_page}/{len(split_ranking)}")
-                await interaction.response.edit_message(embed=embed, view=self)
-
-            @discord.ui.button(
-                label="⬅️", style=discord.ButtonStyle.green, disabled=True
+        embeds = []
+        total_pages = len(split_ranking_chunks)
+        
+        for i, chunk in enumerate(split_ranking_chunks):
+            description = "\n".join([f"{inviter} ： **{count}** 回" for inviter, count in chunk])
+            
+            embed = discord.Embed(
+                title=f"招待ランキング (合計 {len(sorted_ranking)}名)",
+                description=description,
+                color=discord.Color.blue()
             )
-            async def previous(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                self.current_page -= 1
-                await self.update_embed(interaction)
+            embed.set_footer(text=f"Page {i + 1} / {total_pages}")
+            embeds.append(embed)
 
-            @discord.ui.button(label="➡️", style=discord.ButtonStyle.green)
-            async def next(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                self.current_page += 1
-                await self.update_embed(interaction)
+        view = pages.Pages(embeds=embeds, now_page=0)
 
-            @discord.ui.button(label="ページ移動", style=discord.ButtonStyle.blurple)
-            async def page_move(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                await interaction.response.send_modal(send(self))
+        msg = await interaction.followup.send(
+            embed=embeds[0], 
+            view=view,
+            allowed_mentions=discord.AllowedMentions.none()
+        )
 
-        view = SendModal()
-        view.previous.disabled = True
-        view.next.disabled = len(split_ranking) <= 1
-
-        embed = discord.Embed(
-            title="招待回数ランキング",
-            description=return_rankinginfos(1),
-            color=discord.Color.blue(),
-        ).set_footer(text=f"1/{len(split_ranking)}")
-
-        await interaction.followup.send(embed=embed, view=view)
-
-    @listing.command(name="ban", description="Banしたメンバーをリスト化します。")
+    @listing.command(name="ban", description="Banしたメンバーをリスト化します.")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(ban_members=True)
     async def listing_ban(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        member_list = [b async for b in interaction.guild.bans()]
-        if len(member_list) == 0:
+        
+        bans = [b async for b in interaction.guild.bans()]
+        
+        if not bans:
             return await interaction.followup.send("Banされているメンバーはいません。")
-        spliting_member_list = [
-            member_list[i : i + 20] for i in range(0, len(member_list), 20)
-        ]
 
-        def return_memberinfos(page: int):
-            return "\n".join(
-                [
-                    f"{sm.user.name}({sm.user.id})"
-                    for sm in spliting_member_list[page - 1]
-                ]
+        split_size = 20
+        chunked_bans = [bans[i : i + split_size] for i in range(0, len(bans), split_size)]
+
+        embeds = []
+        total_pages = len(chunked_bans)
+        for i, chunk in enumerate(chunked_bans):
+            description = "\n".join([f"{entry.user.name} (`{entry.user.id}`)" for entry in chunk])
+            embed = discord.Embed(
+                title=f"BANリスト ({len(bans)}人)",
+                description=description,
+                color=discord.Color.blue()
             )
+            embed.set_footer(text=f"Page {i + 1} / {total_pages}")
+            embeds.append(embed)
 
-        class send(discord.ui.Modal):
-            def __init__(self) -> None:
-                super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(
-                    label="ページ番号",
-                    placeholder="数字を入力",
-                    style=discord.TextStyle.short,
-                    required=True,
-                )
-                self.add_item(self.page)
-
-            async def on_submit(self, interaction: discord.Interaction) -> None:
-                try:
-                    await interaction.response.defer(ephemeral=True)
-                    test = int(self.page.value)
-                    await interaction.message.edit(
-                        embed=discord.Embed(
-                            title=f"BANリスト ({len(member_list)}人)",
-                            description=return_memberinfos(int(self.page.value)),
-                            color=discord.Color.blue(),
-                        ).set_footer(
-                            text=f"{self.page.value}/{len(spliting_member_list)}"
-                        )
-                    )
-                except:
-                    return await interaction.followup.send(
-                        ephemeral=True, content="数字以外を入れないでください。"
-                    )
-
-        class SendModal(discord.ui.View):
-            def __init__(self):
-                super().__init__(timeout=60)
-
-            @discord.ui.button(label="ページ移動", style=discord.ButtonStyle.blurple)
-            async def page_move(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                await interaction.response.send_modal(send())
-
-        await interaction.followup.send(
-            embed=discord.Embed(
-                title=f"BANリスト ({len(member_list)}人)",
-                description=return_memberinfos(1),
-                color=discord.Color.blue(),
-            ).set_footer(text=f"1/{len(spliting_member_list)}"),
-            view=SendModal(),
-        )
+        view = pages.Pages(embeds=embeds, now_page=0)
+        msg = await interaction.followup.send(embed=embeds[0], view=view)
 
     @listing.command(
         name="guild-ban",
@@ -710,68 +308,31 @@ class ListingCog(commands.Cog):
     @app_commands.checks.has_permissions(ban_members=True)
     async def listing_guild_ban(self, interaction: discord.Interaction):
         await interaction.response.defer()
+        
         db = self.bot.async_db["Main"].GuildBAN
-        member_list = [b async for b in db.find({"Guild": str(interaction.guild.id)})]
-        if len(member_list) == 0:
-            return await interaction.followup.send(
-                "Banされているサーバーはありません。"
+        guild_ban_list = [b async for b in db.find({"Guild": str(interaction.guild.id)})]
+        
+        if not guild_ban_list:
+            return await interaction.followup.send("Banされているサーバーはありません。")
+
+        split_size = 20
+        chunked_guilds = [guild_ban_list[i : i + split_size] for i in range(0, len(guild_ban_list), split_size)]
+
+        embeds = []
+        total_pages = len(chunked_guilds)
+        for i, chunk in enumerate(chunked_guilds):
+            description = "\n".join([f"`{item['BANGuild']}`" for item in chunk])
+            embed = discord.Embed(
+                title=f"BANサーバーリスト ({len(guild_ban_list)}サーバー)",
+                description=description,
+                color=discord.Color.blue()
             )
-        spliting_member_list = [
-            member_list[i : i + 20] for i in range(0, len(member_list), 20)
-        ]
+            embed.set_footer(text=f"Page {i + 1} / {total_pages}")
+            embeds.append(embed)
 
-        def return_memberinfos(page: int):
-            return "\n".join(
-                [f"{sm['BANGuild']}" for sm in spliting_member_list[page - 1]]
-            )
-
-        class send(discord.ui.Modal):
-            def __init__(self) -> None:
-                super().__init__(title="ページの移動", timeout=None)
-                self.page = discord.ui.TextInput(
-                    label="ページ番号",
-                    placeholder="数字を入力",
-                    style=discord.TextStyle.short,
-                    required=True,
-                )
-                self.add_item(self.page)
-
-            async def on_submit(self, interaction: discord.Interaction) -> None:
-                try:
-                    await interaction.response.defer(ephemeral=True)
-                    test = int(self.page.value)
-                    await interaction.message.edit(
-                        embed=discord.Embed(
-                            title=f"BANサーバーリスト ({len(member_list)}サーバー)",
-                            description=return_memberinfos(int(self.page.value)),
-                            color=discord.Color.blue(),
-                        ).set_footer(
-                            text=f"{self.page.value}/{len(spliting_member_list)}"
-                        )
-                    )
-                except:
-                    return await interaction.followup.send(
-                        ephemeral=True, content="数字以外を入れないでください。"
-                    )
-
-        class SendModal(discord.ui.View):
-            def __init__(self):
-                super().__init__(timeout=60)
-
-            @discord.ui.button(label="ページ移動", style=discord.ButtonStyle.blurple)
-            async def page_move(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                await interaction.response.send_modal(send())
-
-        await interaction.followup.send(
-            embed=discord.Embed(
-                title=f"BANサーバーリスト ({len(member_list)}サーバー)",
-                description=return_memberinfos(1),
-                color=discord.Color.blue(),
-            ).set_footer(text=f"1/{len(spliting_member_list)}"),
-            view=SendModal(),
-        )
+        view = pages.Pages(embeds=embeds, now_page=0)
+        msg = await interaction.followup.send(embed=embeds[0], view=view)
+        view.message = msg
 
     @listing.command(name="analysis", description="サーバーを解析します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
