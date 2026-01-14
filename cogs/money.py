@@ -1049,7 +1049,7 @@ class ManageGroup(app_commands.Group):
     ):
         db = interaction.client.async_db["Main"].ServerChatMoney
         if not 金額:
-            await db.delete_one({"Guild": interaction.guild.id})
+            await db.delete_many({"Guild": interaction.guild.id})
             return await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="会話をしてもお金をもらえなくしました。"
@@ -1057,7 +1057,7 @@ class ManageGroup(app_commands.Group):
             )
 
         await db.update_one(
-            {"Guild": interaction.guild.id, "Money": 金額},
+            {"Guild": interaction.guild.id},
             {"$set": {"Guild": interaction.guild.id, "Money": 金額}},
             upsert=True,
         )
