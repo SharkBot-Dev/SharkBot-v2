@@ -1353,6 +1353,8 @@ class SettingCog(commands.Cog):
             return
         if isinstance(message.channel, discord.DMChannel):
             return
+        if not message.guild:
+            return
         if message.author.guild_permissions.administrator:
             return
 
