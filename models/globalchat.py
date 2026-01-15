@@ -54,7 +54,7 @@ async def send_one_global(bot: commands.Bot, webhook: str, message: discord.Mess
         em = await get_guild_emoji(bot, message.guild)
         user_name = f"[{bag}] {message.author.name} | [{em}] {message.guild.name.replace('discord', 'disc**d')} | ({message.author.id})"
 
-        if not message.attachments == [] or ref_msg:
+        if not message.attachments == [] or ref_msg or not message.stickers == []:
 
             embed = discord.Embed(color=discord.Color.dark_gray())
 
@@ -67,6 +67,12 @@ async def send_one_global(bot: commands.Bot, webhook: str, message: discord.Mess
                         if message.attachments[0].filename.endswith(kaku):
                             embed.set_image(url=message.attachments[0].url)
                             break
+
+            if not message.stickers == []:
+                try:
+                    embed.set_image(url=message.stickers[0].url)
+                except:
+                    pass
 
             if ref_msg:
                 embed.add_field(name=f"返信: {ref_msg.author.display_name.split(' | ')[0]}", value=ref_msg.content, inline=False)
