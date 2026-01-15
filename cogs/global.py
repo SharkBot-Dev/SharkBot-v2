@@ -8,7 +8,7 @@ from discord import app_commands
 import aiohttp
 import urllib.parse
 
-from models import command_disable, make_embed, is_ban
+from models import command_disable, make_embed, is_ban, globalchat
 import re
 
 from consts import settings
@@ -676,8 +676,6 @@ class GlobalCog(commands.Cog):
         db = self.bot.async_db["Main"].NewGlobalChat
         channels = db.find({})
 
-        count = 0
-
         async for channel in channels:
             if channel["Channel"] == message.channel.id:
                 continue
@@ -685,9 +683,10 @@ class GlobalCog(commands.Cog):
             target_channel = self.bot.get_channel(channel["Channel"])
             if target_channel:
                 if not ref_msg:
-                    await self.send_one_globalchat(channel["Webhook"], message)
+                    await globalchat.send_one_global(self.bot, channel["Webhook"], message)
+                    # await self.send_one_globalchat(channel["Webhook"], message)
                 else:
-                    await self.send_one_globalchat(channel["Webhook"], message, ref_msg)
+                    await globalchat.send_one_global(self.bot, channel["Webhook"], message, ref_msg)
             else:
                 continue
 
@@ -726,9 +725,9 @@ class GlobalCog(commands.Cog):
             target_channel = self.bot.get_channel(channel["Channel"])
             if target_channel:
                 if not ref_msg:
-                    await self.send_one_globalchat(channel["Webhook"], message)
+                    await globalchat.send_one_global(self.bot, channel["Webhook"], message)
                 else:
-                    await self.send_one_globalchat(channel["Webhook"], message, ref_msg)
+                    await globalchat.send_one_global(self.bot, channel["Webhook"], message, ref_msg)
             else:
                 continue
 
@@ -1846,7 +1845,7 @@ class GlobalCog(commands.Cog):
 
             target_channel = self.bot.get_channel(channel["Channel"])
             if target_channel:
-                await self.send_one_ads(channel["Webhook"], message)
+                await globalchat.send_one_global(self.bot, channel["Webhook"], message)
             else:
                 continue
 
