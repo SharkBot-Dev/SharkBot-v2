@@ -33,9 +33,10 @@ def filter_global(message: discord.Message) -> bool:
     ]
     return not any(word in message.content for word in blocked_words)
 
-async def send_one_global(bot: commands.Bot, webhook: str, message: discord.Message, ref_msg: discord.Message = None):
-    if not filter_global(message):
-        return
+async def send_one_global(bot: commands.Bot, webhook: str, message: discord.Message, ref_msg: discord.Message = None, is_ad: bool = False):
+    if not is_ad:
+        if not filter_global(message):
+            return
     async with aiohttp.ClientSession() as session:
         webhook_object = discord.Webhook.from_url(webhook, session=session)
 

@@ -1845,7 +1845,7 @@ class GlobalCog(commands.Cog):
 
             target_channel = self.bot.get_channel(channel["Channel"])
             if target_channel:
-                await self.send_one_ads(channel["Webhook"], message)
+                await globalchat.send_one_global(self.bot, channel["Webhook"], message, is_ad=True)
             else:
                 continue
 
