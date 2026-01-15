@@ -371,7 +371,6 @@ class WelcomeCommands(app_commands.Group):
                     db = self.db["Main"].WelcomeMessage
                     await db.update_one(
                         {
-                            "Channel": interaction_.channel.id,
                             "Guild": interaction_.guild.id,
                         },
                         {
@@ -395,7 +394,7 @@ class WelcomeCommands(app_commands.Group):
             db = interaction.client.async_db["Main"].WelcomeMessage
             result = await db.delete_one(
                 {
-                    "Channel": interaction.channel.id,
+                    "Guild": interaction.guild.id
                 }
             )
             await interaction.response.send_message(
@@ -438,7 +437,6 @@ class WelcomeCommands(app_commands.Group):
                     db = self.db["Main"].GoodByeMessage
                     await db.update_one(
                         {
-                            "Channel": interaction_.channel.id,
                             "Guild": interaction_.guild.id,
                         },
                         {
@@ -462,7 +460,7 @@ class WelcomeCommands(app_commands.Group):
             db = interaction.client.async_db["Main"].GoodByeMessage
             result = await db.delete_one(
                 {
-                    "Channel": interaction.channel.id,
+                    "Guild": interaction.guild.id,
                 }
             )
             await interaction.response.send_message(
@@ -503,7 +501,6 @@ class WelcomeCommands(app_commands.Group):
                     db = self.db["Main"].BanMessage
                     await db.update_one(
                         {
-                            "Channel": interaction.channel.id,
                             "Guild": interaction.guild.id,
                         },
                         {
@@ -527,7 +524,7 @@ class WelcomeCommands(app_commands.Group):
             db = interaction.client.async_db["Main"].BanMessage
             result = await db.delete_one(
                 {
-                    "Channel": interaction.channel.id,
+                    "Guild": interaction.guild.id
                 }
             )
             await interaction.response.send_message(
@@ -544,7 +541,6 @@ class WelcomeCommands(app_commands.Group):
         db = interaction.client.async_db["Main"].FastGoodByeRTAMessage
         await db.update_one(
             {
-                "Channel": interaction.channel.id,
                 "Guild": interaction.guild.id,
             },
             {
