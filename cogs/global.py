@@ -1949,10 +1949,28 @@ class GlobalCog(commands.Cog):
 
         await self.send_global_ads(message)
 
-        await message.remove_reaction("🔄", self.bot.user)
-        await message.add_reaction("✅")
-        await asyncio.sleep(3)
-        await message.remove_reaction("✅", message.guild.me)
+        try:
+            await message.remove_reaction("🔄", self.bot.user)
+            await message.add_reaction("✅")
+            await asyncio.sleep(3)
+            await message.remove_reaction("✅", message.guild.me)
+        except:
+            pass
+
+    @commands.Cog.listener("on_message_delete")
+    async def on_message_delete_globalroom(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+        check = await self.globalchat_room_check(message)
+
+        if not check:
+            return
+
+        db = self.bot.async_db["Main"].NewGlobalChatRoom
+        channels = await db.find({"Name": check}).to_list(length=None)
+
+        await globalchat.delete_one_global(self.bot, channels, message.id)
 
     @commands.Cog.listener("on_message")
     async def on_message_globalroom(self, message: discord.Message):
@@ -1970,11 +1988,6 @@ class GlobalCog(commands.Cog):
         block = await self.user_block(message)
 
         if block:
-            current_time = time.time()
-            last_message_time = user_last_message_time_mute.get(message.guild.id, 0)
-            if current_time - last_message_time < 30:
-                return
-            user_last_message_time_mute[message.guild.id] = current_time
             return
 
         current_time = time.time()
@@ -2090,10 +2103,13 @@ r18やグロ関連のものを貼らない
         else:
             await self.send_global_chat(message)
 
-        await message.remove_reaction("🔄", self.bot.user)
-        await message.add_reaction("✅")
-        await asyncio.sleep(3)
-        await message.remove_reaction("✅", message.guild.me)
+        try:
+            await message.remove_reaction("🔄", self.bot.user)
+            await message.add_reaction("✅")
+            await asyncio.sleep(3)
+            await message.remove_reaction("✅", message.guild.me)
+        except:
+            pass
 
     async def globalshiritori_check_channel(self, message: discord.Message):
         db = self.bot.async_db["Main"].GlobalShiritori
