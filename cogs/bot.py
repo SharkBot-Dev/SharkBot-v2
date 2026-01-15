@@ -65,6 +65,15 @@ class BotCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
     async def follow_bot(self, interaction: discord.Interaction):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
+
         await interaction.response.defer()
         guild = self.bot.get_guild(1343124570131009579)
         await guild.get_channel(1419883503365128212).follow(destination=interaction.channel, reason="Botのアナウンスをフォロー")
