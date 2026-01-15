@@ -33,6 +33,16 @@ def filter_global(message: discord.Message) -> bool:
     ]
     return not any(word in message.content for word in blocked_words)
 
+async def get_guild_emoji(bot: commands.Bot, guild: discord.Guild):
+    db = bot.async_db["Main"].NewGlobalChatEmoji
+    try:
+        dbfind = await db.find_one({"Guild": guild.id}, {"_id": False})
+        if dbfind is None:
+            return "😎"
+        return dbfind.get("Emoji", "😎")
+    except Exception:
+        return "😎"
+
 async def send_one_global(bot: commands.Bot, webhook: str, message: discord.Message, ref_msg: discord.Message = None, is_ad: bool = False):
     if not is_ad:
         if not filter_global(message):
@@ -41,7 +51,8 @@ async def send_one_global(bot: commands.Bot, webhook: str, message: discord.Mess
         webhook_object = discord.Webhook.from_url(webhook, session=session)
 
         bag = await badge_build(bot, message)
-        user_name = f"[{bag}] {message.author.name} | ({message.guild.name.replace('discord', 'disc**d')}) | ({message.author.id})"
+        em = await get_guild_emoji(bot, message.guild)
+        user_name = f"[{bag}] {message.author.name} | [{em}] {message.guild.name.replace('discord', 'disc**d')} | ({message.author.id})"
 
         if not message.attachments == [] or ref_msg:
 
@@ -61,13 +72,11 @@ async def send_one_global(bot: commands.Bot, webhook: str, message: discord.Mess
                 embed.add_field(name=f"返信: {ref_msg.author.display_name.split(' | ')[0]}", value=ref_msg.content, inline=False)
 
             try:
-                await webhook_object.send(content=message.clean_content, username=user_name, avatar_url=message.author.display_avatar.url, embed=embed, allowed_mentions=discord.AllowedMentions.none())
+                msg = await webhook_object.send(content=message.clean_content, username=user_name, avatar_url=message.author.display_avatar.url, embed=embed, allowed_mentions=discord.AllowedMentions.none(), wait=True)
             except:
-                pass
-        
-            return
-
-        try:
-            await webhook_object.send(content=message.clean_content, username=user_name, avatar_url=message.author.display_avatar.url, allowed_mentions=discord.AllowedMentions.none())
-        except:
-            pass
+                return
+        else:
+            try:
+                msg = await webhook_object.send(content=message.clean_content, username=user_name, avatar_url=message.author.display_avatar.url, allowed_mentions=discord.AllowedMentions.none(), wait=True)
+            except:
+                return
