@@ -1906,6 +1906,21 @@ class GlobalCog(commands.Cog):
             return
         await self.send_global_chat(message)
 
+    @commands.Cog.listener("on_message_delete")
+    async def on_message_delete_ads(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+        check = await self.globalads_check_channel(message)
+
+        if not check:
+            return
+
+        db = self.bot.async_db["Main"].NewGlobalAds
+        channels = await db.find({}).to_list(length=None)
+
+        await globalchat.delete_one_global(self.bot, channels, message.id)
+
     @commands.Cog.listener("on_message")
     async def on_message_ads(self, message: discord.Message):
         if message.author.bot:
@@ -2023,6 +2038,21 @@ r18やグロ関連のものを貼らない
             upsert=True,
         )
         return False
+
+    @commands.Cog.listener("on_message_delete")
+    async def on_message_delete_global(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+        check = await self.globalchat_check_channel(message)
+
+        if not check:
+            return
+
+        db = self.bot.async_db["Main"].NewGlobalChat
+        channels = await db.find({}).to_list(length=None)
+
+        await globalchat.delete_one_global(self.bot, channels, message.id)
 
     @commands.Cog.listener("on_message")
     async def on_message_global(self, message: discord.Message):

@@ -43,6 +43,36 @@ async def get_guild_emoji(bot: commands.Bot, guild: discord.Guild):
     except Exception:
         return "😎"
 
+# TYPES = ["globalchat", "globalads", "globalroom_"]
+
+async def delete_one_global(bot: commands.Bot, channels, original_message_id: int):
+    messages_db = bot.async_db["MainTwo"].GlobalChatMessages
+    
+    data = await messages_db.find_one({"message_id": original_message_id})
+    
+    if not data or "messages" not in data:
+        return
+
+    channel_map = {}
+    for c in channels:
+        channel_map[c["Channel"]] = c["Webhook"]
+
+    async with aiohttp.ClientSession() as session:
+        for msg_info in data["messages"]:
+            dest_channel_id = int(msg_info["channel_id"])
+            
+            if dest_channel_id in channel_map:
+                try:
+                    webhook_url = channel_map[dest_channel_id]
+                    webhook_object = discord.Webhook.from_url(webhook_url, session=session)
+                    
+                    await webhook_object.delete_message(msg_info["id"])
+                    
+                except (discord.NotFound, discord.Forbidden, discord.HTTPException) as e:
+                    continue
+
+    await messages_db.delete_one({"message_id": original_message_id})
+
 async def send_one_global(bot: commands.Bot, webhook: str, message: discord.Message, ref_msg: discord.Message = None, is_ad: bool = False):
     if not is_ad:
         if not filter_global(message):
@@ -86,3 +116,19 @@ async def send_one_global(bot: commands.Bot, webhook: str, message: discord.Mess
                 msg = await webhook_object.send(content=message.clean_content, username=user_name, avatar_url=message.author.display_avatar.url, allowed_mentions=discord.AllowedMentions.none(), wait=True)
             except:
                 return
+        
+        messages_db = bot.async_db["MainTwo"].GlobalChatMessages
+        await messages_db.update_one({
+            "channel_id": message.channel.id,
+            "guild_id": message.guild.id,
+            "message_id": message.id,
+            "author_id": message.author.id
+        }, {
+            "$addToSet": {
+                "messages": {
+                    "id": msg.id,
+                    "url": msg.jump_url,
+                    "channel_id": msg.channel.id
+                }
+            }
+        }, upsert=True)
