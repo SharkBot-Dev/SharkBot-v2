@@ -1637,50 +1637,38 @@ class PanelCog(commands.Cog):
                         Modal_Qneuete(embed, interaction.message)
                     )
                 elif "templates_answer+" in custom_id:
-                    embed_fields = interaction.message.embeds[0].fields
+                    current_embed = interaction.message.embeds[0]
+                    embed_fields = current_embed.fields
 
-                    class Modal_Qneuete(discord.ui.Modal):
-                        def __init__(self, embed_fields, message: discord.Message):
-                            super().__init__(
-                                title=f"{message.embeds[0].title}", timeout=180
-                            )
+                    class Modal_Template(discord.ui.Modal):
+                        def __init__(self, fields, message: discord.Message):
+                            super().__init__(title=f"{message.embeds[0].title[:45]}", timeout=180)
                             self.message = message
-                            self.embed_fields = embed_fields
+                            self.embed_fields = fields
 
-                            for e in embed_fields[:5]:
+                            for e in self.embed_fields[:5]:
                                 self.add_item(
                                     discord.ui.TextInput(
-                                        label=e.value,
+                                        label=e.value[:45],
                                         placeholder=f"{e.value}について回答してください",
                                         style=discord.TextStyle.short,
                                         required=True,
-                                        max_length=50,
+                                        max_length=100,
                                     )
                                 )
 
                         async def on_submit(self, interaction: discord.Interaction):
                             answer_embed = discord.Embed(color=discord.Color.blue())
-                            for i, field in enumerate(
-                                self.embed_fields[: len(self.children)]
-                            ):
-                                answer = self.children[i].value
-
-                                for b in badword.badwords:
-                                    if b in answer:
-                                        return await interaction.response.send_message(
-                                            content="不適切な言葉が含まれています。",
-                                            ephemeral=True,
-                                        )
-
+                            for i, child in enumerate(self.children):
+                                question_text = self.embed_fields[i].value
                                 answer_embed.add_field(
-                                    name=field.value, value=answer, inline=False
+                                    name=question_text, value=child.value, inline=False
                                 )
 
+                            avatar_url = interaction.user.display_avatar.url
                             answer_embed.set_author(
-                                name=f"{interaction.user.name} / {interaction.user.id}",
-                                icon_url=interaction.user.avatar.url
-                                if interaction.user.avatar
-                                else interaction.user.default_avatar.url,
+                                name=f"{interaction.user.name} ({interaction.user.id})",
+                                icon_url=avatar_url
                             )
 
                             await interaction.channel.send(embed=answer_embed)
@@ -1693,31 +1681,25 @@ class PanelCog(commands.Cog):
                                 question_embed.add_field(
                                     name=f"Q.{i + 1}", value=q.value, inline=False
                                 )
-
                             question_embed.set_footer(text="SharkBot Templates")
 
-                            view = discord.ui.View()
+                            view = discord.ui.View(timeout=None)
                             view.add_item(
                                 discord.ui.Button(
-                                    label="発言する", custom_id="templates_answer+"
+                                    label="発言する",
+                                    custom_id="templates_answer+"
                                 )
                             )
+                            await interaction.channel.send(embed=question_embed, view=view)
 
-                            await interaction.channel.send(
-                                embed=question_embed, view=view
-                            )
+                            await interaction.response.send_message("回答を送信しました", ephemeral=True)
+                            
+                            try:
+                                await self.message.delete()
+                            except discord.NotFound:
+                                pass
 
-                            await interaction.response.send_message(
-                                "回答を送信しました", ephemeral=True
-                            )
-
-                            await asyncio.sleep(2)
-
-                            await interaction.message.delete()
-
-                    await interaction.response.send_modal(
-                        Modal_Qneuete(embed_fields, interaction.message)
-                    )
+                    await interaction.response.send_modal(Modal_Template(embed_fields, interaction.message))
 
                 elif custom_id.startswith("quick_tik+"):
                     embed_fields = interaction.message.embeds[0].fields
