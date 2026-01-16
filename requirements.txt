@@ -24,7 +24,7 @@ dnspython==2.7.0
 dotenv==0.9.9
 fastapi==0.116.1
 Flask==3.1.2
-fonttools==4.59.2
+fonttools==4.60.2
 frozenlist==1.7.0
 h11==0.16.0
 httpcore==1.0.9
@@ -66,9 +66,9 @@ tabulate==0.9.0
 typing-inspection==0.4.1
 typing_extensions==4.14.1
 unbelievaboat==2.2.0
-urllib3==2.5.0
+urllib3==2.6.3
 uvicorn==0.35.0
-Werkzeug==3.1.3
+Werkzeug==3.1.5
 wrapt==1.17.3
 yarl==1.20.1
 autopep8
