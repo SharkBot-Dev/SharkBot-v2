@@ -538,6 +538,67 @@ class WebGroup(app_commands.Group):
 
         await interaction.followup.send(embed=embed)
 
+    @app_commands.command(name="note", description="note.comの記事の検索をします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def note_search_web(self, interaction: discord.Interaction, 検索ワード: str):
+        await interaction.response.defer()
+
+        url = f"https://note.com/api/v3/searches?context=note&mode=typeahead&q={urllib.parse.quote(検索ワード)}"
+
+        headers = {
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'accept-language': 'ja,en-US;q=0.9,en;q=0.8',
+            'cache-control': 'max-age=0',
+            'priority': 'u=0, i',
+            'sec-ch-ua': '"Not(A:Brand";v="8", "Chromium";v="144", "Google Chrome";v="144"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"',
+            'sec-fetch-dest': 'document',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'none',
+            'sec-fetch-user': '?1',
+            'upgrade-insecure-requests': '1',
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36'
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers) as resp:
+                if resp.status != 200:
+                    return await interaction.followup.send(embed=make_embed.error_embed(title="取得に失敗しました。", description="しばらく待ってから再度お試しください。"))
+
+                data = await resp.json()
+
+        data = data["data"]
+        notes = data["notes"]
+        contents = notes["contents"]
+
+        if not contents:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="取得に失敗しました。", description="その検索ワードからは何も得られませんでした。"))
+        
+        note = contents[0]
+
+        embed = make_embed.success_embed(title=note["name"])
+        embed.title = note["name"]
+
+        if note.get('publish_at'):
+            embed.add_field(name="作成日", value=note.get('publish_at'), inline=False)
+        if note.get('eyecatch'):
+            embed.set_image(url=note.get('eyecatch'))
+        if note.get('user'):
+            user = note.get('user')
+            name = user["name"]
+            user_profile_image_path = user.get('user_profile_image_path')
+            if user_profile_image_path:
+                embed.set_author(name=name, icon_url=user_profile_image_path)
+            else:
+                embed.set_author(name=name)
+
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(label="アクセスする", url=f"https://note.com/nobisiro_2023/n/{note['key']}"))
+
+        await interaction.followup.send(embed=embed, view=view)
+
 class SearchCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
