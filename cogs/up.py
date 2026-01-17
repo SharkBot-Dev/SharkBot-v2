@@ -493,7 +493,7 @@ class UpCog(commands.Cog):
                         "discafe",
                         message.channel.id,
                         ment,
-                        "DisCafeをUpしてね！",
+                        "DCafeをUpしてね！",
                         "</up:980136954169536525> でUp。",
                         3600,
                     )
