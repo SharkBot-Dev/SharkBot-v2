@@ -14,7 +14,7 @@ import datetime
 
 import requests
 from discord import app_commands
-from models import command_disable, make_embed, web_translate
+from models import command_disable, make_embed, web_translate, pages
 
 import pytesseract
 from PIL import Image
@@ -988,36 +988,10 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
                 title=f"{user.display_name}の情報 (ページ2)",
                 description=roles,
             )
-            pages = [embed, embed2]
+            
+            pages_view = [embed, embed2]
+            view = pages.Pages(embeds=pages_view, now_page=0, page_owner=interaction.user)
 
-            class PaginatorView(discord.ui.View):
-                def __init__(self):
-                    super().__init__(timeout=60)
-                    self.current_page = 0
-                    self.message = None
-
-                async def update_message(self, interaction: discord.Interaction):
-                    await interaction.response.edit_message(
-                        embed=pages[self.current_page], view=self
-                    )
-
-                @discord.ui.button(label="⬅️", style=discord.ButtonStyle.primary)
-                async def prev_page(
-                    self, interaction: discord.Interaction, button: discord.ui.Button
-                ):
-                    if self.current_page > 0:
-                        self.current_page -= 1
-                        await self.update_message(interaction)
-
-                @discord.ui.button(label="➡️", style=discord.ButtonStyle.primary)
-                async def next_page(
-                    self, interaction: discord.Interaction, button: discord.ui.Button
-                ):
-                    if self.current_page < len(pages) - 1:
-                        self.current_page += 1
-                        await self.update_message(interaction)
-
-            view = PaginatorView()
             if user.avatar:
                 await interaction.followup.send(
                     embed=embed.set_thumbnail(url=user.avatar.url), view=view
