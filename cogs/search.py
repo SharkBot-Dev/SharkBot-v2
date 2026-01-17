@@ -988,7 +988,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
                 title=f"{user.display_name}の情報 (ページ2)",
                 description=roles,
             )
-            
+
             pages_view = [embed, embed2]
             view = pages.Pages(embeds=pages_view, now_page=0, page_owner=interaction.user)
 
@@ -1076,12 +1076,22 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             name="Botからの情報", value=f"Shard番号: {interaction.guild.shard_id}番"
         )
 
+        embed_2 = make_embed.success_embed(title=f"{interaction.guild.name}の情報")
+        embed_2.add_field(name="サーバーの機能", value=", ".join(interaction.guild.features))
+
         if interaction.guild.icon:
+            embed = embed.set_thumbnail(url=interaction.guild.icon.url)
+            view = pages.Pages(embeds=[embed, embed_2], now_page=0, page_owner=interaction.user)
+
             await interaction.followup.send(
-                embed=embed.set_thumbnail(url=interaction.guild.icon.url)
+                embed=embed, view=view
             )
         else:
-            await interaction.followup.send(embed=embed)
+            view = pages.Pages(embeds=[embed, embed_2], now_page=0, page_owner=interaction.user)
+
+            await interaction.followup.send(
+                embed=embed, view=view
+            )
 
     @search.command(name="channel", description="チャンネルを検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
