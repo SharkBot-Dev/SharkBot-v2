@@ -28,15 +28,25 @@ class JumpModal(discord.ui.Modal, title="ページ移動"):
             await interaction.response.send_message("有効な数値を入力してください。", ephemeral=True)
 
 class Pages(discord.ui.View):
-    def __init__(self, *, timeout=180, embeds: list[discord.Embed], now_page: int = 0):
+    def __init__(self, *, timeout=180, embeds: list[discord.Embed], now_page: int = 0, page_owner: discord.User = None):
         super().__init__(timeout=timeout)
         self.embeds = embeds
         self.now_page = now_page
+        self.page_owner = page_owner
         self.update_button_states()
 
     def update_button_states(self):
         self.back.disabled = (self.now_page == 0)
         self.next.disabled = (self.now_page == len(self.embeds) - 1)
+
+    async def interaction_check(self, interaction: discord.Interaction):
+        if not self.page_owner:
+            return True
+        
+        if self.page_owner.id == interaction.user.id:
+            return True
+        
+        return False
 
     async def update_view(self, interaction: discord.Interaction):
         self.update_button_states()
