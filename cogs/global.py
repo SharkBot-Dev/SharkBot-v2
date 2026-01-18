@@ -731,6 +731,36 @@ class GlobalCog(commands.Cog):
             else:
                 continue
 
+    async def send_global_chat_room_join(
+        self, room: str, joind_channel: discord.TextChannel
+    ):
+        db = self.bot.async_db["Main"].NewGlobalChatRoom
+        channels = db.find({"Name": room})
+
+        async with aiohttp.ClientSession() as session:
+
+            async for channel in channels:
+                if channel["Channel"] == joind_channel.id:
+                    continue
+
+                target_channel = self.bot.get_channel(channel["Channel"])
+                if target_channel:
+                    webhook_object = discord.Webhook.from_url(channel["Webhook"], session=session)
+                    embed = discord.Embed(
+                        title=f"{joind_channel.guild.name}が参加したよ！よろしく！",
+                        description=f"オーナーID: {joind_channel.guild.owner_id}",
+                        color=discord.Color.green(),
+                    )
+                    if joind_channel.guild.icon:
+                        embed.set_thumbnail(url=joind_channel.guild.icon.url)
+                    await webhook_object.send(
+                        embed=embed,
+                        avatar_url=self.bot.user.avatar.url,
+                        username="SharkBot-Global-Join",
+                    )
+                else:
+                    continue
+
     async def globalchat_room_check(self, ctx: discord.Interaction):
         db = self.bot.async_db["Main"].NewGlobalChatRoom
         try:
@@ -872,7 +902,10 @@ class GlobalCog(commands.Cog):
                                 title="グローバルチャットに参加しました。", description=f"部屋名: {部屋名}"
                             )
                         )
-                        return await ch.edit(embed=make_embed.success_embed(title="サーバーを確認して下さい。"))
+                        await ch.edit(embed=make_embed.success_embed(title="サーバーを確認して下さい。"))
+
+                        await self.send_global_chat_room_join(部屋名, interaction.channel)
+                        return
                     else:
                         await interaction.edit_original_response(embed=make_embed.error_embed(title="パスワードが違うみたいです。"))
                         return await ch.edit(embed=make_embed.error_embed(title="パスワードが違います。"))
@@ -883,6 +916,7 @@ class GlobalCog(commands.Cog):
                             title="グローバルチャットに参加しました。", description=f"部屋名: {部屋名}"
                         )
                     )
+                    await self.send_global_chat_room_join(部屋名, interaction.channel)
                     return
 
     @globalchat.command(name="setting", description="グローバルルームの設定を確認します。")
