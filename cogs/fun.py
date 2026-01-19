@@ -1029,6 +1029,7 @@ class ImageGroup(app_commands.Group):
         noアルファ: bool = None,
         虹色にするか: bool = False
     ):
+        await interaction.response.defer()
         def make_5000(up: str, down: str, noa: bool = None, rainbow: bool = False):
             text = f"https://gsapi.cbrx.io/image?top={urllib.parse.quote(up)}&bottom={urllib.parse.quote(down)}"
             if noa:
@@ -1036,11 +1037,20 @@ class ImageGroup(app_commands.Group):
             if rainbow:
                 text += "&rainbow=true"
             return text
-        msg = await interaction.response.send_message(
-            embed=make_embed.success_embed(title="5000兆円ほしい！").set_image(
-                url=make_5000(上, 下, noアルファ, 虹色にするか)
-            )
-        )
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                make_5000(上, 下, noアルファ, 虹色にするか)
+            ) as response:
+                saved_image = io.BytesIO(await response.read())
+
+                msg = await interaction.followup.send(
+                    embed=make_embed.success_embed(title="5000兆円ほしい！").set_image(
+                        url="attachment://5000choyen.png"
+                    ),
+                    file=discord.File(saved_image, "5000choyen.png")
+                )
+
+                saved_image.close()
 
     @app_commands.command(name="emoji-kitchen", description="絵文字を合体させます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
