@@ -1004,11 +1004,11 @@ class GlobalCog(commands.Cog):
             )
         )
 
-    @globalchat.command(name="register", description="サーバー掲示板に登録します。")
-    @app_commands.checks.has_permissions(manage_channels=True)
+    @globalchat.command(name="register", description="サーバー掲示板に登録・登録解除します。")
+    @app_commands.checks.has_permissions(manage_guild=True, create_instant_invite=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def global_register(self, interaction: discord.Interaction, 説明: str):
+    async def global_register(self, interaction: discord.Interaction, 説明: str = "説明なし"):
         db = self.bot.async_db["Main"].Register
 
         try:
