@@ -3,33 +3,8 @@ from discord.ext import commands
 import discord
 from consts import settings
 from discord import app_commands
-from models import command_disable, make_embed
+from models import command_disable, make_embed, pages
 import aiohttp
-
-
-class Paginator(discord.ui.View):
-    def __init__(self, embeds: list[discord.Embed]):
-        super().__init__(timeout=60)
-        self.embeds = embeds
-        self.current = 0
-
-    async def update_message(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(
-            embed=self.embeds[self.current], view=self
-        )
-
-    @discord.ui.button(label="⬅️", style=discord.ButtonStyle.primary)
-    async def previous(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
-        self.current = (self.current - 1) % len(self.embeds)
-        await self.update_message(interaction)
-
-    @discord.ui.button(label="➡️", style=discord.ButtonStyle.primary)
-    async def next(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.current = (self.current + 1) % len(self.embeds)
-        await self.update_message(interaction)
-
 
 class Prefixs_HelpCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -51,8 +26,7 @@ class Prefixs_HelpCog(commands.Cog):
 
         for start in range(0, len(list(self.bot.commands)), 20):
             embed = make_embed.success_embed(
-                title="SharkBotのヘルプ (頭文字バージョン)",
-                description="頭文字バージョンです。\nスラッシュコマンド用ヘルプは、\n`/help`を使用してください。\n\nちなみに、頭文字コマンドは、\n`[頭文字]コマンド名`と送信することで機能します。\n\n標準頭文字: `!.`",
+                title="SharkBotのヘルプ (頭文字バージョン)"
             )
 
             embed.add_field(
@@ -93,7 +67,7 @@ class Prefixs_HelpCog(commands.Cog):
             e.set_footer(text=f"{c} / {len(ems)}")
             c += 1
 
-        await ctx.reply(embed=ems[0], view=Paginator(ems))
+        await ctx.reply(embed=ems[0], view=pages.Pages(embeds=ems, now_page=0, page_owner=ctx.author))
 
     @commands.command(
         name="dashboard",
