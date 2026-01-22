@@ -101,6 +101,25 @@ class AdminCog(commands.Cog):
                     )
                 )
 
+    @admin.command(name="sync", description="スラッシュコマンドを同期します。")
+    async def sync_setting(
+        self,
+        interaction: discord.Interaction
+    ):
+        if interaction.user.id != 1335428061541437531:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="あなたはSharkBotのオーナーではないため実行できません。"
+                ),
+            )
+
+        await interaction.response.defer()
+
+        await self.bot.tree.sync()
+
+        await interaction.followup.send(embed=make_embed.success_embed(title="スラッシュコマンドを同期しました。"))
+
     @admin.command(
         name="ban", description="Botからbanをします。サーバーからはbanされません。"
     )

@@ -550,8 +550,16 @@ class LevelCog(commands.Cog):
             else await target_user.default_avatar.read()
         )
         level = await self.get_level(interaction.guild, target_user)
+        if not level:
+            level = 0
+
         xp = await self.get_xp(interaction.guild, target_user)
+        if not xp:
+            xp = 0
+
         timing = await self.get_timing(interaction.guild)
+        if not timing:
+            timing = 100
 
         color = await self.get_user_color(target_user)
 
