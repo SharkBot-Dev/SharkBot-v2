@@ -22,7 +22,7 @@ discord==2.3.2
 discord.py==2.6.2
 dnspython==2.7.0
 dotenv==0.9.9
-fastapi==0.116.1
+fastapi==0.128.0
 Flask==3.1.2
 fonttools==4.59.2
 frozenlist==1.7.0
