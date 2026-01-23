@@ -67,7 +67,7 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 unbelievaboat==2.2.0
 urllib3==2.6.3
-uvicorn==0.35.0
+uvicorn==0.40.0
 Werkzeug==3.1.5
 wrapt==1.17.3
 yarl==1.22.0
