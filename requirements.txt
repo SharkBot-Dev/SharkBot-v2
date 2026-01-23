@@ -19,7 +19,7 @@ cycler==0.12.1
 deep-translator==1.11.4
 Deprecated==1.2.18
 discord==2.3.2
-discord.py==2.6.2
+discord.py==2.6.4
 dnspython==2.7.0
 dotenv==0.9.9
 fastapi==0.116.1
