@@ -871,9 +871,12 @@ wheels = [
 
 [[package]]
 name = "jaconv"
-version = "0.4.0"
+version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d2/e1/670cefc7f00b0e1890e114a37a98ea425f7e06131342aeb9636856ac663c/jaconv-0.4.0.tar.gz", hash = "sha256:32da74b247f276e09a52d6b35c153df2387965cb85a6f034cc8af21d446f8161", size = 17402, upload-time = "2024-07-25T16:35:24.75Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4d/49/239829acdddfe10836dc6606a7bceb131b2c151512cb66a28ce167a1cfa8/jaconv-0.4.1.tar.gz", hash = "sha256:d18898764a562304035a3af1b966bf3b1f73da8cb92ee7b75ad5b7762411cd28", size = 20277, upload-time = "2025-11-29T23:20:57.343Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/07/30/dcf9c45aca696c44d37f69f167c6ceae3e58cca853031836d5a0a7c58f3b/jaconv-0.4.1-py3-none-any.whl", hash = "sha256:98d42263225f0c1b780c6428f3ac65b96d652248929d1757520afef90687c2d7", size = 15958, upload-time = "2025-11-29T23:20:55.907Z" },
+]
 
 [[package]]
 name = "jinja2"
@@ -1913,7 +1916,7 @@ requires-dist = [
     { name = "idna", specifier = "==3.10" },
     { name = "import-expression", specifier = "==2.2.1.post1" },
     { name = "itsdangerous", specifier = "==2.2.0" },
-    { name = "jaconv", specifier = "==0.4.0" },
+    { name = "jaconv", specifier = "==0.4.1" },
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "jishaku", specifier = "==2.6.0" },
     { name = "kiwisolver", specifier = "==1.4.9" },
