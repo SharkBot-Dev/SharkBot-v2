@@ -1,77 +1,39 @@
 # SharkBot-v2
 
-より便利に進化したSharkBot。
+A useful Discord Bot.
 
-## 目標
+The goal is...
 
-- 全コマンドの無効化が可能な bot
-- ネタコマンドから管理コマンドまで幅広く取りそろえた bot
+- A bot capable of disabling all commands
+- A bot with a wide range of commands from fun commands to administrative commands
 
-# Botの使い方
-<a href="/docs/START.md">ここ(ドキュメント)</a> から確認できます。
+## How to use (for Non-Developper)
 
-## 現在実装中の機能
+You can see [the document](./docs/START.md).
 
-- [ ] Cog の load、reload
-- [ ] Up 通知
-- [ ] 自動モデレーション
-- [ ] 自動返信
-- [ ] メッセージ展開
-- [ ] 面白いコマンド
-- [ ] グローバルチャット
-- [ ] レベル
-- [ ] 固定メッセージ
-- [ ] ログ記録
-- [ ] モデレーション
-- [ ] ロール付与・追加
-- [ ] いろいろ検索
-- [ ] スターボード
-- [ ] ツール系コマンド
-- [ ] よろしくメッセージ
-- [ ] カウントゲーム
-- [ ] チケットパネル
-- [ ] 認証パネル
-- [ ] 募集パネル
-- [ ] チャンネル管理
-- [ ] エラー管理
-- [ ] 設定関連のコマンド
-- [ ] 自動アナウンス公開
-- [ ] ニックネーム管理
-- [ ] サーバー内経済
-- [ ] 自動リアクション
-- [ ] イベントアラート
-- [ ] ゲーム
-- [ ] VC 管理
-- [ ] ヘルプ機能
-- [ ] プログラムシェル、コンパイル
-- [ ] リスト化・解析機能
-- [ ] カスタムスラッシュコマンドツリー
-- [ ] ユーザー・サーバーを Bot から Ban 機能
-- [ ] チャンネルごとにコマンドを有効化・無効化可能機能
-- [ ] フリーチャンネル
-- [ ] よみあげ
-- [ ] ペット機能
-- [ ] グローバルな木
-- [ ] グループ機能
-- [ ] タグ機能 (カスタムコマンド)
-- [ ] カスタムスラッシュコマンド
-- [ ] 自動スレッド作成
-- [ ] gif返信とgif検索
+### You want to new feature?
 
-## 作成途中の機能
+You can create issue.
+Please tell me your opinion!
 
-- [ ] その他セキュリティ
-- [ ] SharkBotv1からの移行
+## Built With
 
-## 使用したプログラムに関する表記
-### OpenJTalk
-```
-Copyright (c) 2009, Nara Institute of Science and Technology, Japan.
-OpenJTalkは修正BSDライセンス（3条項BSDライセンス）に基づいて配布されています。
-このソフトウェアは、著作権者および貢献者によって「現状有姿」で提供され、商品性および特定目的への適合性に関する黙示の保証を含むがこれに限定されない、明示または黙示を問わず一切の保証を負いません。いかなる場合においても、著作権者または貢献者は、契約、厳格責任、または不法行為（過失およびその他を含む）にかかわらず、本ソフトウェアの使用によって生じたいかなる直接的、間接的、偶発的、特別、懲罰的、または結果的な損害（代替の物品またはサービスの調達、使用、データ、または利益の損失、または事業の中断を含むがこれらに限定されない）に対して、たとえそのような損害の可能性について通知されていたとしても、一切の責任を負わないものとします。
-```
+- [OpenJTalk](https://open-jtalk.sp.nitech.ac.jp/) - TTS Module
 
-# Botに新機能を追加・バグを修正してほしい？
-Issuesを開いて、New Issuesから追加、修正してほしい内容を投稿してください。<br>
-よろしくお願いします。<br>
-※必ず採用されるとは限りません。
+## Contributing
+
+WIP
+
+## Versioning
+
+WIP
+
+## License
+
+The project's license is GPL-3.0.
+
+## Acknowledgments
+
+- Hat tip to anyone whose code was used
+- Inspiration
+- etc
