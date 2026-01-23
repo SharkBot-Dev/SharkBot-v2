@@ -70,7 +70,7 @@ urllib3==2.6.3
 uvicorn==0.35.0
 Werkzeug==3.1.5
 wrapt==1.17.3
-yarl==1.20.1
+yarl==1.22.0
 autopep8
 flake8
 ruff

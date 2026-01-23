@@ -79,7 +79,7 @@ dependencies = [
     "uvicorn==0.35.0",
     "werkzeug==3.1.5",
     "wrapt==1.17.3",
-    "yarl==1.20.1",
+    "yarl==1.22.0",
 ]
 
 [dependency-groups]
