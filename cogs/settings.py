@@ -12,7 +12,7 @@ import aiohttp
 from discord import app_commands
 
 from consts import mongodb
-from models import command_disable, make_embed, translate
+from models import block, command_disable, make_embed, translate
 
 COOLDOWN_TIME_KEIGO = 5
 cooldown_keigo_time = {}
@@ -2890,6 +2890,44 @@ class SettingCog(commands.Cog):
             )
         )
 
+    async def user_setting_autocomplete( 
+        self, 
+        interaction: discord.Interaction,  
+        current: str,  
+    ) -> list[app_commands.Choice[str]]: 
+        return [  
+            app_commands.Choice(name=setting_name, value=setting_name)  
+            for setting_name in block.SETTINDS_LIST if current.lower() in setting_name.lower()
+        ]  
+
+    @settings.command(name="block", description="機能のブロックを設定します。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_messages=True)
+    @app_commands.autocomplete(設定=user_setting_autocomplete)
+    async def block_setting(
+        self, interaction: discord.Interaction, 設定: str, 有効か: bool
+    ):
+        if not 設定 in block.SETTINDS_LIST:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="ブロックに失敗しました。", description="その機能は存在しません。"))
+        db = interaction.client.async_db["MainTwo"].UserBlockSetting
+        if 有効か:
+            await db.update_one({
+                "user_id": interaction.user.id
+            }, {
+                "$addToSet": {
+                    "blockd_func": 設定
+                }
+            }, upsert=True)
+            await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="機能をブロックしました。", description=f"{設定}をブロックしました。"))
+        else:
+            await db.update_one({
+                "user_id": interaction.user.id
+            }, {
+                "$pull": {
+                    "blockd_func": 設定
+                }
+            }, upsert=True)
+            await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="機能をブロックしました。", description=f"{設定}のブロックを解除しました。"))
 
 async def setup(bot):
     await bot.add_cog(SettingCog(bot))

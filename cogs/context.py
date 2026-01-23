@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import datetime
 
 import requests
-from models import make_embed, miq, web_translate
+from models import block, make_embed, miq, web_translate
 from models.permissions_text import PERMISSION_TRANSLATIONS
 import asyncio
 
@@ -278,6 +278,10 @@ async def setup(bot: commands.Bot):
                     description="メッセージ内容があるものを選択してください。",
                 ),
             )
+
+        is_blockd = await block.is_blocked_func(interaction.client, message.author.id, "Miq機能")
+        if is_blockd:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="そのメンバーはMiq機能を\nブロックしています。"))
 
         await interaction.response.defer()
         av = (

@@ -16,7 +16,7 @@ import asyncio
 import aiohttp
 import json
 
-from models import make_embed, quest
+from models import make_embed, quest, block
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
@@ -875,96 +875,86 @@ class GameCog(commands.Cog):
         メンバー1: discord.User,
         メンバー2: discord.User,
     ):
+        is_blockd = await block.is_blocked_func(interaction.client, メンバー1.id, "恋愛度計算機")
+        if is_blockd:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="そのメンバーは恋愛度計算機を\nブロックしています。"))
+        
+        is_blockd = await block.is_blocked_func(interaction.client, メンバー2.id, "恋愛度計算機")
+        if is_blockd:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="そのメンバーは恋愛度計算機を\nブロックしています。"))
+
         await interaction.response.defer()
         love_percent = random.randint(0, 100)
 
-        c = 0
+        img = await asyncio.to_thread(
+            Image.new, "RGB", (600, 300), color=(255, 182, 193)
+        )
+        draw = await asyncio.to_thread(ImageDraw.Draw, img)
 
-        while True:
-            if c > 8:
-                return await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="予期しないエラーが発生しました。",
-                        color=discord.Color.red(),
-                    )
-                )
-
-            img = await asyncio.to_thread(
-                Image.new, "RGB", (600, 300), color=(255, 182, 193)
+        try:
+            font_title = await asyncio.to_thread(
+                ImageFont.truetype, "data/DiscordFont.ttf", 40
             )
-            draw = await asyncio.to_thread(ImageDraw.Draw, img)
-
-            try:
-                font_title = await asyncio.to_thread(
-                    ImageFont.truetype, "data/DiscordFont.ttf", 40
-                )
-                font_text = await asyncio.to_thread(
-                    ImageFont.truetype, "data/DiscordFont.ttf", 25
-                )
-            except:
-                font_title = await asyncio.to_thread(ImageFont.load_default)
-                font_text = await asyncio.to_thread(ImageFont.load_default)
-
-            async def get_avatar(member: discord.Member):
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(str(member.avatar.url)) as resp:
-                        avatar_bytes = await resp.read()
-                avatar = await asyncio.to_thread(Image.open, io.BytesIO(avatar_bytes))
-                avatar = await asyncio.to_thread(avatar.convert, "RGB")
-                avatar = await asyncio.to_thread(avatar.resize, (128, 128))
-
-                mask = await asyncio.to_thread(Image.new, "L", avatar.size, 0)
-                mask_draw = await asyncio.to_thread(ImageDraw.Draw, mask)
-                await asyncio.to_thread(mask_draw.ellipse, (0, 0, 128, 128), fill=255)
-                return avatar, mask
-
-            avatar1, mask1 = await get_avatar(メンバー1)
-            avatar2, mask2 = await get_avatar(メンバー2)
-
-            await asyncio.to_thread(img.paste, avatar1, (100, 80), mask1)
-            await asyncio.to_thread(img.paste, avatar2, (370, 80), mask2)
-
-            await asyncio.to_thread(
-                draw.text, (0, 0), "SharkBot", font=font_text, fill=(0, 0, 0)
+            font_text = await asyncio.to_thread(
+                ImageFont.truetype, "data/DiscordFont.ttf", 25
             )
-            await asyncio.to_thread(
-                draw.text, (200, 30), "恋愛度診断", font=font_title, fill=(255, 0, 0)
-            )
-            await asyncio.to_thread(
-                draw.text,
-                (260, 230),
-                f"{love_percent}%",
-                font=font_text,
-                fill=(0, 0, 0),
-            )
+        except:
+            font_title = await asyncio.to_thread(ImageFont.load_default)
+            font_text = await asyncio.to_thread(ImageFont.load_default)
 
-            bar_x, bar_y = 150, 270
-            bar_width, bar_height = 300, 20
-            await asyncio.to_thread(
-                draw.rectangle,
-                [bar_x, bar_y, bar_x + bar_width, bar_y + bar_height],
-                fill=(200, 200, 200),
-            )
-            filled_width = int(bar_width * (love_percent / 100))
-            await asyncio.to_thread(
-                draw.rectangle,
-                [bar_x, bar_y, bar_x + filled_width, bar_y + bar_height],
-                fill=(255, 0, 0),
-            )
+        async def get_avatar(member: discord.Member):
+            async with aiohttp.ClientSession() as session:
+                async with session.get(str(member.avatar.url)) as resp:
+                    avatar_bytes = await resp.read()
+            avatar = await asyncio.to_thread(Image.open, io.BytesIO(avatar_bytes))
+            avatar = await asyncio.to_thread(avatar.convert, "RGB")
+            avatar = await asyncio.to_thread(avatar.resize, (128, 128))
 
-            with io.BytesIO() as image_binary:
-                try:
-                    await asyncio.to_thread(img.save, image_binary, "PNG")
-                    image_binary.seek(0)
-                    await interaction.followup.send(
-                        file=discord.File(fp=image_binary, filename="love.png"),
-                        content=f"-# {c}回再試行しました。",
-                    )
-                except:
-                    c += 1
-                    await asyncio.sleep(0.5)
-                    continue
-                return
+            mask = await asyncio.to_thread(Image.new, "L", avatar.size, 0)
+            mask_draw = await asyncio.to_thread(ImageDraw.Draw, mask)
+            await asyncio.to_thread(mask_draw.ellipse, (0, 0, 128, 128), fill=255)
+            return avatar, mask
+
+        avatar1, mask1 = await get_avatar(メンバー1)
+        avatar2, mask2 = await get_avatar(メンバー2)
+
+        await asyncio.to_thread(img.paste, avatar1, (100, 80), mask1)
+        await asyncio.to_thread(img.paste, avatar2, (370, 80), mask2)
+
+        await asyncio.to_thread(
+            draw.text, (0, 0), "SharkBot", font=font_text, fill=(0, 0, 0)
+        )
+        await asyncio.to_thread(
+            draw.text, (200, 30), "恋愛度診断", font=font_title, fill=(255, 0, 0)
+        )
+        await asyncio.to_thread(
+            draw.text,
+            (260, 230),
+            f"{love_percent}%",
+            font=font_text,
+            fill=(0, 0, 0),
+        )
+
+        bar_x, bar_y = 150, 270
+        bar_width, bar_height = 300, 20
+        await asyncio.to_thread(
+            draw.rectangle,
+            [bar_x, bar_y, bar_x + bar_width, bar_y + bar_height],
+            fill=(200, 200, 200),
+        )
+        filled_width = int(bar_width * (love_percent / 100))
+        await asyncio.to_thread(
+            draw.rectangle,
+            [bar_x, bar_y, bar_x + filled_width, bar_y + bar_height],
+            fill=(255, 0, 0),
+        )
+
+        with io.BytesIO() as image_binary:           
+            await asyncio.to_thread(img.save, image_binary, "PNG")
+            image_binary.seek(0)
+            await interaction.followup.send(
+                file=discord.File(fp=image_binary, filename="love.png")
+            )
 
     @game.command(name="geo-quiz", description="地理クイズをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)

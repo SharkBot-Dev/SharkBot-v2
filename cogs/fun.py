@@ -17,7 +17,7 @@ import pykakasi
 from discord import app_commands
 import requests
 from consts import settings
-from models import command_disable, make_embed, miq, markov, miq_china
+from models import block, command_disable, make_embed, miq, markov, miq_china
 from models.markov import HIROYUKI_TEXT
 import asyncio
 import uuid
@@ -1256,6 +1256,10 @@ class ImageGroup(app_commands.Group):
         背景色: app_commands.Choice[str],
         タイプ: app_commands.Choice[str],
     ):
+        is_blockd = await block.is_blocked_func(interaction.client, ユーザー.id, "Miq機能")
+        if is_blockd:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="そのメンバーはMiq機能を\nブロックしています。"))
+
         await interaction.response.defer()
         if タイプ.value == "gaikou":
             i = io.BytesIO()
