@@ -28,7 +28,7 @@ dependencies = [
     "deprecated==1.3.1",
     "discord==2.3.2",
     "discord-py==2.6.4",
-    "dnspython==2.7.0",
+    "dnspython==2.8.0",
     "dotenv==0.9.9",
     "fastapi==0.128.0",
     "flake8>=7.3.0",
