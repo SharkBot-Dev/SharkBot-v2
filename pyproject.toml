@@ -11,7 +11,7 @@ dependencies = [
     "aiosignal==1.4.0",
     "annotated-types==0.7.0",
     "anyio==4.12.1",
-    "attrs==25.3.0",
+    "attrs==25.4.0",
     "autopep8>=2.3.2",
     "beautifulsoup4==4.14.3",
     "blinker==1.9.0",
