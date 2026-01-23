@@ -209,6 +209,8 @@ __marimo__/
 
 /consts/settings.py
 /consts/test_settings.py
+src/consts/settings.py
+src/consts/test_settings.py
 /data
 /static
 /consts/badword.py
@@ -270,6 +272,11 @@ Graph/chart.png
 node_modules
 
 env.py
+badword.py
 /web
 
 /colorbot/bot/htsvoice
+src/youtube/settings.py
+src/sites/settings.py
+
+htsvoice
