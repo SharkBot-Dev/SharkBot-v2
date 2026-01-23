@@ -5,7 +5,7 @@ aiosignal==1.4.0
 annotated-types==0.7.0
 anyio==4.12.1
 attrs==25.3.0
-beautifulsoup4==4.13.5
+beautifulsoup4==4.14.3
 blinker==1.9.0
 braceexpand==0.1.7
 bs4==0.0.2
