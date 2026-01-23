@@ -9,7 +9,7 @@ beautifulsoup4==4.13.5
 blinker==1.9.0
 braceexpand==0.1.7
 bs4==0.0.2
-certifi==2025.8.3
+certifi==2025.11.12
 cffi==1.17.1
 charset-normalizer==3.4.3
 click==8.2.1
