@@ -278,5 +278,8 @@ badword.py
 /colorbot/bot/htsvoice
 src/youtube/settings.py
 src/sites/settings.py
+src/data
 
 htsvoice
+
+src/run_windows.bat
