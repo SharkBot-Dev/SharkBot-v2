@@ -60,7 +60,9 @@ class BotCog(commands.Cog):
         allowed_installs=app_commands.AppInstallationType(guild=True, user=True),
     )
 
-    @bot.command(name="follow", description="Botのアナウンスチャンネルをフォローします。")
+    @bot.command(
+        name="follow", description="Botのアナウンスチャンネルをフォローします。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)
@@ -76,12 +78,23 @@ class BotCog(commands.Cog):
 
         await interaction.response.defer()
         guild = self.bot.get_guild(1343124570131009579)
-        await guild.get_channel(1419883503365128212).follow(destination=interaction.channel, reason="Botのアナウンスをフォロー")
+        await guild.get_channel(1419883503365128212).follow(
+            destination=interaction.channel, reason="Botのアナウンスをフォロー"
+        )
         await asyncio.sleep(1)
-        await guild.get_channel(1347451795978453052).follow(destination=interaction.channel, reason="Botのアナウンスをフォロー")
+        await guild.get_channel(1347451795978453052).follow(
+            destination=interaction.channel, reason="Botのアナウンスをフォロー"
+        )
         await asyncio.sleep(1)
-        await guild.get_channel(1361173338763956284).follow(destination=interaction.channel, reason="Botのアナウンスをフォロー")
-        await interaction.followup.send(embed=make_embed.success_embed(title="アナウンスチャンネルを追加しました。", description="このチャンネルでBOTをお知らせを受け取ることができます。"))
+        await guild.get_channel(1361173338763956284).follow(
+            destination=interaction.channel, reason="Botのアナウンスをフォロー"
+        )
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="アナウンスチャンネルを追加しました。",
+                description="このチャンネルでBOTをお知らせを受け取ることができます。",
+            )
+        )
 
     @bot.command(name="about", description="Botの情報を取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -312,8 +325,14 @@ Sharkアカウント: {sharkaccount_count}人
                     description="サーバーにBotをインストールして使用してください。",
                 ),
             )
-        
-        return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="現在メンテナンス中です。", description="ご迷惑をおかけし申し訳ございません。"))
+
+        return await interaction.response.send_message(
+            ephemeral=True,
+            embed=make_embed.error_embed(
+                title="現在メンテナンス中です。",
+                description="ご迷惑をおかけし申し訳ございません。",
+            ),
+        )
 
         await interaction.response.defer()
 

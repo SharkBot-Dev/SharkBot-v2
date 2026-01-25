@@ -385,7 +385,7 @@ ID | 説明
             "mei": "htsvoice/mei_normal.htsvoice",
             "miku": "htsvoice/miku.htsvoice",
             "akesato": "htsvoice/akesato.htsvoice",
-            "kuon": "htsvoice/kono.htsvoice"
+            "kuon": "htsvoice/kono.htsvoice",
         }
 
         ttscheck = self.bot.async_db.TTSVoiceBeta

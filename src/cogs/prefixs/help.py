@@ -6,6 +6,7 @@ from discord import app_commands
 from models import command_disable, make_embed, pages
 import aiohttp
 
+
 class Prefixs_HelpCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -53,10 +54,7 @@ class Prefixs_HelpCog(commands.Cog):
 
                 al = al if al else "なし"
 
-                embed.add_field(
-                    name=cmd.name,
-                    value=cmd.description + f"\n別名: " + al
-                )
+                embed.add_field(name=cmd.name, value=cmd.description + f"\n別名: " + al)
 
             ems.append(embed)
 
@@ -67,7 +65,10 @@ class Prefixs_HelpCog(commands.Cog):
             e.set_footer(text=f"{c} / {len(ems)}")
             c += 1
 
-        await ctx.reply(embed=ems[0], view=pages.Pages(embeds=ems, now_page=0, page_owner=ctx.author))
+        await ctx.reply(
+            embed=ems[0],
+            view=pages.Pages(embeds=ems, now_page=0, page_owner=ctx.author),
+        )
 
     @commands.command(
         name="dashboard",

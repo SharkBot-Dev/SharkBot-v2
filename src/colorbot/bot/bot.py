@@ -9,12 +9,13 @@ intent = discord.Intents.all()
 class NewSharkBot(commands.AutoShardedBot):
     def __init__(self):
         super().__init__(
-            command_prefix=os.environ.get("PREFIX"),
-            help_command=None,
-            intents=intent
+            command_prefix=os.environ.get("PREFIX"), help_command=None, intents=intent
         )
         print("InitDone")
-        self.async_db = AsyncIOMotorClient(os.environ.get('MONGO_URI'))[os.environ.get('DB_NAME')]
+        self.async_db = AsyncIOMotorClient(os.environ.get("MONGO_URI"))[
+            os.environ.get("DB_NAME")
+        ]
+
 
 bot = NewSharkBot()
 

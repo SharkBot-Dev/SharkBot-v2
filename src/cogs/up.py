@@ -9,6 +9,7 @@ from models import command_disable, make_embed
 
 from datetime import datetime, timedelta, timezone
 
+
 class UpCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -27,7 +28,7 @@ class UpCog(commands.Cog):
             "DisboardChannel": "disboard",
             "DiscafeChannel": "discafe",
             "DisCadiaChannel": "discadia",
-            "SharkBotChannel": "sharkbot"
+            "SharkBotChannel": "sharkbot",
         }
 
         services_to_slash = {
@@ -38,7 +39,7 @@ class UpCog(commands.Cog):
             "disboard": "</bump:947088344167366698>",
             "discafe": "</up:980136954169536525>",
             "discadia": "</bump:1225075208394768496>",
-            "sharkbot": "</global up:1408658655532023855>"
+            "sharkbot": "</global up:1408658655532023855>",
         }
 
         services_name = {
@@ -49,7 +50,7 @@ class UpCog(commands.Cog):
             "disboard": "ディスボード",
             "discafe": "DCafe",
             "discadia": "Discadia",
-            "sharkbot": "SharkBot"
+            "sharkbot": "SharkBot",
         }
 
         alert_db = db_main["AlertQueue"]
@@ -57,16 +58,15 @@ class UpCog(commands.Cog):
         async def find_channel(collection):
             try:
                 data = await collection.find_one(
-                    {"Channel": interaction.channel.id},
-                    {"_id": False}
+                    {"Channel": interaction.channel.id}, {"_id": False}
                 )
                 return data or False
             except Exception:
                 return False
 
-        possible = []      # Bump可能
-        cooldown = []      # クールタイム中
-        disabled = []      # 未設定
+        possible = []  # Bump可能
+        cooldown = []  # クールタイム中
+        disabled = []  # 未設定
 
         for db_name, service_id in services.items():
             collection = db_main[db_name]
@@ -76,48 +76,60 @@ class UpCog(commands.Cog):
                 disabled.append(service_id)
                 continue
 
-            exists = await alert_db.find_one({
-                "Channel": interaction.channel.id,
-                "ID": service_id,
-                "NotifyAt": {"$gt": now}
-            })
+            exists = await alert_db.find_one(
+                {
+                    "Channel": interaction.channel.id,
+                    "ID": service_id,
+                    "NotifyAt": {"$gt": now},
+                }
+            )
 
             if exists:
                 remaining = exists["NotifyAt"] - now
                 minutes = remaining.seconds // 60
                 seconds = remaining.seconds % 60
-                cooldown.append(f"{services_name.get(service_id)}（あと {discord.utils.format_dt(discord.utils.utcnow() + timedelta(seconds=seconds, minutes=minutes), 'R')}）")
+                cooldown.append(
+                    f"{services_name.get(service_id)}（あと {discord.utils.format_dt(discord.utils.utcnow() + timedelta(seconds=seconds, minutes=minutes), 'R')}）"
+                )
             else:
-                possible.append(f"{services_name.get(service_id)} {services_to_slash.get(service_id, 'スラッシュコマンド取得失敗')}")
+                possible.append(
+                    f"{services_name.get(service_id)} {services_to_slash.get(service_id, 'スラッシュコマンド取得失敗')}"
+                )
 
         collection = db_maintwo["SharkBotChannel"]
         config = await find_channel(collection)
 
         if config:
-                
-
-            exists = await alert_db.find_one({
-                "Channel": interaction.channel.id,
-                "ID": "sharkbot",
-                "NotifyAt": {"$gt": now}
-            })
+            exists = await alert_db.find_one(
+                {
+                    "Channel": interaction.channel.id,
+                    "ID": "sharkbot",
+                    "NotifyAt": {"$gt": now},
+                }
+            )
 
             if exists:
                 remaining = exists["NotifyAt"] - now
                 minutes = remaining.seconds // 60
                 seconds = remaining.seconds % 60
-                cooldown.append(f"SharkBot（あと {discord.utils.format_dt(discord.utils.utcnow() + timedelta(seconds=seconds, minutes=minutes), 'R')}）")
+                cooldown.append(
+                    f"SharkBot（あと {discord.utils.format_dt(discord.utils.utcnow() + timedelta(seconds=seconds, minutes=minutes), 'R')}）"
+                )
             else:
-                possible.append(f"Sharkbot {services_to_slash.get('sharkbot', 'スラッシュコマンド取得失敗')}")
+                possible.append(
+                    f"Sharkbot {services_to_slash.get('sharkbot', 'スラッシュコマンド取得失敗')}"
+                )
 
         embed = discord.Embed(
             title="Bump 状況一覧",
-            description="🟢 Bump可能:\n{}\n\n🟡 クールダウン中:\n{}".format("\n".join(possible) if possible else "なし", "\n".join(cooldown) if cooldown else "なし"),
-            color=discord.Color.green()
+            description="🟢 Bump可能:\n{}\n\n🟡 クールダウン中:\n{}".format(
+                "\n".join(possible) if possible else "なし",
+                "\n".join(cooldown) if cooldown else "なし",
+            ),
+            color=discord.Color.green(),
         )
 
         return embed
-
 
     async def add_money(self, message: discord.Message):
         return
@@ -285,7 +297,10 @@ class UpCog(commands.Cog):
                         "</up:935190259111706754> でアップ。",
                         3600,
                     )
-                elif "サーバーがリストの最上段に更新されました" in message.embeds[0].title:
+                elif (
+                    "サーバーがリストの最上段に更新されました"
+                    in message.embeds[0].title
+                ):
                     db = self.bot.async_db["Main"].Dicoall
                     try:
                         dbfind = await db.find_one(
@@ -826,16 +841,17 @@ class UpCog(commands.Cog):
             )
         )
 
-    @bump.command(name="pin", description="Bumpなどがあと何分後にできるかをチャンネルの下にピン止めします。")
+    @bump.command(
+        name="pin",
+        description="Bumpなどがあと何分後にできるかをチャンネルの下にピン止めします。",
+    )
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def bump_pin(self, interaction: discord.Interaction):
         db = self.bot.async_db["Main"].LockMessage
 
-        dbfind = await db.find_one(
-            {"Channel": interaction.channel.id}, {"_id": False}
-        )
+        dbfind = await db.find_one({"Channel": interaction.channel.id}, {"_id": False})
 
         if dbfind:
             await db.delete_one(
@@ -843,15 +859,22 @@ class UpCog(commands.Cog):
                     "Channel": interaction.channel.id,
                 }
             )
-            await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="ピン止めメッセージを削除しました。"))
+            await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="ピン止めメッセージを削除しました。"
+                ),
+            )
             return
 
         view = discord.ui.View()
-        view.add_item(discord.ui.Button(
-            style=discord.ButtonStyle.red,
-            label="削除",
-            custom_id="lockmessage_delete+"
-        ))
+        view.add_item(
+            discord.ui.Button(
+                style=discord.ButtonStyle.red,
+                label="削除",
+                custom_id="lockmessage_delete+",
+            )
+        )
 
         await interaction.response.defer(ephemeral=True)
 
@@ -871,13 +894,16 @@ class UpCog(commands.Cog):
                     "Title": embed.title,
                     "Desc": embed.description,
                     "MessageID": msg.id,
-                    "Service": "bump_pin"
+                    "Service": "bump_pin",
                 }
             },
             upsert=True,
         )
 
-        await interaction.followup.send(embed=make_embed.success_embed(title="ピン止めメッセージを作成しました。"), ephemeral=True)
+        await interaction.followup.send(
+            embed=make_embed.success_embed(title="ピン止めメッセージを作成しました。"),
+            ephemeral=True,
+        )
 
 
 async def setup(bot):

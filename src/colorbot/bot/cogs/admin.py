@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from models import make_embed
 
+
 class AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -47,25 +48,26 @@ class AdminCog(commands.Cog):
         if attatch[0].filename.endswith(".py"):
             return await ctx.reply("添付ファイルは.pyで終わる必要があります。")
         await attatch[0].save(f"cogs/{attatch[0].filename}")
-        await ctx.reply('保存しました。')
+        await ctx.reply("保存しました。")
 
     @commands.command(name="reload")
     @commands.is_owner()
     async def reload(self, ctx: commands.Context, cog_name: str):
         await self.bot.reload_extension(f"cogs.{cog_name}")
-        await ctx.reply('Reloaded!')
+        await ctx.reply("Reloaded!")
 
     @commands.command(name="load")
     @commands.is_owner()
     async def load(self, ctx: commands.Context, cog_name: str):
         await self.bot.load_extension(f"cogs.{cog_name}")
-        await ctx.reply('Loaded!')
+        await ctx.reply("Loaded!")
 
     @commands.command(name="sync")
     @commands.is_owner()
     async def sync(self, ctx: commands.Context):
         await self.bot.tree.sync()
-        await ctx.reply('Synced!')
+        await ctx.reply("Synced!")
+
 
 async def setup(bot):
     await bot.add_cog(AdminCog(bot))

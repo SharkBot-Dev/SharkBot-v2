@@ -46,21 +46,22 @@ class ListingCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def listing_member(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        
+
         member_list = interaction.guild.members
         split_size = 20
         chunked_members = [
-            member_list[i : i + split_size] for i in range(0, len(member_list), split_size)
+            member_list[i : i + split_size]
+            for i in range(0, len(member_list), split_size)
         ]
 
         embeds = []
         total_pages = len(chunked_members)
-        
+
         for i, members in enumerate(chunked_members):
             embed = discord.Embed(
                 title=f"メンバーリスト ({len(member_list)}人)",
                 color=discord.Color.blue(),
-                description="\n".join([f"{m.name} (`{m.id}`)" for m in members])
+                description="\n".join([f"{m.name} (`{m.id}`)" for m in members]),
             )
             embed.set_footer(text=f"Page {i + 1} / {total_pages}")
             embeds.append(embed)
@@ -69,7 +70,9 @@ class ListingCog(commands.Cog):
 
         msg = await interaction.followup.send(embed=embeds[0], view=view)
 
-    @listing.command(name="role-member", description="ロールとそのメンバー数をリスト化します。")
+    @listing.command(
+        name="role-member", description="ロールとそのメンバー数をリスト化します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_roles=True)
@@ -77,7 +80,9 @@ class ListingCog(commands.Cog):
         await interaction.response.defer()
 
         raw = self.bot.raw(bot=self.bot)
-        roles = await raw.get_guild_role_member_counts(guildId=str(interaction.guild_id))
+        roles = await raw.get_guild_role_member_counts(
+            guildId=str(interaction.guild_id)
+        )
 
         if not isinstance(roles, dict):
             return await interaction.followup.send("データの取得に失敗しました。")
@@ -100,7 +105,7 @@ class ListingCog(commands.Cog):
             embed = discord.Embed(
                 title=f"ロールメンバー数一覧 ({len(r)}種類)",
                 description="\n".join(role_chunk),
-                color=discord.Color.blue()
+                color=discord.Color.blue(),
             )
             embed.set_footer(text=f"Page {i + 1} / {total_pages}")
             embeds.append(embed)
@@ -108,9 +113,7 @@ class ListingCog(commands.Cog):
         view = pages.Pages(embeds=embeds, now_page=0)
 
         msg = await interaction.followup.send(
-            embed=embeds[0], 
-            view=view, 
-            allowed_mentions=discord.AllowedMentions.none()
+            embed=embeds[0], view=view, allowed_mentions=discord.AllowedMentions.none()
         )
 
     @listing.command(name="role", description="ロールをリスト化します。")
@@ -119,7 +122,7 @@ class ListingCog(commands.Cog):
     @app_commands.checks.has_permissions(manage_roles=True)
     async def listing_role(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        
+
         role_list = list(reversed(interaction.guild.roles))
 
         if not role_list:
@@ -134,11 +137,11 @@ class ListingCog(commands.Cog):
         total_pages = len(chunked_roles)
         for i, roles in enumerate(chunked_roles):
             description = "\n".join([f"{r.mention} (`{r.id}`)" for r in roles])
-            
+
             embed = discord.Embed(
                 title=f"ロールリスト ({len(role_list)}個)",
                 description=description,
-                color=discord.Color.blue()
+                color=discord.Color.blue(),
             )
             embed.set_footer(text=f"Page {i + 1} / {total_pages}")
             embeds.append(embed)
@@ -146,9 +149,7 @@ class ListingCog(commands.Cog):
         view = pages.Pages(embeds=embeds, now_page=0)
 
         msg = await interaction.followup.send(
-            embed=embeds[0], 
-            view=view,
-            allowed_mentions=discord.AllowedMentions.none()
+            embed=embeds[0], view=view, allowed_mentions=discord.AllowedMentions.none()
         )
 
     @listing.command(name="emoji", description="サーバー内絵文字をリスト化します。")
@@ -161,19 +162,17 @@ class ListingCog(commands.Cog):
         if len(emoji_list) == 0:
             return await interaction.followup.send("絵文字がありません。")
 
-        chunked_emojis = [
-            emoji_list[i : i + 20] for i in range(0, len(emoji_list), 20)
-        ]
+        chunked_emojis = [emoji_list[i : i + 20] for i in range(0, len(emoji_list), 20)]
 
         embeds = []
         total_pages = len(chunked_emojis)
         for i, emojis in enumerate(chunked_emojis):
             description = "\n".join([f"{r.__str__()} (`{r.id}`)" for r in emojis])
-            
+
             embed = discord.Embed(
                 title=f"絵文字リスト ({len(emoji_list)}個)",
                 description=description,
-                color=discord.Color.blue()
+                color=discord.Color.blue(),
             )
             embed.set_footer(text=f"Page {i + 1} / {total_pages}")
             embeds.append(embed)
@@ -181,9 +180,7 @@ class ListingCog(commands.Cog):
         view = pages.Pages(embeds=embeds, now_page=0)
 
         msg = await interaction.followup.send(
-            embed=embeds[0], 
-            view=view,
-            allowed_mentions=discord.AllowedMentions.none()
+            embed=embeds[0], view=view, allowed_mentions=discord.AllowedMentions.none()
         )
 
     @listing.command(
@@ -207,11 +204,11 @@ class ListingCog(commands.Cog):
         total_pages = len(sp_invite_list)
         for i, invite in enumerate(sp_invite_list):
             description = "\n".join([f"{i.inviter.mention} {i.url}" for i in invite])
-            
+
             embed = discord.Embed(
                 title=f"招待リンクリスト ({len(invite_list)}個)",
                 description=description,
-                color=discord.Color.blue()
+                color=discord.Color.blue(),
             )
             embed.set_footer(text=f"Page {i + 1} / {total_pages}")
             embeds.append(embed)
@@ -219,9 +216,7 @@ class ListingCog(commands.Cog):
         view = pages.Pages(embeds=embeds, now_page=0)
 
         msg = await interaction.followup.send(
-            embed=embeds[0], 
-            view=view,
-            allowed_mentions=discord.AllowedMentions.none()
+            embed=embeds[0], view=view, allowed_mentions=discord.AllowedMentions.none()
         )
 
     @listing.command(name="inviter", description="招待回数をリスト化します。")
@@ -229,7 +224,7 @@ class ListingCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def listing_invite(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        
+
         invite_list = await interaction.guild.invites()
 
         if not invite_list:
@@ -244,19 +239,22 @@ class ListingCog(commands.Cog):
 
         split_size = 20
         split_ranking_chunks = [
-            sorted_ranking[i : i + split_size] for i in range(0, len(sorted_ranking), split_size)
+            sorted_ranking[i : i + split_size]
+            for i in range(0, len(sorted_ranking), split_size)
         ]
 
         embeds = []
         total_pages = len(split_ranking_chunks)
-        
+
         for i, chunk in enumerate(split_ranking_chunks):
-            description = "\n".join([f"{inviter} ： **{count}** 回" for inviter, count in chunk])
-            
+            description = "\n".join(
+                [f"{inviter} ： **{count}** 回" for inviter, count in chunk]
+            )
+
             embed = discord.Embed(
                 title=f"招待ランキング (合計 {len(sorted_ranking)}名)",
                 description=description,
-                color=discord.Color.blue()
+                color=discord.Color.blue(),
             )
             embed.set_footer(text=f"Page {i + 1} / {total_pages}")
             embeds.append(embed)
@@ -264,9 +262,7 @@ class ListingCog(commands.Cog):
         view = pages.Pages(embeds=embeds, now_page=0)
 
         msg = await interaction.followup.send(
-            embed=embeds[0], 
-            view=view,
-            allowed_mentions=discord.AllowedMentions.none()
+            embed=embeds[0], view=view, allowed_mentions=discord.AllowedMentions.none()
         )
 
     @listing.command(name="ban", description="Banしたメンバーをリスト化します.")
@@ -275,23 +271,27 @@ class ListingCog(commands.Cog):
     @app_commands.checks.has_permissions(ban_members=True)
     async def listing_ban(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        
+
         bans = [b async for b in interaction.guild.bans()]
-        
+
         if not bans:
             return await interaction.followup.send("Banされているメンバーはいません。")
 
         split_size = 20
-        chunked_bans = [bans[i : i + split_size] for i in range(0, len(bans), split_size)]
+        chunked_bans = [
+            bans[i : i + split_size] for i in range(0, len(bans), split_size)
+        ]
 
         embeds = []
         total_pages = len(chunked_bans)
         for i, chunk in enumerate(chunked_bans):
-            description = "\n".join([f"{entry.user.name} (`{entry.user.id}`)" for entry in chunk])
+            description = "\n".join(
+                [f"{entry.user.name} (`{entry.user.id}`)" for entry in chunk]
+            )
             embed = discord.Embed(
                 title=f"BANリスト ({len(bans)}人)",
                 description=description,
-                color=discord.Color.blue()
+                color=discord.Color.blue(),
             )
             embed.set_footer(text=f"Page {i + 1} / {total_pages}")
             embeds.append(embed)
@@ -308,15 +308,22 @@ class ListingCog(commands.Cog):
     @app_commands.checks.has_permissions(ban_members=True)
     async def listing_guild_ban(self, interaction: discord.Interaction):
         await interaction.response.defer()
-        
+
         db = self.bot.async_db["Main"].GuildBAN
-        guild_ban_list = [b async for b in db.find({"Guild": str(interaction.guild.id)})]
-        
+        guild_ban_list = [
+            b async for b in db.find({"Guild": str(interaction.guild.id)})
+        ]
+
         if not guild_ban_list:
-            return await interaction.followup.send("Banされているサーバーはありません。")
+            return await interaction.followup.send(
+                "Banされているサーバーはありません。"
+            )
 
         split_size = 20
-        chunked_guilds = [guild_ban_list[i : i + split_size] for i in range(0, len(guild_ban_list), split_size)]
+        chunked_guilds = [
+            guild_ban_list[i : i + split_size]
+            for i in range(0, len(guild_ban_list), split_size)
+        ]
 
         embeds = []
         total_pages = len(chunked_guilds)
@@ -325,7 +332,7 @@ class ListingCog(commands.Cog):
             embed = discord.Embed(
                 title=f"BANサーバーリスト ({len(guild_ban_list)}サーバー)",
                 description=description,
-                color=discord.Color.blue()
+                color=discord.Color.blue(),
             )
             embed.set_footer(text=f"Page {i + 1} / {total_pages}")
             embeds.append(embed)
@@ -503,27 +510,32 @@ class ListingCog(commands.Cog):
     @listing.command(name="graph", description="グラフを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def graph_make(
-        self,
-        interaction: discord.Interaction,
-        数式: str
-    ):
+    async def graph_make(self, interaction: discord.Interaction, 数式: str):
         await interaction.response.defer()
         async with aiohttp.ClientSession() as session:
             async with session.post(
-                "http://localhost:3067/formula", json={
-                    'formula': 数式
-                }
+                "http://localhost:3067/formula", json={"formula": 数式}
             ) as response:
                 if response.status != 200:
                     e = await response.json()
-                    return await interaction.followup.send(embed=make_embed.error_embed(title="グラフの作成に失敗しました。", description=f"```{e.get('error', 'エラーの取得失敗')}```"))
-                
+                    return await interaction.followup.send(
+                        embed=make_embed.error_embed(
+                            title="グラフの作成に失敗しました。",
+                            description=f"```{e.get('error', 'エラーの取得失敗')}```",
+                        )
+                    )
+
                 i = io.BytesIO(await response.read())
                 file = discord.File(i, filename="graph.png")
 
-                await interaction.followup.send(file=file, embed=make_embed.success_embed(title="グラフを作成しました。", description=f"数式: `{数式}`"))
+                await interaction.followup.send(
+                    file=file,
+                    embed=make_embed.success_embed(
+                        title="グラフを作成しました。", description=f"数式: `{数式}`"
+                    ),
+                )
                 i.close()
+
 
 async def setup(bot):
     await bot.add_cog(ListingCog(bot))

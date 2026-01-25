@@ -15,6 +15,7 @@ SERVICE_NAME = {
     "sabachan": "SabaChannel",
 }
 
+
 class LockMessageEditModal(discord.ui.Modal):
     def __init__(self, msgid: discord.Message):
         super().__init__(title="固定メッセージの修正")
@@ -101,7 +102,7 @@ class LockMessageCog(commands.Cog):
             "DisboardChannel": "disboard",
             "DiscafeChannel": "discafe",
             "DisCadiaChannel": "discadia",
-            "SharkBotChannel": "sharkbot"
+            "SharkBotChannel": "sharkbot",
         }
 
         services_to_slash = {
@@ -112,7 +113,7 @@ class LockMessageCog(commands.Cog):
             "disboard": "</bump:947088344167366698>",
             "discafe": "</up:980136954169536525>",
             "discadia": "</bump:1225075208394768496>",
-            "sharkbot": "</global up:1408658655532023855>"
+            "sharkbot": "</global up:1408658655532023855>",
         }
 
         services_name = {
@@ -123,7 +124,7 @@ class LockMessageCog(commands.Cog):
             "disboard": "ディスボード",
             "discafe": "DCafe",
             "discadia": "Discadia",
-            "sharkbot": "SharkBot"
+            "sharkbot": "SharkBot",
         }
 
         alert_db = db_main["AlertQueue"]
@@ -131,16 +132,15 @@ class LockMessageCog(commands.Cog):
         async def find_channel(collection):
             try:
                 data = await collection.find_one(
-                    {"Channel": message.channel.id},
-                    {"_id": False}
+                    {"Channel": message.channel.id}, {"_id": False}
                 )
                 return data or False
             except Exception:
                 return False
 
-        possible = []      # Bump可能
-        cooldown = []      # クールタイム中
-        disabled = []      # 未設定
+        possible = []  # Bump可能
+        cooldown = []  # クールタイム中
+        disabled = []  # 未設定
 
         for db_name, service_id in services.items():
             collection = db_main[db_name]
@@ -150,43 +150,56 @@ class LockMessageCog(commands.Cog):
                 disabled.append(service_id)
                 continue
 
-            exists = await alert_db.find_one({
-                "Channel": message.channel.id,
-                "ID": service_id,
-                "NotifyAt": {"$gt": now}
-            })
+            exists = await alert_db.find_one(
+                {
+                    "Channel": message.channel.id,
+                    "ID": service_id,
+                    "NotifyAt": {"$gt": now},
+                }
+            )
 
             if exists:
                 remaining = exists["NotifyAt"] - now
                 minutes = remaining.seconds // 60
                 seconds = remaining.seconds % 60
-                cooldown.append(f"{services_name.get(service_id)}（あと {discord.utils.format_dt(discord.utils.utcnow() + timedelta(seconds=seconds, minutes=minutes), 'R')}）")
+                cooldown.append(
+                    f"{services_name.get(service_id)}（あと {discord.utils.format_dt(discord.utils.utcnow() + timedelta(seconds=seconds, minutes=minutes), 'R')}）"
+                )
             else:
-                possible.append(f"{services_name.get(service_id)} {services_to_slash.get(service_id, 'スラッシュコマンド取得失敗')}")
+                possible.append(
+                    f"{services_name.get(service_id)} {services_to_slash.get(service_id, 'スラッシュコマンド取得失敗')}"
+                )
 
         collection = db_maintwo["SharkBotChannel"]
         config = await find_channel(collection)
         if config:
-                
-
-            exists = await alert_db.find_one({
-                "Channel": message.channel.id,
-                "ID": "sharkbot",
-                "NotifyAt": {"$gt": now}
-            })
+            exists = await alert_db.find_one(
+                {
+                    "Channel": message.channel.id,
+                    "ID": "sharkbot",
+                    "NotifyAt": {"$gt": now},
+                }
+            )
 
             if exists:
                 remaining = exists["NotifyAt"] - now
                 minutes = remaining.seconds // 60
                 seconds = remaining.seconds % 60
-                cooldown.append(f"SharkBot（あと {discord.utils.format_dt(discord.utils.utcnow() + timedelta(seconds=seconds, minutes=minutes), 'R')}）")
+                cooldown.append(
+                    f"SharkBot（あと {discord.utils.format_dt(discord.utils.utcnow() + timedelta(seconds=seconds, minutes=minutes), 'R')}）"
+                )
             else:
-                possible.append(f"Sharkbot {services_to_slash.get('sharkbot', 'スラッシュコマンド取得失敗')}")
+                possible.append(
+                    f"Sharkbot {services_to_slash.get('sharkbot', 'スラッシュコマンド取得失敗')}"
+                )
 
         embed = discord.Embed(
             title="Bump 状況一覧",
-            description="🟢 Bump可能:\n{}\n\n🟡 クールダウン中:\n{}".format("\n".join(possible) if possible else "なし", "\n".join(cooldown) if cooldown else "なし"),
-            color=discord.Color.green()
+            description="🟢 Bump可能:\n{}\n\n🟡 クールダウン中:\n{}".format(
+                "\n".join(possible) if possible else "なし",
+                "\n".join(cooldown) if cooldown else "なし",
+            ),
+            color=discord.Color.green(),
         )
 
         return embed
@@ -274,10 +287,9 @@ class LockMessageCog(commands.Cog):
                 )
             )
 
-            service = dbfind.get('Service')
+            service = dbfind.get("Service")
 
             if service is None:
-
                 view.add_item(
                     discord.ui.Button(
                         style=discord.ButtonStyle.blurple,

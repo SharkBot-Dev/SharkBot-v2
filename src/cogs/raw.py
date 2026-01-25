@@ -86,14 +86,11 @@ class Raw:
                     )
                 return await response.json()
 
-    async def get_guild_role_member_counts(
-        self,
-        guildId: str
-    ):
+    async def get_guild_role_member_counts(self, guildId: str):
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 f"{self.api_base}/guilds/{guildId}/roles/member-counts",
-                headers={"Authorization": f"Bot {self.token}"}
+                headers={"Authorization": f"Bot {self.token}"},
             ) as response:
                 if response.status != 200:
                     text = await response.text()
@@ -112,13 +109,22 @@ class Raw:
         role_ids: list[int] = None,
         target_type: int = None,
         target_user_id: int = None,
-        target_application_id: int = None
+        target_application_id: int = None,
     ):
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 f"{self.api_base}/channels/{channelId}/invites",
                 headers={"Authorization": f"Bot {self.token}"},
-                json={"max_age": max_age, "max_uses": max_uses, "temporary": temporary, "unique": unique, "target_type": target_type, "target_user_id": target_user_id, "target_application_id": target_application_id, "role_ids": role_ids}
+                json={
+                    "max_age": max_age,
+                    "max_uses": max_uses,
+                    "temporary": temporary,
+                    "unique": unique,
+                    "target_type": target_type,
+                    "target_user_id": target_user_id,
+                    "target_application_id": target_application_id,
+                    "role_ids": role_ids,
+                },
             ) as response:
                 if response.status != 200:
                     text = await response.text()
@@ -126,15 +132,12 @@ class Raw:
                         f"Failed to invite channel: {response.status} {text}"
                     )
                 return await response.json()
-            
-    async def get_channel_invite_target_user(
-        self,
-        inviteCode: str
-    ):
+
+    async def get_channel_invite_target_user(self, inviteCode: str):
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 f"{self.api_base}/invites/{inviteCode}",
-                headers={"Authorization": f"Bot {self.token}"}
+                headers={"Authorization": f"Bot {self.token}"},
             ) as response:
                 if response.status != 200:
                     text = await response.text()
@@ -142,7 +145,8 @@ class Raw:
                         f"Failed to get invite target user: {response.status} {text}"
                     )
                 return await response.json()
-            
+
+
 class RawCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot

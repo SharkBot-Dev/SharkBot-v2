@@ -5,8 +5,10 @@ from discord import app_commands
 
 from models import make_embed
 
+
 def floor100(n: int) -> int:
     return n // 100 * 100
+
 
 class ServerStats(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -22,11 +24,11 @@ class ServerStats(commands.Cog):
             return
         if not dbfind:
             return False
-        if not dbfind.get('Enabled'):
+        if not dbfind.get("Enabled"):
             return False
-        message = dbfind.get('Message')
+        message = dbfind.get("Message")
         return message
-    
+
     async def get_now_messages(self, guild: discord.Guild):
         db = self.bot.async_db["MainTwo"].ServerStat
         try:
@@ -35,9 +37,9 @@ class ServerStats(commands.Cog):
             return
         if not dbfind:
             return False
-        if not dbfind.get('Enabled'):
+        if not dbfind.get("Enabled"):
             return False
-        message = dbfind.get('NowMessage')
+        message = dbfind.get("NowMessage")
         return message
 
     @tasks.loop(minutes=5)
@@ -66,9 +68,7 @@ class ServerStats(commands.Cog):
                         continue
                     new_name = f"人間数: {len(list(filter(lambda m: not m.bot, guild.members)))}人"
                     if channel.name != new_name:
-                        await channel.edit(
-                            name=new_name
-                        )
+                        await channel.edit(name=new_name)
             await asyncio.sleep(1)
             if messages_channel:
                 channel = guild.get_channel(messages_channel)
@@ -79,9 +79,7 @@ class ServerStats(commands.Cog):
                     if msg:
                         new_name = f"メッセージ数: {floor100(msg)}個"
                         if channel.name != new_name:
-                            await channel.edit(
-                                name=new_name
-                            )
+                            await channel.edit(name=new_name)
             if now_messages_channel:
                 channel = guild.get_channel(now_messages_channel)
                 if channel:
@@ -91,9 +89,7 @@ class ServerStats(commands.Cog):
                     if nmsg:
                         new_name = f"今日のメッセージ数: {floor100(nmsg)}個"
                         if channel.name != new_name:
-                            await channel.edit(
-                                name=new_name
-                            )
+                            await channel.edit(name=new_name)
             await asyncio.sleep(1)
 
     server_status = app_commands.Group(
@@ -147,7 +143,12 @@ class ServerStats(commands.Cog):
         elif 何を表示するか.value == "messages":
             msg = await self.get_messages(interaction.guild)
             if not msg:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="統計情報の収集が無効化されています。", description="/settings stat setting で有効にして下さい。"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="統計情報の収集が無効化されています。",
+                        description="/settings stat setting で有効にして下さい。",
+                    )
+                )
             ch = await カテゴリー.create_voice_channel(
                 name=f"メッセージ数: {floor100(msg)}個"
             )
@@ -159,7 +160,12 @@ class ServerStats(commands.Cog):
         elif 何を表示するか.value == "now_messages":
             nmsg = await self.get_now_messages(interaction.guild)
             if not nmsg:
-                return await interaction.followup.send(embed=make_embed.error_embed(title="統計情報の収集が無効化されています。", description="/settings stat setting で有効にして下さい。"))
+                return await interaction.followup.send(
+                    embed=make_embed.error_embed(
+                        title="統計情報の収集が無効化されています。",
+                        description="/settings stat setting で有効にして下さい。",
+                    )
+                )
             ch = await カテゴリー.create_voice_channel(
                 name=f"今日のメッセージ数: {floor100(nmsg)}個"
             )

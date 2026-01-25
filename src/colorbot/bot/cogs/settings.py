@@ -4,6 +4,7 @@ import discord
 
 from models import make_embed
 
+
 class SettingsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -100,10 +101,9 @@ class SettingsCog(commands.Cog):
                     )
                 )
             await interaction.response.send_message(
-                embed=make_embed.success_embed(
-                    title="メッセージ固定を無効化しました。"
-                )
+                embed=make_embed.success_embed(title="メッセージ固定を無効化しました。")
             )
+
 
 async def setup(bot):
     await bot.add_cog(SettingsCog(bot))

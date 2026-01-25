@@ -17,6 +17,7 @@ from google.genai.types import GenerateContentConfig
 
 cooldown_aichat = {}
 
+
 class AICog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -78,21 +79,30 @@ class AICog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def aichat_name(
-        self,
-        interaction: discord.Interaction,
-        ユーザー: discord.User = None
+        self, interaction: discord.Interaction, ユーザー: discord.User = None
     ):
         user = ユーザー.display_name if ユーザー else interaction.user.display_name
 
         check = await self.is_premium(interaction.user)
         if not check:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="あなたは寄付者ではありません！", description="この機能は寄付者のみ使用できます。\n現在寄付は受け付けておりません。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="あなたは寄付者ではありません！",
+                    description="この機能は寄付者のみ使用できます。\n現在寄付は受け付けておりません。",
+                ),
+            )
 
         await interaction.response.defer()
 
         a_c, ti = await self.add_cooldown(interaction.user, "name", 60)
         if not a_c:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="クールダウン中です。", description=f"あと{ti}秒お待ちください。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="クールダウン中です。",
+                    description=f"あと{ti}秒お待ちください。",
+                )
+            )
 
         api_key = settings.GEMINI_APIKEY
         if not api_key:
@@ -107,48 +117,54 @@ class AICog(commands.Cog):
 """
 
         try:
-
             name = await client.aio.models.generate_content(
-                model="gemma-3-27b-it",
-                contents=prompt
+                model="gemma-3-27b-it", contents=prompt
             )
         except:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="エラーが発生しました。", description="レートリミットである可能性があります。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="エラーが発生しました。",
+                    description="レートリミットである可能性があります。",
+                )
+            )
 
-        names = re.findall(r'「.+」', name.text)
+        names = re.findall(r"「.+」", name.text)
 
         if not names:
             embed = make_embed.error_embed(
-                title="名前の生成に失敗しました", 
-                description=f"AIが名前を生成できませんでした。"
+                title="名前の生成に失敗しました",
+                description=f"AIが名前を生成できませんでした。",
             )
             await interaction.followup.send(embed=embed)
             return
 
-        embed = make_embed.success_embed(title=f"「{user}」さんに合う新しい名前を考えました。")
+        embed = make_embed.success_embed(
+            title=f"「{user}」さんに合う新しい名前を考えました。"
+        )
         for i, n in enumerate(names):
-            embed.add_field(name=f"候補 {i+1}", value=n, inline=False)
-                
+            embed.add_field(name=f"候補 {i + 1}", value=n, inline=False)
+
         await interaction.followup.send(embed=embed)
 
     @aichat.command(name="keigo", description="AIで敬語を生成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def aichat_keigo(
-        self,
-        interaction: discord.Interaction,
-        口語: str
-    ):
+    async def aichat_keigo(self, interaction: discord.Interaction, 口語: str):
         await interaction.response.defer(ephemeral=True)
 
         a_c, ti = await self.add_cooldown(interaction.user, "keigo", 15)
         if not a_c:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="クールダウン中です。", description=f"あと{ti}秒お待ちください。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="クールダウン中です。",
+                    description=f"あと{ti}秒お待ちください。",
+                )
+            )
 
         json_data = {
-            'kougo_writing': 口語,
-            'mode': 'direct',
-            'translation_id': '',
+            "kougo_writing": 口語,
+            "mode": "direct",
+            "translation_id": "",
         }
 
         async with aiohttp.ClientSession() as session:
@@ -157,7 +173,14 @@ class AICog(commands.Cog):
                 json=json_data,
             ) as response:
                 response_data = await response.json()
-                await interaction.followup.send(embed=make_embed.success_embed(title="敬語を生成しました。", description=response_data.get("content", "敬語に変換できませんでした。")))
+                await interaction.followup.send(
+                    embed=make_embed.success_embed(
+                        title="敬語を生成しました。",
+                        description=response_data.get(
+                            "content", "敬語に変換できませんでした。"
+                        ),
+                    )
+                )
 
     @commands.Cog.listener("on_message")
     async def on_message_aichat(self, message: discord.Message):
@@ -168,16 +191,19 @@ class AICog(commands.Cog):
         db = self.bot.async_db["MainTwo"].AIChat
 
         try:
-            dbfind = await db.find_one({"Guild": message.guild.id, "Channel": message.channel.id}, {"_id": False})
+            dbfind = await db.find_one(
+                {"Guild": message.guild.id, "Channel": message.channel.id},
+                {"_id": False},
+            )
         except:
             return
 
         if dbfind is None:
             return
-        
+
         if not dbfind.get("Enabled"):
             return
-        
+
         block = await is_ban.is_blockd_by_message(message)
 
         if not block:
@@ -207,7 +233,12 @@ class AICog(commands.Cog):
         if not check:
             a_c, ti = await self.add_cooldown(message.author, "aichat", 1800)
             if not a_c:
-                return await message.reply(embed=make_embed.error_embed(title="レートリミットです。", description="AIChatは、一人当たり30分に一回のみ使用できます。"))
+                return await message.reply(
+                    embed=make_embed.error_embed(
+                        title="レートリミットです。",
+                        description="AIChatは、一人当たり30分に一回のみ使用できます。",
+                    )
+                )
 
         api_key = settings.GEMINI_APIKEY
         if not api_key:
@@ -227,31 +258,36 @@ class AICog(commands.Cog):
 """
 
         try:
-
             text = await client.aio.models.generate_content(
-                model="gemma-3-27b-it",
-                contents=prompt
+                model="gemma-3-27b-it", contents=prompt
             )
 
             chunks = []
             for i in range(0, len(text.text), 1000):
-                chunks.append(text.text[i:i+1000])
+                chunks.append(text.text[i : i + 1000])
 
             for c in chunks:
-                await webhook.send(content=c, username="GoogleのAI", avatar_url=self.bot.user.avatar.url, allowed_mentions=discord.AllowedMentions.none())
+                await webhook.send(
+                    content=c,
+                    username="GoogleのAI",
+                    avatar_url=self.bot.user.avatar.url,
+                    allowed_mentions=discord.AllowedMentions.none(),
+                )
                 await asyncio.sleep(2)
         except Exception as e:
             # print(f"AIChatError: {e}")
-            return await message.reply(embed=make_embed.error_embed(title="エラーが発生しました。", description="レートリミットである可能性があります。"))
+            return await message.reply(
+                embed=make_embed.error_embed(
+                    title="エラーが発生しました。",
+                    description="レートリミットである可能性があります。",
+                )
+            )
 
     @aichat.command(name="chat", description="AIに質問できるチャンネルを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def aichat_chat(
-        self,
-        interaction: discord.Interaction
-    ):
+    async def aichat_chat(self, interaction: discord.Interaction):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
             return await interaction.response.send_message(
                 ephemeral=True,
@@ -272,21 +308,28 @@ class AICog(commands.Cog):
                 {"$set": {"Enabled": True, "Channel": interaction.channel.id}},
                 upsert=True,
             )
-            return await interaction.response.send_message(embed=make_embed.success_embed(title="AIチャットを有効化しました。"))
+            return await interaction.response.send_message(
+                embed=make_embed.success_embed(title="AIチャットを有効化しました。")
+            )
         else:
-            if not dbfind.get('Enabled'):
+            if not dbfind.get("Enabled"):
                 await db.update_one(
                     {"Guild": interaction.guild.id},
                     {"$set": {"Enabled": True, "Channel": interaction.channel.id}},
                     upsert=True,
                 )
-                return await interaction.response.send_message(embed=make_embed.success_embed(title="AIチャットを有効化しました。"))
+                return await interaction.response.send_message(
+                    embed=make_embed.success_embed(title="AIチャットを有効化しました。")
+                )
             await db.update_one(
                 {"Guild": interaction.guild.id},
                 {"$set": {"Enabled": False}},
                 upsert=True,
             )
-            return await interaction.response.send_message(embed=make_embed.success_embed(title="AIチャットを無効化しました。"))
+            return await interaction.response.send_message(
+                embed=make_embed.success_embed(title="AIチャットを無効化しました。")
+            )
+
 
 async def setup(bot):
     await bot.add_cog(AICog(bot))

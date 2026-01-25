@@ -16,12 +16,7 @@ class LoopCog(commands.Cog):
         self.check_loop.cancel()
 
     async def loop_create(
-        self,
-        time: timedelta,
-        event: str,
-        /,
-        *args: Any,
-        **kwargs: Any
+        self, time: timedelta, event: str, /, *args: Any, **kwargs: Any
     ):
         notify_time = datetime.now(timezone.utc) + time
         db = self.bot.async_db["MainTwo"].LoopQueue
@@ -66,7 +61,9 @@ class LoopCog(commands.Cog):
 
         if event == "auto_reset_event":
             guild_id = args[0]
-            await db.delete_many({"Event": event, "Guild": guild_id, "Channel": args[1]})
+            await db.delete_many(
+                {"Event": event, "Guild": guild_id, "Channel": args[1]}
+            )
             return
 
         await db.delete_many({"Event": event, "Args": args})

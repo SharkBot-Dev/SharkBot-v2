@@ -179,7 +179,7 @@ class AchievementCog(commands.Cog):
         if 有効か:
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {'$set': {"Guild": interaction.guild.id}},
+                {"$set": {"Guild": interaction.guild.id}},
                 upsert=True,
             )
             await interaction.response.send_message(
@@ -218,13 +218,15 @@ class AchievementCog(commands.Cog):
         db = self.bot.async_db["Main"].Achievements
         await db.update_one(
             {"Guild": interaction.guild.id, "Name": 実績名},
-            {'$set': {
-                "Guild": interaction.guild.id,
-                "Name": 実績名,
-                "Value": 値,
-                "If": をする.value,
-                "Role": ロール.id if ロール else 0,
-            }},
+            {
+                "$set": {
+                    "Guild": interaction.guild.id,
+                    "Name": 実績名,
+                    "Value": 値,
+                    "If": をする.value,
+                    "Role": ロール.id if ロール else 0,
+                }
+            },
             upsert=True,
         )
         await interaction.response.send_message(
@@ -269,7 +271,7 @@ class AchievementCog(commands.Cog):
         if チャンネル:
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
+                {"$set": {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
                 upsert=True,
             )
             await interaction.response.send_message(

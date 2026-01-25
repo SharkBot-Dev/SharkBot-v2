@@ -9,6 +9,7 @@ class BotLogCog(commands.Cog):
         print("init -> BotLogCog")
 
     # 不要なので削除
-    
+
+
 async def setup(bot):
     await bot.add_cog(BotLogCog(bot))

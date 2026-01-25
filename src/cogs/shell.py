@@ -498,7 +498,7 @@ class ShellCog(commands.Cog):
                     avatar_url="https://images.icon-icons.com/112/PNG/512/python_18894.png",
                 )
                 return
-            
+
     @commands.Cog.listener("on_message")
     async def on_message_nodejs_shell(self, message: discord.Message):
         if message.author.bot:
@@ -511,7 +511,7 @@ class ShellCog(commands.Cog):
             return
         if dbfind is None:
             return
-        
+
         current_time = time.time()
         last_message_time = cooldown_python_shell.get(message.channel.id, 0)
         if current_time - last_message_time < 5:
@@ -636,7 +636,7 @@ class ShellCog(commands.Cog):
             return await interaction.response.send_message(
                 embed=make_embed.success_embed(title="Pythonシェルを無効化しました。")
             )
-        
+
     @shell.command(name="nodejs", description="nodejsシェルを使用します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_channels=True)

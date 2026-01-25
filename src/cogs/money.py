@@ -44,6 +44,7 @@ def calculate_score(hand):
         aces -= 1
     return score
 
+
 class ScratchCardview(discord.ui.View):
     def __init__(self, player: discord.User, coin: int):
         super().__init__(timeout=60)
@@ -58,10 +59,15 @@ class ScratchCardview(discord.ui.View):
             )
             return False
         return True
-    
+
     async def end_game(self, interaction: discord.Interaction, hit_id: int):
         await interaction.response.defer(ephemeral=True)
-        await interaction.message.edit(embed=discord.Embed(title="スクラッチカードを削っています・・", color=discord.Color.green()), view=None)
+        await interaction.message.edit(
+            embed=discord.Embed(
+                title="スクラッチカードを削っています・・", color=discord.Color.green()
+            ),
+            view=None,
+        )
         await asyncio.sleep(3)
 
         rand = random.randint(1, 3)
@@ -70,14 +76,18 @@ class ScratchCardview(discord.ui.View):
                 interaction.guild, interaction.user, -self.coin
             )
             await Money(interaction.client).add_server_money(
-                interaction.guild, interaction.user, self.coin*2
+                interaction.guild, interaction.user, self.coin * 2
             )
-            await interaction.message.edit(embed=make_embed.success_embed(title="当たりました。"))
+            await interaction.message.edit(
+                embed=make_embed.success_embed(title="当たりました。")
+            )
         else:
             await Money(interaction.client).add_server_money(
                 interaction.guild, interaction.user, -self.coin
             )
-            await interaction.message.edit(embed=make_embed.error_embed(title="外れました・・"))
+            await interaction.message.edit(
+                embed=make_embed.error_embed(title="外れました・・")
+            )
 
     @discord.ui.button(label="1つめ", style=discord.ButtonStyle.blurple)
     async def _1(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -90,6 +100,7 @@ class ScratchCardview(discord.ui.View):
     @discord.ui.button(label="3つめ", style=discord.ButtonStyle.blurple)
     async def _3(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.end_game(interaction, 3)
+
 
 class BlackjackView(discord.ui.View):
     def __init__(self, player: discord.User, player_hand, dealer_hand, deck, coin: int):
@@ -398,13 +409,15 @@ class Money:
         db = self.bot.async_db["Main"].ServerMoneyItems
         await db.update_one(
             {"Guild": guild.id, "ItemName": itemname},
-            {'$set': {
-                "Guild": guild.id,
-                "ItemName": itemname,
-                "Role": role.id if role else 0,
-                "DM": dm if dm else "なし",
-                "Money": money,
-            }},
+            {
+                "$set": {
+                    "Guild": guild.id,
+                    "ItemName": itemname,
+                    "Role": role.id if role else 0,
+                    "DM": dm if dm else "なし",
+                    "Money": money,
+                }
+            },
             upsert=True,
         )
 
@@ -940,7 +953,9 @@ class GamesGroup(app_commands.Group):
 
         await interaction.response.send_message(embed=embed, view=view)
 
-    @app_commands.command(name="scratch-card", description="スクラッチカードを削ります。")
+    @app_commands.command(
+        name="scratch-card", description="スクラッチカードを削ります。"
+    )
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_games_scratch_card(
         self, interaction: discord.Interaction, 金額: int
@@ -949,7 +964,7 @@ class GamesGroup(app_commands.Group):
             return await interaction.response.send_message(
                 "金額は100以上で入力してください。", ephemeral=True
             )
-        
+
         m = await Money(interaction.client).get_server_money(
             interaction.guild, interaction.user
         )
@@ -962,8 +977,15 @@ class GamesGroup(app_commands.Group):
                     color=discord.Color.red(),
                 )
             )
-        
-        await interaction.response.send_message(embed=discord.Embed(title="スクラッチカード", description="以下の三つのどれかのボタンを押してください。", color=discord.Color.green()), view=ScratchCardview(interaction.user, 金額))
+
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="スクラッチカード",
+                description="以下の三つのどれかのボタンを押してください。",
+                color=discord.Color.green(),
+            ),
+            view=ScratchCardview(interaction.user, 金額),
+        )
 
     @app_commands.command(name="info", description="ゲームの情報を取得します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
@@ -1072,7 +1094,8 @@ class ManageGroup(app_commands.Group):
         )
 
     @app_commands.command(
-        name="clear-cooldown", description="指定ユーザーのクールダウンをリセットします。"
+        name="clear-cooldown",
+        description="指定ユーザーのクールダウンをリセットします。",
     )
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -1081,19 +1104,25 @@ class ManageGroup(app_commands.Group):
         種類=[
             app_commands.Choice(name="仕事", value="work"),
             app_commands.Choice(name="犯罪", value="crime"),
-            app_commands.Choice(name="物乞い", value="beg")
+            app_commands.Choice(name="物乞い", value="beg"),
         ]
     )
     async def economy_manage_clear_cooldown(
-        self, interaction: discord.Interaction, ユーザー: discord.User, 種類: app_commands.Choice[str]
+        self,
+        interaction: discord.Interaction,
+        ユーザー: discord.User,
+        種類: app_commands.Choice[str],
     ):
-        await Money(interaction.client).clear_cooldown(interaction.guild, ユーザー, 種類.value)
+        await Money(interaction.client).clear_cooldown(
+            interaction.guild, ユーザー, 種類.value
+        )
         await interaction.response.send_message(
             embed=make_embed.success_embed(
                 title="クールダウンをリセットしました。",
                 description=f"{ユーザー.mention} の {種類.name} のクールダウンをリセットしました。",
             )
         )
+
 
 class ItemGroup(app_commands.Group):
     def __init__(self):
@@ -1114,18 +1143,16 @@ class ItemGroup(app_commands.Group):
         await interaction.response.defer()
         if ロール and not interaction.user.guild_permissions.administrator:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="管理者権限が必要です。"
-                )
+                embed=make_embed.error_embed(title="管理者権限が必要です。")
             )
 
         await Money(interaction.client).create_server_items(
             interaction.guild, 値段, アイテム名, ロール, 使用時にdmに送信するメッセージ
         )
         await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title="アイテムを作成しました。"
-            ).set_footer(text="/economy items で確認できます。")
+            embed=make_embed.success_embed(title="アイテムを作成しました。").set_footer(
+                text="/economy items で確認できます。"
+            )
         )
 
     @app_commands.command(name="remove", description="アイテムを削除します。")
@@ -1141,15 +1168,11 @@ class ItemGroup(app_commands.Group):
         )
         if b:
             await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="アイテムを削除しました。"
-                )
+                embed=make_embed.success_embed(title="アイテムを削除しました。")
             )
         else:
             await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="アイテムが見つかりませんでした。"
-                )
+                embed=make_embed.error_embed(title="アイテムが見つかりませんでした。")
             )
 
 

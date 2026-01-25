@@ -8,18 +8,21 @@ import io
 from sympy.parsing.sympy_parser import (
     parse_expr,
     standard_transformations,
-    implicit_multiplication_application
+    implicit_multiplication_application,
 )
 
 matplotlib.use("Agg")
 
 app = Flask(__name__)
 
+
 class TimeoutError(Exception):
     pass
 
+
 def handler(signum, frame):
     raise TimeoutError("計算がタイムアウトしました")
+
 
 def evaluate_formula_with_timeout(expr, X, timeout_sec=1):
     signal.signal(signal.SIGALRM, handler)
@@ -33,14 +36,12 @@ def evaluate_formula_with_timeout(expr, X, timeout_sec=1):
 
     return Y
 
+
 transformations = standard_transformations + (implicit_multiplication_application,)
 
 x, y = sp.symbols("x y")
 
-ALLOWED_SYMBOLS = {
-    "x": x,
-    "y": y
-}
+ALLOWED_SYMBOLS = {"x": x, "y": y}
 
 ALLOWED_FUNCTIONS = {
     "sin": sp.sin,
@@ -49,23 +50,16 @@ ALLOWED_FUNCTIONS = {
     "asin": sp.asin,
     "acos": sp.acos,
     "atan": sp.atan,
-
     "log": sp.log,
     "ln": sp.log,
-
     "sqrt": sp.sqrt,
     "abs": sp.Abs,
-
     "floor": sp.floor,
     "ceil": sp.ceiling,
-    
-    "exp": sp.exp
+    "exp": sp.exp,
 }
 
-SAFE_DICT = {
-    **ALLOWED_SYMBOLS,
-    **ALLOWED_FUNCTIONS
-}
+SAFE_DICT = {**ALLOWED_SYMBOLS, **ALLOWED_FUNCTIONS}
 
 
 def safe_parse_formula(formula: str):
@@ -74,20 +68,32 @@ def safe_parse_formula(formula: str):
             formula,
             transformations=transformations,
             local_dict=SAFE_DICT,
-            evaluate=False
+            evaluate=False,
         )
         return expr
     except Exception:
         raise ValueError("invalid or forbidden formula")
 
+
 DANGEROUS_WORDS = [
-    "__", "import", "exec", "eval", "open", "os", "sys",
-    "subprocess", "socket", "shutil", "pathlib"
+    "__",
+    "import",
+    "exec",
+    "eval",
+    "open",
+    "os",
+    "sys",
+    "subprocess",
+    "socket",
+    "shutil",
+    "pathlib",
 ]
+
 
 def contains_dangerous(expr_str):
     lower = expr_str.lower()
     return any(word in lower for word in DANGEROUS_WORDS)
+
 
 @app.route("/formula", methods=["POST"])
 def formula_plot():
@@ -131,7 +137,8 @@ def formula_plot():
 
     except Exception as e:
         return jsonify({"error": f"{e}"}), 500
-    
+
+
 @app.route("/piechart", methods=["POST"])
 def create_pie_chart():
     data = request.json
@@ -194,5 +201,6 @@ def create_plot():
     plt.close(fig)
 
     return send_file(buf, mimetype="image/png")
+
 
 # app.run("0.0.0.0", port=3067)

@@ -232,14 +232,19 @@ def create_quote_image(
     else:
         return img.convert("L")
 
+
 class DeleteMiqView(discord.ui.View):
-    def __init__(self, *, timeout=180, can_delete_user: discord.User, create_user: discord.User):
+    def __init__(
+        self, *, timeout=180, can_delete_user: discord.User, create_user: discord.User
+    ):
         super().__init__(timeout=timeout)
         self.can_delete_user = can_delete_user
         self.create_user = create_user
 
     @discord.ui.button(label="削除", emoji="🗑️", style=discord.ButtonStyle.red)
-    async def delete_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def delete_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         if interaction.user.id not in (self.can_delete_user.id, self.create_user.id):
             return await interaction.response.send_message(
                 ephemeral=True,
@@ -253,6 +258,7 @@ class DeleteMiqView(discord.ui.View):
             attachments=[],
             view=None,
         )
+
 
 class ContextCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -279,9 +285,16 @@ async def setup(bot: commands.Bot):
                 ),
             )
 
-        is_blockd = await block.is_blocked_func(interaction.client, message.author.id, "Miq機能")
+        is_blockd = await block.is_blocked_func(
+            interaction.client, message.author.id, "Miq機能"
+        )
         if is_blockd:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="そのメンバーはMiq機能を\nブロックしています。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="そのメンバーはMiq機能を\nブロックしています。"
+                ),
+            )
 
         await interaction.response.defer()
         av = (
@@ -332,7 +345,13 @@ async def setup(bot: commands.Bot):
             try:
                 file = discord.File(fp=image_binary, filename=f"{message.id}_quote.png")
                 await interaction.followup.send(
-                    file=file, content=f"-# {c}回再試行しました。", view=DeleteMiqView(timeout=180, can_delete_user=interaction.user, create_user=message.author)
+                    file=file,
+                    content=f"-# {c}回再試行しました。",
+                    view=DeleteMiqView(
+                        timeout=180,
+                        can_delete_user=interaction.user,
+                        create_user=message.author,
+                    ),
                 )
             except:
                 c += 1
@@ -531,7 +550,11 @@ async def setup(bot: commands.Bot):
                             return
 
                         try:
-                            translated_text = await web_translate.translate(web_translate.targetToSource("ja"), "ja", message.embeds[0].description)
+                            translated_text = await web_translate.translate(
+                                web_translate.targetToSource("ja"),
+                                "ja",
+                                message.embeds[0].description,
+                            )
 
                             embed = discord.Embed(
                                 title="翻訳 (日本語 へ)",
@@ -548,7 +571,11 @@ async def setup(bot: commands.Bot):
                         return
 
                     try:
-                        translated_text = await web_translate.translate(web_translate.targetToSource("ja"), "ja", message.clean_content)
+                        translated_text = await web_translate.translate(
+                            web_translate.targetToSource("ja"),
+                            "ja",
+                            message.clean_content,
+                        )
 
                         embed = discord.Embed(
                             title="翻訳 (日本語 へ)",
@@ -581,7 +608,11 @@ async def setup(bot: commands.Bot):
                             return
 
                         try:
-                            translated_text = await web_translate.translate(web_translate.targetToSource("en"), "en", message.embeds[0].description)
+                            translated_text = await web_translate.translate(
+                                web_translate.targetToSource("en"),
+                                "en",
+                                message.embeds[0].description,
+                            )
 
                             embed = discord.Embed(
                                 title="翻訳 (英語 へ)",
@@ -598,7 +629,11 @@ async def setup(bot: commands.Bot):
                         return
 
                     try:
-                        translated_text = await web_translate.translate(web_translate.targetToSource("en"), "en", message.clean_content)
+                        translated_text = await web_translate.translate(
+                            web_translate.targetToSource("en"),
+                            "en",
+                            message.clean_content,
+                        )
 
                         embed = discord.Embed(
                             title="翻訳 (英語 へ)",
@@ -764,58 +799,74 @@ async def setup(bot: commands.Bot):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.allowed_installs(guilds=True, users=True)
-    async def message_more(
-        interaction: discord.Interaction, message: discord.Message
-    ):
+    async def message_more(interaction: discord.Interaction, message: discord.Message):
         class MoreView(discord.ui.View):
-            def __init__(self, *, timeout = 180, interaction: discord.Interaction):
+            def __init__(self, *, timeout=180, interaction: discord.Interaction):
                 super().__init__(timeout=timeout)
                 self.interaction = interaction
 
             @discord.ui.button(label="インタラクション情報")
-            async def interaction_info(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def interaction_info(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
                 meta = message.interaction_metadata
-        
+
                 if not meta:
                     await interaction.response.send_message(
-                        ephemeral=True, 
+                        ephemeral=True,
                         embed=make_embed.error_embed(
-                            title="情報が見つかりません", 
-                            description="このメッセージはインタラクション（コマンド等）によって送信されたものではありません。"
-                        )
+                            title="情報が見つかりません",
+                            description="このメッセージはインタラクション（コマンド等）によって送信されたものではありません。",
+                        ),
                     )
                     return
 
                 await interaction.response.defer(ephemeral=True, thinking=False)
 
                 embed = make_embed.success_embed(title="インタラクション詳細情報")
-                
+
                 if meta.user:
                     user_info = f"{meta.user.mention}\nID: `{meta.user.id}`"
                     embed.add_field(name="実行者", value=user_info, inline=True)
-                    
+
                     avatar_url = meta.user.display_avatar.url
                     embed.set_thumbnail(url=avatar_url)
 
-                cmd_type = str(meta.type).split('.')[-1].replace('_', ' ').title()
+                cmd_type = str(meta.type).split(".")[-1].replace("_", " ").title()
                 embed.add_field(name="種類", value=f"`{cmd_type}`", inline=True)
-                
-                embed.add_field(name="インタラクションID", value=f"`{meta.id}`", inline=False)
 
                 embed.add_field(
-                    name="実行日時", 
-                    value=f"{discord.utils.format_dt(message.created_at, 'F')} ({discord.utils.format_dt(message.created_at, 'R')})", 
-                    inline=False
+                    name="インタラクションID", value=f"`{meta.id}`", inline=False
                 )
 
-                embed.add_field(name="BotID", value=f"{message.author.mention}\nID: `{message.author.id}`", inline=True)
+                embed.add_field(
+                    name="実行日時",
+                    value=f"{discord.utils.format_dt(message.created_at, 'F')} ({discord.utils.format_dt(message.created_at, 'R')})",
+                    inline=False,
+                )
 
-                if hasattr(meta, 'target_user') and meta.target_user:
-                    embed.add_field(name="ターゲット", value=f"{meta.target_user.mention}", inline=True)
+                embed.add_field(
+                    name="BotID",
+                    value=f"{message.author.mention}\nID: `{message.author.id}`",
+                    inline=True,
+                )
+
+                if hasattr(meta, "target_user") and meta.target_user:
+                    embed.add_field(
+                        name="ターゲット",
+                        value=f"{meta.target_user.mention}",
+                        inline=True,
+                    )
 
                 await self.interaction.followup.send(embed=embed)
 
-        await interaction.response.send_message(embed=discord.Embed(title="以下から選択してください。", color=discord.Color.green()), view=MoreView(interaction=interaction), ephemeral=True)
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="以下から選択してください。", color=discord.Color.green()
+            ),
+            view=MoreView(interaction=interaction),
+            ephemeral=True,
+        )
 
     # メッセージに使うコマンド
     bot.tree.add_command(make_it_a_quote)

@@ -1165,7 +1165,11 @@ class HelpCog(commands.Cog):
     async def dashboard(self, interaction: discord.Interaction):
         await interaction.response.send_message(
             f"以下からアクセスできます。\n-# ダッシュボードはベータ版です。",
-            view=discord.ui.View().add_item(discord.ui.Button(label="アクセスする", url="https://dashboard.sharkbot.xyz/")),
+            view=discord.ui.View().add_item(
+                discord.ui.Button(
+                    label="アクセスする", url="https://dashboard.sharkbot.xyz/"
+                )
+            ),
             ephemeral=True,
         )
 

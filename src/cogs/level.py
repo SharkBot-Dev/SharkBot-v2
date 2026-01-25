@@ -478,11 +478,17 @@ class LevelCog(commands.Cog):
         await interaction.response.defer()
 
         def generate_rank_card(
-            color, username: str, gu_a: bytes, avatar_bytes: bytes, level: int, xp: int, next_xp: int = 1000
+            color,
+            username: str,
+            gu_a: bytes,
+            avatar_bytes: bytes,
+            level: int,
+            xp: int,
+            next_xp: int = 1000,
         ) -> io.BytesIO:
             W, H = 600, 200
             base_color = color if isinstance(color, tuple) else (40, 44, 52)
-            
+
             try:
                 font_main = ImageFont.truetype("data/DiscordFont.ttf", 28)
                 font_sub = ImageFont.truetype("data/DiscordFont.ttf", 18)
@@ -492,33 +498,41 @@ class LevelCog(commands.Cog):
 
             img = Image.new("RGBA", (W, H), (30, 33, 39, 255))
             draw = ImageDraw.Draw(img)
-            
+
             draw.rectangle([0, 0, 15, H], fill=base_color)
 
             with io.BytesIO(avatar_bytes) as a_v:
                 avatar = Image.open(a_v).convert("RGBA").resize((120, 120))
-            
+
             mask = Image.new("L", (120, 120), 0)
             mask_draw = ImageDraw.Draw(mask)
             mask_draw.ellipse((0, 0, 120, 120), fill=255)
-            
+
             draw.ellipse((37, 37, 163, 163), fill=base_color)
             img.paste(avatar, (40, 40), mask)
 
             draw.text((180, 40), username, "#FFFFFF", font=font_main)
-            
+
             level_text = f"LEVEL {level}"
             l_w = draw.textlength(level_text, font=font_main)
             draw.text((W - l_w - 30, 40), level_text, base_color, font=font_main)
 
             bar_x, bar_y, bar_w, bar_h = 180, 120, 380, 25
             progress = min(xp / next_xp, 1.0)
-            
-            draw.rounded_rectangle([bar_x, bar_y, bar_x + bar_w, bar_y + bar_h], radius=12, fill=(60, 60, 60))
+
+            draw.rounded_rectangle(
+                [bar_x, bar_y, bar_x + bar_w, bar_y + bar_h],
+                radius=12,
+                fill=(60, 60, 60),
+            )
 
             if progress > 0:
-                draw.rounded_rectangle([bar_x, bar_y, bar_x + int(bar_w * progress), bar_y + bar_h], radius=12, fill=base_color)
-            
+                draw.rounded_rectangle(
+                    [bar_x, bar_y, bar_x + int(bar_w * progress), bar_y + bar_h],
+                    radius=12,
+                    fill=base_color,
+                )
+
             xp_text = f"{xp} / {next_xp} XP"
             draw.text((bar_x, bar_y + 30), xp_text, "#AAAAAA", font=font_sub)
 
@@ -572,7 +586,7 @@ class LevelCog(commands.Cog):
             avatar_bytes,
             level,
             xp,
-            timing
+            timing,
         )
 
         await interaction.followup.send(

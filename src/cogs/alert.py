@@ -195,7 +195,7 @@ class AlertCog(commands.Cog):
         if ロール:
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {'$set': {"Channel": interaction.channel.id, "Role": ロール.id}},
+                {"$set": {"Channel": interaction.channel.id, "Role": ロール.id}},
                 upsert=True,
             )
             await interaction.response.send_message(

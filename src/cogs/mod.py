@@ -182,6 +182,7 @@ class PauseGroup(app_commands.Group):
                 embed=make_embed.success_embed(title="DMとサーバー招待を再開しました。")
             )
 
+
 class MuteGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="mute", description="ミュート系のコマンド")
@@ -191,79 +192,127 @@ class MuteGroup(app_commands.Group):
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def muterole_add(
-        self, interaction: discord.Interaction,
-        メンバー: discord.User, 理由: str = "なし"
+        self,
+        interaction: discord.Interaction,
+        メンバー: discord.User,
+        理由: str = "なし",
     ):
         await interaction.response.defer()
         db = interaction.client.async_db["MainTwo"].MuteRole
-        finded = await db.find_one({
-            "guild_id": interaction.guild.id
-        })
+        finded = await db.find_one({"guild_id": interaction.guild.id})
 
         if not finded:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="ミュートロールがありません。", description="/moderation mute create を実行してください。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="ミュートロールがありません。",
+                    description="/moderation mute create を実行してください。",
+                )
+            )
 
         member = interaction.guild.get_member(メンバー.id)
         if not member:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="メンバーが見つかりません。", description="サーバーメンバーにのみ使用できます。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="メンバーが見つかりません。",
+                    description="サーバーメンバーにのみ使用できます。",
+                )
+            )
 
-        role = interaction.guild.get_role(finded.get('role_id'))
+        role = interaction.guild.get_role(finded.get("role_id"))
         if not role:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="ミュートロールがありません。", description="/moderation mute create を実行してください。"))
-        
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="ミュートロールがありません。",
+                    description="/moderation mute create を実行してください。",
+                )
+            )
+
         await member.add_roles(role, reason=f"{interaction.user.id}により実行: " + 理由)
 
-        await interaction.followup.send(embed=make_embed.success_embed(title="ミュートしました。", description=メンバー.mention + "をミュートしました。"))
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="ミュートしました。",
+                description=メンバー.mention + "をミュートしました。",
+            )
+        )
 
     @app_commands.command(name="remove", description="メンバーのミュートを解除します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def muterole_remove(
-        self, interaction: discord.Interaction,
-        メンバー: discord.User, 理由: str = "なし"
+        self,
+        interaction: discord.Interaction,
+        メンバー: discord.User,
+        理由: str = "なし",
     ):
         await interaction.response.defer()
         db = interaction.client.async_db["MainTwo"].MuteRole
-        finded = await db.find_one({
-            "guild_id": interaction.guild.id
-        })
+        finded = await db.find_one({"guild_id": interaction.guild.id})
 
         if not finded:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="ミュートロールがありません。", description="/moderation mute create を実行してください。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="ミュートロールがありません。",
+                    description="/moderation mute create を実行してください。",
+                )
+            )
 
         member = interaction.guild.get_member(メンバー.id)
         if not member:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="メンバーが見つかりません。", description="サーバーメンバーにのみ使用できます。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="メンバーが見つかりません。",
+                    description="サーバーメンバーにのみ使用できます。",
+                )
+            )
 
-        role = interaction.guild.get_role(finded.get('role_id'))
+        role = interaction.guild.get_role(finded.get("role_id"))
         if not role:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="ミュートロールがありません。", description="/moderation mute create を実行してください。"))
-        
-        await member.remove_roles(role, reason=f"{interaction.user.id}により実行: " + 理由)
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="ミュートロールがありません。",
+                    description="/moderation mute create を実行してください。",
+                )
+            )
 
-        await interaction.followup.send(embed=make_embed.success_embed(title="ミュートを解除しました。", description=メンバー.mention + "のミュートを解除しました。"))
+        await member.remove_roles(
+            role, reason=f"{interaction.user.id}により実行: " + 理由
+        )
+
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="ミュートを解除しました。",
+                description=メンバー.mention + "のミュートを解除しました。",
+            )
+        )
 
     @app_commands.command(name="update", description="ミュートロールを更新します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(manage_roles=True, manage_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def muterole_update(
-        self, interaction: discord.Interaction
-    ):
+    async def muterole_update(self, interaction: discord.Interaction):
         await interaction.response.defer()
 
         db = interaction.client.async_db["MainTwo"].MuteRole
-        finded = await db.find_one({
-            "guild_id": interaction.guild.id
-        })
+        finded = await db.find_one({"guild_id": interaction.guild.id})
 
         if not finded:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="ミュートロールがありません。", description="/moderation mute create を実行してください。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="ミュートロールがありません。",
+                    description="/moderation mute create を実行してください。",
+                )
+            )
 
         role = interaction.guild.get_role(finded.get("role_id"))
         if not role:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="ミュートロールがありません。", description="/moderation mute create を実行してください。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="ミュートロールがありません。",
+                    description="/moderation mute create を実行してください。",
+                )
+            )
 
         guild = interaction.guild
 
@@ -279,14 +328,19 @@ class MuteGroup(app_commands.Group):
                     send_messages=False,
                     speak=False,
                     add_reactions=False,
-                    reason="ミュートロールの更新のため"
+                    reason="ミュートロールの更新のため",
                 )
             except discord.Forbidden:
                 pass
             except discord.HTTPException as e:
                 pass
 
-        await interaction.followup.send(embed=make_embed.success_embed(title="ミュートロールを更新しました。", description=f"{ch_count} 個のチャンネルを更新しました。"))
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="ミュートロールを更新しました。",
+                description=f"{ch_count} 個のチャンネルを更新しました。",
+            )
+        )
 
     @app_commands.command(name="create", description="ミュートロールを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -297,7 +351,11 @@ class MuteGroup(app_commands.Group):
     ):
         await interaction.response.defer()
 
-        mute_role = await interaction.guild.create_role(name=ロール名, reason="ミュートロールの作成のため", colour=discord.Color.dark_red())
+        mute_role = await interaction.guild.create_role(
+            name=ロール名,
+            reason="ミュートロールの作成のため",
+            colour=discord.Color.dark_red(),
+        )
 
         guild = interaction.guild
 
@@ -311,23 +369,29 @@ class MuteGroup(app_commands.Group):
                     send_messages=False,
                     speak=False,
                     add_reactions=False,
-                    reason="ミュートロールの作成のため"
+                    reason="ミュートロールの作成のため",
                 )
             except discord.Forbidden:
                 pass
             except discord.HTTPException as e:
                 pass
 
-        await interaction.client.async_db["MainTwo"].MuteRole.update_one({
-            "guild_id": guild.id
-        }, {
-            "$set": {
-                "role_id": mute_role.id,
-                "created_at": datetime.datetime.utcnow()
-            }
-        },upsert=True)
+        await interaction.client.async_db["MainTwo"].MuteRole.update_one(
+            {"guild_id": guild.id},
+            {
+                "$set": {
+                    "role_id": mute_role.id,
+                    "created_at": datetime.datetime.utcnow(),
+                }
+            },
+            upsert=True,
+        )
 
-        await interaction.followup.send(embed=make_embed.success_embed(title="ミュートロールを作成しました。", description=mute_role.mention))
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="ミュートロールを作成しました。", description=mute_role.mention
+            )
+        )
 
 
 class BanGroup(app_commands.Group):
@@ -343,9 +407,7 @@ class BanGroup(app_commands.Group):
     ):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(
-                    title="自分自身はBanできません。"
-                ),
+                embed=make_embed.error_embed(title="自分自身はBanできません。"),
                 ephemeral=True,
             )
         await interaction.response.defer()
@@ -356,8 +418,7 @@ class BanGroup(app_commands.Group):
         except:
             return await interaction.followup.send(
                 embed=discord.Embed(
-                    title="Banに失敗しました。",
-                    description="権限が足りないかも！？"
+                    title="Banに失敗しました。", description="権限が足りないかも！？"
                 )
             )
         return await interaction.followup.send(
@@ -379,9 +440,7 @@ class BanGroup(app_commands.Group):
     ):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(
-                    title="自分自身のBanは解除できません。"
-                ),
+                embed=make_embed.error_embed(title="自分自身のBanは解除できません。"),
                 ephemeral=True,
             )
         await interaction.response.defer()
@@ -393,7 +452,7 @@ class BanGroup(app_commands.Group):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="Ban解除に失敗しました。",
-                    description="権限が足りないかも！？"
+                    description="権限が足りないかも！？",
                 )
             )
         return await interaction.followup.send(
@@ -406,7 +465,9 @@ class BanGroup(app_commands.Group):
             )
         )
 
-    @app_commands.command(name="silentban", description="メッセージを削除せずにメンバーをbanをします。")
+    @app_commands.command(
+        name="silentban", description="メッセージを削除せずにメンバーをbanをします。"
+    )
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -422,27 +483,45 @@ class BanGroup(app_commands.Group):
             )
         if メンバー.id == interaction.user.id:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(
-                    title="自分自身はBanできません。"
-                ),
+                embed=make_embed.error_embed(title="自分自身はBanできません。"),
                 ephemeral=True,
             )
         await interaction.response.defer()
         try:
-            await interaction.guild.ban(メンバー, reason=理由 + f"\n{interaction.user.id} によってBAN", delete_message_days=0)
+            await interaction.guild.ban(
+                メンバー,
+                reason=理由 + f"\n{interaction.user.id} によってBAN",
+                delete_message_days=0,
+            )
         except discord.Forbidden:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="Botに権限がありません。", description="Banの権限が必要です。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="Botに権限がありません。", description="Banの権限が必要です。"
+                )
+            )
         return await interaction.followup.send(
-            embed=make_embed.success_embed(title=f"{メンバー.name}をBanしました。", description="メッセージは削除されません。")
-            .add_field(name="理由", value=理由 + f"\n{interaction.user.id} によってBAN", inline=False)
+            embed=make_embed.success_embed(
+                title=f"{メンバー.name}をBanしました。",
+                description="メッセージは削除されません。",
+            ).add_field(
+                name="理由",
+                value=理由 + f"\n{interaction.user.id} によってBAN",
+                inline=False,
+            )
         )
-    
-    @app_commands.command(name="reverseban", description="Ban解除条件を与えてメンバーをbanします。")
+
+    @app_commands.command(
+        name="reverseban", description="Ban解除条件を与えてメンバーをbanします。"
+    )
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def reverseban(
-        self, interaction: discord.Interaction, メンバー: discord.User, 理由: str, 解除条件: str
+        self,
+        interaction: discord.Interaction,
+        メンバー: discord.User,
+        理由: str,
+        解除条件: str,
     ):
         guild = interaction.guild
         member = guild.get_member(メンバー.id)
@@ -450,13 +529,13 @@ class BanGroup(app_commands.Group):
         if not member:
             return await interaction.response.send_message(
                 embed=make_embed.error_embed("このサーバーにいない人はBANできません。"),
-                ephemeral=True
+                ephemeral=True,
             )
 
         if member.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=make_embed.error_embed("自分自身はBANできません。"),
-                ephemeral=True
+                ephemeral=True,
             )
 
         await interaction.response.defer()
@@ -466,27 +545,28 @@ class BanGroup(app_commands.Group):
                 embed=discord.Embed(
                     title=f"{guild.name} からBANされました",
                     description="BAN解除には以下の条件を満たしてください。\n条件を満たしたらBanされた\nサーバーのオーナーに連絡してください。",
-                    color=discord.Color.green()
+                    color=discord.Color.green(),
                 ).add_field(name="解除条件", value=解除条件)
             )
         except discord.Forbidden:
             pass
 
-        await interaction.client.async_db["MainTwo"].ReverseBan.update_one({
-            "guild_id": guild.id,
-            "user_id": member.id
-        }, {
-            "$set": {
-                "reason": 理由,
-                "condition": 解除条件,
-                "moderator_id": interaction.user.id,
-                "banned_at": datetime.datetime.utcnow()
-            }
-        },upsert=True)
+        await interaction.client.async_db["MainTwo"].ReverseBan.update_one(
+            {"guild_id": guild.id, "user_id": member.id},
+            {
+                "$set": {
+                    "reason": 理由,
+                    "condition": 解除条件,
+                    "moderator_id": interaction.user.id,
+                    "banned_at": datetime.datetime.utcnow(),
+                }
+            },
+            upsert=True,
+        )
 
         await guild.ban(
             member,
-            reason=f"{理由} | ReverseBan by {interaction.user} ({interaction.user.id})"
+            reason=f"{理由} | ReverseBan by {interaction.user} ({interaction.user.id})",
         )
 
         await interaction.followup.send(
@@ -497,7 +577,9 @@ class BanGroup(app_commands.Group):
             .add_field(name="解除条件", value=解除条件, inline=False)
         )
 
-    @app_commands.command(name="remove-reverseban", description="Ban条件付きのBanを解除します。")
+    @app_commands.command(
+        name="remove-reverseban", description="Ban条件付きのBanを解除します。"
+    )
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -508,41 +590,35 @@ class BanGroup(app_commands.Group):
         db = interaction.client.async_db["MainTwo"].ReverseBan
 
         async def check_reverseban_condition(guild_id: int, user_id: int):
-            data = await db.find_one({
-                "guild_id": guild_id,
-                "user_id": user_id
-            })
+            data = await db.find_one({"guild_id": guild_id, "user_id": user_id})
             return data
 
-        data = await check_reverseban_condition(
-            interaction.guild.id,
-            ユーザー.id
-        )
+        data = await check_reverseban_condition(interaction.guild.id, ユーザー.id)
 
         if not data:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(title="そのユーザーはReverseBanされていません。")
+                embed=make_embed.error_embed(
+                    title="そのユーザーはReverseBanされていません。"
+                )
             )
-        
+
         try:
             await interaction.guild.unban(ユーザー, reason=理由)
         except:
             pass
 
-        await db.delete_one({
-            "guild_id": interaction.guild.id,
-            "user_id": ユーザー.id
-        })
+        await db.delete_one({"guild_id": interaction.guild.id, "user_id": ユーザー.id})
 
-        embed = make_embed.success_embed(
-            title="ReverseBan を解除しました。"
-        )
+        embed = make_embed.success_embed(title="ReverseBan を解除しました。")
         embed.add_field(name="理由", value=理由, inline=False)
         embed.add_field(name="解除条件", value=data["condition"], inline=False)
 
         await interaction.followup.send(embed=embed)
 
-    @app_commands.command(name="info-reverseban", description="BanをしたユーザーのBan解除条件を確認します。")
+    @app_commands.command(
+        name="info-reverseban",
+        description="BanをしたユーザーのBan解除条件を確認します。",
+    )
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -553,25 +629,19 @@ class BanGroup(app_commands.Group):
         db = interaction.client.async_db["MainTwo"].ReverseBan
 
         async def check_reverseban_condition(guild_id: int, user_id: int):
-            data = await db.find_one({
-                "guild_id": guild_id,
-                "user_id": user_id
-            })
+            data = await db.find_one({"guild_id": guild_id, "user_id": user_id})
             return data
 
-        data = await check_reverseban_condition(
-            interaction.guild.id,
-            ユーザー.id
-        )
+        data = await check_reverseban_condition(interaction.guild.id, ユーザー.id)
 
         if not data:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(title="このユーザーに ReverseBan はありません。")
+                embed=make_embed.error_embed(
+                    title="このユーザーに ReverseBan はありません。"
+                )
             )
 
-        embed = make_embed.success_embed(
-            title="ReverseBan 条件確認"
-        )
+        embed = make_embed.success_embed(title="ReverseBan 条件確認")
         embed.add_field(name="理由", value=data["reason"], inline=False)
         embed.add_field(name="解除条件", value=data["condition"], inline=False)
 
@@ -586,9 +656,7 @@ class BanGroup(app_commands.Group):
     ):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
-                embed=make_embed.error_embed(
-                    title="自分自身はSoftBanできません。"
-                ),
+                embed=make_embed.error_embed(title="自分自身はSoftBanできません。"),
                 ephemeral=True,
             )
         await interaction.response.defer()
@@ -605,7 +673,7 @@ class BanGroup(app_commands.Group):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(
                     title="SoftBanに失敗しました。",
-                    description="権限が足りないかも！？"
+                    description="権限が足りないかも！？",
                 )
             )
         return await interaction.followup.send(
@@ -1135,7 +1203,7 @@ class ModCog(commands.Cog):
         if チャンネル:
             await db.update_one(
                 {"Guild": interaction.guild.id},
-                {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
+                {"$set": {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
                 upsert=True,
             )
             await interaction.followup.send(
@@ -1146,9 +1214,7 @@ class ModCog(commands.Cog):
         else:
             await db.delete_one({"Guild": interaction.guild.id})
             await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="通報チャンネルを無効化しました。"
-                )
+                embed=make_embed.success_embed(title="通報チャンネルを無効化しました。")
             )
 
     @moderation.command(

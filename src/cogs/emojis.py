@@ -12,6 +12,7 @@ from discord import app_commands
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
+
 def edit_emoji(byte: io.BytesIO):
     image = Image.open(byte, "r")
     i = io.BytesIO()
@@ -21,7 +22,9 @@ def edit_emoji(byte: io.BytesIO):
     image.close()
     return i
 
+
 EMOJI_RE = re.compile(r"(<a?:(\w+):(\d+?)>)")
+
 
 def extract_discord_emoji_info(text):
     matches = EMOJI_RE.findall(text)
@@ -34,10 +37,12 @@ def extract_discord_emoji_info(text):
 
     return results
 
+
 allowed_content_types = [
     "image/jpeg",
     "image/png",
 ]
+
 
 class EmojisCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -59,37 +64,63 @@ class EmojisCog(commands.Cog):
         extracted_info = extract_discord_emoji_info(絵文字)
         for name, emoji_id, is_animated in extracted_info:
             if is_animated:
-                url=f"https://cdn.discordapp.com/emojis/{emoji_id}.gif"
+                url = f"https://cdn.discordapp.com/emojis/{emoji_id}.gif"
             else:
-                url=f"https://cdn.discordapp.com/emojis/{emoji_id}.png"
+                url = f"https://cdn.discordapp.com/emojis/{emoji_id}.png"
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as resp:
                     i = io.BytesIO(await resp.read())
                     b = i.read()
                     em = await interaction.guild.create_custom_emoji(name=name, image=b)
                     i.close()
-                    await interaction.followup.send(embed=make_embed.success_embed(title="絵文字をコピーしました。", description=em.__str__()))
+                    await interaction.followup.send(
+                        embed=make_embed.success_embed(
+                            title="絵文字をコピーしました。", description=em.__str__()
+                        )
+                    )
             return
-        await interaction.followup.send(embed=make_embed.error_embed(title="絵文字が見つかりませんでした。", description="有効な絵文字を入力してください。"))
+        await interaction.followup.send(
+            embed=make_embed.error_embed(
+                title="絵文字が見つかりませんでした。",
+                description="有効な絵文字を入力してください。",
+            )
+        )
 
     @emojis.command(name="create", description="絵文字を作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_guild=True, create_expressions=True)
-    async def emojis_create(self, interaction: discord.Interaction, 名前: str, ファイル: discord.Attachment):
+    async def emojis_create(
+        self, interaction: discord.Interaction, 名前: str, ファイル: discord.Attachment
+    ):
         if ファイル.content_type not in allowed_content_types:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="絵文字を追加できませんでした。", description="画像タイプはpngかjpgである必要があります。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="絵文字を追加できませんでした。",
+                    description="画像タイプはpngかjpgである必要があります。",
+                ),
+            )
         await interaction.response.defer()
         name = 名前.lower()
         if not name.islower():
-            return await interaction.followup.send(embed=make_embed.error_embed(title="絵文字を追加できませんでした。", description="絵文字を追加するには、名前を小文字で、\nかつ英語で入力する必要があります。"))
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="絵文字を追加できませんでした。",
+                    description="絵文字を追加するには、名前を小文字で、\nかつ英語で入力する必要があります。",
+                )
+            )
         i = io.BytesIO(await ファイル.read())
         image = await asyncio.to_thread(edit_emoji, i)
         b = image.read()
         em = await interaction.guild.create_custom_emoji(name=name, image=b)
         i.close()
         image.close()
-        await interaction.followup.send(embed=make_embed.success_embed(title="絵文字を追加しました。", description=em.__str__()))
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="絵文字を追加しました。", description=em.__str__()
+            )
+        )
 
     @emojis.command(name="list", description="絵文字をリスト化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -101,6 +132,7 @@ class EmojisCog(commands.Cog):
         for e in interaction.guild.emojis:
             em_ls.append(e.__str__())
         await interaction.followup.send(" ".join(em_ls), ephemeral=True)
+
 
 async def setup(bot):
     await bot.add_cog(EmojisCog(bot))

@@ -368,6 +368,7 @@ class EmbedMake(discord.ui.Modal, title="埋め込みを作成"):
                 ),
             )
 
+
 class ToolsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -398,6 +399,7 @@ class ToolsCog(commands.Cog):
                     description="サーバーにBotをインストールして使用してください。",
                 ),
             )
+
         async def send_pc_embed_builder():
             await interaction.response.send_message(
                 ephemeral=True,
@@ -447,15 +449,36 @@ class ToolsCog(commands.Cog):
                         await interaction.response.defer(ephemeral=True, thinking=True)
                         msg_id = interaction.message.id
                         db = interaction.client.async_db.ButtonRedirect
-                        docs = await db.find_one({"guild_id": interaction.guild_id, "message_id": msg_id})
+                        docs = await db.find_one(
+                            {"guild_id": interaction.guild_id, "message_id": msg_id}
+                        )
 
                         view = discord.ui.View()
-                        view.add_item(discord.ui.Button(label="アクセスする", url=docs.get('url', "https://example.com/")))
+                        view.add_item(
+                            discord.ui.Button(
+                                label="アクセスする",
+                                url=docs.get("url", "https://example.com/"),
+                            )
+                        )
 
-                        await interaction.followup.send(embed=discord.Embed(title="説明", description="以下のボタンを押すことで先ほどの\nボタンのページに飛ぶことができます。", color=discord.Color.green())
-                                                        .add_field(name="ボタンのページのURL", value=docs.get('url', "https://example.com/"), inline=False), view=view)
+                        await interaction.followup.send(
+                            embed=discord.Embed(
+                                title="説明",
+                                description="以下のボタンを押すことで先ほどの\nボタンのページに飛ぶことができます。",
+                                color=discord.Color.green(),
+                            ).add_field(
+                                name="ボタンのページのURL",
+                                value=docs.get("url", "https://example.com/"),
+                                inline=False,
+                            ),
+                            view=view,
+                        )
                     except Exception as e:
-                        return await interaction.followup.send(embed=make_embed.error_embed(title="エラーが発生しました。", description=f"```{e}```"))
+                        return await interaction.followup.send(
+                            embed=make_embed.error_embed(
+                                title="エラーが発生しました。", description=f"```{e}```"
+                            )
+                        )
         except:
             return
 
@@ -474,7 +497,11 @@ class ToolsCog(commands.Cog):
         ]
     )
     async def tools_button(
-        self, interaction: discord.Interaction, ラベル: str, url: str, ボタンの種類: app_commands.Choice[str]
+        self,
+        interaction: discord.Interaction,
+        ラベル: str,
+        url: str,
+        ボタンの種類: app_commands.Choice[str],
     ):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
             return await interaction.response.send_message(
@@ -494,28 +521,68 @@ class ToolsCog(commands.Cog):
         if ボタンの種類.value == "url":
             view.add_item(discord.ui.Button(label=ラベル, url=url))
         elif ボタンの種類.value == "gray":
-            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.gray))
+            view.add_item(
+                discord.ui.Button(
+                    label=ラベル,
+                    custom_id="button_redirect+",
+                    style=discord.ButtonStyle.gray,
+                )
+            )
         elif ボタンの種類.value == "green":
-            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.green))
+            view.add_item(
+                discord.ui.Button(
+                    label=ラベル,
+                    custom_id="button_redirect+",
+                    style=discord.ButtonStyle.green,
+                )
+            )
         elif ボタンの種類.value == "red":
-            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.red))
+            view.add_item(
+                discord.ui.Button(
+                    label=ラベル,
+                    custom_id="button_redirect+",
+                    style=discord.ButtonStyle.red,
+                )
+            )
         elif ボタンの種類.value == "blue":
-            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.blurple))
+            view.add_item(
+                discord.ui.Button(
+                    label=ラベル,
+                    custom_id="button_redirect+",
+                    style=discord.ButtonStyle.blurple,
+                )
+            )
         elif ボタンの種類.value == "none":
-            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.gray, disabled=True))
+            view.add_item(
+                discord.ui.Button(
+                    label=ラベル,
+                    custom_id="button_redirect+",
+                    style=discord.ButtonStyle.gray,
+                    disabled=True,
+                )
+            )
 
-        await interaction.response.send_message(
-            view=view
-        )
+        await interaction.response.send_message(view=view)
 
         if ボタンの種類.value != "url":
-
             fet_message = await interaction.original_response()
             await interaction.client.async_db.ButtonRedirect.update_one(
-                {"guild_id": interaction.guild.id, "channel_id": interaction.channel_id, "message_id": fet_message.id},
-                {'$set': {"guild_id": interaction.guild.id, "channel_id": interaction.channel_id, "message_id": fet_message.id, "url": url}},
+                {
+                    "guild_id": interaction.guild.id,
+                    "channel_id": interaction.channel_id,
+                    "message_id": fet_message.id,
+                },
+                {
+                    "$set": {
+                        "guild_id": interaction.guild.id,
+                        "channel_id": interaction.channel_id,
+                        "message_id": fet_message.id,
+                        "url": url,
+                    }
+                },
                 upsert=True,
             )
+
 
 async def setup(bot):
     await bot.add_cog(ToolsCog(bot))

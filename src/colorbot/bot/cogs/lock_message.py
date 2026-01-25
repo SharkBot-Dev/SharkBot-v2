@@ -6,6 +6,7 @@ import asyncio
 
 from models import make_embed
 
+
 class LockMessageEditModal(discord.ui.Modal):
     def __init__(self, msgid: discord.Message):
         super().__init__(title="固定メッセージの修正")
@@ -162,10 +163,9 @@ class LockMessageCog(commands.Cog):
                 )
             )
 
-            service = dbfind.get('Service')
+            service = dbfind.get("Service")
 
             if service is None:
-
                 view.add_item(
                     discord.ui.Button(
                         style=discord.ButtonStyle.blurple,
@@ -279,10 +279,8 @@ async def setup(bot: commands.Bot):
             upsert=True,
         )
         await interaction.response.send_message(
-            embed=make_embed.success_embed(
-                title="メッセージ固定を有効化しました。"
-            ),
+            embed=make_embed.success_embed(title="メッセージ固定を有効化しました。"),
             ephemeral=True,
         )
-    
+
     bot.tree.add_command(message_pin)

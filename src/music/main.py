@@ -12,6 +12,7 @@ from discord import Embed, Color
 SUCCESS_EMOJI = "https://cdn.discordapp.com/emojis/1419898127975972937.png?format=webp&quality=lossless&width=85&height=81"
 ERROR_EMOJI = "https://cdn.discordapp.com/emojis/1419898620530004140.png?format=webp&quality=lossless&width=84&height=79"
 
+
 def success_embed(title: str, description: str = None, url: str = None):
     embed = Embed(color=Color.green(), description=description, url=url)
     embed.set_author(name=title, icon_url=SUCCESS_EMOJI)
@@ -23,7 +24,9 @@ def error_embed(title: str, description: str = None, url: str = None):
     embed.set_author(name=title, icon_url=ERROR_EMOJI)
     return embed
 
+
 dotenv.load_dotenv()
+
 
 class CustomTree(discord.app_commands.CommandTree):
     def _from_interaction(self, interaction: discord.Interaction) -> None:
@@ -44,6 +47,7 @@ class CustomTree(discord.app_commands.CommandTree):
 
         self.client.loop.create_task(wrapper(), name="CommandTree-invoker")
 
+
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents, tree_cls=CustomTree)
 
@@ -57,12 +61,13 @@ def get_queue(gid: int):
         guild_queues[gid] = asyncio.Queue()
     return guild_queues[gid]
 
+
 async def yt_extract_async(url: str, search: bool = False):
     def run():
         ydl_opts = {
             "quiet": True,
             "default_search": "ytsearch1" if search else None,
-            'noplaylist': True,
+            "noplaylist": True,
             "no_warnings": True,
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -76,13 +81,14 @@ async def yt_get_audio_url(info):
 
     audio = next(
         (f for f in formats if f.get("acodec") != "none" and f.get("abr", 999) <= 64),
-        None
+        None,
     )
 
     if audio is None:
         audio = next((f for f in formats if f.get("acodec") != "none"), None)
 
     return audio["url"]
+
 
 async def play_next(vc, guild_id):
     queue = get_queue(guild_id)
@@ -105,7 +111,7 @@ async def play_next(vc, guild_id):
         discord.FFmpegPCMAudio(audio_url, **ffmpeg_opts),
         after=lambda e: asyncio.run_coroutine_threadsafe(
             play_next(vc, guild_id), bot.loop
-        )
+        ),
     )
 
 
@@ -113,12 +119,11 @@ async def play_next(vc, guild_id):
 async def loop_pres():
     try:
         await bot.change_presence(
-            activity=discord.CustomActivity(
-                name=f"/help | {len(bot.guilds)}鯖"
-            )
+            activity=discord.CustomActivity(name=f"/help | {len(bot.guilds)}鯖")
         )
     except:
         pass
+
 
 @bot.event
 async def on_ready():
@@ -129,6 +134,7 @@ async def on_ready():
 
     loop_pres.start()
 
+
 @bot.tree.command(name="play", description="音楽を再生します")
 @app_commands.describe(query="URL または検索語句")
 async def play(interaction: discord.Interaction, query: str):
@@ -137,14 +143,17 @@ async def play(interaction: discord.Interaction, query: str):
     vc = interaction.guild.voice_client
     if not vc:
         if not interaction.user.voice:
-            return await interaction.followup.send(embed=error_embed(title="まずボイスチャンネルに参加してください。"))
+            return await interaction.followup.send(
+                embed=error_embed(title="まずボイスチャンネルに参加してください。")
+            )
         vc = await interaction.user.voice.channel.connect()
 
     if "list=" in query:
-        return await interaction.followup.send(embed=error_embed(title="プレイリストには対応してません。"))
+        return await interaction.followup.send(
+            embed=error_embed(title="プレイリストには対応してません。")
+        )
 
     try:
-
         if not re.match(YOUTUBE_RE, query):
             info = await yt_extract_async(query, search=True)
             query = info["entries"][0]["webpage_url"]
@@ -152,33 +161,51 @@ async def play(interaction: discord.Interaction, query: str):
         queue = get_queue(interaction.guild.id)
         await queue.put(query)
     except:
-        return await interaction.followup.send(embed=error_embed(title="エラーが発生しました。", description="プレイリストには対応してません。"))
+        return await interaction.followup.send(
+            embed=error_embed(
+                title="エラーが発生しました。",
+                description="プレイリストには対応してません。",
+            )
+        )
 
-    await interaction.followup.send(embed=success_embed(title="キューに追加しました。", description=query))
+    await interaction.followup.send(
+        embed=success_embed(title="キューに追加しました。", description=query)
+    )
 
     if not vc.is_playing():
         await play_next(vc, interaction.guild.id)
+
 
 @bot.tree.command(name="skip", description="曲をスキップします")
 async def skip(interaction: discord.Interaction):
     vc = interaction.guild.voice_client
     if not vc or not vc.is_playing():
-        return await interaction.response.send_message(embed=error_embed(title="再生中ではありません。"))
+        return await interaction.response.send_message(
+            embed=error_embed(title="再生中ではありません。")
+        )
 
     vc.stop()
-    await interaction.response.send_message(embed=success_embed(title="スキップしました。"))
+    await interaction.response.send_message(
+        embed=success_embed(title="スキップしました。")
+    )
+
 
 @bot.tree.command(name="queue", description="再生キューを表示します")
 async def queue_cmd(interaction: discord.Interaction):
     queue = get_queue(interaction.guild.id)
 
     if queue.empty():
-        return await interaction.response.send_message(embed=error_embed(title="キューは空です。"))
+        return await interaction.response.send_message(
+            embed=error_embed(title="キューは空です。")
+        )
 
     items = list(queue._queue)
-    text = "\n".join(f"{i+1}. {v}" for i, v in enumerate(items[:10]))
+    text = "\n".join(f"{i + 1}. {v}" for i, v in enumerate(items[:10]))
 
-    await interaction.response.send_message(embed=success_embed(title="現在のキュー", description=text))
+    await interaction.response.send_message(
+        embed=success_embed(title="現在のキュー", description=text)
+    )
+
 
 @bot.tree.command(name="stop", description="停止して切断します")
 async def stop(interaction: discord.Interaction):
@@ -190,17 +217,22 @@ async def stop(interaction: discord.Interaction):
     get_queue(interaction.guild.id)._queue.clear()
     await interaction.followup.send(embed=success_embed(title="停止しました。"))
 
+
 @bot.tree.command(name="help", description="ヘルプを表示します。")
 async def help(interaction: discord.Interaction):
-    await interaction.response.send_message(embed=success_embed(
-        title="Shark DJのヘルプ",
-        description="""
+    await interaction.response.send_message(
+        embed=success_embed(
+            title="Shark DJのヘルプ",
+            description="""
 /play 音楽を再生します。
 /stop 音楽をストップします。
 /skip 音楽をスキップします。
 /queue 再生キューを表示します。
 /help ヘルプを表示します。
-"""
-    ).set_thumbnail(url=bot.user.avatar.url), ephemeral=True)
+""",
+        ).set_thumbnail(url=bot.user.avatar.url),
+        ephemeral=True,
+    )
+
 
 bot.run(os.getenv("DISCORD_TOKEN"))

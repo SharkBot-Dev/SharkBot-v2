@@ -8,6 +8,7 @@ import time
 cooldown_announce_pub = {}
 cooldown_announce_arr = {}
 
+
 class AnnounceCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -22,7 +23,7 @@ class AnnounceCog(commands.Cog):
         else:
             await db.update_one(
                 {"Guild": guild.id, "Channel": channel.id},
-                {'$set': {"Guild": guild.id, "Channel": channel.id}},
+                {"$set": {"Guild": guild.id, "Channel": channel.id}},
                 upsert=True,
             )
 
@@ -76,7 +77,7 @@ class AnnounceCog(commands.Cog):
         else:
             await db.update_one(
                 {"Guild": guild.id, "Channel": channel.id},
-                {'$set': {"Guild": guild.id, "Channel": channel.id}},
+                {"$set": {"Guild": guild.id, "Channel": channel.id}},
                 upsert=True,
             )
 
@@ -96,9 +97,8 @@ class AnnounceCog(commands.Cog):
     async def on_message_autoreplyreplace(self, message: discord.Message):
         if message.author.bot or message.author == self.bot.user:
             return
-        
-        try:
 
+        try:
             check = await self.announce_arr_get(message.guild, message.channel)
             if (
                 not check
@@ -108,12 +108,12 @@ class AnnounceCog(commands.Cog):
                 return
         except:
             return
-        
+
         reply = message.reference
 
         if not reply:
             return
-        
+
         current_time = time.time()
         last_message_time = cooldown_announce_arr.get(message.guild.id, 0)
         if current_time - last_message_time < 3:
@@ -133,16 +133,40 @@ class AnnounceCog(commands.Cog):
                     break
 
             if webhook is None:
-                webhook = await message.channel.create_webhook(name="SharkBot-ReplyReplace")
+                webhook = await message.channel.create_webhook(
+                    name="SharkBot-ReplyReplace"
+                )
 
             if msg.application_id != self.bot.user.id:
-                embed = discord.Embed(description=message.content,color=discord.Color.blue())
-                embed.add_field(name=f"返信先 ({msg.author.__str__()})", value=msg.content, inline=False)
-                embed.set_author(name=message.author.name, icon_url=message.author.avatar.url if message.author.avatar else message.author.default_avatar.url)
+                embed = discord.Embed(
+                    description=message.content, color=discord.Color.blue()
+                )
+                embed.add_field(
+                    name=f"返信先 ({msg.author.__str__()})",
+                    value=msg.content,
+                    inline=False,
+                )
+                embed.set_author(
+                    name=message.author.name,
+                    icon_url=message.author.avatar.url
+                    if message.author.avatar
+                    else message.author.default_avatar.url,
+                )
             elif msg.application_id == self.bot.user.id:
-                embed = discord.Embed(description=message.content,color=discord.Color.blue())
-                embed.add_field(name=f"返信先 ({msg.embeds[0].author.name})", value=msg.embeds[0].description, inline=False)
-                embed.set_author(name=message.author.name, icon_url=message.author.avatar.url if message.author.avatar else message.author.default_avatar.url)
+                embed = discord.Embed(
+                    description=message.content, color=discord.Color.blue()
+                )
+                embed.add_field(
+                    name=f"返信先 ({msg.embeds[0].author.name})",
+                    value=msg.embeds[0].description,
+                    inline=False,
+                )
+                embed.set_author(
+                    name=message.author.name,
+                    icon_url=message.author.avatar.url
+                    if message.author.avatar
+                    else message.author.default_avatar.url,
+                )
 
             if not message.attachments == []:
                 at = message.attachments[0]
@@ -153,7 +177,6 @@ class AnnounceCog(commands.Cog):
                         rd = io.BytesIO(await at.read())
 
                         async with aiohttp.ClientSession() as session:
-
                             webhook_ = discord.Webhook.from_url(
                                 webhook.url, session=session
                             )
@@ -162,19 +185,16 @@ class AnnounceCog(commands.Cog):
                                     embed=embed,
                                     username="SharkBot-ReplyReplace",
                                     avatar_url=self.bot.user.avatar.url,
-                                    file=discord.File(rd, filename=f"image.{kaku}")
+                                    file=discord.File(rd, filename=f"image.{kaku}"),
                                 )
                             except:
                                 pass
                         rd.close()
                         await message.delete()
                         return
-                    
-                async with aiohttp.ClientSession() as session:
 
-                    webhook_ = discord.Webhook.from_url(
-                        webhook.url, session=session
-                    )
+                async with aiohttp.ClientSession() as session:
+                    webhook_ = discord.Webhook.from_url(webhook.url, session=session)
                     await webhook_.send(
                         embed=embed,
                         username="SharkBot-ReplyReplace",
@@ -182,10 +202,7 @@ class AnnounceCog(commands.Cog):
                     )
             else:
                 async with aiohttp.ClientSession() as session:
-
-                    webhook_ = discord.Webhook.from_url(
-                        webhook.url, session=session
-                    )
+                    webhook_ = discord.Webhook.from_url(webhook.url, session=session)
                     await webhook_.send(
                         embed=embed,
                         username="SharkBot-ReplyReplace",
@@ -196,6 +213,7 @@ class AnnounceCog(commands.Cog):
         except Exception as e:
             # print(e)
             return
-        
+
+
 async def setup(bot):
     await bot.add_cog(AnnounceCog(bot))

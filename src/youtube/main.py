@@ -13,10 +13,12 @@ app = Flask(__name__)
 
 HMAC_SECRET = settings.HMAC_SECRET.encode()
 
+
 @app.get("/youtube/callback")
 def verify():
     challenge = request.args.get("hub.challenge")
     return Response(challenge, 200)
+
 
 @app.post("/youtube/callback")
 def notification():
@@ -38,7 +40,7 @@ def notification():
 
     ns = {
         "yt": "http://www.youtube.com/xml/schemas/2015",
-        "atom": "http://www.w3.org/2005/Atom"
+        "atom": "http://www.w3.org/2005/Atom",
     }
 
     entry = root.find("atom:entry", ns)
@@ -56,10 +58,15 @@ def notification():
     for item in cursor:
         webhook = item.get("webhook_url")
         if webhook:
-            role = item.get('role_mention', "新しい動画が投稿されました！")
-            requests.post(webhook, json={
-                "content": item.get('message', f"{role}\n{title}\n\n{url}"), "username": "SharkBot Youtube", "avatar_url": "https://yt3.googleusercontent.com/vE6aoNnj0dvL-8sPUMwJ5hQOwsjGhP6q3_MmuwyAc36Jous6GSWVgPnOqKN2KoGsaES8pBKrKA=s900-c-k-c0x00ffffff-no-rj"
-            })
+            role = item.get("role_mention", "新しい動画が投稿されました！")
+            requests.post(
+                webhook,
+                json={
+                    "content": item.get("message", f"{role}\n{title}\n\n{url}"),
+                    "username": "SharkBot Youtube",
+                    "avatar_url": "https://yt3.googleusercontent.com/vE6aoNnj0dvL-8sPUMwJ5hQOwsjGhP6q3_MmuwyAc36Jous6GSWVgPnOqKN2KoGsaES8pBKrKA=s900-c-k-c0x00ffffff-no-rj",
+                },
+            )
 
     topic = f"https://www.youtube.com/xml/feeds/videos.xml?channel_id={channel_id}"
 
@@ -68,11 +75,12 @@ def notification():
         "hub.topic": topic,
         "hub.callback": settings.CALLBACK,
         "hub.verify": "async",
-        "hub.secret": settings.HMAC_SECRET
+        "hub.secret": settings.HMAC_SECRET,
     }
 
-    requests.post('https://pubsubhubbub.appspot.com/subscribe', data=data)
+    requests.post("https://pubsubhubbub.appspot.com/subscribe", data=data)
 
     return "OK"
+
 
 asgi_app = WSGIMiddleware(app)

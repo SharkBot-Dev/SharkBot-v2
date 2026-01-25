@@ -493,6 +493,7 @@ class CalcGroup(app_commands.Group):
                     description="サーバーにBotをインストールして使用してください。",
                 ),
             )
+
         def safe_calculator(expression: str):
             expression = expression.replace(" ", "")
 
@@ -690,17 +691,21 @@ class CalcGroup(app_commands.Group):
         self,
         interaction: discord.Interaction,
         法則: app_commands.Choice[str],
-        入力: str
+        入力: str,
     ):
         if 法則.value == "homo":
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    "http://localhost:3320/api/homo", params={
-                        "input": int(入力)
-                    }
+                    "http://localhost:3320/api/homo", params={"input": int(入力)}
                 ) as response:
-                    await interaction.response.send_message(embed=make_embed.success_embed(title="変換しました。", description=f"```{await response.text()}```"), ephemeral=True)
-            
+                    await interaction.response.send_message(
+                        embed=make_embed.success_embed(
+                            title="変換しました。",
+                            description=f"```{await response.text()}```",
+                        ),
+                        ephemeral=True,
+                    )
+
     @app_commands.command(
         name="size-converter", description="ファイルの容量の単位を変換します。"
     )
@@ -1228,7 +1233,11 @@ class ToolsCog(commands.Cog):
                 )
                 return
 
-    tools = app_commands.Group(name="tools", description="ツール系のコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=True))
+    tools = app_commands.Group(
+        name="tools",
+        description="ツール系のコマンドです。",
+        allowed_installs=app_commands.AppInstallationType(guild=True, user=True),
+    )
 
     tools.add_command(CalcGroup())
     tools.add_command(OcrGroup())
@@ -1258,6 +1267,7 @@ class ToolsCog(commands.Cog):
                     description="サーバーにBotをインストールして使用してください。",
                 ),
             )
+
         async def send_pc_embed_builder():
             await interaction.response.send_message(
                 ephemeral=True,
@@ -1307,15 +1317,36 @@ class ToolsCog(commands.Cog):
                         await interaction.response.defer(ephemeral=True, thinking=True)
                         msg_id = interaction.message.id
                         db = interaction.client.async_db["MainTwo"].ButtonRedirect
-                        docs = await db.find_one({"guild_id": interaction.guild_id, "message_id": msg_id})
+                        docs = await db.find_one(
+                            {"guild_id": interaction.guild_id, "message_id": msg_id}
+                        )
 
                         view = discord.ui.View()
-                        view.add_item(discord.ui.Button(label="アクセスする", url=docs.get('url', "https://example.com/")))
+                        view.add_item(
+                            discord.ui.Button(
+                                label="アクセスする",
+                                url=docs.get("url", "https://example.com/"),
+                            )
+                        )
 
-                        await interaction.followup.send(embed=discord.Embed(title="説明", description="以下のボタンを押すことで先ほどの\nボタンのページに飛ぶことができます。", color=discord.Color.green())
-                                                        .add_field(name="ボタンのページのURL", value=docs.get('url', "https://example.com/"), inline=False), view=view)
+                        await interaction.followup.send(
+                            embed=discord.Embed(
+                                title="説明",
+                                description="以下のボタンを押すことで先ほどの\nボタンのページに飛ぶことができます。",
+                                color=discord.Color.green(),
+                            ).add_field(
+                                name="ボタンのページのURL",
+                                value=docs.get("url", "https://example.com/"),
+                                inline=False,
+                            ),
+                            view=view,
+                        )
                     except Exception as e:
-                        return await interaction.followup.send(embed=make_embed.error_embed(title="エラーが発生しました。", description=f"```{e}```"))
+                        return await interaction.followup.send(
+                            embed=make_embed.error_embed(
+                                title="エラーが発生しました。", description=f"```{e}```"
+                            )
+                        )
         except:
             return
 
@@ -1334,7 +1365,11 @@ class ToolsCog(commands.Cog):
         ]
     )
     async def tools_button(
-        self, interaction: discord.Interaction, ラベル: str, url: str, ボタンの種類: app_commands.Choice[str]
+        self,
+        interaction: discord.Interaction,
+        ラベル: str,
+        url: str,
+        ボタンの種類: app_commands.Choice[str],
     ):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
             return await interaction.response.send_message(
@@ -1359,26 +1394,65 @@ class ToolsCog(commands.Cog):
         if ボタンの種類.value == "url":
             view.add_item(discord.ui.Button(label=ラベル, url=url))
         elif ボタンの種類.value == "gray":
-            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.gray))
+            view.add_item(
+                discord.ui.Button(
+                    label=ラベル,
+                    custom_id="button_redirect+",
+                    style=discord.ButtonStyle.gray,
+                )
+            )
         elif ボタンの種類.value == "green":
-            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.green))
+            view.add_item(
+                discord.ui.Button(
+                    label=ラベル,
+                    custom_id="button_redirect+",
+                    style=discord.ButtonStyle.green,
+                )
+            )
         elif ボタンの種類.value == "red":
-            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.red))
+            view.add_item(
+                discord.ui.Button(
+                    label=ラベル,
+                    custom_id="button_redirect+",
+                    style=discord.ButtonStyle.red,
+                )
+            )
         elif ボタンの種類.value == "blue":
-            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.blurple))
+            view.add_item(
+                discord.ui.Button(
+                    label=ラベル,
+                    custom_id="button_redirect+",
+                    style=discord.ButtonStyle.blurple,
+                )
+            )
         elif ボタンの種類.value == "none":
-            view.add_item(discord.ui.Button(label=ラベル, custom_id="button_redirect+", style=discord.ButtonStyle.gray, disabled=True))
+            view.add_item(
+                discord.ui.Button(
+                    label=ラベル,
+                    custom_id="button_redirect+",
+                    style=discord.ButtonStyle.gray,
+                    disabled=True,
+                )
+            )
 
-        await interaction.response.send_message(
-            view=view
-        )
+        await interaction.response.send_message(view=view)
 
         if ボタンの種類.value != "url":
-
             fet_message = await interaction.original_response()
             await interaction.client.async_db["MainTwo"].ButtonRedirect.update_one(
-                {"guild_id": interaction.guild.id, "channel_id": interaction.channel_id, "message_id": fet_message.id},
-                {'$set': {"guild_id": interaction.guild.id, "channel_id": interaction.channel_id, "message_id": fet_message.id, "url": url}},
+                {
+                    "guild_id": interaction.guild.id,
+                    "channel_id": interaction.channel_id,
+                    "message_id": fet_message.id,
+                },
+                {
+                    "$set": {
+                        "guild_id": interaction.guild.id,
+                        "channel_id": interaction.channel_id,
+                        "message_id": fet_message.id,
+                        "url": url,
+                    }
+                },
                 upsert=True,
             )
 
@@ -1420,6 +1494,7 @@ class ToolsCog(commands.Cog):
                     description="サーバーにBotをインストールして使用してください。",
                 ),
             )
+
         def parse_time(timestr: str):
             match = TIMESTAMP_REGEX.fullmatch(timestr.strip().lower())
             if not match:
@@ -1814,7 +1889,13 @@ class ToolsCog(commands.Cog):
         database = self.bot.async_db["Main"].AFK
         await database.update_one(
             {"User": interaction.user.id},
-            {'$set': {"User": interaction.user.id, "Reason": 理由, "End": 終わったらやること}},
+            {
+                "$set": {
+                    "User": interaction.user.id,
+                    "Reason": 理由,
+                    "End": 終わったらやること,
+                }
+            },
             upsert=True,
         )
         embed = make_embed.success_embed(title="AFKを設定しました。", description=理由)

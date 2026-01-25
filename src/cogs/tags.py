@@ -188,7 +188,9 @@ class TagsCog(commands.Cog):
                 for role_id in role_ids:
                     try:
                         role = interaction.guild.get_role(int(role_id))
-                        await interaction.user.add_roles(role, reason="tagの実行のため。")
+                        await interaction.user.add_roles(
+                            role, reason="tagの実行のため。"
+                        )
 
                         await asyncio.sleep(1)
                     except:

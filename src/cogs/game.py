@@ -26,6 +26,7 @@ from models.akinator import characters, questions
 
 import math
 
+
 def entropy(feature, probabilities, characters):
     yes = 0
     no = 0
@@ -45,6 +46,7 @@ def entropy(feature, probabilities, characters):
 
     return h(yes) + h(no) + h(unk)
 
+
 def choose_best_question(prob, asked_questions):
     best_q = None
     best_entropy = -1
@@ -60,14 +62,19 @@ def choose_best_question(prob, asked_questions):
 
     return best_q
 
+
 def bayesian_update(prob, feature, answer):
     for char in prob:
         char_value = characters[char].get(feature, None)
 
         if answer == "yes":
-            likelihood = 0.9 if char_value is True else (0.1 if char_value is False else 0.5)
+            likelihood = (
+                0.9 if char_value is True else (0.1 if char_value is False else 0.5)
+            )
         elif answer == "no":
-            likelihood = 0.9 if char_value is False else (0.1 if char_value is True else 0.5)
+            likelihood = (
+                0.9 if char_value is False else (0.1 if char_value is True else 0.5)
+            )
         else:
             likelihood = 0.5
 
@@ -78,6 +85,7 @@ def bayesian_update(prob, feature, answer):
         prob[c] /= total
 
     return prob
+
 
 class AkiView(discord.ui.View):
     def __init__(self, interaction: discord.Interaction, probabilities, asked):
@@ -94,14 +102,21 @@ class AkiView(discord.ui.View):
         if not self.current_q:
             best = max(self.prob, key=self.prob.get)
             await interaction.response.edit_message(
-                embed=make_embed.success_embed(title="アキネーターの推理", description=f"多分… **{best}** だと思います！"),
-                view=None
+                embed=make_embed.success_embed(
+                    title="アキネーターの推理",
+                    description=f"多分… **{best}** だと思います！",
+                ),
+                view=None,
             )
             return
 
         await interaction.response.edit_message(
-            embed=discord.Embed(title="アキネーターからの質問", description=self.current_q["text"], color=discord.Color.blue()),
-            view=self
+            embed=discord.Embed(
+                title="アキネーターからの質問",
+                description=self.current_q["text"],
+                color=discord.Color.blue(),
+            ),
+            view=self,
         )
 
     async def process_answer(self, interaction, answer):
@@ -116,8 +131,11 @@ class AkiView(discord.ui.View):
         best = max(self.prob, key=self.prob.get)
         if self.prob[best] >= 0.80:
             await interaction.response.edit_message(
-                embed=make_embed.success_embed(title="アキネーターの推理", description=f"あなたのキャラは **{best}** ですね？"),
-                view=None
+                embed=make_embed.success_embed(
+                    title="アキネーターの推理",
+                    description=f"あなたのキャラは **{best}** ですね？",
+                ),
+                view=None,
             )
             return
 
@@ -132,8 +150,11 @@ class AkiView(discord.ui.View):
         await self.process_answer(interaction, "no")
 
     @discord.ui.button(label="わからない", style=discord.ButtonStyle.grey)
-    async def unknown(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def unknown(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         await self.process_answer(interaction, "unknown")
+
 
 cooldown_shiritori = {}
 
@@ -518,9 +539,7 @@ class OsuGroup(app_commands.Group):
             avatar = user.avatar_url
         except:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="ユーザーが見つかりません。"
-                )
+                embed=make_embed.error_embed(title="ユーザーが見つかりません。")
             )
         await interaction.followup.send(
             embed=make_embed.success_embed(title="Osuのユーザー検索")
@@ -563,7 +582,7 @@ class PokemonGroup(app_commands.Group):
 
                 embed = make_embed.success_embed(
                     title=f"{poke_name} (#{poke_id})",
-                    description=f"**タイプ:** {types}"
+                    description=f"**タイプ:** {types}",
                 )
                 embed.add_field(name="高さ", value=f"{height} m")
                 embed.add_field(name="重さ", value=f"{weight} kg")
@@ -617,9 +636,7 @@ class FortniteGroup(app_commands.Group):
                         )
                     )
                 await interaction.response.send_message(
-                    embed=make_embed.success_embed(
-                        title=user + " の実績"
-                    )
+                    embed=make_embed.success_embed(title=user + " の実績")
                     .add_field(name="バトルパスレベル", value=f"{level}")
                     .add_field(name="勝利数", value=f"{wins}")
                     .add_field(name="K/D", value=f"{kd}")
@@ -654,7 +671,7 @@ class MinecraftGroup(app_commands.Group):
                             await interaction.followup.send(
                                 embed=make_embed.success_embed(
                                     title="Minecraftのユーザー情報",
-                                    description=f"ID: {j['id']}\nName: {j['name']}"
+                                    description=f"ID: {j['id']}\nName: {j['name']}",
                                 )
                                 .set_thumbnail(
                                     url=f"{jj['decoded']['textures']['SKIN']['url']}"
@@ -665,9 +682,7 @@ class MinecraftGroup(app_commands.Group):
                             )
         except:
             return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="ユーザー情報の取得に失敗しました。"
-                )
+                embed=make_embed.error_embed(title="ユーザー情報の取得に失敗しました。")
             )
 
     @app_commands.command(
@@ -875,13 +890,27 @@ class GameCog(commands.Cog):
         メンバー1: discord.User,
         メンバー2: discord.User,
     ):
-        is_blockd = await block.is_blocked_func(interaction.client, メンバー1.id, "恋愛度計算機")
+        is_blockd = await block.is_blocked_func(
+            interaction.client, メンバー1.id, "恋愛度計算機"
+        )
         if is_blockd:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="そのメンバーは恋愛度計算機を\nブロックしています。"))
-        
-        is_blockd = await block.is_blocked_func(interaction.client, メンバー2.id, "恋愛度計算機")
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="そのメンバーは恋愛度計算機を\nブロックしています。"
+                ),
+            )
+
+        is_blockd = await block.is_blocked_func(
+            interaction.client, メンバー2.id, "恋愛度計算機"
+        )
         if is_blockd:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="そのメンバーは恋愛度計算機を\nブロックしています。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="そのメンバーは恋愛度計算機を\nブロックしています。"
+                ),
+            )
 
         await interaction.response.defer()
         love_percent = random.randint(0, 100)
@@ -949,7 +978,7 @@ class GameCog(commands.Cog):
             fill=(255, 0, 0),
         )
 
-        with io.BytesIO() as image_binary:           
+        with io.BytesIO() as image_binary:
             await asyncio.to_thread(img.save, image_binary, "PNG")
             image_binary.seek(0)
             await interaction.followup.send(
@@ -966,9 +995,8 @@ class GameCog(commands.Cog):
         r = random.randint(0, 2)
 
         async with aiohttp.ClientSession(
-            headers = {"User-Agent": "DiscordBot/1.0 (https://example.com)"}
+            headers={"User-Agent": "DiscordBot/1.0 (https://example.com)"}
         ) as session:
-
             try:
                 title = urllib.parse.quote(ans[r])
                 url = f"https://ja.wikipedia.org/api/rest_v1/page/summary/{title}"
@@ -1230,7 +1258,10 @@ class GameCog(commands.Cog):
 
         db = self.bot.async_db["MainTwo"].ShiritoriChannel
 
-        dbfind = await db.find_one({"Guild": interaction.guild.id, "Channel": interaction.channel.id}, {"_id": False})
+        dbfind = await db.find_one(
+            {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+            {"_id": False},
+        )
         if dbfind is None:
             await db.update_one(
                 {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
@@ -1250,7 +1281,9 @@ class GameCog(commands.Cog):
                 )
             )
         else:
-            await db.delete_one({"Guild": interaction.guild.id, "Channel": interaction.channel.id})
+            await db.delete_one(
+                {"Guild": interaction.guild.id, "Channel": interaction.channel.id}
+            )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="しりとりを終了しました。",
@@ -1395,7 +1428,15 @@ class GameCog(commands.Cog):
         asked = []
 
         view = AkiView(interaction, prob, asked)
-        await interaction.response.send_message(embed=discord.Embed(title="アキネーターからの質問", description=view.current_q["text"], color=discord.Color.blue()), view=view)
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="アキネーターからの質問",
+                description=view.current_q["text"],
+                color=discord.Color.blue(),
+            ),
+            view=view,
+        )
+
 
 async def setup(bot):
     await bot.add_cog(GameCog(bot))

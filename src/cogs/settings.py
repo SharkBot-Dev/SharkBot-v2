@@ -75,6 +75,7 @@ COMBINED_EMOJI_RE = re.compile(
     flags=re.UNICODE | re.DOTALL,
 )
 
+
 class StatSettingsGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="stat", description="統計情報の取得・設定をします。")
@@ -90,12 +91,20 @@ class StatSettingsGroup(app_commands.Group):
         except Exception:
             return
         if not dbfind:
-            return await interaction.response.send_message(embed=make_embed.error_embed(title="統計情報の収集が無効化されています。"))
-        if not dbfind.get('Enabled'):
-            return await interaction.response.send_message(embed=make_embed.error_embed(title="統計情報の収集が無効化されています。"))
-        
-        message = dbfind.get('Message')
-        now_message = dbfind.get('NowMessage')
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="統計情報の収集が無効化されています。"
+                )
+            )
+        if not dbfind.get("Enabled"):
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="統計情報の収集が無効化されています。"
+                )
+            )
+
+        message = dbfind.get("Message")
+        now_message = dbfind.get("NowMessage")
 
         embed = make_embed.success_embed(title="統計情報を表示しました。")
         embed.add_field(name="合計メッセージ数", value=f"{message}個")
@@ -103,7 +112,9 @@ class StatSettingsGroup(app_commands.Group):
 
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name="setting", description="統計情報を収集していいか設定します。")
+    @app_commands.command(
+        name="setting", description="統計情報を収集していいか設定します。"
+    )
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -119,21 +130,30 @@ class StatSettingsGroup(app_commands.Group):
                 {"$set": {"Enabled": True}},
                 upsert=True,
             )
-            return await interaction.response.send_message(embed=make_embed.success_embed(title="統計情報の収集を有効化しました。"))
+            return await interaction.response.send_message(
+                embed=make_embed.success_embed(title="統計情報の収集を有効化しました。")
+            )
         else:
-            if not dbfind.get('Enabled'):
+            if not dbfind.get("Enabled"):
                 await db.update_one(
                     {"Guild": interaction.guild.id},
                     {"$set": {"Enabled": True}},
                     upsert=True,
                 )
-                return await interaction.response.send_message(embed=make_embed.success_embed(title="統計情報の収集を有効化しました。"))
+                return await interaction.response.send_message(
+                    embed=make_embed.success_embed(
+                        title="統計情報の収集を有効化しました。"
+                    )
+                )
             await db.update_one(
                 {"Guild": interaction.guild.id},
                 {"$set": {"Enabled": False}},
                 upsert=True,
             )
-            return await interaction.response.send_message(embed=make_embed.success_embed(title="統計情報の収集を無効化しました。"))
+            return await interaction.response.send_message(
+                embed=make_embed.success_embed(title="統計情報の収集を無効化しました。")
+            )
+
 
 class DiceSettingGroup(app_commands.Group):
     def __init__(self):
@@ -392,11 +412,7 @@ class WelcomeCommands(app_commands.Group):
             await interaction.response.send_modal(send(interaction.client.async_db))
         else:
             db = interaction.client.async_db["Main"].WelcomeMessage
-            result = await db.delete_one(
-                {
-                    "Guild": interaction.guild.id
-                }
-            )
+            result = await db.delete_one({"Guild": interaction.guild.id})
             await interaction.response.send_message(
                 embed=make_embed.success_embed(
                     title="よろしくメッセージを無効化しました。"
@@ -522,11 +538,7 @@ class WelcomeCommands(app_commands.Group):
             await interaction.response.send_modal(send(interaction.client.async_db))
         else:
             db = interaction.client.async_db["Main"].BanMessage
-            result = await db.delete_one(
-                {
-                    "Guild": interaction.guild.id
-                }
-            )
+            result = await db.delete_one({"Guild": interaction.guild.id})
             await interaction.response.send_message(
                 embed=make_embed.success_embed(title="BANメッセージを無効化しました。")
             )
@@ -650,7 +662,7 @@ class SettingCog(commands.Cog):
 
         if dbfind is None:
             return
-        
+
         if not dbfind.get("Enabled"):
             return
 
@@ -660,20 +672,11 @@ class SettingCog(commands.Cog):
         if stored_day != now:
             await db.update_one(
                 {"Guild": message.guild.id},
-                {"$set": {
-                    "Now": now,
-                    "NowMessage": 1
-                }, "$inc": {
-                    "Message": 1
-                }}
+                {"$set": {"Now": now, "NowMessage": 1}, "$inc": {"Message": 1}},
             )
         else:
             await db.update_one(
-                {"Guild": message.guild.id},
-                {"$inc": {
-                    "NowMessage": 1,
-                    "Message": 1
-                }}
+                {"Guild": message.guild.id}, {"$inc": {"NowMessage": 1, "Message": 1}}
             )
 
     @commands.Cog.listener("on_member_join")
@@ -2628,8 +2631,11 @@ class SettingCog(commands.Cog):
                     description="権限エラーです。",
                 )
             )
-        
-    @settings.command(name="auto-replace-reply", description="アナウンスチャンネルで返信をすると自動的にBotのメッセージになる設定をします。")
+
+    @settings.command(
+        name="auto-replace-reply",
+        description="アナウンスチャンネルで返信をすると自動的にBotのメッセージになる設定をします。",
+    )
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(manage_messages=True)
     async def auto_replace_reply(
@@ -2643,17 +2649,20 @@ class SettingCog(commands.Cog):
                 embed=make_embed.error_embed(
                     title="設定できませんでした。",
                     description="アナウンスチャンネルを指定して下さい。",
-                ), ephemeral=True
+                ),
+                ephemeral=True,
             )
-        
+
         await interaction.response.defer()
         db = self.bot.async_db["MainTwo"].AnnounceAutoReplace
         if not 有効にするか:
-            await db.delete_one({"Guild": interaction.guild.id, "Channel": チャンネル.id})
+            await db.delete_one(
+                {"Guild": interaction.guild.id, "Channel": チャンネル.id}
+            )
         else:
             await db.update_one(
                 {"Guild": interaction.guild.id, "Channel": チャンネル.id},
-                {'$set': {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
+                {"$set": {"Guild": interaction.guild.id, "Channel": チャンネル.id}},
                 upsert=True,
             )
         await interaction.followup.send(
@@ -2831,7 +2840,7 @@ class SettingCog(commands.Cog):
         try:
             await message.create_thread(name=thread_name)
         except discord.HTTPException as e:
-            print(f"スレッド作成エラー: {e}")
+            return
 
     @settings.command(name="auto-thread", description="自動スレッド作成を設定します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -2890,15 +2899,16 @@ class SettingCog(commands.Cog):
             )
         )
 
-    async def user_setting_autocomplete( 
-        self, 
-        interaction: discord.Interaction,  
-        current: str,  
-    ) -> list[app_commands.Choice[str]]: 
-        return [  
-            app_commands.Choice(name=setting_name, value=setting_name)  
-            for setting_name in block.SETTINDS_LIST if current.lower() in setting_name.lower()
-        ]  
+    async def user_setting_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        current: str,
+    ) -> list[app_commands.Choice[str]]:
+        return [
+            app_commands.Choice(name=setting_name, value=setting_name)
+            for setting_name in block.SETTINDS_LIST
+            if current.lower() in setting_name.lower()
+        ]
 
     @settings.command(name="block", description="機能のブロックを設定します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -2908,26 +2918,41 @@ class SettingCog(commands.Cog):
         self, interaction: discord.Interaction, 設定: str, 有効か: bool
     ):
         if not 設定 in block.SETTINDS_LIST:
-            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="ブロックに失敗しました。", description="その機能は存在しません。"))
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="ブロックに失敗しました。",
+                    description="その機能は存在しません。",
+                ),
+            )
         db = interaction.client.async_db["MainTwo"].UserBlockSetting
         if 有効か:
-            await db.update_one({
-                "user_id": interaction.user.id
-            }, {
-                "$addToSet": {
-                    "blockd_func": 設定
-                }
-            }, upsert=True)
-            await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="機能をブロックしました。", description=f"{設定}をブロックしました。"))
+            await db.update_one(
+                {"user_id": interaction.user.id},
+                {"$addToSet": {"blockd_func": 設定}},
+                upsert=True,
+            )
+            await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.success_embed(
+                    title="機能をブロックしました。",
+                    description=f"{設定}をブロックしました。",
+                ),
+            )
         else:
-            await db.update_one({
-                "user_id": interaction.user.id
-            }, {
-                "$pull": {
-                    "blockd_func": 設定
-                }
-            }, upsert=True)
-            await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="機能をブロックしました。", description=f"{設定}のブロックを解除しました。"))
+            await db.update_one(
+                {"user_id": interaction.user.id},
+                {"$pull": {"blockd_func": 設定}},
+                upsert=True,
+            )
+            await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.success_embed(
+                    title="機能をブロックしました。",
+                    description=f"{設定}のブロックを解除しました。",
+                ),
+            )
+
 
 async def setup(bot):
     await bot.add_cog(SettingCog(bot))

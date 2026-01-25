@@ -134,7 +134,8 @@ class TimerCog(commands.Cog):
 
         await interaction.response.send_message(
             embed=make_embed.success_embed(
-                title="タイマーを削除しました。", description="このチャンネルのタイマーが削除されました。"
+                title="タイマーを削除しました。",
+                description="このチャンネルのタイマーが削除されました。",
             ),
             ephemeral=True,
         )

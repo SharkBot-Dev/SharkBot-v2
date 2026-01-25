@@ -102,10 +102,7 @@ class AdminCog(commands.Cog):
                 )
 
     @admin.command(name="sync", description="スラッシュコマンドを同期します。")
-    async def sync_setting(
-        self,
-        interaction: discord.Interaction
-    ):
+    async def sync_setting(self, interaction: discord.Interaction):
         if interaction.user.id != 1335428061541437531:
             return await interaction.response.send_message(
                 ephemeral=True,
@@ -118,7 +115,9 @@ class AdminCog(commands.Cog):
 
         await self.bot.tree.sync()
 
-        await interaction.followup.send(embed=make_embed.success_embed(title="スラッシュコマンドを同期しました。"))
+        await interaction.followup.send(
+            embed=make_embed.success_embed(title="スラッシュコマンドを同期しました。")
+        )
 
     @admin.command(
         name="ban", description="Botからbanをします。サーバーからはbanされません。"
@@ -489,7 +488,7 @@ class AdminCog(commands.Cog):
         db = self.bot.async_db["Main"].PremiumUser
         if 操作.value == "add":
             await db.update_one(
-                {"User": ユーザー.id}, {'$set': {"User": ユーザー.id}}, upsert=True
+                {"User": ユーザー.id}, {"$set": {"User": ユーザー.id}}, upsert=True
             )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(

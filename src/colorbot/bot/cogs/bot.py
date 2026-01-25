@@ -4,6 +4,7 @@ from discord import app_commands
 
 from models import make_embed
 
+
 class BotCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -34,9 +35,7 @@ class BotCog(commands.Cog):
             )
         )
         em = discord.Embed(title="SharkBotの情報", color=discord.Color.green())
-        em.add_field(
-            name="サーバー数", value=f"{len(self.bot.guilds)}サーバー"
-        )
+        em.add_field(name="サーバー数", value=f"{len(self.bot.guilds)}サーバー")
 
         em.set_thumbnail(url=self.bot.user.avatar.url)
 
@@ -63,6 +62,7 @@ class BotCog(commands.Cog):
                 description=f"<t:{uptime:.0f}:R>",
             )
         )
+
 
 async def setup(bot):
     await bot.add_cog(BotCog(bot))

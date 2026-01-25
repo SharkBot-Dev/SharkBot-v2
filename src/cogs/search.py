@@ -162,7 +162,9 @@ class WebGroup(app_commands.Group):
                         return
 
             try:
-                translated_text = await web_translate.translate(web_translate.targetToSource(翻訳先.value), 翻訳先.value, テキスト)
+                translated_text = await web_translate.translate(
+                    web_translate.targetToSource(翻訳先.value), 翻訳先.value, テキスト
+                )
 
                 embed = make_embed.success_embed(
                     title=f"翻訳 ({翻訳先.value} へ)",
@@ -222,7 +224,9 @@ class WebGroup(app_commands.Group):
                         return
 
             try:
-                translated_text = await web_translate.translate(web_translate.targetToSource(翻訳先.value), 翻訳先.value, text_ocrd)
+                translated_text = await web_translate.translate(
+                    web_translate.targetToSource(翻訳先.value), 翻訳先.value, text_ocrd
+                )
 
                 embed = make_embed.success_embed(
                     title=f"翻訳 ({翻訳先.value} へ)",
@@ -231,9 +235,7 @@ class WebGroup(app_commands.Group):
                 await interaction.followup.send(embed=embed)
 
             except Exception as e:
-                embed = make_embed.error_embed(
-                    title="翻訳に失敗しました"
-                )
+                embed = make_embed.error_embed(title="翻訳に失敗しました")
                 await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="news", description="ニュースを取得します。")
@@ -437,43 +439,54 @@ class WebGroup(app_commands.Group):
                     .set_image(url=posterImage)
                 )
 
-    @app_commands.command(name="discord", description="Discordのステータスやバグ情報を取得します。")
+    @app_commands.command(
+        name="discord", description="Discordのステータスやバグ情報を取得します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def discord_status_search_web(self, interaction: discord.Interaction):
-
         await interaction.response.defer()
 
         status_url = "https://discordstatus.com/api/v2/status.json"
         incidents_url = "https://discordstatus.com/api/v2/incidents/unresolved.json"
 
         async with aiohttp.ClientSession() as session:
-
             async with session.get(status_url) as resp:
                 if resp.status != 200:
-                    return await interaction.followup.send(embed=make_embed.error_embed(title="ステータスAPIにアクセスできませんでした。"))
+                    return await interaction.followup.send(
+                        embed=make_embed.error_embed(
+                            title="ステータスAPIにアクセスできませんでした。"
+                        )
+                    )
                 status_data = await resp.json()
 
             async with session.get(incidents_url) as resp2:
                 if resp2.status != 200:
-                    return await interaction.followup.send(embed=make_embed.error_embed(title="障害情報APIにアクセスできませんでした。"))
+                    return await interaction.followup.send(
+                        embed=make_embed.error_embed(
+                            title="障害情報APIにアクセスできませんでした。"
+                        )
+                    )
                 incidents_data = await resp2.json()
 
-        embed_resp = make_embed.success_embed(title="Discordのステータスを取得しました。", description="以下がステータス情報です。")
+        embed_resp = make_embed.success_embed(
+            title="Discordのステータスを取得しました。",
+            description="以下がステータス情報です。",
+        )
 
         indicator = status_data["status"]["indicator"]
         description = status_data["status"]["description"]
 
         color = (
-            discord.Color.green() if indicator == "none" else
-            discord.Color.orange() if indicator in ["minor", "major"] else
-            discord.Color.red()
+            discord.Color.green()
+            if indicator == "none"
+            else discord.Color.orange()
+            if indicator in ["minor", "major"]
+            else discord.Color.red()
         )
 
         embed = discord.Embed(
-            title="📡 Discord Status",
-            description=description,
-            color=color
+            title="📡 Discord Status", description=description, color=color
         )
         embed.add_field(name="レベル", value=indicator)
 
@@ -483,7 +496,7 @@ class WebGroup(app_commands.Group):
             embed.add_field(
                 name="🟢 現在の障害",
                 value="現在発生中の障害はありません。",
-                inline=False
+                inline=False,
             )
         else:
             text = ""
@@ -495,17 +508,15 @@ class WebGroup(app_commands.Group):
 
                 text += f"● **{name}**（影響度: `{impact}`）\n{latest_update}\n\n"
 
-            embed.add_field(
-                name="🔴 発生中の障害",
-                value=text,
-                inline=False
-            )
+            embed.add_field(name="🔴 発生中の障害", value=text, inline=False)
 
         embed.set_footer(text="ソース: discordstatus.com")
 
         await interaction.followup.send(embeds=[embed_resp, embed])
 
-    @app_commands.command(name="iss", description="国際宇宙ステーションの位置を検索します。")
+    @app_commands.command(
+        name="iss", description="国際宇宙ステーションの位置を検索します。"
+    )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def iss_search_web(self, interaction: discord.Interaction):
@@ -516,7 +527,12 @@ class WebGroup(app_commands.Group):
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 if resp.status != 200:
-                    return await interaction.followup.send(embed=make_embed.error_embed(title="取得に失敗しました。", description="しばらく待ってから再度お試しください。"))
+                    return await interaction.followup.send(
+                        embed=make_embed.error_embed(
+                            title="取得に失敗しました。",
+                            description="しばらく待ってから再度お試しください。",
+                        )
+                    )
 
                 data = await resp.json()
 
@@ -524,16 +540,14 @@ class WebGroup(app_commands.Group):
         latitude = position["latitude"]
         longitude = position["longitude"]
 
-        embed = make_embed.success_embed(
-            title="国際宇宙ステーション 現在位置"
-        )
+        embed = make_embed.success_embed(title="国際宇宙ステーション 現在位置")
         embed.add_field(name="緯度 (Latitude)", value=latitude, inline=True)
         embed.add_field(name="経度 (Longitude)", value=longitude, inline=True)
 
         embed.add_field(
             name="地図リンク",
             value=f"https://www.google.com/maps?q={latitude},{longitude}",
-            inline=False
+            inline=False,
         )
 
         await interaction.followup.send(embed=embed)
@@ -547,25 +561,30 @@ class WebGroup(app_commands.Group):
         url = f"https://note.com/api/v3/searches?context=note&mode=typeahead&q={urllib.parse.quote(検索ワード)}"
 
         headers = {
-            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-            'accept-language': 'ja,en-US;q=0.9,en;q=0.8',
-            'cache-control': 'max-age=0',
-            'priority': 'u=0, i',
-            'sec-ch-ua': '"Not(A:Brand";v="8", "Chromium";v="144", "Google Chrome";v="144"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'document',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'none',
-            'sec-fetch-user': '?1',
-            'upgrade-insecure-requests': '1',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36'
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-language": "ja,en-US;q=0.9,en;q=0.8",
+            "cache-control": "max-age=0",
+            "priority": "u=0, i",
+            "sec-ch-ua": '"Not(A:Brand";v="8", "Chromium";v="144", "Google Chrome";v="144"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36",
         }
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=headers) as resp:
                 if resp.status != 200:
-                    return await interaction.followup.send(embed=make_embed.error_embed(title="取得に失敗しました。", description="しばらく待ってから再度お試しください。"))
+                    return await interaction.followup.send(
+                        embed=make_embed.error_embed(
+                            title="取得に失敗しました。",
+                            description="しばらく待ってから再度お試しください。",
+                        )
+                    )
 
                 data = await resp.json()
 
@@ -574,30 +593,41 @@ class WebGroup(app_commands.Group):
         contents = notes["contents"]
 
         if not contents:
-            return await interaction.followup.send(embed=make_embed.error_embed(title="取得に失敗しました。", description="その検索ワードからは何も得られませんでした。"))
-        
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="取得に失敗しました。",
+                    description="その検索ワードからは何も得られませんでした。",
+                )
+            )
+
         note = contents[0]
 
         embed = make_embed.success_embed(title=note["name"])
         embed.title = note["name"]
 
-        if note.get('publish_at'):
-            embed.add_field(name="作成日", value=note.get('publish_at'), inline=False)
-        if note.get('eyecatch'):
-            embed.set_image(url=note.get('eyecatch'))
-        if note.get('user'):
-            user = note.get('user')
+        if note.get("publish_at"):
+            embed.add_field(name="作成日", value=note.get("publish_at"), inline=False)
+        if note.get("eyecatch"):
+            embed.set_image(url=note.get("eyecatch"))
+        if note.get("user"):
+            user = note.get("user")
             name = user["name"]
-            user_profile_image_path = user.get('user_profile_image_path')
+            user_profile_image_path = user.get("user_profile_image_path")
             if user_profile_image_path:
                 embed.set_author(name=name, icon_url=user_profile_image_path)
             else:
                 embed.set_author(name=name)
 
         view = discord.ui.View()
-        view.add_item(discord.ui.Button(label="アクセスする", url=f"https://note.com/nobisiro_2023/n/{note['key']}"))
+        view.add_item(
+            discord.ui.Button(
+                label="アクセスする",
+                url=f"https://note.com/nobisiro_2023/n/{note['key']}",
+            )
+        )
 
         await interaction.followup.send(embed=embed, view=view)
+
 
 class SearchCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -990,7 +1020,9 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             )
 
             pages_view = [embed, embed2]
-            view = pages.Pages(embeds=pages_view, now_page=0, page_owner=interaction.user)
+            view = pages.Pages(
+                embeds=pages_view, now_page=0, page_owner=interaction.user
+            )
 
             if user.avatar:
                 await interaction.followup.send(
@@ -1077,21 +1109,23 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
         )
 
         embed_2 = make_embed.success_embed(title=f"{interaction.guild.name}の情報")
-        embed_2.add_field(name="サーバーの機能", value=", ".join(interaction.guild.features))
+        embed_2.add_field(
+            name="サーバーの機能", value=", ".join(interaction.guild.features)
+        )
 
         if interaction.guild.icon:
             embed = embed.set_thumbnail(url=interaction.guild.icon.url)
-            view = pages.Pages(embeds=[embed, embed_2], now_page=0, page_owner=interaction.user)
-
-            await interaction.followup.send(
-                embed=embed, view=view
+            view = pages.Pages(
+                embeds=[embed, embed_2], now_page=0, page_owner=interaction.user
             )
+
+            await interaction.followup.send(embed=embed, view=view)
         else:
-            view = pages.Pages(embeds=[embed, embed_2], now_page=0, page_owner=interaction.user)
-
-            await interaction.followup.send(
-                embed=embed, view=view
+            view = pages.Pages(
+                embeds=[embed, embed_2], now_page=0, page_owner=interaction.user
             )
+
+            await interaction.followup.send(embed=embed, view=view)
 
     @search.command(name="channel", description="チャンネルを検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)

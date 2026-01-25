@@ -266,7 +266,10 @@ class AuthGroup(app_commands.Group):
             ephemeral=True,
         )
 
-    @app_commands.command(name="guideline", description="ルールに同意するとロールがもらえるパネルを作ります。")
+    @app_commands.command(
+        name="guideline",
+        description="ルールに同意するとロールがもらえるパネルを作ります。",
+    )
     @app_commands.checks.has_permissions(manage_roles=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -1597,7 +1600,9 @@ class PanelCog(commands.Cog):
                         async def on_submit(self, interaction: discord.Interaction):
                             await interaction.response.defer(ephemeral=True)
 
-                            msg = await interaction.channel.fetch_message(interaction.message.id)
+                            msg = await interaction.channel.fetch_message(
+                                interaction.message.id
+                            )
 
                             embed = msg.embeds[0]
                             new_embed = discord.Embed(
@@ -1642,7 +1647,9 @@ class PanelCog(commands.Cog):
 
                     class Modal_Template(discord.ui.Modal):
                         def __init__(self, fields, message: discord.Message):
-                            super().__init__(title=f"{message.embeds[0].title[:45]}", timeout=180)
+                            super().__init__(
+                                title=f"{message.embeds[0].title[:45]}", timeout=180
+                            )
                             self.message = message
                             self.embed_fields = fields
 
@@ -1668,7 +1675,7 @@ class PanelCog(commands.Cog):
                             avatar_url = interaction.user.display_avatar.url
                             answer_embed.set_author(
                                 name=f"{interaction.user.name} ({interaction.user.id})",
-                                icon_url=avatar_url
+                                icon_url=avatar_url,
                             )
 
                             await interaction.channel.send(embed=answer_embed)
@@ -1686,20 +1693,25 @@ class PanelCog(commands.Cog):
                             view = discord.ui.View(timeout=None)
                             view.add_item(
                                 discord.ui.Button(
-                                    label="発言する",
-                                    custom_id="templates_answer+"
+                                    label="発言する", custom_id="templates_answer+"
                                 )
                             )
-                            await interaction.channel.send(embed=question_embed, view=view)
+                            await interaction.channel.send(
+                                embed=question_embed, view=view
+                            )
 
-                            await interaction.response.send_message("回答を送信しました", ephemeral=True)
-                            
+                            await interaction.response.send_message(
+                                "回答を送信しました", ephemeral=True
+                            )
+
                             try:
                                 await self.message.delete()
                             except discord.NotFound:
                                 pass
 
-                    await interaction.response.send_modal(Modal_Template(embed_fields, interaction.message))
+                    await interaction.response.send_modal(
+                        Modal_Template(embed_fields, interaction.message)
+                    )
 
                 elif custom_id.startswith("quick_tik+"):
                     embed_fields = interaction.message.embeds[0].fields
@@ -2340,7 +2352,12 @@ class PanelCog(commands.Cog):
             msg_ = await interaction.channel.send(
                 embed=discord.Embed(
                     title=タイトル, description=選択肢1, color=discord.Color.blue()
-                ).set_author(name=f"{interaction.user.name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url)
+                ).set_author(
+                    name=f"{interaction.user.name}",
+                    icon_url=interaction.user.avatar.url
+                    if interaction.user.avatar
+                    else interaction.user.default_avatar.url,
+                )
             )
             await msg_.add_reaction("👍")
             await msg_.add_reaction("👎")
@@ -2357,7 +2374,12 @@ class PanelCog(commands.Cog):
                     title=タイトル,
                     description="🇦 " + 選択肢1 + f"\n🇧 {選択肢2}",
                     color=discord.Color.blue(),
-                ).set_author(name=f"{interaction.user.name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url)
+                ).set_author(
+                    name=f"{interaction.user.name}",
+                    icon_url=interaction.user.avatar.url
+                    if interaction.user.avatar
+                    else interaction.user.default_avatar.url,
+                )
             )
             await msg_.add_reaction("🇦")
             await msg_.add_reaction("🇧")
@@ -2401,7 +2423,12 @@ class PanelCog(commands.Cog):
         msg_ = await interaction.channel.send(
             embed=discord.Embed(
                 title=f"{タイトル}", description=f"{text}", color=discord.Color.blue()
-            ).set_author(name=f"{interaction.user.name}", icon_url=interaction.user.avatar.url if interaction.user.avatar else interaction.user.default_avatar.url)
+            ).set_author(
+                name=f"{interaction.user.name}",
+                icon_url=interaction.user.avatar.url
+                if interaction.user.avatar
+                else interaction.user.default_avatar.url,
+            )
         )
         await msg_.add_reaction("1️⃣")
         if 選択肢2 != None:
@@ -2464,7 +2491,9 @@ class PanelCog(commands.Cog):
             ephemeral=True,
         )
 
-    @panel.command(name="thread-ticket", description="スレッドを使ったチケットパネルを作成します。")
+    @panel.command(
+        name="thread-ticket", description="スレッドを使ったチケットパネルを作成します。"
+    )
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -2506,7 +2535,10 @@ class PanelCog(commands.Cog):
                     return
                 if "ticket_thread" == custom_id:
                     await interaction.response.defer(ephemeral=True)
-                    th = await interaction.channel.create_thread(name=f"{interaction.user.display_name} のチケット", type=discord.ChannelType.private_thread)
+                    th = await interaction.channel.create_thread(
+                        name=f"{interaction.user.display_name} のチケット",
+                        type=discord.ChannelType.private_thread,
+                    )
 
                     view = discord.ui.View()
                     view.add_item(
@@ -2519,12 +2551,28 @@ class PanelCog(commands.Cog):
 
                     men = await self.get_ticket_mention(interaction.message)
 
-                    await th.send(embed=discord.Embed(title=f"`{interaction.user.name}` のチケット", color=discord.Color.green()), view=view, content=men + f" {interaction.user.mention}" if men else interaction.user.mention)
-                    await interaction.followup.send(ephemeral=True, content=f"チケットを作成しました。\n{th.mention}")
+                    await th.send(
+                        embed=discord.Embed(
+                            title=f"`{interaction.user.name}` のチケット",
+                            color=discord.Color.green(),
+                        ),
+                        view=view,
+                        content=men + f" {interaction.user.mention}"
+                        if men
+                        else interaction.user.mention,
+                    )
+                    await interaction.followup.send(
+                        ephemeral=True,
+                        content=f"チケットを作成しました。\n{th.mention}",
+                    )
                 elif "close_thread_ticket" == custom_id:
                     await interaction.response.defer(ephemeral=True)
 
-                    await interaction.channel.edit(archived=True, locked=True, name=f"{interaction.user.display_name} の閉じられたチケット")
+                    await interaction.channel.edit(
+                        archived=True,
+                        locked=True,
+                        name=f"{interaction.user.display_name} の閉じられたチケット",
+                    )
         except:
             return
 
