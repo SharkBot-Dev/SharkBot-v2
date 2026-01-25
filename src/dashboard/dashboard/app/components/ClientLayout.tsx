@@ -109,6 +109,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/search`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🔎なんでも検索
           </a>
+          <a href={`/dashboard/settings/${guildid}/emosort`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            😀絵文字アップ
+          </a>
 
           <LineAndtextLayout text="面白い・楽しい" />
 
