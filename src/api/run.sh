@@ -1,0 +1,1 @@
+uvicorn api:asgi_app --port 5002

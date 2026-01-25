@@ -312,6 +312,8 @@ Sharkアカウント: {sharkaccount_count}人
                     description="サーバーにBotをインストールして使用してください。",
                 ),
             )
+        
+        return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="現在メンテナンス中です。", description="ご迷惑をおかけし申し訳ございません。"))
 
         await interaction.response.defer()
 
