@@ -182,6 +182,7 @@ class RoleCog(commands.Cog):
             app_commands.Choice(name="黄", value="yellow"),
             app_commands.Choice(name="緑", value="green"),
             app_commands.Choice(name="金", value="gold"),
+            app_commands.Choice(name="RGB指定", value="rgb"),
         ]
     )
     async def color_role(
@@ -190,6 +191,30 @@ class RoleCog(commands.Cog):
         ロール名: str,
         色: app_commands.Choice[str],
     ):
+        if 色.value == "rgb":
+            class ColorModal(discord.ui.Modal):
+                def __init__(self):
+                    super().__init__(title="RGBの入力", timeout=180)
+                    self.text = discord.ui.TextInput(label=f"rgbを入力", style=discord.TextStyle.short, placeholder="#000000")
+                    self.add_item(self.text)
+
+                async def on_submit(self, interaction_modal: discord.Interaction):
+                    try:
+                        color = discord.Color.from_str(self.text.value)
+                    except ValueError:
+                        return await interaction_modal.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="適切な色を入力してください。", description="例: `#000000`"))
+                    await interaction_modal.response.defer()
+                    role = await interaction_modal.guild.create_role(
+                        name=ロール名, color=discord.Colour.red(), colour=color
+                    )
+                    embed = make_embed.success_embed(
+                        title="色付きロールを作成しました。",
+                        description=f"作成したロール: {role.mention}",
+                    )
+                    await interaction_modal.followup.send(embed=embed)
+
+            await interaction.response.send_modal(ColorModal())
+            return
         await interaction.response.defer()
         if 色.value == "red":
             role = await interaction.guild.create_role(
