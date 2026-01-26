@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
+import { revalidatePath } from "next/cache";
 
 export default async function Home({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -25,6 +26,8 @@ export default async function Home({ params }: { params: { guildid: string } }) 
             { $set: { Prefix: prefix } },
             { upsert: true }
         );
+
+        revalidatePath(`/dashboard/settings/${guildid}`);
     }
 
     const { guildid } = await params;
@@ -79,6 +82,15 @@ export default async function Home({ params }: { params: { guildid: string } }) 
                     設定を保存
                 </button>
             </form><br/>
+            
+            <br/>
+            <div className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow">
+                <h3>TopGGでVoteをお願いします！</h3>
+
+                <div className="col-span-full flex justify-start mt-4 animate-in fade-in duration-200">
+                    <a href="https://top.gg/ja/bot/1322100616369147924/vote" className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition">今すぐVoteする！</a>
+                </div>
+            </div>
         </div>
     );
 }
