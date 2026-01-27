@@ -1,1 +1,1 @@
-npx next start -p 5050
+pm2 start ecosystem.config.js
