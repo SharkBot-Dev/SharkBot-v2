@@ -428,42 +428,6 @@ class AdminCog(commands.Cog):
                 embed=make_embed.success_embed(title="管理者を削除しました。")
             )
 
-    @admin.command(name="shutdown", description="シャットダウンします。")
-    @app_commands.choices(
-        操作=[
-            app_commands.Choice(name="再起動", value="reboot"),
-            app_commands.Choice(name="シャットダウン", value="shutdown"),
-        ]
-    )
-    async def admin_shutdown(
-        self, interaction: discord.Interaction, 操作: app_commands.Choice[str]
-    ):
-        if interaction.user.id != 1335428061541437531:
-            return await interaction.response.send_message(
-                ephemeral=True,
-                embed=make_embed.error_embed(
-                    title="あなたはSharkBotのオーナーではないため実行できません。"
-                ),
-            )
-
-        if 操作.value == "reboot":
-            with open("./reboot", "w") as f:
-                f.write("Reboot!")
-        else:
-            with open("./shutdown", "w") as f:
-                f.write("Shutdown!")
-
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title=f"{操作.name} します。", color=discord.Color.red()
-            )
-        )
-
-        if 操作.value == "reboot":
-            await self.bot.change_presence(
-                status=discord.Status.dnd, activity=discord.Game(name="再起動中!!")
-            )
-
     @admin.command(name="premium", description="プレミアムユーザーを手動で追加します。")
     @app_commands.choices(
         操作=[
