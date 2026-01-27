@@ -19,7 +19,8 @@ export default async function StarBoardPage({ params }: { params: { guildid: str
 
         const channel = formData.get("channel_select")?.toString();
         const emoji = formData.get("emoji")?.toString();
-        if (!channel || !emoji) return;
+        const count = formData.get("emoji_count")?.toString();
+        if (!channel || !emoji || !count) return;
 
         const guild_channels = await getChannels(guildid);
         const channelsData =
@@ -36,24 +37,28 @@ export default async function StarBoardPage({ params }: { params: { guildid: str
 
         const db = await connectDB();
 
-        await db
-            .db("Main")
-            .collection("ReactionBoard")
-            .updateOne(
-                {
-                    Guild: Long.fromString(guildid),
-                    Channel: Long.fromString(channel),
-                },
-                {
-                    $set: {
+        try {
+            await db
+                .db("Main")
+                .collection("ReactionBoard")
+                .updateOne(
+                    {
                         Guild: Long.fromString(guildid),
                         Channel: Long.fromString(channel),
-                        Emoji: emoji,
-                    }
-                },
-                { upsert: true }
-            );
-
+                    },
+                    {
+                        $set: {
+                            Guild: Long.fromString(guildid),
+                            Channel: Long.fromString(channel),
+                            Emoji: emoji,
+                            MinEmoji: Number.parseInt(count)
+                        }
+                    },
+                    { upsert: true }
+                );
+        } catch {
+            return;
+        }
         revalidatePath(`/dashboard/settings/${guildid}/starboard`);
     }
 
@@ -168,6 +173,15 @@ export default async function StarBoardPage({ params }: { params: { guildid: str
                     name="emoji"
                     className="border p-2"
                     placeholder="⭐"
+                />
+
+                <span className="font-semibold mb-1">最小絵文字数</span>
+                <input
+                    type="number"
+                    name="emoji_count"
+                    className="border p-2"
+                    placeholder="1"
+                    defaultValue="1"
                 />
             </Form>
         </div>
