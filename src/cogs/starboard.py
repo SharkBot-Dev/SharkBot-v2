@@ -36,6 +36,18 @@ class StarBoardCog(commands.Cog):
         if not dbfind:
             return None
         return self.bot.get_channel(dbfind["Channel"])
+    
+    async def get_minemoji_get(self, guild: discord.Guild, emoji: discord.PartialEmoji):
+        db = self.bot.async_db["Main"].ReactionBoard
+        try:
+            dbfind = await db.find_one(
+                {"Guild": guild.id, "Emoji": emoji.__str__()}, {"_id": False}
+            )
+        except Exception:
+            return None
+        if not dbfind:
+            return None
+        return dbfind.get("MinEmoji", 1)
 
     async def save_message(self, original: discord.Message, board_msg: discord.Message):
         db = self.bot.async_db["Main"].ReactionBoardMessage
@@ -76,10 +88,13 @@ class StarBoardCog(commands.Cog):
         if not cha:
             return
 
-        if count == 1:
+        if count < await self.get_minemoji_get(message.guild, emoji=emoji_):
+            return
+
+        if count <= await self.get_minemoji_get(message.guild, emoji=emoji_):
             board_msg = await cha.send(
                 embed=discord.Embed(
-                    title=f"{emoji_}x1",
+                    title=f"{emoji_}x{count}",
                     description=message.content,
                     color=discord.Color.blue(),
                 )
@@ -232,6 +247,22 @@ class StarBoardCog(commands.Cog):
             upsert=True,
         )
 
+    async def set_emojicount(
+        self,
+        interaction: discord.Interaction,
+        チャンネル: discord.TextChannel,
+        最小絵文字: int,
+    ):
+        db = self.bot.async_db["Main"].ReactionBoard
+        await db.update_one(
+            {"Guild": interaction.guild.id, "Channel": チャンネル.id},
+            {
+                "$set": {
+                    "MinEmoji": 最小絵文字,
+                }
+            }
+        )
+
     async def delete_reaction_board(self, interaction: discord.Interaction):
         db = self.bot.async_db["Main"].ReactionBoard
         await db.delete_one({"Channel": interaction.channel.id})
@@ -250,11 +281,6 @@ class StarBoardCog(commands.Cog):
         チャンネル: discord.TextChannel,
         絵文字: str = "⭐",
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         try:
             await interaction.response.defer()
             await self.set_reaction_board(interaction, チャンネル, 絵文字)
@@ -272,16 +298,26 @@ class StarBoardCog(commands.Cog):
                 )
             )
 
+    @starboard.command(name="emojicount", description="絵文字の最低数を指定します。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def reactionboard_setup(
+        self,
+        interaction: discord.Interaction,
+        チャンネル: discord.TextChannel,
+        絵文字の最低数: int = 1,
+    ):
+        if 絵文字の最低数 < 1:
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="最低数1以上である必要があります。"))
+        await self.set_emojicount(interaction, チャンネル, 絵文字の最低数)
+        await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="絵文字の最低数を設定しました。", description=f"{絵文字の最低数} 個の絵文字が集まらないと\n転送されなくしました。"))
+
     @starboard.command(name="disable", description="スターボードを無効化します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def reation_board_disable(self, interaction: discord.Interaction):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         try:
             await interaction.response.defer()
             await self.delete_reaction_board(interaction)
