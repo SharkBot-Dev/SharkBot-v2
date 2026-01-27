@@ -131,8 +131,35 @@ class UpCog(commands.Cog):
 
         return embed
 
+    async def get_currency_name(self, guild: discord.Guild):
+        db = self.bot.async_db["Main"].ServerMoneyCurrency
+        _id = f"{guild.id}"
+        dbfind = await db.find_one({"_id": _id}, {"_id": False})
+        if not dbfind:
+            return "コイン"
+        return dbfind.get("Name", "コイン")
+
+    async def add_server_money(
+        self, guild: discord.Guild, author: discord.User, coin: int
+    ):
+        db = self.bot.async_db["Main"].ServerMoney
+        user_data = await db.find_one({"_id": f"{guild.id}-{author.id}"})
+        if user_data:
+            await db.update_one(
+                {"_id": f"{guild.id}-{author.id}"}, {"$inc": {"count": coin}}
+            )
+        else:
+            await db.insert_one(
+                {
+                    "_id": f"{guild.id}-{author.id}",
+                    "count": coin,
+                    "Guild": guild.id,
+                    "User": author.id,
+                }
+            )
+        return True
+
     async def add_money(self, message: discord.Message):
-        return
         db = self.bot.async_db["Main"].BumpUpEconomy
         try:
             dbfind = await db.find_one({"Channel": message.channel.id}, {"_id": False})
@@ -143,26 +170,16 @@ class UpCog(commands.Cog):
         if dbfind.get("Money", 0) == 0:
             return
         try:
-            client = Client(self.mt)
-            guild = await client.get_guild(message.guild.id)
-            user = await guild.get_user_balance(message.interaction_metadata.user.id)
-            await user.set(cash=dbfind.get("Money", 0) + user.cash)
-
+            await self.add_server_money(message.guild, message.interaction_metadata.user, dbfind.get("Money", 0))
+            await asyncio.sleep(1)
             await message.channel.send(
-                embed=discord.Embed(
+                embed=make_embed.success_embed(
                     title="Up・Bumpなどをしたため、給料がもらえました。",
-                    description=f"{dbfind.get('Money', 0)}コインです。",
-                    color=discord.Color.pink(),
+                    description=f"{dbfind.get('Money', 0)}{await self.get_currency_name(message.guild)}です。"
                 )
             )
         except Exception:
-            return await message.channel.send(
-                embed=discord.Embed(
-                    title="追加に失敗しました。",
-                    description="以下を管理者権限を持っている人に\n認証してもらってください。\nhttps://unbelievaboat.com/applications/authorize?app_id=1326818885663592015",
-                    color=discord.Color.yellow(),
-                )
-            )
+            return
 
     async def mention_get(self, message: discord.Message):
         db = self.bot.async_db["Main"].BumpUpMention
@@ -607,6 +624,7 @@ class UpCog(commands.Cog):
                             color=discord.Color.green(),
                         )
                     )
+                    # await self.add_money(after)
 
                     await self.bot.alert_add(
                         "discadia",
@@ -905,6 +923,24 @@ class UpCog(commands.Cog):
             ephemeral=True,
         )
 
+    @bump.command(
+        name="economy",
+        description="Upをするとサーバー内経済にお金が追加されるようにします。",
+    )
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def economy_up_setting(self, interaction: discord.Interaction, 何コイン: str):
+        db = self.bot.async_db["Main"].BumpUpEconomy
+        await db.update_one({
+            "Channel": interaction.channel.id
+        }, {
+            "$set": {
+                "Money": 何コイン
+            }
+        }, upsert=True)
+        coin_name = await self.get_currency_name(interaction.guild)
+        await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="Upをすると報酬をもらえるようにしました。", description=f"{何コイン}{coin_name}をもらえるようにしました。"))
 
 async def setup(bot):
     await bot.add_cog(UpCog(bot))
