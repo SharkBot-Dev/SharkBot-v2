@@ -1,4 +1,5 @@
 import asyncio
+import random
 import time
 import discord
 from discord.ext import commands
@@ -44,9 +45,35 @@ class TagsCog(commands.Cog):
         self.bot = bot
         print("init -> TagsCog")
 
-    def replace_tag(self, text: str, args: str, author: discord.Member):
+    async def parse_tags(self, text: str, args: str, author: discord.Member, guild: discord.Guild, message: discord.Message = None):
+        if "{delete}" in text and message:
+            await message.delete()
+
+        def replace_choice():
+            def select_option(match):
+                options = match.group(1).split('|')
+                return random.choice(options)
+
+            pattern = r'\{choice:(.*?)\}'
+            return re.sub(pattern, select_option, text)
+        
+        text = replace_choice()
+
+        pattern = r"\{addrole:([^}]+)\}"
+        role_ids = set(re.findall(pattern, text))
+        for role_id in role_ids:
+            try:
+                role = guild.get_role(int(role_id))
+                await author.add_roles(role, reason="tagの実行のため。")
+
+                await asyncio.sleep(0.5)
+            except:
+                pass
+
+        cleaned_text = re.sub(r"\{addrole:[^}]+\}", "", text)
+
         return (
-            text.replace("{args}", args)
+            cleaned_text.replace("{args}", args)
             .replace("{author}", author.name)
             .replace("{author_id}", str(author.id))
         )
@@ -183,23 +210,8 @@ class TagsCog(commands.Cog):
             try:
                 ts_script = doc["tagscript"]
 
-                pattern = r"\{addrole:([^}]+)\}"
-                role_ids = set(re.findall(pattern, ts_script))
-                for role_id in role_ids:
-                    try:
-                        role = interaction.guild.get_role(int(role_id))
-                        await interaction.user.add_roles(
-                            role, reason="tagの実行のため。"
-                        )
-
-                        await asyncio.sleep(1)
-                    except:
-                        pass
-
-                cleaned_text = re.sub(r"\{addrole:[^}]+\}", "", ts_script)
-
                 await interaction.followup.send(
-                    self.replace_tag(cleaned_text, 引数, interaction.user)
+                    await self.parse_tags(ts_script, 引数, interaction.user, interaction.guild)
                     + "\n-# これはタグからのメッセージです。"
                 )
             except Exception as e:
@@ -245,15 +257,16 @@ class TagsCog(commands.Cog):
                     return
                 if interaction.data.get("options"):
                     return await interaction.response.send_message(
-                        self.replace_tag(
+                        await self.parse_tags(
                             doc.get("tagscript"),
                             interaction.data["options"][0]["value"],
                             interaction.user,
+                            interaction.guild
                         )
                         + "\n-# これはタグからのメッセージです。"
                     )
                 await interaction.response.send_message(
-                    self.replace_tag(doc.get("tagscript"), "No Args.", interaction.user)
+                    await self.parse_tags(doc.get("tagscript"), "No Args.", interaction.user, interaction.guild)
                     + "\n-# これはタグからのメッセージです。"
                 )
         except:
@@ -295,21 +308,8 @@ class TagsCog(commands.Cog):
 
                 ts_script = doc["tagscript"]
 
-                pattern = r"\{addrole:([^}]+)\}"
-                role_ids = set(re.findall(pattern, ts_script))
-                for role_id in role_ids:
-                    try:
-                        role = message.guild.get_role(int(role_id))
-                        await message.author.add_roles(role, reason="tagの実行のため。")
-
-                        await asyncio.sleep(1)
-                    except:
-                        pass
-
-                cleaned_text = re.sub(r"\{addrole:[^}]+\}", "", ts_script)
-
                 await message.channel.send(
-                    self.replace_tag(cleaned_text, args, message.author)
+                    await self.parse_tags(ts_script, args, message.author, message.guild, message=message)
                     + "\n-# これはタグからのメッセージです。"
                 )
             except Exception as e:
