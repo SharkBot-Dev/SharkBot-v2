@@ -46,9 +46,6 @@ class TagsCog(commands.Cog):
         print("init -> TagsCog")
 
     async def parse_tags(self, text: str, args: str, author: discord.Member, guild: discord.Guild, message: discord.Message = None):
-        if "{delete}" in text and message:
-            await message.delete()
-
         def replace_choice():
             def select_option(match):
                 options = match.group(1).split('|')
