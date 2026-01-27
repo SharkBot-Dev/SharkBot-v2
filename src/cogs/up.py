@@ -932,13 +932,16 @@ class UpCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def economy_up_setting(self, interaction: discord.Interaction, 何コイン: str):
         db = self.bot.async_db["Main"].BumpUpEconomy
-        await db.update_one({
-            "Channel": interaction.channel.id
-        }, {
-            "$set": {
-                "Money": 何コイン
-            }
-        }, upsert=True)
+        try:
+            await db.update_one({
+                "Channel": interaction.channel.id
+            }, {
+                "$set": {
+                    "Money": int(何コイン)
+                }
+            }, upsert=True)
+        except:
+            return await interaction.response.send_message(ephemeral=True, content="数字以外を入れないでください。")
         coin_name = await self.get_currency_name(interaction.guild)
         await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="Upをすると報酬をもらえるようにしました。", description=f"{何コイン}{coin_name}をもらえるようにしました。"))
 
