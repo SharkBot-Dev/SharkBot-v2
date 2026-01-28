@@ -942,6 +942,8 @@ class UpCog(commands.Cog):
             }, upsert=True)
         except:
             return await interaction.response.send_message(ephemeral=True, content="数字以外を入れないでください。")
+        if 何コイン == "0":
+            return await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="報酬を無効化しました。"))
         coin_name = await self.get_currency_name(interaction.guild)
         await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="Upをすると報酬をもらえるようにしました。", description=f"{何コイン}{coin_name}をもらえるようにしました。"))
 
