@@ -150,15 +150,27 @@ class WelcomeCog(commands.Cog):
             async with aiohttp.ClientSession() as session:
                 webhook = Webhook.from_url(webhooks, session=session)
                 try:
-                    await webhook.send(
-                        embed=discord.Embed(
-                            title=f"{await rep_name(dbfind['Title'], member=member)}",
-                            description=f"{await rep_name(dbfind['Description'], member=member)}",
-                            color=discord.Color.green(),
-                        ),
-                        username="SharkBot Welcome",
-                        avatar_url=self.bot.user.avatar.url,
-                    )
+                    if dbfind.get('Mention'):
+                        await webhook.send(
+                            embed=discord.Embed(
+                                title=f"{await rep_name(dbfind['Title'], member=member)}",
+                                description=f"{await rep_name(dbfind['Description'], member=member)}",
+                                color=discord.Color.green(),
+                            ),
+                            username="SharkBot Welcome",
+                            avatar_url=self.bot.user.avatar.url,
+                            content=member.mention
+                        )
+                    else:
+                        await webhook.send(
+                            embed=discord.Embed(
+                                title=f"{await rep_name(dbfind['Title'], member=member)}",
+                                description=f"{await rep_name(dbfind['Description'], member=member)}",
+                                color=discord.Color.green(),
+                            ),
+                            username="SharkBot Welcome",
+                            avatar_url=self.bot.user.avatar.url
+                        )
                 except:
                     return
         except:

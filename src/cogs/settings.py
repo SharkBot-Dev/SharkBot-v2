@@ -370,24 +370,52 @@ class WelcomeCommands(app_commands.Group):
                 def __init__(self, database) -> None:
                     super().__init__(title="ようこそメッセージの設定", timeout=None)
                     self.db = database
-                    self.etitle = discord.ui.TextInput(
-                        label="タイトル",
-                        placeholder="タイトルを入力",
-                        style=discord.TextStyle.long,
-                        required=True,
-                        default="<name> さん、よろしく！",
+
+                    self.wtitle = discord.ui.Label(
+                        text='タイトル',
+                        description='タイトルを入力してください',
+                        component=discord.ui.TextInput(
+                            style=discord.TextStyle.long,
+                            max_length=500,
+                            default="<name> さん、よろしく！",
+                            required=True
+                        ),
                     )
-                    self.desc = discord.ui.TextInput(
-                        label="説明",
-                        placeholder="説明を入力",
-                        style=discord.TextStyle.long,
-                        required=True,
-                        default="あなたは <count> 人目のメンバーです！\n\nアカウント作成日: <createdat>",
+
+                    self.desc = discord.ui.Label(
+                        text='説明',
+                        description='説明を入力してください',
+                        component=discord.ui.TextInput(
+                            style=discord.TextStyle.long,
+                            max_length=500,
+                            default="あなたは <count> 人目のメンバーです！\n\nアカウント作成日: <createdat>",
+                            required=True
+                        ),
                     )
-                    self.add_item(self.etitle)
+
+                    self.mention = discord.ui.Label(
+                        text='メンションをするか',
+                        description='メンションをするか選択してください',
+                        component=discord.ui.Select(
+                            required=True,
+                            options=[
+                                discord.SelectOption(label='しない', value='no', default=True),
+                                discord.SelectOption(label='する', value='yes')
+                            ]
+                        ),
+                    )
+
+                    self.add_item(self.wtitle)
                     self.add_item(self.desc)
+                    self.add_item(self.mention)
 
                 async def on_submit(self, interaction_: discord.Interaction) -> None:
+                    assert isinstance(self.wtitle.component, discord.ui.TextInput)
+                    assert isinstance(self.desc.component, discord.ui.TextInput)
+                    assert isinstance(self.mention.component, discord.ui.Select)
+
+                    mention = True if self.mention.component.values[0] == "yes" else False
+
                     db = self.db["Main"].WelcomeMessage
                     await db.update_one(
                         {
@@ -397,8 +425,9 @@ class WelcomeCommands(app_commands.Group):
                             "$set": {
                                 "Channel": interaction_.channel.id,
                                 "Guild": interaction_.guild.id,
-                                "Title": self.etitle.value,
-                                "Description": self.desc.value,
+                                "Title": self.wtitle.component.value,
+                                "Description": self.desc.component.value,
+                                "Mention": mention
                             }
                         },
                         upsert=True,
