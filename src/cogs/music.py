@@ -143,8 +143,8 @@ class MusicCog(commands.Cog):
         )
 
     async def now_play_set(self, guild, title):
-        await self.db["NowPLay"].replace_one(
-            {"Guild": guild}, {"Guild": guild, "Title": title}, upsert=True
+        await self.db["NowPLay"].update_one(
+            {"Guild": guild}, {'$set': {"Guild": guild, "Title": title}}, upsert=True
         )
 
     async def play_next(self, interaction, guild_id):
@@ -172,7 +172,7 @@ class MusicCog(commands.Cog):
             queue_item["url"], boost=boost_enabled, volume=vol_setting
         )
         voice.play(audio, after=after_playing)
-        await interaction.channel.send(f"再生中の曲: **{queue_item['title']}**")
+        await interaction.channel.send(embed=make_embed.success_embed(title="再生が開始されました。", description=queue_item['title']))
 
     @commands.Cog.listener(name="on_interaction")
     async def on_interaction_panel(self, interaction: discord.Interaction):
@@ -300,12 +300,12 @@ class MusicCog(commands.Cog):
                                     ),
                                 )
                                 await interaction.channel.send(
-                                    f"再生中の曲: **{source_info['title']}**"
+                                    embed=make_embed.success_embed(title="再生が開始されました。", description=source_info['title'])
                                 )
                             else:
                                 await add_to_queue(interaction.guild.id, source_info)
                                 await interaction.channel.send(
-                                    f"キューに追加: **{source_info['title']}**"
+                                    embed=make_embed.success_embed(title="キューに追加されました。", description=source_info['title'])
                                 )
 
                     await interaction.response.send_modal(MusicAddModal())
@@ -375,10 +375,10 @@ class MusicCog(commands.Cog):
                     ),
                 )
                 await self.now_play_set(interaction.guild.id, item["title"])
-                await interaction.channel.send(f"再生中の曲: **{item['title']}**")
+                await interaction.channel.send(embed=make_embed.success_embed(title="再生が開始されました。", description=item['title']))
             else:
                 await self.add_to_queue(interaction.guild.id, item)
-                await interaction.channel.send(f"キューに追加: **{item['title']}**")
+                await interaction.channel.send(embed=make_embed.success_embed(title="キューに追加されました。", description=item['title']))
 
             return await interaction.followup.send(view=MusicView())
 
@@ -413,12 +413,12 @@ class MusicCog(commands.Cog):
                     )
                     await self.now_play_set(interaction.guild.id, source_info["title"])
                     await interaction.channel.send(
-                        f"再生中の曲: **{source_info['title']}**"
+                        embed=make_embed.success_embed(title="再生が開始されました。", description=source_info['title'])
                     )
                 else:
                     await self.add_to_queue(interaction.guild.id, source_info)
                     await interaction.channel.send(
-                        f"キューに追加: **{source_info['title']}**"
+                        embed=make_embed.success_embed(title="キューに追加されました。", description=source_info['title'])
                     )
 
                 return await interaction.followup.send(view=MusicView())
@@ -440,18 +440,18 @@ class MusicCog(commands.Cog):
                     )
                     await self.now_play_set(interaction.guild.id, source_info["title"])
                     await interaction.channel.send(
-                        f"再生中の曲: **{source_info['title']}**"
+                        embed=make_embed.success_embed(title="再生が開始されました。", description=source_info['title'])
                     )
                 else:
                     await self.add_to_queue(interaction.guild.id, source_info)
                     await interaction.channel.send(
-                        f"キューに追加: **{source_info['title']}**"
+                        embed=make_embed.success_embed(title="キューに追加されました。", description=source_info['title'])
                     )
 
                 return await interaction.followup.send(view=MusicView())
             else:
                 return await interaction.response.send_message(
-                    "SoundCloud以外に対応していません。"
+                    embed=make_embed.error_embed(title="そのソースには対応していません。", description="/music source を実行し、\n対応ソースを確認して下さい。")
                 )
 
         return await interaction.response.send_message(
