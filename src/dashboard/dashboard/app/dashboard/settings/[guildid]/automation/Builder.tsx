@@ -72,14 +72,16 @@ export default function AutoMationBuilder({ guild, channels, sendData }: Builder
               )}
             </div>
           ))}
-          <button 
-            type="button" 
-            onClick={addCondition} 
-            disabled={conditions.length >= 5}
-            className="border p-2 rounded bg-gray-800 text-white"
-          >
-            {conditions.length >= 5 ? "条件は最大5個までです" : "+ 条件を追加"}
-          </button>
+          <div className="card-style">
+            <button 
+              type="button" 
+              onClick={addCondition} 
+              disabled={conditions.length >= 5}
+              className="border p-2 rounded bg-gray-800 text-white"
+            >
+              {conditions.length >= 5 ? "条件は最大5個までです" : "+ 条件を追加"}
+            </button>
+          </div>
         </Section>
 
         <Section title="3. 実行するアクション" color="text-yellow-400">
@@ -117,14 +119,16 @@ export default function AutoMationBuilder({ guild, channels, sendData }: Builder
               )}
             </div>
           ))}
-          <button 
-            type="button" 
-            onClick={addAction} 
-            disabled={actions.length >= 5}
-            className="border p-2 rounded bg-gray-800 text-white"
-          >
-            {actions.length >= 5 ? "行動は最大5個までです" : "+ 行動を追加"}
-          </button>
+          <div className="card-style">
+            <button 
+              type="button" 
+              onClick={addAction} 
+              disabled={actions.length >= 5}
+              className="border p-2 rounded bg-gray-800 text-white"
+            >
+              {actions.length >= 5 ? "行動は最大5個までです" : "+ 行動を追加"}
+            </button>
+          </div>
         </Section>
 
       </Form>
