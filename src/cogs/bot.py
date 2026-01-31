@@ -306,6 +306,12 @@ Sharkアカウント: {sharkaccount_count}人
             )
         )
 
+    @bot.command(name="vote", description="SharkBotに投票する方法を取得します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def bot_vote(self, interaction: discord.Interaction):
+        await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="以下から投票できます！", description="24時間に一回投票できます。"), view=discord.ui.View().add_item(discord.ui.Button(label="今すぐ投票する！", url="https://top.gg/ja/bot/1322100616369147924/vote")))
+
     @bot.command(name="custom", description="Botのアバターなどをカスタマイズします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
