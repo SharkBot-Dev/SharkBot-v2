@@ -42,13 +42,16 @@ class AlertCog(commands.Cog):
 
                 news_db = self.bot.async_db["Main"].NewsAlert
                 async for n in news_db.find({}):
-                    guild = self.bot.get_guild(n.get("Guild", 0))
-                    if guild:
-                        channel = guild.get_channel(n.get("Channel", 0))
-                        if channel:
-                            mention = await self.get_mention(guild, channel.id)
-                            mention = mention if mention else ""
-                            await channel.send(f"{mention}\nhttps:{url['href']}")
+                    try:
+                        guild = self.bot.get_guild(n.get("Guild", 0))
+                        if guild:
+                            channel = guild.get_channel(n.get("Channel", 0))
+                            if channel:
+                                mention = await self.get_mention(guild, channel.id)
+                                mention = mention if mention else ""
+                                await channel.send(f"{mention}\nhttps:{url['href']}")
+                    except:
+                        continue
 
     async def cog_unload(self):
         self.check_news_alert.stop()
