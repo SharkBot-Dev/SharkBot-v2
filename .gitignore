@@ -283,3 +283,5 @@ src/data
 htsvoice
 
 src/run_windows.bat
+
+src/premium/
