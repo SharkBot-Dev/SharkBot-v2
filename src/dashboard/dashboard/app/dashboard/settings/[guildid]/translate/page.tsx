@@ -7,6 +7,7 @@ import ItemRow from "@/app/components/ItemRow";
 import ItemBox from "@/app/components/ItemBox";
 import LineAndTextLayout from "@/app/components/LineAndTextLayout";
 import Form from "@/app/components/Form";
+import ModuleToggle from "@/app/components/ModuleToggle";
 
 export default async function SearchPage({ params }: { params: { guildid: string } }) {
     async function sendData(formData: FormData) {
@@ -56,6 +57,7 @@ export default async function SearchPage({ params }: { params: { guildid: string
     return (
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} の翻訳</h1>
+            <ModuleToggle guild_id={guildid} module_name="translate"/>
 
             <Form action={sendData} buttonlabel="設定を保存">
                 <LineAndTextLayout text="コマンド設定" />
