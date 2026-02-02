@@ -748,35 +748,6 @@ class MinecraftGroup(app_commands.Group):
                     "サーバー情報を取得できませんでした。\nサーバーがオフラインである可能性があります。"
                 )
 
-    @app_commands.command(name="seedmap", description="シード値からマップを取得します")
-    @app_commands.choices(
-        バージョン=[
-            app_commands.Choice(name="1.21.5-Java", value="java_one"),
-            app_commands.Choice(name="1.21.4-Java", value="java_two"),
-        ]
-    )
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def minecraft_seedmao(
-        self,
-        interaction: discord.Interaction,
-        バージョン: app_commands.Choice[str],
-        シード値: str,
-    ):
-        await interaction.response.send_message(
-            embed=make_embed.success_embed(title="シードマップ")
-            .add_field(name="シード値", value=シード値, inline=False)
-            .add_field(name="バージョン", value=バージョン.name, inline=False),
-            view=discord.ui.View().add_item(
-                discord.ui.Button(
-                    label="アクセスする",
-                    url=f"https://mcseedmap.net/{バージョン.name}/{シード値}",
-                )
-            ),
-            ephemeral=True,
-        )
-
-
 class GameCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
