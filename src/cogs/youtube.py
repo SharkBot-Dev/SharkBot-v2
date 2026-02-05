@@ -1,6 +1,6 @@
 import json
 import re
-from discord.ext import commands
+from discord.ext import commands, tasks
 import discord
 import random
 import time
@@ -39,6 +39,30 @@ class YoutubeCog(commands.Cog):
         self.bot = bot
         print("init -> YoutubeCog")
 
+    @tasks.loop(hours=3)
+    async def youtube_re_subscribe_channel_loop(self):
+        db = self.bot.async_db["MainTwo"].YoutubeAlert
+        
+        try:
+            channel_ids = await db.distinct("channel_id")
+        except Exception as e:
+            return
+
+        for channel_id in channel_ids:
+            if not channel_id:
+                continue
+                
+            try:
+                res = await subscribe_channel(channel_id, settings.CALLBACK)
+            except Exception as e:
+                continue
+
+    async def cog_load(self):
+        self.youtube_re_subscribe_channel_loop.start()
+
+    async def cog_unload(self):
+        self.youtube_re_subscribe_channel_loop.stop()
+
     youtube = app_commands.Group(
         name="youtube",
         description="Youtube関連のコマンドです。",
@@ -48,7 +72,7 @@ class YoutubeCog(commands.Cog):
     @youtube.command(name="add", description="Youtube通知に追加します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.checks.has_permissions(manage_channels=True, manage_webhooks=True)
     async def youtube_add_alert(
         self,
         interaction: discord.Interaction,
@@ -147,7 +171,7 @@ class YoutubeCog(commands.Cog):
         # res = await unsubscribe_channel(youtubeチャンネルid, settings.CALLBACK)
 
         await interaction.followup.send(
-            embed=make_embed.success_embed(title="登録を解除しました。")
+            embed=make_embed.success_embed(title="登録を解除しました。", description="使用されていたWebHookは\n各自で削除してください。")
         )
 
     @youtube.command(name="list", description="Youtube通知をリスト化します。")
