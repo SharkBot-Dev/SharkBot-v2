@@ -597,6 +597,16 @@ class GlobalCog(commands.Cog):
         except Exception:
             return False
 
+    async def globalchat_check_channel_for_interaction(self, interaction: discord.Interaction):
+        db = self.bot.async_db["Main"].NewGlobalChat
+        try:
+            dbfind = await db.find_one({"Channel": interaction.channel.id}, {"_id": False})
+            if dbfind is None:
+                return False
+            return True
+        except Exception:
+            return False
+
     async def globalchat_check_channel(self, message: discord.Message):
         db = self.bot.async_db["Main"].NewGlobalChat
         try:
@@ -1127,7 +1137,7 @@ class GlobalCog(commands.Cog):
     ):
         await interaction.response.defer()
         if not 部屋名:
-            is_in_globalchat = await self.globalchat_check(interaction)
+            is_in_globalchat = await self.globalchat_check_channel_for_interaction(interaction)
             if is_in_globalchat:
                 await interaction.followup.send(embed=make_embed.success_embed(title="グローバルチャットのルール", description="グローバルチャットのルール\n・荒らしをしない\n・宣伝をしない\n・r18やグロ関連のものを貼らない\n・その他運営の禁止したものを貼らない\n以上です。守れない場合は、処罰することもあります。\nご了承ください。"))
                 return
