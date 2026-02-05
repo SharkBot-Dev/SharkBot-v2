@@ -514,6 +514,25 @@ ID | 説明
             await ttscheck.delete_one({"Guild": message.guild.id})
             return await message.guild.voice_client.disconnect()
 
+    @commands.Cog.listener("on_voice_state_update")
+    async def on_voice_state_update_autodown(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ):
+        if member.id == self.bot.user.id:
+            return
+
+        if before.channel is not None:
+            voice_client = before.channel.guild.voice_client
+            
+            if voice_client and voice_client.channel == before.channel:
+                if len(before.channel.members) == 1:
+                    try:
+                        await voice_client.disconnect()
+                    except:
+                        pass
 
 async def setup(bot):
     await bot.add_cog(TTSCog(bot))
