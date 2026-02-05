@@ -1031,6 +1031,62 @@ class GlobalCog(commands.Cog):
             .add_field(name="ルール", value=dbfind.get('Rule', 'ルール未制定'), inline=False),
         )
 
+    @globalchat.command(name="moderate", description="グローバルルームでメンバーを管理します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="ミュート", value="mute"),
+            app_commands.Choice(name="ミュート解除", value="unmute")
+        ]
+    )
+    async def global_setting_moderate(
+        self, interaction: discord.Interaction, 部屋名: str, 操作: app_commands.Choice[str], ユーザー: discord.User
+    ):
+        db = self.bot.async_db["MainTwo"].GlobalChatRoomSetting
+        dbfind = await db.find_one(
+            {"Name": 部屋名, "Owner": interaction.user.id}, {"_id": False}
+        )
+        if not dbfind:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="あなたはルームのオーナーではありません！",
+                    description="オーナーしか設定は変更できません。",
+                ),
+            )
+
+        if 操作.value == "mute":
+            await db.update_one(
+                {"Name": 部屋名, "Owner": interaction.user.id},
+                {"$addToSet": {
+                    "Mute": ユーザー.id
+                }}
+            )
+
+            await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.success_embed(
+                    title="ミュートしました。",
+                    description=f"ユーザー: {ユーザー.mention}",
+                ),
+            )
+        elif 操作.value == "unmute":
+            await db.update_one(
+                {"Name": 部屋名, "Owner": interaction.user.id},
+                {"$pull": {
+                    "Mute": ユーザー.id
+                }}
+            )
+
+            await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.success_embed(
+                    title="ミュートを解除しました。",
+                    description=f"ユーザー: {ユーザー.mention}",
+                ),
+            )
+
     @globalchat.command(name="set-password", description="パスワードを設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -2191,6 +2247,20 @@ class GlobalCog(commands.Cog):
 
         await globalchat.delete_one_global(self.bot, channels, message.id)
 
+    async def is_user_muted(self, room_name: str, user: discord.User):
+        db = self.bot.async_db["MainTwo"].GlobalChatRoomSetting
+        dbfind = await db.find_one(
+            {"Name": room_name}, {"_id": False}
+        )
+        if not dbfind:
+            return False
+        
+        muted_list = dbfind.get('Mute', [])
+        if user.id in muted_list:
+            return True
+        
+        return False
+
     @commands.Cog.listener("on_message")
     async def on_message_globalroom(self, message: discord.Message):
         if message.author.bot:
@@ -2214,6 +2284,11 @@ class GlobalCog(commands.Cog):
         if current_time - last_message_time < COOLDOWN_TIMEGC:
             return
         user_last_message_timegc[message.guild.id] = current_time
+
+        is_muted = await self.is_user_muted(check, message.author)
+        if is_muted:
+            await message.add_reaction("❌")
+            return
 
         await message.add_reaction("🔄")
 
