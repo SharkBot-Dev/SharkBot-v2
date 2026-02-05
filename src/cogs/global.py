@@ -28,6 +28,45 @@ invite_only_check = re.compile(
     r"^(https?://)?(www\.)?(discord\.gg/|discord\.com/invite/)[a-zA-Z0-9]+$"
 )
 
+class RuleModal(discord.ui.Modal):
+    def __init__(self, room_name: str):
+        super().__init__(title="ルールを制定する", timeout=360)
+        self.room_name = room_name
+
+    text = discord.ui.TextInput(
+        label="ルールを入力",
+        placeholder="ここにルールを入力",
+        style=discord.TextStyle.long,
+        required=True,
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        db = interaction.client.async_db["MainTwo"].GlobalChatRoomSetting
+        dbfind = await db.find_one(
+            {"Name": self.room_name, "Owner": interaction.user.id}, {"_id": False}
+        )
+        if not dbfind:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="あなたはルームのオーナーではありません！",
+                    description="オーナーしか設定は変更できません。",
+                ),
+            )
+
+        await db.update_one(
+            {"Name": self.room_name, "Owner": interaction.user.id},
+            {"$set": {"Rule": self.text.value}},
+        )
+
+        await interaction.followup.send(
+            ephemeral=True,
+            embed=make_embed.success_embed(
+                title="ルールを制定しました。",
+                description=self.text.value,
+            ),
+        )
 
 class SitesModal(discord.ui.Modal, title="サイトの作成"):
     text = discord.ui.TextInput(
@@ -987,7 +1026,9 @@ class GlobalCog(commands.Cog):
             .add_field(
                 name="パスワード",
                 value=f"`{dbfind.get('Password') if dbfind.get('Password') else 'パスワードなし'}`",
-            ),
+                inline=False
+            )
+            .add_field(name="ルール", value=dbfind.get('Rule', 'ルール未制定'), inline=False),
         )
 
     @globalchat.command(name="set-password", description="パスワードを設定します。")
@@ -1021,6 +1062,63 @@ class GlobalCog(commands.Cog):
                 description=f"```{パスワード if パスワード else 'なし'}```",
             ),
         )
+
+    @globalchat.command(name="rule", description="グローバルチャットのルールを表示します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def global_setting_rule(
+        self, interaction: discord.Interaction, 部屋名: str = None
+    ):
+        await interaction.response.defer()
+        if not 部屋名:
+            is_in_globalchat = await self.globalchat_check(interaction)
+            if is_in_globalchat:
+                await interaction.followup.send(embed=make_embed.success_embed(title="グローバルチャットのルール", description="グローバルチャットのルール\n・荒らしをしない\n・宣伝をしない\n・r18やグロ関連のものを貼らない\n・その他運営の禁止したものを貼らない\n以上です。守れない場合は、処罰することもあります。\nご了承ください。"))
+                return
+            
+            is_in_globalroom = await self.globalchat_room_check(interaction)
+            if not is_in_globalroom:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="表示するルールがありません。", description="グローバルチャットの設定されている\nチャンネルで実行してください。"))
+
+            db = self.bot.async_db["MainTwo"].GlobalChatRoomSetting
+            dbfind = await db.find_one(
+                {"Name": is_in_globalroom}, {"_id": False}
+            )
+            if not dbfind:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="表示するルールがありません。", description="グローバルチャットの設定が見つかりません、"))
+
+            await interaction.followup.send(embed=make_embed.success_embed(title="グローバルチャットのルール", description=dbfind.get('Rule', 'まだルールが制定されていません。')))
+            return
+
+        db = self.bot.async_db["MainTwo"].GlobalChatRoomSetting
+        dbfind = await db.find_one(
+            {"Name": 部屋名}, {"_id": False}
+        )
+        if not dbfind:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="表示するルールがありません。", description="その部屋は存在しません。"))
+
+        await interaction.followup.send(embed=make_embed.success_embed(title="グローバルチャットのルール", description=dbfind.get('Rule', 'まだルールが制定されていません。')))
+
+    @globalchat.command(name="set-rule", description="グローバルチャットのルールを制定します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def global_setting_setrule(
+        self, interaction: discord.Interaction, 部屋名: str
+    ):
+        db = self.bot.async_db["MainTwo"].GlobalChatRoomSetting
+        dbfind = await db.find_one(
+            {"Name": 部屋名, "Owner": interaction.user.id}, {"_id": False}
+        )
+        if not dbfind:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="あなたはルームのオーナーではありません！",
+                    description="オーナーしか設定は変更できません。",
+                ),
+            )
+
+        await interaction.response.send_modal(RuleModal(部屋名))
 
     async def globalshiritori_leave(self, ctx: discord.Interaction):
         db = self.bot.async_db["Main"].GlobalShiritori
