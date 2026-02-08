@@ -8,7 +8,7 @@ import aiohttp
 import urllib.parse
 from discord import app_commands
 
-from models import tts_dict
+from models import make_embed, tts_dict
 
 cooldown_autojoin = {}
 cooldown_tts = {}
@@ -97,6 +97,8 @@ class TTSCog(commands.Cog):
     @tts.command(name="start", description="読み上げをします。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def _tts_start(self, interaction: discord.Interaction):
+        return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed("この機能は終了しました。", description="今後このコマンドも削除されます。\n\n今までご利用いただきありがとうございました。"))
+
         if not interaction.user.voice:
             return await interaction.response.send_message(
                 embed=discord.Embed(

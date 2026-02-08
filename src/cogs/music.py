@@ -214,6 +214,7 @@ class MusicCog(commands.Cog):
                             ephemeral=True,
                         )
                 elif custom_id.startswith("music_add+"):
+                    return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed("この機能は終了しました。", description="今後このコマンドも削除されます。\n\n今までご利用いただきありがとうございました。"))
 
                     class MusicAddModal(discord.ui.Modal):
                         def __init__(self_):
@@ -328,6 +329,8 @@ class MusicCog(commands.Cog):
         url: str = None,
         ファイル: discord.Attachment = None,
     ):
+        return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed("この機能は終了しました。", description="今後このコマンドも削除されます。\n\n今までご利用いただきありがとうございました。"))
+        
         if interaction.user.voice is None:
             return await interaction.response.send_message(
                 "ボイスチャンネルに参加してください。"
@@ -545,6 +548,8 @@ class MusicCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def music_source(self, interaction: discord.Interaction):
+        return await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed("この機能は終了しました。", description="今後このコマンドも削除されます。\n\n今までご利用いただきありがとうございました。"))
+
         await interaction.response.send_message(
             embed=make_embed.success_embed(title="対応ソース")
             .add_field(name="SoundCloud", value="音楽再生する用です。", inline=False)
