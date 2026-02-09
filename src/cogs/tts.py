@@ -1,3 +1,5 @@
+# この機能は削除されました。
+
 import re
 from discord.ext import commands
 import discord
