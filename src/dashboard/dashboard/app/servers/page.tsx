@@ -1,10 +1,24 @@
 import { connectDB } from "@/lib/mongodb";
+import Link from "next/link";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
-export default async function ServersPage() {
+type Props = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+export default async function ServersPage({ searchParams }: Props) {
+  const resolvedParams = await searchParams;
+  const currentPage = Number(resolvedParams.page) || 1;
+  
+  const limit = 9;
+  const skip = (currentPage - 1) * limit;
+
   const db = await connectDB();
   const cp = db.db("Main").collection("Register");
+
+  const totalServers = await cp.countDocuments();
+  const totalPages = Math.ceil(totalServers / limit);
 
   const pipeline = [
     {
@@ -20,12 +34,14 @@ export default async function ServersPage() {
         Up: -1,
       },
     },
+    { $skip: skip },
+    { $limit: limit },
   ];
 
   const servers = await cp.aggregate(pipeline).toArray();
 
   return (
-    <main className="px-4 py-6 max-w-6xl mx-auto">
+    <main key={currentPage} className="px-4 py-6 max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold mb-6 text-center">
         Discordサーバー掲示板
       </h1>
@@ -48,11 +64,9 @@ export default async function ServersPage() {
                 </h2>
               </div>
             </div>
-
             <p className="text-sm text-zinc-300 line-clamp-3">
               {server.Description || "説明はありません"}
             </p>
-
             <a
               href={server.Invite}
               target="_blank"
@@ -63,6 +77,32 @@ export default async function ServersPage() {
             </a>
           </div>
         ))}
+      </div>
+
+      <div className="mt-10 flex justify-center items-center gap-4">
+        {currentPage > 1 && (
+          <Link
+            href={`?page=${currentPage - 1}`}
+            prefetch={false}
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition"
+          >
+            前のページ
+          </Link>
+        )}
+        
+        <span className="text-sm text-zinc-400">
+          {currentPage} / {totalPages}
+        </span>
+
+        {currentPage < totalPages && (
+          <Link
+            href={`?page=${currentPage + 1}`}
+            prefetch={false}
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm transition"
+          >
+            次のページ
+          </Link>
+        )}
       </div>
     </main>
   );
