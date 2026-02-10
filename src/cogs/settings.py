@@ -2810,7 +2810,7 @@ class SettingCog(commands.Cog):
         db = self.bot.async_db["Main"].GoodMorningChannel
         if 有効にするか:
             await db.update_one(
-                {"Guild": interaction.guild.id, "Channel": interaction.channel.id},
+                {"Guild": interaction.guild.id},
                 {
                     "$set": {
                         "Guild": interaction.guild.id,
@@ -2827,11 +2827,11 @@ class SettingCog(commands.Cog):
             )
         else:
             result = await db.delete_one(
-                {"Guild": interaction.guild.id, "Channel": interaction.channel.id}
+                {"Guild": interaction.guild.id}
             )
             if result.deleted_count == 0:
                 return await interaction.response.send_message(
-                    embed=discord.Embed(title="おはよう挨拶は有効化されていません。")
+                    embed=make_embed.error_embed(title="おはよう挨拶は有効化されていません。")
                 )
             await interaction.response.send_message(
                 embed=make_embed.success_embed(title="おはよう挨拶を無効化しました。")
