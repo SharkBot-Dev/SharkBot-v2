@@ -68,7 +68,7 @@ export default async function ServersPage({ searchParams }: Props) {
               {server.Description || "説明はありません"}
             </p>
             <a
-              href={server.Invite}
+              href={"/servers/" + server.Guild}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-auto text-center bg-indigo-600 hover:bg-indigo-500 transition rounded-lg py-2 text-sm font-medium"
