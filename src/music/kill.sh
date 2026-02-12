@@ -1,1 +1,1 @@
-sudo docker rm -f shark-dj
+pm2 stop ecosystem.config.js
