@@ -1,1 +1,1 @@
-uvicorn main:asgi_app --port 5000
+pm2 start ecosystem.config.js
