@@ -19,6 +19,30 @@ app = Flask(__name__, static_folder="./static/")
 
 client = MongoClient("mongodb://localhost:27017/")
 
+@app.route("/economy/<guildid>", methods=["GET", "POST"])
+def economy_getinfo(guildid: str):
+    data = {}
+    db = client["Main"].ServerMoneyCurrency
+    _id = f"{guildid}"
+    dbfind = db.find_one({"_id": _id}, {"_id": False})
+    if not dbfind:
+        data["currency"] = "コイン"
+        return jsonify(data)
+    data["currency"] = dbfind.get("Name", "コイン")
+    return jsonify(data)
+
+@app.route("/economy/<guildid>/<userid>", methods=["GET", "POST"])
+def economy_getmoney(guildid: str, userid: str):
+    data = {}
+    db = client["Main"].ServerMoney
+    user_data = db.find_one({"_id": f"{guildid}-{userid}"}, {"_id": False})
+    if not user_data:
+        data["money"] = 0
+        data["bank"] = 0
+        return jsonify(data)
+    data["money"] = user_data.get('count', 0)
+    data["bank"] = user_data.get('bank', 0)
+    return jsonify(data)
 
 def add_topgg(id_: str):
     db = client["Main"].TOPGGVote
