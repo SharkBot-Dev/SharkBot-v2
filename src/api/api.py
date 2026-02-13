@@ -19,7 +19,7 @@ app = Flask(__name__, static_folder="./static/")
 
 client = MongoClient("mongodb://localhost:27017/")
 
-@app.route("/economy/<guildid>", methods=["GET", "POST"])
+@app.get("/economy/<guildid>")
 def economy_getinfo(guildid: str):
     data = {}
     db = client["Main"].ServerMoneyCurrency
@@ -31,7 +31,7 @@ def economy_getinfo(guildid: str):
     data["currency"] = dbfind.get("Name", "コイン")
     return jsonify(data)
 
-@app.route("/economy/<guildid>/<userid>", methods=["GET", "POST"])
+@app.get("/economy/<guildid>/<userid>")
 def economy_getmoney(guildid: str, userid: str):
     data = {}
     db = client["Main"].ServerMoney
