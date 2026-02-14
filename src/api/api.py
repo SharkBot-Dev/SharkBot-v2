@@ -15,10 +15,11 @@ import os
 
 dotenv.load_dotenv()
 
-app = Flask(__name__, static_folder="./static/")
+app = Flask(__name__, static_folder="./static/", template_folder="./Templates/")
 
 client = MongoClient("mongodb://localhost:27017/")
 
+# サーバーごとの経済情報取得
 @app.get("/economy/<guildid>")
 def economy_getinfo(guildid: str):
     data = {}
@@ -31,6 +32,7 @@ def economy_getinfo(guildid: str):
     data["currency"] = dbfind.get("Name", "コイン")
     return jsonify(data)
 
+# そのユーザーが持っているお金を取得
 @app.get("/economy/<guildid>/<userid>")
 def economy_getmoney(guildid: str, userid: str):
     data = {}
@@ -54,7 +56,6 @@ def add_topgg(id_: str):
         db.insert_one({"_id": int(id_), "count": 1})
         return True
 
-
 @app.route("/topgg/webhook", methods=["GET", "POST"])
 def topgg_vote_webhook():
     apikey = os.environ.get("APIKEY")
@@ -74,5 +75,13 @@ def topgg_vote_webhook():
         print(f"Vote Error: {e}")
         return "VoteError"
 
+# ドキュメント
+@app.get("/docs")
+def docs():
+    return render_template("docs.html")
+
+@app.get("/")
+def index():
+    return redirect("/docs")
 
 asgi_app = WSGIMiddleware(app)

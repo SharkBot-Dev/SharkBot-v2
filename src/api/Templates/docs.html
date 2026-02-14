@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>SharkBotAPI ドキュメント</title>
+
+        <style>
+            :root {
+                --main-gradient: linear-gradient(90deg, #236bf2, #665df7);
+            }
+
+            body {
+                background-image: linear-gradient(90deg, #204486, #4b167c);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                display: flex;
+                justify-content: center;
+                padding: 20px;
+            }
+
+            .container {
+                background-image: var(--main-gradient);
+                width: 100%;
+                max-width: 800px;
+                padding: 30px;
+                border-radius: 20px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+                color: white;
+            }
+
+            h1 {
+                text-align: center;
+                margin-bottom: 25px;
+                font-weight: 800;
+                text-shadow: 1px 1px 4px rgba(0,0,0,0.2);
+            }
+
+            #search {
+                width: 100%;
+                padding: 12px 20px;
+                margin-bottom: 20px;
+                border-radius: 25px;
+                border: none;
+                box-sizing: border-box;
+                font-size: 16px;
+                outline: none;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+
+            .api-card {
+                background-color: rgba(0, 0, 0, 0.4);
+                margin-bottom: 15px;
+                padding: 15px 20px;
+                border-radius: 15px;
+                border-left: 5px solid #fff;
+                transition: transform 0.2s, background-color 0.2s;
+            }
+
+            .api-card:hover {
+                background-color: rgba(0, 0, 0, 0.5);
+                transform: translateX(5px);
+            }
+
+            .api-card h3 {
+                margin: 0 0 8px 0;
+                font-family: 'Courier New', Courier, monospace;
+                color: #00d4ff;
+            }
+
+            .api-card p {
+                margin: 0;
+                font-size: 0.95em;
+                line-height: 1.6;
+                color: #e0e0e0;
+            }
+
+            .copy-btn {
+                background-color: rgba(255, 255, 255, 0.2);
+                color: white;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                padding: 5px 12px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 0.8em;
+                transition: all 0.2s;
+            }
+
+            .copy-btn:hover {
+                background-color: rgba(255, 255, 255, 0.4);
+            }
+
+            .copy-btn.success {
+                background-color: #4caf50;
+                border-color: #4caf50;
+            }
+
+            .space {
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .hidden {
+                display: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <h1>SharkBotAPI ドキュメント</h1>
+
+            <input type="text" id="search" placeholder="エンドポイントや説明を検索...">
+
+            <div id="api-list">
+                <div class="api-card">
+                    <div class="space">
+                        <h3>/economy/{guildId}</h3>
+                        <button class="copy-btn" onclick="copyText(this, '/economy/{guildId}/')">Copy</button>
+                    </div>
+                    <p>
+                        経済の情報を取得する。<br>
+                        guildIdを指定する必要がある。
+                    </p>
+                </div>
+
+                <div class="api-card">
+                    <div class="space">
+                        <h3>/economy/{guildId}/{userId}</h3>
+                        <button class="copy-btn" onclick="copyText(this, '/economy/{guildId}/{userId}')">Copy</button>
+                    </div>
+                    <p>
+                        特定ユーザーがどのぐらいコインを持っているかを取得する。<br>
+                        guildIdとuserIdを指定する必要がある。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const searchInput = document.getElementById("search");
+            const apiCards = document.querySelectorAll(".api-card");
+
+            searchInput.addEventListener("input", (event) => {
+                const query = event.target.value.toLowerCase();
+
+                apiCards.forEach(card => {
+                    const content = card.textContent.toLowerCase();
+                    
+                    if (content.includes(query)) {
+                        card.classList.remove("hidden");
+                    } else {
+                        card.classList.add("hidden");
+                    }
+                });
+            });
+
+            function copyText(button, text) {
+                navigator.clipboard.writeText(`https://api.sharkbot.xyz${text}`).then(() => {
+                    const originalText = button.innerText;
+                    button.innerText = "Copied!";
+                    button.classList.add("success");
+
+                    setTimeout(() => {
+                        button.innerText = originalText;
+                        button.classList.remove("success");
+                    }, 1500);
+                }).catch(err => {
+                    console.error('コピーに失敗しました', err);
+                });
+            }
+        </script>
+    </body>
+</html>
