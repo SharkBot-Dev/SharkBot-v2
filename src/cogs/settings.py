@@ -10,6 +10,7 @@ import time
 import asyncio
 import aiohttp
 from discord import app_commands
+import secrets
 
 from consts import mongodb
 from models import block, command_disable, make_embed, translate
@@ -2982,6 +2983,50 @@ class SettingCog(commands.Cog):
                 ),
             )
 
+    @settings.command(name="apikey", description="SharkBotのAPIKeyを作成・削除します。")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(administrator=True)
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="作成", value="create"),
+            app_commands.Choice(name="削除", value="delete"),
+            app_commands.Choice(name="リスト化", value="list")
+        ]
+    )
+    async def apikey_setting(
+        self, interaction: discord.Interaction, 操作: app_commands.Choice[str], 名前: str
+    ):
+        await interaction.response.defer(ephemeral=True)
+
+        if 操作.value == "create":
+            key = secrets.token_urlsafe(30)
+            db = interaction.client.async_db["SharkAPI"].APIKeys
+            await db.update_one({
+                "guild_id": interaction.guild_id,
+                "name": 名前
+            }, {
+                "$set": {
+                    "guild_id": interaction.guild_id,
+                    "user_id": interaction.user.id,
+                    "name": 名前,
+                    "apikey": key
+                }
+            }, upsert=True)
+            await interaction.followup.send(ephemeral=True, embed=make_embed.success_embed(title="APIKeyを作成しました。", description=key).set_footer(text="このキーは誰にも見せないでください。"))
+        elif 操作.value == "delete":
+            db = interaction.client.async_db["SharkAPI"].APIKeys
+            await db.delete_one({
+                "guild_id": interaction.guild_id,
+                "name": 名前
+            })
+            await interaction.followup.send(ephemeral=True, embed=make_embed.success_embed(title="APIKeyを削除しました。", description=f"名前: {名前}"))
+        elif 操作.value == "list":
+            db = interaction.client.async_db["SharkAPI"].APIKeys
+            api_list = [
+                f"{b.get('name')} - <@{b.get('user_id')}>"
+                async for b in db.find({"guild_id": interaction.guild_id})
+            ]
+            await interaction.followup.send(ephemeral=True, embed=make_embed.success_embed(title="APIKeyのリストです", description='\n'.join(api_list)))
 
 async def setup(bot):
     await bot.add_cog(SettingCog(bot))

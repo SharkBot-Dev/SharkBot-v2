@@ -46,6 +46,53 @@ def economy_getmoney(guildid: str, userid: str):
     data["bank"] = user_data.get('bank', 0)
     return jsonify(data)
 
+@app.patch("/economy/<guildid>/<userid>")
+def economy_patchmoney(guildid: str, userid: str):
+    api_key = request.headers.get('Authorization')
+    if not api_key:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        g_id = int(guildid)
+    except ValueError:
+        return jsonify({"error": "指定形式が正しくありません"}), 400
+
+    apikey_db = client["SharkAPI"].APIKeys
+    key = apikey_db.find_one({
+        "guild_id": g_id
+    })
+
+    if api_key != key.get('apikey'):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    db = client["Main"].ServerMoney
+    update_fields = {}
+
+    try:
+        if 'money' in data:
+            update_fields["count"] = int(data["money"])
+        if 'bank' in data:
+            update_fields["bank"] = int(data["bank"])
+    except ValueError:
+        return jsonify({"error": "数値形式が正しくありません"}), 400
+
+    if not update_fields:
+        return jsonify({"error": "更新する項目がありません"}), 400
+
+    result = db.update_one(
+        {"_id": f"{guildid}-{userid}"},
+        {"$set": update_fields}
+    )
+
+    if result.matched_count == 0:
+        return jsonify({"error": "指定されたユーザーが見つかりません"}), 404
+
+    return jsonify({"success": True})
+
 def add_topgg(id_: str):
     db = client["Main"].TOPGGVote
     user_data = db.find_one({"_id": int(id_)})
