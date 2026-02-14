@@ -46,6 +46,8 @@ def economy_getmoney(guildid: str, userid: str):
     data["bank"] = user_data.get('bank', 0)
     return jsonify(data)
 
+# お金をアップデート
+# ※APIKey必要
 @app.patch("/economy/<guildid>/<userid>")
 def economy_patchmoney(guildid: str, userid: str):
     api_key = request.headers.get('Authorization')
@@ -61,6 +63,8 @@ def economy_patchmoney(guildid: str, userid: str):
     key = apikey_db.find_one({
         "guild_id": g_id
     })
+    if not key:
+        return jsonify({"error": "Unauthorized"}), 401
 
     if api_key != key.get('apikey'):
         return jsonify({"error": "Unauthorized"}), 401

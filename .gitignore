@@ -285,3 +285,5 @@ htsvoice
 src/run_windows.bat
 
 src/premium/
+
+src/api/client/test.py
