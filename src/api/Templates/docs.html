@@ -108,6 +108,15 @@
                 justify-content: center;
             }
 
+            .api-key {
+                background-color: rgba(0, 0, 0, 0.4);
+                margin-bottom: 15px;
+                padding: 15px 20px;
+                border-radius: 15px;
+                border-left: 5px solid #fff;
+                transition: transform 0.2s, background-color 0.2s;
+            }
+
             .hidden {
                 display: none;
             }
@@ -118,12 +127,27 @@
         <div class="container">
             <h1>SharkBotAPI ドキュメント</h1>
 
+            <div class="api-key">
+                <h3>簡単にAPIを使う方法</h3>
+                <p>
+                    「<button onclick="location.href = 'https://github.com/SharkBot-Dev/SharkBot-v2/blob/main/src/api/client/sharkapi.py'" style="background-color: #00000000; color: #ffffff;">ここ</button>」にあるPythonライブラリを使うと便利です。
+                </p>
+            </div>
+
+            <div class="api-key">
+                <h3>APIKeyの指定方法</h3>
+                <p>
+                    ヘッダーに以下のように指定すればOK<br>
+                    {"Authorization": "APIKeyをここに"}
+                </p>
+            </div>
+
             <input type="text" id="search" placeholder="エンドポイントや説明を検索...">
 
             <div id="api-list">
                 <div class="api-card">
                     <div class="space">
-                        <h3>/economy/{guildId}</h3>
+                        <h3>GET /economy/{guildId}</h3>
                         <button class="copy-btn" onclick="copyText(this, '/economy/{guildId}')">Copy</button>
                     </div>
                     <p>
@@ -134,12 +158,25 @@
 
                 <div class="api-card">
                     <div class="space">
-                        <h3>/economy/{guildId}/{userId}</h3>
+                        <h3>GET /economy/{guildId}/{userId}</h3>
                         <button class="copy-btn" onclick="copyText(this, '/economy/{guildId}/{userId}')">Copy</button>
                     </div>
                     <p>
                         特定ユーザーがどのぐらいコインを持っているかを取得する。<br>
                         guildIdとuserIdを指定する必要がある。
+                    </p>
+                </div>
+
+                <div class="api-card">
+                    <div class="space">
+                        <h3>PATCH /economy/{guildId}/{userId} (※APIKey必要)</h3>
+                        <button class="copy-btn" onclick="copyText(this, '/economy/{guildId}/{userId}')">Copy</button>
+                    </div>
+                    <p>
+                        特定のユーザーのコインの数を操作する<br>
+                        guildIdとuserIdを指定する必要がある。<br>
+                        またjsonとしてPatchする必要がある。<br>
+                        例: {"money": 100, "bank": 300}
                     </p>
                 </div>
             </div>
