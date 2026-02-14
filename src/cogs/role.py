@@ -5,6 +5,13 @@ import datetime
 from discord import app_commands
 from models import command_disable, make_embed
 
+COLOR_MAP = {
+    "red": discord.Color.red(),
+    "blue": discord.Color.blue(),
+    "yellow": discord.Color.yellow(),
+    "green": discord.Color.green(),
+    "gold": discord.Color.gold()
+}
 
 class RoleCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -170,6 +177,136 @@ class RoleCog(commands.Cog):
                 description=f"{メンバー.mention} から {ロール.mention} を剥奪しました。",
             )
         )
+
+    @role.command(name="edit", description="ロールを編集します。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=False)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.choices(
+        色=[
+            app_commands.Choice(name="赤", value="red"),
+            app_commands.Choice(name="青", value="blue"),
+            app_commands.Choice(name="黄", value="yellow"),
+            app_commands.Choice(name="緑", value="green"),
+            app_commands.Choice(name="金", value="gold"),
+            app_commands.Choice(name="RGB指定", value="rgb"),
+        ]
+    )
+    async def role_edit(
+        self,
+        interaction: discord.Interaction,
+        ロール: discord.Role,
+        名前: str = None,
+        色: app_commands.Choice[str] = None
+    ):
+        guild = interaction.guild
+        executor = interaction.user
+        bot_member = guild.me
+
+        if not bot_member.guild_permissions.manage_roles:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="ロール編集失敗",
+                    description="Botにロール管理権限がありません。",
+                ),
+                ephemeral=True,
+            )
+
+        if ロール.position >= bot_member.top_role.position:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="ロール編集失敗",
+                    description="指定されたロールはBotより上位のため、操作できません。",
+                ),
+                ephemeral=True,
+            )
+
+        if (
+            ロール.position >= executor.top_role.position
+            and not executor.guild_permissions.administrator
+        ):
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="ロール編集失敗",
+                    description="あなたより上位のロールは編集できません。",
+                ),
+                ephemeral=True,
+            )
+
+        if 色 and 色.value == "rgb" :
+            class ColorModal(discord.ui.Modal):
+                def __init__(self):
+                    super().__init__(title="RGBの入力", timeout=180)
+                    self.text = discord.ui.TextInput(label=f"rgbを入力", style=discord.TextStyle.short, placeholder="#000000")
+                    self.add_item(self.text)
+
+                async def on_submit(self, interaction_modal: discord.Interaction):
+                    try:
+                        color = discord.Color.from_str(self.text.value)
+                    except ValueError:
+                        return await interaction_modal.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="適切な色を入力してください。", description="例: `#000000`"))
+                    await interaction_modal.response.defer()
+
+                    edit_kwargs = {"reason": f"実行者: {executor}"}
+                    description_parts = []
+
+                    if 名前:
+                        edit_kwargs["name"] = 名前
+                        description_parts.append(f"名前を `{名前}` に変更しました。")
+                    
+                    edit_kwargs["color"] = color
+                    description_parts.append(f"色を `{self.text.value}` に変更しました。")
+
+                    await ロール.edit(**edit_kwargs)
+
+                    await interaction_modal.followup.send(
+                        embed=make_embed.success_embed(
+                            title="ロールを編集しました",
+                            description="\n".join(description_parts)
+                        )
+                    )
+
+            return await interaction.response.send_modal(ColorModal())
+
+        await interaction.response.defer(thinking=True)
+
+        try:
+            edit_kwargs = {"reason": f"実行者: {executor}"}
+            description_parts = []
+
+            if 名前:
+                edit_kwargs["name"] = 名前
+                description_parts.append(f"名前を `{名前}` に変更しました。")
+            
+            if 色:
+                new_color = COLOR_MAP.get(色.value)
+                if new_color:
+                    edit_kwargs["color"] = new_color
+                    description_parts.append(f"色を `{色.name}` に変更しました。")
+
+            await ロール.edit(**edit_kwargs)
+
+            await interaction.followup.send(
+                embed=make_embed.success_embed(
+                    title="ロールを編集しました",
+                    description="\n".join(description_parts)
+                )
+            )
+        except discord.Forbidden:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="ロール編集失敗",
+                    description="権限不足により、ロールを編集できませんでした。",
+                ),
+                ephemeral=True,
+            )
+        except discord.HTTPException as e:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="エラーが発生しました。", description=f"詳細: {e}"
+                ),
+                ephemeral=True,
+            )
 
     @role.command(name="color-role", description="色付きロールを作成します。")
     @app_commands.checks.has_permissions(manage_roles=True)
