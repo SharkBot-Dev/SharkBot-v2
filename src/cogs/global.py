@@ -13,7 +13,7 @@ import re
 
 from consts import settings
 
-COOLDOWN_TIMEGC = 5
+COOLDOWN_TIMEGC = 3
 user_last_message_timegc = {}
 user_last_message_time_ad = {}
 
@@ -2290,10 +2290,10 @@ class GlobalCog(commands.Cog):
             return
 
         current_time = time.time()
-        last_message_time = user_last_message_timegc.get(message.guild.id, 0)
+        last_message_time = user_last_message_timegc.get(message.author.id, 0)
         if current_time - last_message_time < COOLDOWN_TIMEGC:
             return
-        user_last_message_timegc[message.guild.id] = current_time
+        user_last_message_timegc[message.author.id] = current_time
 
         is_muted = await self.is_user_muted(check, message.author)
         if is_muted:
@@ -2390,10 +2390,10 @@ r18やグロ関連のものを貼らない
             return
 
         current_time = time.time()
-        last_message_time = user_last_message_timegc.get(message.guild.id, 0)
+        last_message_time = user_last_message_timegc.get(message.author.id, 0)
         if current_time - last_message_time < COOLDOWN_TIMEGC:
             return print("クールダウン中です。")
-        user_last_message_timegc[message.guild.id] = current_time
+        user_last_message_timegc[message.author.id] = current_time
 
         g_u = await self.globalchat_users_add(message.author, message)
         if g_u:
