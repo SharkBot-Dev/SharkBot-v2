@@ -72,16 +72,8 @@ export default async function CommandPage({ params }: { params: { guildid: strin
         : (Array.isArray(guild_roles) ? guild_roles : []);
 
     return (
-        <div className="p-6 max-w-7xl mx-auto">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                    <span className="bg-blue-600 w-2 h-8 rounded-full"></span>
-                    {guild.name} <span className="text-gray-400 font-light text-xl">/ コマンド設定</span>
-                </h1>
-                <p className="text-gray-400 mt-2">
-                    コマンドの有効化・無効化、および実行可能なロールの制限を行えます。
-                </p>
-            </header>
+        <div className="p-4">
+            <h1 className="text-2xl font-bold mb-4">{guild.name} のコマンド設定</h1>
 
             <form action={sendData}>
                 <CommandList

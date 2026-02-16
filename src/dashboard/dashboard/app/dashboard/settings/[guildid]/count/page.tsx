@@ -143,7 +143,7 @@ export default async function CountPage({ params }: { params: { guildid: string 
                 )}
             </div>
 
-            <Form action={sendData} buttonlabel="設定を保存">
+            <form action={sendData}>
                 <select
                     name="channel_select"
                     className="border p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -154,7 +154,16 @@ export default async function CountPage({ params }: { params: { guildid: string 
                         </option>
                     ))}
                 </select>
-            </Form>
+
+                <div className="col-span-full flex justify-start mt-4 animate-in fade-in duration-200">
+                    <button
+                        type="submit"
+                        className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
+                    >
+                        設定を保存
+                    </button>
+                </div>
+            </form>
         </div>
     );
 }

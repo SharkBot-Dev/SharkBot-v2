@@ -91,9 +91,9 @@ export default function CommandList({
             />
 
             <div className="mb-8">
-                <h2 className="text-xl font-bold text-white mb-4 border-l-4 border-blue-500 pl-3">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
                     一括設定
-                </h2>
+                </h2><br/>
                 <div className="bg-gray-900 p-5 rounded-xl border border-gray-700 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div>
                         <h3 className="text-lg font-semibold text-white">すべて切り替え</h3>
