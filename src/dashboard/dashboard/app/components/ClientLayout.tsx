@@ -133,9 +133,6 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/count`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             💯カウントゲーム
           </a>
-          <a href={`/dashboard/settings/${guildid}/music`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
-            🎵音楽 <Badge text="NEW" color="bg-green-600" />
-          </a>
           <a href={`/dashboard/settings/${guildid}/dice`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🎲ダイス
           </a>
