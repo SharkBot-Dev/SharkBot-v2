@@ -23,67 +23,78 @@ def extract_command_name(interaction: discord.Interaction) -> str:
     return " ".join(name_parts)
 
 
-async def command_enabled_check_by_cmdname(cmdname: str, guild: discord.Guild) -> bool:
-    cmds = await mongodb.mongo["DashboardBot"].CommandDisabled.find_one(
-        {"Guild": guild.id}
-    )
-
-    if not cmds or cmdname not in cmds.get("commands", []):
-        return True
-    return False
-
-
 async def command_enabled_check(interaction: discord.Interaction) -> bool:
     """
-    このギルドでコマンドが有効かをチェックする
+    このギルドでコマンドが有効か、および実行ロール権限があるかをチェックする
     """
     if interaction.guild is None:
         return True
 
     cmdname = extract_command_name(interaction)
-
-    cmds = await mongodb.mongo["DashboardBot"].CommandDisabled.find_one(
+    
+    config = await mongodb.mongo["DashboardBot"].CommandDisabled.find_one(
         {"Guild": interaction.guild.id}
     )
 
-    if not cmds or cmdname not in cmds.get("commands", []):
+    if not config:
         return True
-    return False
 
+    disabled_list = config.get("commands", [])
+    if cmdname in disabled_list:
+        return False
 
-async def add_disabled_command(guild_id: int, cmdname: str) -> bool:
-    """
-    ギルドに無効コマンドを追加
-    """
-    await mongodb.mongo["DashboardBot"].CommandDisabled.update_one(
-        {"Guild": guild_id}, {"$addToSet": {"commands": cmdname}}, upsert=True
-    )
+    role_restrictions = config.get("roleRestrictions", {})
+    allowed_role_id = role_restrictions.get(cmdname)
+
+    if allowed_role_id:
+        user_has_role = any(r.id == int(allowed_role_id) for r in interaction.user.roles)
+        if not user_has_role:
+            return False
+
     return True
 
 
-async def remove_disabled_command(guild_id: int, cmdname: str) -> bool:
+async def command_enabled_check_by_cmdname(cmdname: str, guild: discord.Guild) -> bool:
     """
-    ギルドの無効コマンドから削除
+    (互換性維持用) コマンド名のみでのチェック
+    ※この関数は interaction がないため、ロール制限の判定はスキップされます
     """
-    await mongodb.mongo["DashboardBot"].CommandDisabled.update_one(
-        {"Guild": guild_id}, {"$pull": {"commands": cmdname}}, upsert=True
+    config = await mongodb.mongo["DashboardBot"].CommandDisabled.find_one(
+        {"Guild": guild.id}
     )
+
+    if not config:
+        return True
+    
+    if cmdname in config.get("commands", []):
+        return False
+        
     return True
 
 
-async def set_disabled_commands(guild_id: int, commands: list[str]) -> bool:
-    """ギルドの無効化コマンド一覧を丸ごと置き換える"""
+async def set_command_config(guild_id: int, commands: list[str], role_restrictions: dict[str, str]) -> bool:
+    """
+    無効コマンドとロール制限をセットで更新
+    """
     await mongodb.mongo["DashboardBot"].CommandDisabled.update_one(
-        {"Guild": guild_id}, {"$set": {"commands": commands}}, upsert=True
+        {"Guild": guild_id},
+        {
+            "$set": {
+                "commands": commands,
+                "roleRestrictions": role_restrictions
+            }
+        },
+        upsert=True
     )
     return True
 
-
-async def get_disabled_commands(guild_id: int) -> list[str]:
+async def get_command_config(guild_id: int) -> tuple[list[str], dict[str, str]]:
     """
-    ギルドで無効化されているコマンド一覧を取得
+    設定をまるごと取得 (disabled_commands, role_restrictions)
     """
-    cmds = await mongodb.mongo["DashboardBot"].CommandDisabled.find_one(
+    config = await mongodb.mongo["DashboardBot"].CommandDisabled.find_one(
         {"Guild": guild_id}
     )
-    return cmds.get("commands", []) if cmds else []
+    if not config:
+        return [], {}
+    return config.get("commands", []), config.get("roleRestrictions", {})
