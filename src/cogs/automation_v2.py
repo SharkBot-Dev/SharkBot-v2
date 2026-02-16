@@ -34,6 +34,10 @@ class AutoMationV2Cog(commands.Cog):
                 await message.channel.send(f"{a_value}\n-# このメッセージは自動化機能によるメッセージです。")
             elif a_type == "add_reaction":
                 await message.add_reaction(a_value)
+            elif a_type == "delmsg":
+                await message.delete()
+            elif a_type == "reply":
+                await message.reply(f"{a_value}\n-# このメッセージは自動化機能によるメッセージです。")
         except Exception as e:
             return
 
@@ -55,10 +59,10 @@ class AutoMationV2Cog(commands.Cog):
 
             if match:
                 current_time = time.time()
-                last_message_time = cooldown_automation.get(message.guild.id, 0)
+                last_message_time = cooldown_automation.get(message.author.id, 0)
                 if current_time - last_message_time < 2:
                     return
-                cooldown_automation[message.guild.id] = current_time
+                cooldown_automation[message.author.id] = current_time
 
                 for action in setting.get("Actions", []):
                     await self.execute_action(action, message)

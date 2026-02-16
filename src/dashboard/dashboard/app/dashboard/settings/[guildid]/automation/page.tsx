@@ -18,6 +18,8 @@ const ifs = new Map<string, string>([
 
 const actions = new Map<string, string>([
     ["sendmsg", "メッセージを送信"],
+    ["reply", "メッセージに返信"],
+    ["delmsg", "メッセージの削除"],
     ["add_reaction", "リアクションを追加"]
 ]);
 

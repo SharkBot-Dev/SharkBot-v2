@@ -95,6 +95,8 @@ export default function AutoMationBuilder({ guild, channels, sendData }: Builder
                   onChange={(e) => updateItem(setActions, actions, act.id, "type", e.target.value)}
                 >
                   <option value="sendmsg">メッセージを送信</option>
+                  <option value="reply">メッセージに返信</option>
+                  <option value="delmsg">メッセージを削除</option>
                   <option value="add_reaction">リアクションを追加</option>
                 </select>
                 {actions.length > 1 && (
@@ -102,7 +104,7 @@ export default function AutoMationBuilder({ guild, channels, sendData }: Builder
                 )}
               </div>
 
-              {act.type === "add_reaction" ? (
+              {act.type !== "delmsg" ? (act.type === "add_reaction" ? (
                 <input 
                   name={`action_value_${index}`}
                   placeholder="絵文字 (例: ✅)"
@@ -116,7 +118,15 @@ export default function AutoMationBuilder({ guild, channels, sendData }: Builder
                   className="border p-2 rounded bg-gray-800 text-white"
                   required
                 />
-              )}
+              )):
+                <input 
+                  name={`action_value_${index}`}
+                  placeholder="ここは見えない"
+                  className="border p-2 rounded bg-gray-800 text-white"
+                  defaultValue="delmsg"
+                  hidden
+                />
+              }
             </div>
           ))}
           <div className="card-style">
