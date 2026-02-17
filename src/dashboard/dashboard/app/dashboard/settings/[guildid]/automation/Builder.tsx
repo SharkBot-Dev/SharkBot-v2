@@ -32,9 +32,11 @@ export default function AutoMationBuilder({ guild, channels, sendData }: Builder
       <Form action={sendData} buttonlabel="オートメーションを作成">
         
         <Section title="1. トリガー" color="text-blue-400">
-          <select name="trigger" className="border p-2 rounded bg-gray-800 text-white" required>
-            <option value="on_message">メッセージが送信された時</option>
-          </select>
+          <div className="flex gap-2 mb-2">
+            <select name="trigger" className="border p-2 rounded bg-gray-800 text-white" required>
+              <option value="on_message">メッセージが送信された時</option>
+            </select>
+          </div>
         </Section>
 
         <Section title="2. 条件（すべて満たした場合）" color="text-green-400">
