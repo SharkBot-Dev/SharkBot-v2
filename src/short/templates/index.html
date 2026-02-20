@@ -1,81 +1,171 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <meta property="og:title" content="shb.red">
     <meta property="og:description" content="SharkBotの短縮URLサービス">
     <meta property="og:url" content="https://shb.red/">
     <meta property="og:type" content="website">
 
-    <title>短縮URLサービス</title>
+    <title>短縮URLサービス | shb.red</title>
 
     <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #353535;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
         .box {
             background-color: cornflowerblue;
-            color: rgb(0, 0, 0);
+            color: white;
+            padding: 40px 20px;
             border-radius: 30px;
             text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
         }
 
-        .box button {
-            background-color: black;
-            color: white;
-            border-radius: 20px;
+        h1 { margin-bottom: 10px; font-size: 1.8rem; color: #fff; }
+        h4 { font-weight: normal; opacity: 0.9; }
+
+        .input-group {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
-        .box input {
-            background-color: black;
+        input[type="url"] {
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: none;
+            background-color: rgba(0, 0, 0, 0.8);
             color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        button {
+            padding: 12px 25px;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #333;
+            transform: scale(1.05);
+        }
+
+        #result {
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            word-break: break-all;
+            display: none;
+        }
+
+        .short-url-link {
+            color: #fff;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            padding: 5px 15px;
+            background: #fff;
+            color: cornflowerblue;
         }
     </style>
 </head>
 <body>
     <div class="box">
-        <h1>SharkBotの短縮URLサービス<br><img src="/static/images/shark.png" width="100" height="100"></h1>
-        <h1>shb.redへようこそ！</h1>
-        <h4>/shorten に ?url=URL をつければ短縮できます！</h4>
+        <img src="/static/images/shark.png" width="80" height="80" alt="Shark Icon">
+        <h1>shb.red</h1>
+        <h4>SharkBotのURL短縮サービス</h4>
 
-        <h2>以下からも作成できます。</h2>
-        <input type="url" id="url" placeholder="https://example.com">
-        <button onclick="create_url()">作成する</button>
+        <div class="input-group">
+            <input type="url" id="url" placeholder="https://example.com" required>
+            <button onclick="create_url()">短縮URLを作成</button>
+        </div>
 
-        <div id="result" style="margin-top: 20px;"></div><br>
+        <div id="result">
+            <div id="url-container"></div>
+            <button class="copy-btn" id="copy-btn" onclick="copyToClipboard()">コピーする</button>
+        </div>
+
+        <p style="font-size: 0.7rem; margin-top: 20px; opacity: 0.7;">
+            API: /shorten?url=URL で利用可能
+        </p>
     </div>
 
     <script>
         async function create_url() {
-            const url = document.getElementById('url').value.trim();
+            const urlInput = document.getElementById('url');
             const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '';
+            const urlContainer = document.getElementById('url-container');
+            const url = urlInput.value.trim();
 
             if (!url) {
                 alert('URLを入力してください。');
                 return;
             }
 
-            if (!URL.canParse(url)) {
-                alert('URLを入力してください。');
+            try {
+                new URL(url);
+            } catch (e) {
+                alert('有効なURLを入力してください（http:// または https:// から始めてください）');
                 return;
-            };
+            }
 
             try {
                 const response = await fetch(`/shorten?url=${encodeURIComponent(url)}`);
                 const data = await response.json();
 
                 if (data.error) {
-                    resultDiv.innerHTML = `<p style="color:red;">エラー: ${data.error}</p>`;
+                    alert('エラー: ' + data.error);
                     return;
                 }
 
-                const link = document.createElement('a');
-                link.href = data.short_url;
-                link.textContent = data.short_url;
-                link.target = '_blank';
-                resultDiv.appendChild(link);
+                resultDiv.style.display = 'block';
+                urlContainer.innerHTML = `
+                    <span>完成しました：</span><br>
+                    <a href="${data.short_url}" class="short-url-link" target="_blank" id="generated-url">${data.short_url}</a>
+                `;
             } catch (error) {
-                resultDiv.innerHTML = `<p style="color:red;">エラーが発生しました: ${error}</p>`;
+                alert('通信エラーが発生しました。');
             }
+        }
+
+        function copyToClipboard() {
+            const urlText = document.getElementById('generated-url').textContent;
+            navigator.clipboard.writeText(urlText).then(() => {
+                const btn = document.getElementById('copy-btn');
+                btn.textContent = 'コピー完了！';
+                btn.style.backgroundColor = '#4CAF50';
+                btn.style.color = '#fff';
+                
+                setTimeout(() => {
+                    btn.textContent = 'コピーする';
+                    btn.style.backgroundColor = '#fff';
+                    btn.style.color = 'cornflowerblue';
+                }, 2000);
+            });
         }
     </script>
 </body>
