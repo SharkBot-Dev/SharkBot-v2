@@ -382,7 +382,7 @@ class LevelCog(commands.Cog):
             if lv == None:
                 return await interaction.followup.send(
                     embed=make_embed.success_embed(
-                        title=f"`{interaction.user.name}`のレベル",
+                        title=f"{interaction.user.name}のレベル",
                         description="レベル: 「0レベル」\nXP: 「0XP」",
                     ).set_thumbnail(url=avatar)
                 )
@@ -390,13 +390,13 @@ class LevelCog(commands.Cog):
             if xp == None:
                 return await interaction.followup.send(
                     embed=make_embed.success_embed(
-                        title=f"`{interaction.user.name}`のレベル",
+                        title=f"{interaction.user.name}のレベル",
                         description="レベル: 「0レベル」\nXP: 「0XP」",
                     ).set_thumbnail(url=avatar)
                 )
             await interaction.followup.send(
                 embed=make_embed.success_embed(
-                    title=f"`{interaction.user.name}`のレベル",
+                    title=f"{interaction.user.name}のレベル",
                     description=f"レベル: 「{lv}レベル」\nXP: 「{xp}XP」",
                 ).set_thumbnail(url=avatar)
             )
