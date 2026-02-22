@@ -85,10 +85,10 @@ export default async function TopggPage({ params }: { params: { guildid: string 
     const defaultChannel = setting?.channel_id ? setting.channel_id.toString() : "";
 
     return (
-        <div className="p-6 max-w-2xl">
+        <div className="p-6">
             <h1 className="text-2xl font-bold mb-6">{guild.name} のTop.gg Vote通知設定</h1>
 
-            <div className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow">
+            <div className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow break-all">
                 先に、Topggのサーバー設定のサイトにアクセスし、<br/>
                 {`https://dashboard.sharkbot.xyz/api/topgg/${guildid}`}<br/>をWebhookとして設定し、<br/>APIKeyをコピーしておいてください。
             </div><br/>
