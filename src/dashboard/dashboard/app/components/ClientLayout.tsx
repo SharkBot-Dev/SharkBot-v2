@@ -137,6 +137,11 @@ export default function ClientLayout({
             🎲ダイス
           </a>
 
+          <LineAndtextLayout text="外部連携" />
+          <a href={`/dashboard/settings/${guildid}/topgg`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            🔝TopGG <Badge text="NEW" color="bg-green-600" />
+          </a>
+
           <LineAndtextLayout text="Bot作成" />
 
           <a href={`/dashboard/userinstall`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">

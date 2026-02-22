@@ -192,6 +192,11 @@ export default async function LevelPage({ params }: { params: { guildid: string 
                     required
                 />
 
+                <div className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow">
+                    {"{user} .. ユーザーの名前を埋め込みます。"}<br/>
+                    {"{newlevel} .. ユーザーの新しいレベルを埋め込みます。"}
+                </div>
+
                 <span className="font-semibold mb-1">レベルアップ通知チャンネル</span>
                 <select
                     name="levelupchannel"
