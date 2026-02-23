@@ -125,6 +125,7 @@ class YoutubeCog(commands.Cog):
                     "guild_id": interaction.guild_id,
                     "webhook_url": webhook.url,
                     "role_mention": メンション.mention,
+                    "discord_channel_id": str(interaction.channel_id)
                 }
             )
         else:
@@ -133,6 +134,7 @@ class YoutubeCog(commands.Cog):
                     "channel_id": youtubeチャンネルid,
                     "guild_id": interaction.guild_id,
                     "webhook_url": webhook.url,
+                    "discord_channel_id": str(interaction.channel_id)
                 }
             )
 

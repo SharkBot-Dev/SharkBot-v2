@@ -138,6 +138,9 @@ export default function ClientLayout({
           </a>
 
           <LineAndtextLayout text="外部連携" />
+          <a href={`/dashboard/settings/${guildid}/youtube`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            📺Youtube <Badge text="NEW" color="bg-green-600" />
+          </a>
           <a href={`/dashboard/settings/${guildid}/topgg`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             🔝TopGG <Badge text="NEW" color="bg-green-600" />
           </a>
