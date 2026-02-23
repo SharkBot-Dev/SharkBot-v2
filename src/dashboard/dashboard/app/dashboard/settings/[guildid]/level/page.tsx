@@ -111,10 +111,10 @@ export default async function LevelPage({ params }: { params: { guildid: string 
         const sessionId = cookieStore.get("session_id")?.value;
         if (!sessionId) return;
 
+        if (!guildid) return;
+
         const guild = await getGuild(sessionId, guildid);
         if (!guild) return;
-
-        if (!guildid) return;
 
         const db = await connectDB();
 
@@ -124,7 +124,7 @@ export default async function LevelPage({ params }: { params: { guildid: string 
 
         if (!level) return;
 
-        find_item.deleteOne({Guild: new Long(guildid), Level: Long.fromString(level as any)})
+        await find_item.deleteOne({Guild: new Long(guildid), Level: Long.fromString(level as any)})
 
         revalidatePath(`/dashboard/settings/${guildid}/level`);
     }
