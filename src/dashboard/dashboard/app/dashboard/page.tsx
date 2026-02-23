@@ -31,7 +31,7 @@ export default async function DashboardPage() {
       <h2 className="text-xl mb-4">あなたが持っているサーバー</h2>
       <ul className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {guilds.map((g: any) => (
-          g.owner ? (
+          (
             <a href={`/dashboard/settings/${g.id}/`} className="bg-gray-800 text-white p-4 rounded-lg" key={`${g.id}_`}>
               <li key={`${g.id}_`}>
                 
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
                 
               </li>
             </a>
-          ) : null
+          )
         ))}
       </ul><br/>
 

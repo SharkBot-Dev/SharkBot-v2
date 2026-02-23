@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { randomBytes } from "crypto";
+import { encrypt } from "@/lib/crypto";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -48,6 +49,15 @@ export async function GET(request: NextRequest) {
   });
   const guilds = await guildRes.json();
 
+  const ADMIN_PERMISSION = BigInt(8);
+
+  const adminGuilds = Array.isArray(guilds) 
+    ? guilds.filter((guild: any) => {
+        const perms = BigInt(guild.permissions_new);
+        return (perms & ADMIN_PERMISSION) === ADMIN_PERMISSION;
+      })
+    : [];
+
   const db = await connectDB();
   const sessionId = randomBytes(64).toString("base64url");
 
@@ -57,8 +67,9 @@ export async function GET(request: NextRequest) {
     $set: {
       session_id: sessionId,
       user,
-      guilds,
+      guilds: adminGuilds,
       createdAt: new Date(),
+      access_token: encrypt(token.access_token)
     }
   }, {
     upsert: true
