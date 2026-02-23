@@ -79,6 +79,13 @@ export default async function YoutubeAlertPage({ params }: { params: { guildid: 
         const yt_channel = formData.get('yt_channel')?.toString();
         if (!yt_channel) return;
 
+        const cookieStore = await cookies();
+        const sessionId = cookieStore.get("session_id")?.value;
+        if (!sessionId) return;
+
+        const guild = await getGuild(sessionId, guildid);
+        if (!guild) return;
+
         const db = await connectDB();
         await db.db("MainTwo").collection("YoutubeAlert").deleteOne({
             guild_id: Long.fromString(guildid),
