@@ -40,6 +40,9 @@ export default function ClientLayout({
           <a href={`/dashboard/settings/${guildid}/alert`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             📢通知
           </a>
+          <a href={`/dashboard/settings/${guildid}/setup`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
+            ⚙️セットアップ
+          </a>
           <a href={`/dashboard/settings/${guildid}/commands`} className="block p-2 rounded hover:bg-gray-700 text-gray-200">
             💬コマンド一覧
           </a>
