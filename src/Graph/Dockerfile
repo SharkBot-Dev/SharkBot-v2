@@ -2,6 +2,7 @@ FROM python:3.14-slim
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y fonts-noto-cjk
 RUN pip install flask gunicorn matplotlib numpy sympy
 
 RUN useradd -m appuser

@@ -1,5 +1,6 @@
 import signal
 from flask import Flask, request, send_file, jsonify
+from matplotlib.font_manager import FontProperties
 import matplotlib.pyplot as plt
 import matplotlib
 import sympy as sp
@@ -12,6 +13,8 @@ from sympy.parsing.sympy_parser import (
 )
 
 matplotlib.use("Agg")
+
+plt.rcParams['font.family'] = 'Noto Sans CJK JP'
 
 app = Flask(__name__)
 
@@ -201,6 +204,5 @@ def create_plot():
     plt.close(fig)
 
     return send_file(buf, mimetype="image/png")
-
 
 # app.run("0.0.0.0", port=3067)

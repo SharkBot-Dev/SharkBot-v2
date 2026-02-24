@@ -1,3 +1,5 @@
+from typing import Counter
+
 from discord.ext import commands
 import discord
 import io
@@ -352,6 +354,7 @@ class ListingCog(commands.Cog):
             ),
             app_commands.Choice(name="メンバーの機種の割合", value="pc_sm"),
             app_commands.Choice(name="メンバーのステータスの割合", value="mem_status"),
+            app_commands.Choice(name="サーバータグの割合", value="tag"),
             app_commands.Choice(name="グローバルなユーザーとBotの比率", value="gl_mb"),
         ]
     )
@@ -365,11 +368,11 @@ class ListingCog(commands.Cog):
             human_list = len([m for m in interaction.guild.members if not m.bot])
             json_data = {
                 "labels": [
-                    f"Members ({human_list})",
-                    f"Bots ({bot_list})",
+                    f"メンバー ({human_list})",
+                    f"Bot ({bot_list})",
                 ],
                 "values": [human_list / member_list, bot_list / member_list],
-                "title": f"Member and Bot Ratio ({member_list})",
+                "title": f"メンバーとBotの比率 ({member_list})",
             }
             async with aiohttp.ClientSession() as session:
                 async with session.post(
@@ -401,7 +404,7 @@ class ListingCog(commands.Cog):
             json_data = {
                 "xvalues": time_[::-1],
                 "yvalues": count_[::-1],
-                "title": "Number of members participating",
+                "title": "メンバーの増え方",
             }
 
             async with aiohttp.ClientSession() as session:
@@ -419,11 +422,11 @@ class ListingCog(commands.Cog):
             human_list = len([m for m in self.bot.users if not m.bot])
             json_data = {
                 "labels": [
-                    f"Users ({human_list})",
-                    f"Bots ({bot_list})",
+                    f"ユーザー ({human_list})",
+                    f"Bot ({bot_list})",
                 ],
                 "values": [human_list / member_list, bot_list / member_list],
-                "title": f"User and Bot Ratio ({member_list})",
+                "title": f"メンバーとBotの割合 ({member_list})",
             }
             async with aiohttp.ClientSession() as session:
                 async with session.post(
@@ -445,12 +448,12 @@ class ListingCog(commands.Cog):
             )
             json_data = {
                 "labels": [
-                    f"Borwser ({browser})",
-                    f"Phone ({phone})",
-                    f"Desktop ({desktop})",
+                    f"ブラウザ ({browser})",
+                    f"スマホ ({phone})",
+                    f"デスクトップ ({desktop})",
                 ],
                 "values": [browser, phone, desktop],
-                "title": f"Percentage of members' devices ({member_list})",
+                "title": f"デバイス割合 ({member_list})",
             }
             async with aiohttp.ClientSession() as session:
                 async with session.post(
@@ -489,13 +492,13 @@ class ListingCog(commands.Cog):
             )
             json_data = {
                 "labels": [
-                    f"Online ({online})",
-                    f"Idle ({idle})",
-                    f"Dnd ({dnd})",
-                    f"Ofline ({ofline})",
+                    f"オンライン ({online})",
+                    f"退席中 ({idle})",
+                    f"取り込み中 ({dnd})",
+                    f"オフライン ({ofline})",
                 ],
                 "values": [online, idle, dnd, ofline],
-                "title": f"Member Status Percentage ({member_list})",
+                "title": f"ステータス割合 ({member_list})",
             }
             async with aiohttp.ClientSession() as session:
                 async with session.post(
@@ -506,6 +509,59 @@ class ListingCog(commands.Cog):
                         file=discord.File(io_, filename="piechart.png")
                     )
                     io_.close()
+
+        elif 内容.value == "tag":
+            guild = interaction.guild
+            tag_counts = Counter()
+
+            for member in guild.members:
+                if not member.bot:
+                    p_g = member.primary_guild
+                    if p_g:
+                        tag_counts[p_g.tag] += 1
+                    else:
+                        tag_counts["No Tag"] += 1
+                else:
+                    tag_counts["Not Set"] += 1
+
+            top_items = tag_counts.most_common(10)
+
+            total_all = sum(tag_counts.values())
+            total_top = sum(count for tag, count in top_items)
+            others_count = total_all - total_top
+
+            labels = [tag for tag, count in top_items]
+            values = [count for tag, count in top_items]
+
+            if others_count > 0:
+                labels.append("Others")
+                values.append(others_count)
+
+            if not any(values):
+                return await interaction.followup.send("集計可能なタグが見つかりませんでした。")
+
+            json_data = {
+                "labels": labels,
+                "values": values,
+                "title": f"サーバータグ割合",
+            }
+
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        "http://localhost:3067/piechart", 
+                        json=json_data
+                    ) as response:
+                        if response.status == 200:
+                            io_ = io.BytesIO(await response.read())
+                            await interaction.followup.send(
+                                file=discord.File(io_, filename="primary_tags.png")
+                            )
+                            io_.close()
+                        else:
+                            await interaction.followup.send(embed=make_embed.error_embed(title="解析エラーが発生しました。"))
+            except Exception as e:
+                await interaction.followup.send(embed=make_embed.error_embed(title="解析エラーが発生しました。"))
 
     @listing.command(name="graph", description="グラフを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
