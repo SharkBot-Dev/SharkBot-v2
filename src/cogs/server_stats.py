@@ -42,55 +42,58 @@ class ServerStats(commands.Cog):
         message = dbfind.get("NowMessage")
         return message
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(minutes=10)
     async def batch_update_stat_channel(self):
         db = self.bot.async_db["MainTwo"].ServerStatus
         async for db_find in db.find({}):
-            guild = self.bot.get_guild(db_find.get("Guild", 0))
-            if not guild:
+            try:
+                guild = self.bot.get_guild(db_find.get("Guild", 0))
+                if not guild:
+                    continue
+                member_channel = db_find.get("Members", None)
+                humans_channel = db_find.get("Humans", None)
+                messages_channel = db_find.get("Messages", None)
+                now_messages_channel = db_find.get("NowMessages", None)
+                if member_channel:
+                    channel = guild.get_channel(member_channel)
+                    if channel:
+                        if type(channel) != discord.VoiceChannel:
+                            continue
+                        new_name = f"メンバー数: {guild.member_count}人"
+                        if channel.name != new_name:
+                            await channel.edit(name=new_name)
+                if humans_channel:
+                    channel = guild.get_channel(humans_channel)
+                    if channel:
+                        if type(channel) != discord.VoiceChannel:
+                            continue
+                        new_name = f"人間数: {len(list(filter(lambda m: not m.bot, guild.members)))}人"
+                        if channel.name != new_name:
+                            await channel.edit(name=new_name)
+                await asyncio.sleep(1)
+                if messages_channel:
+                    channel = guild.get_channel(messages_channel)
+                    if channel:
+                        if type(channel) != discord.VoiceChannel:
+                            continue
+                        msg = await self.get_messages(guild)
+                        if msg:
+                            new_name = f"メッセージ数: {floor100(msg)}個"
+                            if channel.name != new_name:
+                                await channel.edit(name=new_name)
+                if now_messages_channel:
+                    channel = guild.get_channel(now_messages_channel)
+                    if channel:
+                        if type(channel) != discord.VoiceChannel:
+                            continue
+                        nmsg = await self.get_now_messages(guild)
+                        if nmsg:
+                            new_name = f"今日のメッセージ数: {floor100(nmsg)}個"
+                            if channel.name != new_name:
+                                await channel.edit(name=new_name)
+                await asyncio.sleep(1)
+            except:
                 continue
-            member_channel = db_find.get("Members", None)
-            humans_channel = db_find.get("Humans", None)
-            messages_channel = db_find.get("Messages", None)
-            now_messages_channel = db_find.get("NowMessages", None)
-            if member_channel:
-                channel = guild.get_channel(member_channel)
-                if channel:
-                    if type(channel) != discord.VoiceChannel:
-                        continue
-                    new_name = f"メンバー数: {guild.member_count}人"
-                    if channel.name != new_name:
-                        await channel.edit(name=new_name)
-            if humans_channel:
-                channel = guild.get_channel(humans_channel)
-                if channel:
-                    if type(channel) != discord.VoiceChannel:
-                        continue
-                    new_name = f"人間数: {len(list(filter(lambda m: not m.bot, guild.members)))}人"
-                    if channel.name != new_name:
-                        await channel.edit(name=new_name)
-            await asyncio.sleep(1)
-            if messages_channel:
-                channel = guild.get_channel(messages_channel)
-                if channel:
-                    if type(channel) != discord.VoiceChannel:
-                        continue
-                    msg = await self.get_messages(guild)
-                    if msg:
-                        new_name = f"メッセージ数: {floor100(msg)}個"
-                        if channel.name != new_name:
-                            await channel.edit(name=new_name)
-            if now_messages_channel:
-                channel = guild.get_channel(now_messages_channel)
-                if channel:
-                    if type(channel) != discord.VoiceChannel:
-                        continue
-                    nmsg = await self.get_now_messages(guild)
-                    if nmsg:
-                        new_name = f"今日のメッセージ数: {floor100(nmsg)}個"
-                        if channel.name != new_name:
-                            await channel.edit(name=new_name)
-            await asyncio.sleep(1)
 
     server_status = app_commands.Group(
         name="server-status",
