@@ -212,7 +212,7 @@ class CommandsManageGroup(app_commands.Group):
                 )
             )
 
-        await command_disable.add_disabled_command(interaction.guild.id, コマンド名)
+        await command_disable.disable_single_command(interaction.guild.id, コマンド名)
         await interaction.followup.send(
             embed=discord.Embed(
                 title=f"{コマンド名} を無効化しました。", color=discord.Color.orange()
@@ -238,7 +238,7 @@ class CommandsManageGroup(app_commands.Group):
                 )
             )
 
-        await command_disable.remove_disabled_command(interaction.guild.id, コマンド名)
+        await command_disable.enable_single_command(interaction.guild.id, コマンド名)
         await interaction.followup.send(
             embed=discord.Embed(
                 title=f"{コマンド名} を有効化しました。", color=discord.Color.green()

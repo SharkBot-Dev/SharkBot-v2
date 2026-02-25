@@ -5,9 +5,10 @@ import { Long } from "mongodb";
 import ToggleButton from "@/app/components/ToggleButton";
 import Form from "@/app/components/Form";
 import { revalidatePath } from "next/cache";
+import LineAndTextLayout from "@/app/components/LineAndTextLayout";
 
 export default async function JoinMessagePage({ params }: { params: { guildid: string } }) {
-    async function sendData(formData: FormData) {
+    async function setWelcomeMessage(formData: FormData) {
         "use server";
 
         const { guildid } = await params;
@@ -68,6 +69,40 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
         revalidatePath(`/dashboard/settings/${guildid}/join-message`);
     }
 
+    async function setStickyRole(formData: FormData) {
+        "use server";
+
+        const { guildid } = await params;
+
+        const cookieStore = await cookies();
+        const sessionId = cookieStore.get("session_id")?.value;
+        if (!sessionId) return;
+
+        const guild = await getGuild(sessionId, guildid);
+        if (!guild) return;
+
+        const checkenable = formData.get("checkenable") === "true" || formData.get("checkenable") === "on";
+
+        const db = await connectDB();
+
+        if (checkenable) {
+            await db.db("Main").collection("RoleRestore").updateOne(
+                { Guild: new Long(guildid) },
+                {
+                    $set: {
+                        Guild: new Long(guildid)
+                    },
+                },
+                { upsert: true }
+            );
+        } else {
+            await db.db("Main").collection("RoleRestore").deleteOne({ Guild: Long.fromString(guildid) });
+            revalidatePath(`/dashboard/settings/${guildid}/join-message`);
+        }
+
+        revalidatePath(`/dashboard/settings/${guildid}/join-message`);
+    }
+
     const { guildid } = await params;
 
     const cookieStore = await cookies();
@@ -114,11 +149,16 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
         }
     }
 
+    const find_rolerestore_setting = await db.db("Main").collection("RoleRestore").findOne({Guild: new Long(guildid)});
+    const rolerestore_enabled = !!find_rolerestore_setting;
+
     return (
         <div className="p-4">
         <h1 className="text-2xl font-bold mb-4">{guild.name} のよろしくメッセージ</h1>
 
-        <Form action={sendData} buttonlabel="設定する">
+        <LineAndTextLayout text="メンバーが参加したときにメッセージを送信する" />
+
+        <Form action={setWelcomeMessage} buttonlabel="設定する">
             <span className="font-semibold mb-1">機能を有効にする</span>
             <ToggleButton name="checkenable" defaultValue={enabled} />
 
@@ -147,14 +187,27 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
             ))}
             </select>
 
+            <br/>
             <span className="font-semibold mb-1">使える関数</span>
-            <div className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow">
+            <div className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow break-all">
                 {"<name> .. 名前を埋め込みます。"}<br/>
                 {"<count> .. 現在の人数を埋め込みます。"}<br/>
                 {"<guild> .. サーバーの名前を埋め込みます。"}<br/>
                 {"<createdat> .. アカウント作成日を埋め込みます。"}<br/>
             </div>
         </Form>
+
+        <LineAndTextLayout text="メンバーが再度参加したときにロールを復元する" />
+
+        <Form action={setStickyRole} buttonlabel="設定する">
+            <span className="font-semibold mb-1">機能を有効にする</span>
+            <ToggleButton name="checkenable" defaultValue={rolerestore_enabled} />
+        </Form>
+        <br/>
+        <div className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow break-all">
+            この機能を使用すると、<br/>
+            メンバーが再度参加したときに<br/>自動的にロールが復元されます。
+        </div>
         </div>
     );
 }

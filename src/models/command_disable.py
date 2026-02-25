@@ -98,3 +98,45 @@ async def get_command_config(guild_id: int) -> tuple[list[str], dict[str, str]]:
     if not config:
         return [], {}
     return config.get("commands", []), config.get("roleRestrictions", {})
+
+async def disable_single_command(guild_id: int, cmdname: str) -> bool:
+    """
+    特定のコマンドを一つだけ無効化リストに追加する
+    """
+    await mongodb.mongo["DashboardBot"].CommandDisabled.update_one(
+        {"Guild": guild_id},
+        {"$addToSet": {"commands": cmdname}},
+        upsert=True
+    )
+    return True
+
+async def enable_single_command(guild_id: int, cmdname: str) -> bool:
+    """
+    特定のコマンドを一つだけ無効化リストから削除（有効化）する
+    """
+    await mongodb.mongo["DashboardBot"].CommandDisabled.update_one(
+        {"Guild": guild_id},
+        {"$pull": {"commands": cmdname}}
+    )
+    return True
+
+async def set_single_role_restriction(guild_id: int, cmdname: str, role_id: int) -> bool:
+    """
+    特定のコマンドにロール制限を設定する
+    """
+    await mongodb.mongo["DashboardBot"].CommandDisabled.update_one(
+        {"Guild": guild_id},
+        {"$set": {f"roleRestrictions.{cmdname}": str(role_id)}},
+        upsert=True
+    )
+    return True
+
+async def remove_single_role_restriction(guild_id: int, cmdname: str) -> bool:
+    """
+    特定のコマンドのロール制限を解除する
+    """
+    await mongodb.mongo["DashboardBot"].CommandDisabled.update_one(
+        {"Guild": guild_id},
+        {"$unset": {f"roleRestrictions.{cmdname}": ""}}
+    )
+    return True
