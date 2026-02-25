@@ -98,7 +98,7 @@ async def send_one_global(
 
         bag = await badge_build(bot, message)
         em = await get_guild_emoji(bot, message.guild)
-        user_name = f"[{bag}] {message.author.name} | [{em}] {message.guild.name.replace('discord', 'disc**d')} | ({message.author.id})"
+        user_name = f"[{bag}] {message.author.display_name} | [{em}] {message.guild.name.replace('discord', 'disc**d')} | ({message.author.id})"
 
         if not message.attachments == [] or ref_msg or not message.stickers == []:
             embed = discord.Embed(color=discord.Color.dark_gray())
