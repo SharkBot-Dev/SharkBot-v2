@@ -280,7 +280,7 @@ class LevelCog(commands.Cog):
             if new_lv > current_lv:
                 try:
                     msg = await self.get_message(member.guild.id)
-                    rpd_msg = msg.replace("{user}", member.mention).replace(
+                    rpd_msg = msg.replace("{user}", member.name).replace(
                         "{newlevel}", str(new_lv)
                     )
 
