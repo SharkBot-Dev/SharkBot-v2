@@ -1,3 +1,5 @@
+import datetime
+
 from discord.ext import commands
 from discord import app_commands
 import discord
@@ -51,7 +53,7 @@ class LevelCog(commands.Cog):
             db = self.bot.async_db["Main"].Leveling
             await db.update_one(
                 {"Guild": guild.id, "User": user.id},
-                {"$set": {"Guild": guild.id, "User": user.id, "Level": 0, "XP": 1}},
+                {"$set": {"Guild": guild.id, "User": user.id, "Level": 0, "XP": 1, "last_active": None}},
                 upsert=True,
             )
         except:
@@ -203,6 +205,107 @@ class LevelCog(commands.Cog):
         except Exception:
             return None
 
+    def is_active(self, state: discord.VoiceState):
+        return (state.channel is not None and 
+                not state.self_mute and 
+                not state.self_deaf and 
+                not state.afk)
+
+    @commands.Cog.listener("on_voice_state_update")
+    async def on_voice_state_update_level(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        if member.bot:
+            return
+
+        try:
+            if not await self.check_level_enabled(member.guild):
+                return
+        except:
+            return
+
+        db = self.bot.async_db["Main"].Leveling
+        now = datetime.datetime.now()
+        
+        was_active = self.is_active(before)
+        is_active = self.is_active(after)
+
+        if was_active == is_active:
+            return
+
+        dbfind = await db.find_one({"Guild": member.guild.id, "User": member.id})
+        if dbfind is None:
+            await self.new_user_write(member.guild, member)
+            dbfind = {"Guild": member.guild.id, "User": member.id, "XP": 0, "Level": 0, "last_active": None}
+
+        if not was_active and is_active:
+            await db.update_one(
+                {"Guild": member.guild.id, "User": member.id},
+                {"$set": {"last_active": now}}
+            )
+
+        elif was_active and not is_active:
+            start_time = dbfind.get("last_active")
+            if not start_time:
+                return
+
+            duration = now - start_time
+            seconds = duration.total_seconds()
+            
+            xp_gained = int(seconds / 60) * 2
+
+            if xp_gained < 1:
+                await db.update_one(
+                    {"Guild": member.guild.id, "User": member.id},
+                    {"$set": {"last_active": None}}
+                )
+                return
+
+            current_xp = dbfind.get("XP", 0) + xp_gained
+            current_lv = dbfind.get("Level", 0)
+            
+            timing = await self.get_timing(member.guild) or 100
+            
+            new_lv = current_lv
+            final_xp = current_xp
+
+            while final_xp >= timing:
+                final_xp -= timing
+                new_lv += 1
+
+            await self.user_write(member.guild, member, new_lv, final_xp)
+            await db.update_one(
+                {"Guild": member.guild.id, "User": member.id},
+                {"$set": {"last_active": None}}
+            )
+
+            if new_lv > current_lv:
+                try:
+                    msg = await self.get_message(member.guild.id)
+                    rpd_msg = msg.replace("{user}", member.name).replace(
+                        "{newlevel}", str(new_lv)
+                    )
+
+                    cha = await self.get_channel(member.guild)
+                    role = await self.get_role(member.guild, new_lv)
+
+                    if role:
+                        grole = member.guild.get_role(role)
+                        if grole:
+                            await member.add_roles(grole)
+
+                    if cha:
+                        ch = member.guild.get_channel(cha)
+                        if ch:
+                            await ch.send(
+                                embed=discord.Embed(
+                                    description=rpd_msg,
+                                    color=discord.Color.yellow(),
+                                )
+                            )
+                    else:
+                        pass
+                except:
+                    return
+                
     @commands.Cog.listener("on_reaction_add")
     async def on_reaction_add_level(
         self, reaction: discord.Reaction, user: discord.Member
