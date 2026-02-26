@@ -280,20 +280,24 @@ class LevelCog(commands.Cog):
             if new_lv > current_lv:
                 try:
                     msg = await self.get_message(member.guild.id)
-                    rpd_msg = msg.replace("{user}", member.name).replace(
+                    rpd_msg = msg.replace("{user}", member.mention).replace(
                         "{newlevel}", str(new_lv)
                     )
 
-                    cha = await self.get_channel(member.guild)
-                    role = await self.get_role(member.guild, new_lv)
+                    added_roles = []
+                    for lv in range(current_lv + 1, new_lv + 1):
+                        role_id = await self.get_role(member.guild, lv)
+                        if role_id:
+                            grole = member.guild.get_role(role_id)
+                            if grole and grole not in member.roles:
+                                added_roles.append(grole)
+                    
+                    if added_roles:
+                        await member.add_roles(*added_roles)
 
-                    if role:
-                        grole = member.guild.get_role(role)
-                        if grole:
-                            await member.add_roles(grole)
-
-                    if cha:
-                        ch = member.guild.get_channel(cha)
+                    cha_id = await self.get_channel(member.guild)
+                    if cha_id:
+                        ch = member.guild.get_channel(cha_id)
                         if ch:
                             await ch.send(
                                 embed=discord.Embed(
@@ -301,10 +305,8 @@ class LevelCog(commands.Cog):
                                     color=discord.Color.yellow(),
                                 )
                             )
-                    else:
-                        pass
-                except:
-                    return
+                except Exception as e:
+                    pass
                 
     @commands.Cog.listener("on_reaction_add")
     async def on_reaction_add_level(
