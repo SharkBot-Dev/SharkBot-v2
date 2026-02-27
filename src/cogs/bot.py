@@ -130,6 +130,11 @@ class BotCog(commands.Cog):
                 label="サポートサーバー", url="https://discord.gg/mUyByHYMGk"
             )
         )
+        view.add_item(
+            discord.ui.Button(
+                label="Botアイコンの製作者様のサイト", url="https://hiyokoyarou.com/same/"
+            )
+        )
         em = discord.Embed(title="SharkBotの情報", color=discord.Color.green())
         em.add_field(
             name="サーバー数", value=f"{len(self.bot.guilds)}サーバー"
