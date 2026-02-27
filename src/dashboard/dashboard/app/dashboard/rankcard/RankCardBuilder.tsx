@@ -51,23 +51,15 @@ export const generateRankCard = async (
   ctx.fillText(username, 180, 40);
 
   const levelText = `LEVEL ${level}`;
+  ctx.font = "bold 28px 'DiscordFont', sans-serif";
   ctx.fillStyle = baseColor;
-  const levelWidth = ctx.measureText(levelText).width;
-  ctx.fillText(levelText, W - levelWidth - 30, 40);
+  ctx.fillText(levelText, 180, 85);
 
-  if (guildIconUrl) {
-    try {
-      const gIcon = await loadImage(guildIconUrl);
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(195, 100, 15, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(gIcon, 180, 85, 30, 30);
-      ctx.restore();
-    } catch (e) {
-      console.error("Guild icon load failed", e);
-    }
-  }
+  const levelTextWidth = ctx.measureText(levelText).width;
+  const xpText = `${xp} / ${nextXp} XP`;
+  ctx.font = "18px 'DiscordFont', sans-serif";
+  ctx.fillStyle = "#AAAAAA";
+  ctx.fillText(xpText, 180 + levelTextWidth + 10, 90);
 
   const barX = 180, barY = 130, barW = 380, barH = 25;
   const progress = Math.min(xp / nextXp, 1.0);
@@ -77,10 +69,6 @@ export const generateRankCard = async (
   if (progress > 0) {
     drawRoundedRect(ctx, barX, barY, barW * progress, barH, 12, baseColor);
   }
-
-  ctx.font = "18px sans-serif";
-  ctx.fillStyle = "#AAAAAA";
-  ctx.fillText(`${xp} / ${nextXp} XP`, barX, barY + 35);
 
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob!), "image/png");
