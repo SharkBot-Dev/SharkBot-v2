@@ -182,7 +182,7 @@ export default function RankCardBuilder({ initialData, action }: RankCardBuilder
         </div>
 
         <form action={action}>
-            <div className="flex flex-wrap gap-3 p-2 bg-[#1e1f22]">
+            <div className="flex flex-wrap gap-3 p-2 bg-[#1e1f22] rounded-lg">
                 <input 
                     type="hidden" 
                     name="selected_color"

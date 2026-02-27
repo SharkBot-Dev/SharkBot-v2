@@ -590,6 +590,7 @@ class LevelCog(commands.Cog):
             level: int,
             xp: int,
             next_xp: int = 1000,
+            status_color: str = "#80848E"
         ) -> io.BytesIO:
             W, H = 600, 200
             base_color = color if isinstance(color, tuple) else (40, 44, 52)
@@ -619,8 +620,11 @@ class LevelCog(commands.Cog):
             draw.text((180, 40), username, "#FFFFFF", font=font_main)
 
             level_text = f"LEVEL {level}"
-            l_w = draw.textlength(level_text, font=font_main)
-            draw.text((W - l_w - 30, 40), level_text, base_color, font=font_main)
+            draw.text((180, 75), level_text, base_color, font=font_main)
+
+            xp_text = f"{xp} / {next_xp} XP"
+            l_x = draw.textlength(level_text, font=font_main)
+            draw.text((l_x + 180 + 10, 85), xp_text, "#AAAAAA", font=font_sub)
 
             bar_x, bar_y, bar_w, bar_h = 180, 120, 380, 25
             progress = min(xp / next_xp, 1.0)
@@ -637,18 +641,6 @@ class LevelCog(commands.Cog):
                     radius=12,
                     fill=base_color,
                 )
-
-            xp_text = f"{xp} / {next_xp} XP"
-            draw.text((bar_x, bar_y + 30), xp_text, "#AAAAAA", font=font_sub)
-
-            try:
-                with io.BytesIO(gu_a) as g_a:
-                    guild_icon = Image.open(g_a).convert("RGBA").resize((30, 30))
-                    g_mask = Image.new("L", (30, 30), 0)
-                    ImageDraw.Draw(g_mask).ellipse((0, 0, 30, 30), fill=255)
-                    img.paste(guild_icon, (180, 85), g_mask)
-            except:
-                pass
 
             output = io.BytesIO()
             img.save(output, format="PNG")
