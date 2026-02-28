@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, timezone
 class UpCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.MORE_UP_SERVICES = ["Dislist"]
         print("init -> UpCog")
 
     async def get_bump_status_embed(self, interaction):
@@ -40,6 +41,7 @@ class UpCog(commands.Cog):
             "discafe": "</up:980136954169536525>",
             "discadia": "</bump:1225075208394768496>",
             "sharkbot": "</global up:1408658655532023855>",
+            "Dislist": "</up:1467055819706339370>"
         }
 
         services_name = {
@@ -51,6 +53,7 @@ class UpCog(commands.Cog):
             "discafe": "DCafe",
             "discadia": "Discadia",
             "sharkbot": "SharkBot",
+            "Dislist": "Dislist（Fortify）"
         }
 
         alert_db = db_main["AlertQueue"]
@@ -95,6 +98,31 @@ class UpCog(commands.Cog):
                 possible.append(
                     f"{services_name.get(service_id)} {services_to_slash.get(service_id, 'スラッシュコマンド取得失敗')}"
                 )
+
+        more_collection = db_maintwo["MoreUpChannel"]
+        more_config = await find_channel(more_collection)
+
+        if more_config:
+            for sv in more_config.get('Services'):
+                exists = await alert_db.find_one(
+                    {
+                        "Channel": interaction.channel.id,
+                        "ID": sv,
+                        "NotifyAt": {"$gt": now},
+                    }
+                )
+
+                if exists:
+                    remaining = exists["NotifyAt"] - now
+                    minutes = remaining.seconds // 60
+                    seconds = remaining.seconds % 60
+                    cooldown.append(
+                        f"{sv}（あと {discord.utils.format_dt(discord.utils.utcnow() + timedelta(seconds=seconds, minutes=minutes), 'R')}）"
+                    )
+                else:
+                    possible.append(
+                        f"{sv} {services_to_slash.get(sv, 'スラッシュコマンド取得失敗')}"
+                    )
 
         collection = db_maintwo["SharkBotChannel"]
         config = await find_channel(collection)
@@ -637,6 +665,46 @@ class UpCog(commands.Cog):
             except:
                 return
 
+    @commands.Cog.listener("on_message_edit")
+    async def on_message_edit_dislist(
+        self, before: discord.Message, after: discord.Message
+    ):
+        if after.author.id == 1240964440581603370:
+            try:
+                if "掲載順位を更新しました" in after.embeds[0].title:
+                    db = self.bot.async_db["MainTwo"].MoreUpChannel
+                    try:
+                        dbfind = await db.find_one(
+                            {"Channel": after.channel.id}, {"_id": False}
+                        )
+                    except:
+                        return
+                    if dbfind is None:
+                        return
+                    
+                    if "Dislist" in dbfind.get('Services'):
+
+                        ment = await self.mention_get(after)
+                        await after.reply(
+                            embed=discord.Embed(
+                                title="Upを検知しました。",
+                                description=f"1時間後に通知します。\n以下のロールに通知します。\n{ment}",
+                                color=discord.Color.green(),
+                            )
+                        )
+                        # await self.add_money(after)
+
+                        await self.bot.alert_add(
+                            "Dislist",
+                            after.channel.id,
+                            ment,
+                            "DislistをUpしてね！",
+                            "</up:1467055819706339370> でU@。",
+                            3600,
+                        )
+            except:
+                return
+
     bump = app_commands.Group(name="bump", description="Bump通知のコマンドです。")
 
     @bump.command(name="dicoall", description="DicoallのUp通知を有効化します。")
@@ -831,6 +899,47 @@ class UpCog(commands.Cog):
             await db.delete_one({"Channel": interaction.channel.id})
             await interaction.response.send_message(
                 embed=make_embed.success_embed(title="SharkBotの通知をOFFにしました。")
+            )
+
+    async def choice_moreup_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        current: str,
+    ):
+        choices = [
+            app_commands.Choice(name=f, value=f)
+            for f in self.MORE_UP_SERVICES
+            if current.lower() in f.lower()
+        ]
+        return choices[:25]
+
+    @bump.command(name="more", description="さらにたくさんのUp通知を設定します。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.autocomplete(サービス=choice_moreup_autocomplete)
+    async def more_up(self, interaction: discord.Interaction, サービス: str, onか: bool):
+        if not サービス in self.MORE_UP_SERVICES:
+            return await interaction.response.send_message(embed=make_embed.error_embed(title="サービスが見つかりません。"), ephemeral=False)
+        db = self.bot.async_db["MainTwo"].MoreUpChannel
+        if onか:
+            await db.update_one(
+                {"Channel": interaction.channel.id},
+                {"$addToSet": {"Services": サービス}},
+                upsert=True,
+            )
+            await interaction.response.send_message(
+                embed=make_embed.success_embed(
+                    title=f"{サービス}の通知をONにしました。",
+                    description="チャンネルごとにOnにする必要があります。",
+                )
+            )
+        else:
+            await db.update_one({"Channel": interaction.channel.id}, {
+                "$pull": {"Services": サービス}
+            })
+            await interaction.response.send_message(
+                embed=make_embed.success_embed(title=f"{サービス}の通知をOFFにしました。")
             )
 
     @bump.command(name="mention", description="Bump・Up通知時にメンションをします。")

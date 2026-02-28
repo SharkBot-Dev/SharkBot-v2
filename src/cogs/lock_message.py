@@ -114,6 +114,7 @@ class LockMessageCog(commands.Cog):
             "discafe": "</up:980136954169536525>",
             "discadia": "</bump:1225075208394768496>",
             "sharkbot": "</global up:1408658655532023855>",
+            "Dislist": "</up:1467055819706339370>"
         }
 
         services_name = {
@@ -125,6 +126,7 @@ class LockMessageCog(commands.Cog):
             "discafe": "DCafe",
             "discadia": "Discadia",
             "sharkbot": "SharkBot",
+            "Dislist": "Dislist（Fortify）"
         }
 
         alert_db = db_main["AlertQueue"]
@@ -169,6 +171,31 @@ class LockMessageCog(commands.Cog):
                 possible.append(
                     f"{services_name.get(service_id)} {services_to_slash.get(service_id, 'スラッシュコマンド取得失敗')}"
                 )
+
+        more_collection = db_maintwo["MoreUpChannel"]
+        more_config = await find_channel(more_collection)
+
+        if more_config:
+            for sv in more_config.get('Services'):
+                exists = await alert_db.find_one(
+                    {
+                        "Channel": message.channel.id,
+                        "ID": sv,
+                        "NotifyAt": {"$gt": now},
+                    }
+                )
+
+                if exists:
+                    remaining = exists["NotifyAt"] - now
+                    minutes = remaining.seconds // 60
+                    seconds = remaining.seconds % 60
+                    cooldown.append(
+                        f"{sv}（あと {discord.utils.format_dt(discord.utils.utcnow() + timedelta(seconds=seconds, minutes=minutes), 'R')}）"
+                    )
+                else:
+                    possible.append(
+                        f"{sv} {services_to_slash.get(sv, 'スラッシュコマンド取得失敗')}"
+                    )
 
         collection = db_maintwo["SharkBotChannel"]
         config = await find_channel(collection)
