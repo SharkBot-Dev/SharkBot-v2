@@ -265,7 +265,6 @@ class ContextCog(commands.Cog):
         self.bot = bot
         print("init -> ContextCog")
 
-
 async def setup(bot: commands.Bot):
     await bot.add_cog(ContextCog(bot))
 
@@ -859,6 +858,24 @@ async def setup(bot: commands.Bot):
                     )
 
                 await self.interaction.followup.send(embed=embed)
+
+            @discord.ui.button(label="DMに保存")
+            async def dm_save(
+                self, interaction: discord.Interaction, button: discord.ui.Button
+            ):
+                await interaction.response.defer(ephemeral=True)
+                
+                try:
+                    embed = discord.Embed(color=discord.Color.green(), description=message.content, title="<:check:1419898127975972937> 保存しました。").set_author(name=f"{message.author.name} ({message.author.id})", icon_url=message.author.display_avatar.url).set_footer(text=f"{message.guild.name} ({message.guild.id})", icon_url=message.guild.icon.url if message.guild.icon else None)
+                    if message.attachments != []:
+                        embed.add_field(name="添付ファイル", value="\n".join([f"[{a.filename}]({a.url})" for a in message.attachments]))
+                    
+                    await interaction.user.send(embed=embed)
+                except:
+                    await interaction.followup.send(embed=make_embed.error_embed(title="保存に失敗しました。", description="DMを開放してください。"), ephemeral=True)
+                    return
+                
+                await interaction.followup.send(embed=make_embed.success_embed(title="保存しました。", description="DMを確認してください。"), ephemeral=True)
 
         await interaction.response.send_message(
             embed=discord.Embed(

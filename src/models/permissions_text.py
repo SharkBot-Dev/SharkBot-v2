@@ -53,4 +53,7 @@ PERMISSION_TRANSLATIONS = {
     "send_polls": "投票の作成",
     "external_stickers": "外部のスタンプの使用",
     "use_voice_activation": "ボイスチャンネルでの音声検出の使用",
+    "bypass_slowmode": "スローモードを回避",
+    "pin_messages": "メッセージをピン止め",
+    "set_voice_channel_status": "ボイスチャンネルのステータスを設定"
 }
