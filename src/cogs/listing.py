@@ -81,15 +81,9 @@ class ListingCog(commands.Cog):
     async def listing_role_member(self, interaction: discord.Interaction):
         await interaction.response.defer()
 
-        raw = self.bot.raw(bot=self.bot)
-        roles = await raw.get_guild_role_member_counts(
-            guildId=str(interaction.guild_id)
-        )
+        roles = await interaction.guild.role_member_counts()
 
-        if not isinstance(roles, dict):
-            return await interaction.followup.send("データの取得に失敗しました。")
-
-        r = [f"<@&{r_id}> .. {count}人" for r_id, count in roles.items()]
+        r = [f"{r_id.mention} .. {count}人" for r_id, count in roles.items()]
 
         if len(r) == 0:
             return await interaction.followup.send(
