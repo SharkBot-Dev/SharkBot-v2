@@ -699,7 +699,7 @@ class UpCog(commands.Cog):
                             after.channel.id,
                             ment,
                             "DislistをUpしてね！",
-                            "</up:1467055819706339370> でU@。",
+                            "</up:1467055819706339370> でUp。",
                             3600,
                         )
             except:
