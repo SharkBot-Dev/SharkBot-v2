@@ -40,6 +40,20 @@ class ErrorHandleCog(commands.Cog):
                     )
                 return
 
+            if isinstance(getattr(error, "original", error), discord.Forbidden):
+                embed = make_embed.error_embed(
+                    title="権限エラーが発生しました。",
+                    description="Botにこの操作を行うための権限（ロールやチャンネル権限）がありません。",
+                )
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(
+                        embed=embed,
+                        ephemeral=True,
+                    )
+                else:
+                    await interaction.followup.send(embed=embed)
+                return
+
             print("App command error:", error)
             embed = make_embed.error_embed(
                 title="予期しないエラーが発生しました。",

@@ -417,7 +417,7 @@ class BanGroup(app_commands.Group):
             )
         except:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title="Banに失敗しました。", description="権限が足りないかも！？"
                 )
             )

@@ -903,7 +903,7 @@ class GlobalCog(commands.Cog):
             else:
                 if interaction.guild.member_count < 20:
                     return await interaction.followup.send(
-                        embed=make_embed.success_embed(
+                        embed=make_embed.error_embed(
                             title="20人未満のサーバーは参加できません。"
                         )
                     )
@@ -1985,9 +1985,8 @@ class GlobalCog(commands.Cog):
         await interaction.response.defer()
         if interaction.guild.member_count < 20:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="20人未満のサーバーは参加できません。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="20人未満のサーバーは参加できません。"
                 )
             )
         wh = await interaction.channel.create_webhook(name="SharkBot-しりとり")
@@ -2151,9 +2150,8 @@ class GlobalCog(commands.Cog):
         await interaction.response.defer()
         if interaction.guild.member_count < 20:
             return await interaction.followup.send(
-                embed=discord.Embed(
-                    title="20人未満のサーバーは参加できません。",
-                    color=discord.Color.red(),
+                embed=make_embed.error_embed(
+                    title="20人未満のサーバーは参加できません。"
                 )
             )
         check = await self.globalads_check(interaction)
