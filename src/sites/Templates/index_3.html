@@ -228,7 +228,7 @@
                 </div>
             </div>
             <div class="box">
-                <h3 class="box-title">👑しっかりとした実績システム</h3>
+                <h3 class="box-title">👑しっかりとした<br>実績システム</h3>
                 <div class="box-content">
                     サーバー管理者の指定した<br>
                     実績をメンバーが達成した際に、<br>
@@ -237,8 +237,8 @@
             </div>
             <div class="box">
                 <h3 class="box-title">🔍選ばれる理由と実績</h3>
-                <div class="box-content">
-                    導入サーバー数 1300+<br>
+                <div class="box-content" id="guild_count">
+                    サーバー導入数: 不明<br>
                     稼働率 99.9％
                 </div>
             </div>
@@ -379,6 +379,16 @@
         terms_modal_close.addEventListener('click', () => {
             terms_modal.close();
         });
+
+        async function getBotInfo() {
+            const botInfo = await fetch("https://api.sharkbot.xyz/status");
+            const botInfoJson = await botInfo.json();
+
+            const guildcount = document.getElementById('guild_count');
+            guildcount.innerHTML = `サーバー導入数: ${botInfoJson.guilds_count}個<br>稼働率 99.9％`;
+        }
+
+        getBotInfo();
     </script>
 </body>
 </html>
