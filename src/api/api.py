@@ -14,6 +14,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from discord import Webhook
 
+from pydantic import BaseModel, Field
+
 dotenv.load_dotenv()
 
 app = FastAPI(title="SharkAPI")
@@ -44,11 +46,16 @@ async def add_topgg(user_id: str):
         await col.insert_one({"_id": int(user_id), "count": 1})
     return True
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def index():
     return RedirectResponse(url="/docs")
 
-@app.get("/status", description="Botのステータスを取得する。")
+class Status(BaseModel):
+    guilds_count: str = Field(..., example="100", description="Botの導入数")
+    shards_count: str = Field(..., example="0", description="Botのシャード数")
+    bot_ping: str = Field(..., example="170", description="BotのPing値")
+
+@app.get("/status", description="Botのステータスを取得する。", tags=["System"], summary="ボットのステータス取得", response_model=Status)
 async def status_bot():
     guilds_count = await redis_client.get("guilds_count")
     shards_count = await redis_client.get("shards_count")
@@ -60,7 +67,18 @@ async def status_bot():
         "bot_ping": bot_ping
     }
 
-@app.get("/economy/{guildid}", description="経済の情報を取得する。")
+class EconomyInfo(BaseModel):
+    currency: str = Field(..., example="コイン", description="サーバー固有の通貨名")
+
+class UserBalance(BaseModel):
+    money: int = Field(..., example=1000, description="所持金")
+    bank: int = Field(..., example=5000, description="銀行残高")
+
+class UpdateMoneyPayload(BaseModel):
+    money: Optional[int] = Field(None, example=500, description="設定する所持金の額")
+    bank: Optional[int] = Field(None, example=1000, description="設定する銀行の額")
+
+@app.get("/economy/{guildid}", description="経済の情報を取得する。", summary="経済の情報を取得", response_model=EconomyInfo, tags=["Economy"])
 async def economy_getinfo(guildid: str):
     col = db_main["ServerMoneyCurrency"]
 
@@ -69,7 +87,7 @@ async def economy_getinfo(guildid: str):
     currency = dbfind.get("Name", "コイン") if dbfind else "コイン"
     return {"currency": currency}
 
-@app.get("/economy/{guildid}/{userid}", description="特定ユーザーがどのぐらいコインを持っているかを取得する。")
+@app.get("/economy/{guildid}/{userid}", description="特定ユーザーがどのぐらいコインを持っているかを取得する。", summary="経済内のユーザー情報を取得する", response_model=UserBalance, tags=["Economy"])
 async def economy_getmoney(guildid: str, userid: str):
     col = db_main["ServerMoney"]
     user_data = await col.find_one({"_id": f"{guildid}-{userid}"}, {"_id": False})
@@ -82,12 +100,12 @@ async def economy_getmoney(guildid: str, userid: str):
         "bank": user_data.get('bank', 0)
     }
 
-@app.patch("/economy/{guildid}/{userid}", description="特定のユーザーのコインの数を操作する")
+@app.patch("/economy/{guildid}/{userid}", description="特定のユーザーのコインの数を操作する", summary="特定のユーザーのコインの数を操作する", tags=["Economy"])
 async def economy_patchmoney(
     guildid: str, 
     userid: str, 
-    authorization: Optional[str] = Header(None),
-    payload: dict = Body(...)
+    payload: UpdateMoneyPayload,
+    authorization: Optional[str] = Header(None)
 ):
     if not authorization:
         raise HTTPException(status_code=401, detail="Unauthorized")
