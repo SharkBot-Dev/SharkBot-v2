@@ -271,27 +271,15 @@ Sharkアカウント: {sharkaccount_count}人
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def bot_faq(self, interaction: discord.Interaction):
-        class FaqLayout(discord.ui.LayoutView):
-            container = discord.ui.Container(
-                discord.ui.TextDisplay(
-                    f"### よくある質問",
-                ),
-                discord.ui.Separator(),
-                discord.ui.TextDisplay(
-                    f"例えば、このBotはどんなことができるの？\n・グローバルチャット、グローバル宣伝でサーバー外との交流を深める\n・なんでも検索をする\n・レベル、実績システムの構築\n・様々な画像、動画、音声の作成、加工\n・ルール違反者のモデレーション\nなどなど",
-                ),
-                discord.ui.Separator(),
-                discord.ui.TextDisplay(
-                    f"Botはどうやって使うの？\nすべてスラッシュコマンド (/) で使用できます。",
-                ),
-                discord.ui.Separator(),
-                discord.ui.TextDisplay(
-                    f"その他の質問をしたいんだけど、どうすればいいの？\n以下のURLのサーバーで質問をすることができます。\nhttps://discord.com/invite/mUyByHYMGk",
-                ),
-                accent_colour=discord.Colour.green(),
-            )
+        embed = make_embed.success_embed(title="よくある質問")
 
-        await interaction.response.send_message(view=FaqLayout())
+        embed.add_field(name="Botの使い方", value="スラッシュコマンド (/) と、\nコンテキストコマンド (メッセージ/メンバー右クリック -> アプリ)\nで使用できます。", inline=False)
+        embed.add_field(name="各種IDのコピーボタンを表示する方法", value="Discord設定 > 詳細 >\n開発者モード > 有効にする", inline=False)
+
+        await interaction.response.send_message(
+            embed=embed,
+            view=discord.ui.View().add_item(discord.ui.Button(label="サポートサーバー", url="https://discord.com/invite/mUyByHYMGk"))
+        )
 
     @bot.command(name="feedback", description="Botに意見を送信します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
