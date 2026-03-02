@@ -12,10 +12,12 @@ from discord import SyncWebhook
 from uvicorn.middleware.wsgi import WSGIMiddleware
 import dotenv
 import os
+from flask_cors import CORS
 
 dotenv.load_dotenv()
 
 app = Flask(__name__, static_folder="./static/", template_folder="./Templates/")
+CORS(app)
 
 client = MongoClient("mongodb://localhost:27017/")
 
