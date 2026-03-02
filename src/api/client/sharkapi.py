@@ -11,11 +11,19 @@ class EconomyMember:
         self.money = json.get('money', 0)
         self.bank = json.get('bank', 0)
 
+class BotStatus:
+    def __init__(self, json: dict):
+        self.data = json
+        self.bot_ping = int(json.get('bot_ping', "0"))
+        self.guilds_count = int(json.get('guilds_count', "0"))
+        self.shards_count = int(json.get('shards_count', "0"))
+
 class SharkBot:
     def __init__(self, apikey: str = None):
         self.BASE_URL = "https://api.sharkbot.xyz"
         self.APIKEY = apikey
 
+    # ==== 経済関連 ====
     async def fetchEconomy(self, guildId: str):
         async with aiohttp.ClientSession() as session:
             async with session.get(self.BASE_URL + f'/economy/{guildId}') as resp:
@@ -41,3 +49,10 @@ class SharkBot:
             }) as resp:
                 resp.raise_for_status()
                 return True
+
+    # ==== Botのステータス ====
+    async def fetchBotStatus(self):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.BASE_URL + "/status") as resp:
+                json = await resp.json()
+                return BotStatus(json)
