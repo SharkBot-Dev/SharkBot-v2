@@ -12,6 +12,7 @@ from discord import SyncWebhook
 from uvicorn.middleware.wsgi import WSGIMiddleware
 import dotenv
 import os
+import redis
 from flask_cors import CORS
 
 dotenv.load_dotenv()
@@ -19,7 +20,17 @@ dotenv.load_dotenv()
 app = Flask(__name__, static_folder="./static/", template_folder="./Templates/")
 CORS(app)
 
+redis_client = redis.from_url("redis://localhost", decode_responses=True)
 client = MongoClient("mongodb://localhost:27017/")
+
+# Botのステータスを取得
+@app.get("/status")
+def status_bot():
+    data = {}
+    data["guilds_count"] = redis_client.get("guilds_count")
+    data["shards_count"] = redis_client.get("shards_count")
+    data["bot_ping"] = redis_client.get('bot_ping')
+    return jsonify(data)
 
 # サーバーごとの経済情報取得
 @app.get("/economy/<guildid>")

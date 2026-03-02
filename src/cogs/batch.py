@@ -3,6 +3,7 @@ import discord
 
 from models import save_commands
 
+import redis.asyncio as redis
 
 class BatchCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -26,6 +27,16 @@ class BatchCog(commands.Cog):
             .add_field(name="導入サーバー数", value=f"{len(self.bot.guilds)}サーバー")
         )
         self.loop_pres.start()
+        self.loop_save_botinfo.start()
+
+    @tasks.loop(seconds=10)
+    async def loop_save_botinfo(self):
+        try:
+            await self.bot.redis.set("guilds_count", str(len(self.bot.guilds)))
+            await self.bot.redis.set("shards_count", str(self.bot.shard_count))
+            await self.bot.redis.set("bot_ping", str(round(self.bot.latency * 1000)))
+        except:
+            pass
 
     @tasks.loop(seconds=10)
     async def loop_pres(self):

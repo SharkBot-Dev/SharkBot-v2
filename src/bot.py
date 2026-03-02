@@ -5,6 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
 import dotenv
 from models import custom_tree, translate
+import redis.asyncio as redis
 
 dotenv.load_dotenv()
 
@@ -22,6 +23,7 @@ class NewSharkBot(commands.AutoShardedBot):
         print("InitDone")
         self.async_db = AsyncIOMotorClient("mongodb://localhost:27017")
         self.sync_db = MongoClient("mongodb://localhost:27017")
+        self.redis: redis.Redis = None
 
     def ChangePrefix(self, bot, message):
         pdb = self.sync_db["DashboardBot"].CustomPrefixBot
@@ -71,6 +73,8 @@ async def load_cogs(bot: commands.Bot, base_folder="cogs"):
 
 @bot.event
 async def setup_hook() -> None:
+    bot.redis = await redis.from_url("redis://localhost", decode_responses=True)
+
     await translate.load()
     await load_cogs(bot)
     try:
