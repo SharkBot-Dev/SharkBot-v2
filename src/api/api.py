@@ -1,151 +1,153 @@
-from flask import (
-    Flask,
-    render_template,
-    request,
-    redirect,
-    make_response,
-    send_file,
-    jsonify,
-)
-from pymongo import MongoClient
-from discord import SyncWebhook
-from uvicorn.middleware.wsgi import WSGIMiddleware
-import dotenv
 import os
-import redis
-from flask_cors import CORS
+from typing import Optional
+
+import asyncio
+import aiohttp
+import redis.asyncio as redis
+from motor.motor_asyncio import AsyncIOMotorClient
+
+import dotenv
+from fastapi import FastAPI, Request, Header, HTTPException, Body
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
+from discord import Webhook
 
 dotenv.load_dotenv()
 
-app = Flask(__name__, static_folder="./static/", template_folder="./Templates/")
-CORS(app)
+app = FastAPI(title="SharkAPI")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+templates = Jinja2Templates(directory="Templates")
 
 redis_client = redis.from_url("redis://localhost", decode_responses=True)
-client = MongoClient("mongodb://localhost:27017/")
 
-# Botのステータスを取得
-@app.get("/status")
-def status_bot():
-    data = {}
-    data["guilds_count"] = redis_client.get("guilds_count")
-    data["shards_count"] = redis_client.get("shards_count")
-    data["bot_ping"] = redis_client.get('bot_ping')
-    return jsonify(data)
+mongo_client = AsyncIOMotorClient("mongodb://localhost:27017/")
+db_main = mongo_client["Main"]
+db_api = mongo_client["SharkAPI"]
 
-# サーバーごとの経済情報取得
-@app.get("/economy/<guildid>")
-def economy_getinfo(guildid: str):
-    data = {}
-    db = client["Main"].ServerMoneyCurrency
-    _id = f"{guildid}"
-    dbfind = db.find_one({"_id": _id}, {"_id": False})
-    if not dbfind:
-        data["currency"] = "コイン"
-        return jsonify(data)
-    data["currency"] = dbfind.get("Name", "コイン")
-    return jsonify(data)
+async def add_topgg(user_id: str):
+    col = db_main["TOPGGVote"]
 
-# そのユーザーが持っているお金を取得
-@app.get("/economy/<guildid>/<userid>")
-def economy_getmoney(guildid: str, userid: str):
-    data = {}
-    db = client["Main"].ServerMoney
-    user_data = db.find_one({"_id": f"{guildid}-{userid}"}, {"_id": False})
+    user_data = await col.find_one({"_id": int(user_id)})
+    if user_data:
+        await col.update_one({"_id": int(user_id)}, {"$inc": {"count": 1}})
+    else:
+        await col.insert_one({"_id": int(user_id), "count": 1})
+    return True
+
+@app.get("/")
+async def index():
+    return RedirectResponse(url="/docs")
+
+@app.get("/status", description="Botのステータスを取得する。")
+async def status_bot():
+    guilds_count = await redis_client.get("guilds_count")
+    shards_count = await redis_client.get("shards_count")
+    bot_ping = await redis_client.get("bot_ping")
+    
+    return {
+        "guilds_count": guilds_count,
+        "shards_count": shards_count,
+        "bot_ping": bot_ping
+    }
+
+@app.get("/economy/{guildid}", description="経済の情報を取得する。")
+async def economy_getinfo(guildid: str):
+    col = db_main["ServerMoneyCurrency"]
+
+    dbfind = await col.find_one({"_id": guildid}, {"_id": False})
+    
+    currency = dbfind.get("Name", "コイン") if dbfind else "コイン"
+    return {"currency": currency}
+
+@app.get("/economy/{guildid}/{userid}", description="特定ユーザーがどのぐらいコインを持っているかを取得する。")
+async def economy_getmoney(guildid: str, userid: str):
+    col = db_main["ServerMoney"]
+    user_data = await col.find_one({"_id": f"{guildid}-{userid}"}, {"_id": False})
+    
     if not user_data:
-        data["money"] = 0
-        data["bank"] = 0
-        return jsonify(data)
-    data["money"] = user_data.get('count', 0)
-    data["bank"] = user_data.get('bank', 0)
-    return jsonify(data)
+        return {"money": 0, "bank": 0}
+    
+    return {
+        "money": user_data.get('count', 0),
+        "bank": user_data.get('bank', 0)
+    }
 
-# お金をアップデート
-# ※APIKey必要
-@app.patch("/economy/<guildid>/<userid>")
-def economy_patchmoney(guildid: str, userid: str):
-    api_key = request.headers.get('Authorization')
-    if not api_key:
-        return jsonify({"error": "Unauthorized"}), 401
+@app.patch("/economy/{guildid}/{userid}", description="特定のユーザーのコインの数を操作する")
+async def economy_patchmoney(
+    guildid: str, 
+    userid: str, 
+    authorization: Optional[str] = Header(None),
+    payload: dict = Body(...)
+):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
     try:
         g_id = int(guildid)
     except ValueError:
-        return jsonify({"error": "指定形式が正しくありません"}), 400
+        raise HTTPException(status_code=400, detail="指定形式が正しくありません")
 
-    apikey_db = client["SharkAPI"].APIKeys
-    key = apikey_db.find_one({
-        "guild_id": g_id
-    })
-    if not key:
-        return jsonify({"error": "Unauthorized"}), 401
+    apikey_col = db_api["APIKeys"]
+    key_record = await apikey_col.find_one({"guild_id": g_id})
+    
+    if not key_record or authorization != key_record.get('apikey'):
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
-    if api_key != key.get('apikey'):
-        return jsonify({"error": "Unauthorized"}), 401
-
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
-
-    db = client["Main"].ServerMoney
     update_fields = {}
-
     try:
-        if 'money' in data:
-            update_fields["count"] = int(data["money"])
-        if 'bank' in data:
-            update_fields["bank"] = int(data["bank"])
+        if 'money' in payload:
+            update_fields["count"] = int(payload["money"])
+        if 'bank' in payload:
+            update_fields["bank"] = int(payload["bank"])
     except ValueError:
-        return jsonify({"error": "数値形式が正しくありません"}), 400
+        raise HTTPException(status_code=400, detail="数値形式が正しくありません")
 
     if not update_fields:
-        return jsonify({"error": "更新する項目がありません"}), 400
+        raise HTTPException(status_code=400, detail="更新する項目がありません")
 
-    result = db.update_one(
+    col = db_main["ServerMoney"]
+    result = await col.update_one(
         {"_id": f"{guildid}-{userid}"},
         {"$set": update_fields}
     )
 
     if result.matched_count == 0:
-        return jsonify({"error": "指定されたユーザーが見つかりません"}), 404
+        raise HTTPException(status_code=404, detail="指定されたユーザーが見つかりません")
 
-    return jsonify({"success": True})
+    return {"success": True}
 
-def add_topgg(id_: str):
-    db = client["Main"].TOPGGVote
-    user_data = db.find_one({"_id": int(id_)})
-    if user_data:
-        db.update_one({"_id": int(id_)}, {"$inc": {"count": 1}})
-        return True
-    else:
-        db.insert_one({"_id": int(id_), "count": 1})
-        return True
+@app.post("/topgg/webhook", include_in_schema=False)
+async def topgg_vote_webhook(request: Request, authorization: Optional[str] = Header(None)):
+    target_apikey = os.environ.get("APIKEY")
+    if authorization != target_apikey:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    data = await request.json()
+    if not data or "user" not in data:
+        raise HTTPException(status_code=400, detail="No data")
 
-@app.route("/topgg/webhook", methods=["GET", "POST"])
-def topgg_vote_webhook():
-    apikey = os.environ.get("APIKEY")
-    auth = request.headers.get("Authorization")
-    if auth != apikey:
-        return "Unauthorized", 401
-    data = request.json
-    if not data:
-        return "No data", 400
     try:
-        add_topgg(data["user"])
-        url = os.environ.get("WEBHOOK")
-        web = SyncWebhook.from_url(url)
-        web.send(content=f"<@{data['user']}> さんがVoteをしてくれました！")
-        return jsonify({"status": "received"}), 200
+        await add_topgg(data["user"])
+        
+        webhook_url = os.environ.get("WEBHOOK")
+        if webhook_url:
+            async with aiohttp.ClientSession() as session:
+                web = Webhook.from_url(webhook_url, session=session)
+                await web.send(content=f"<@{data['user']}> さんがVoteをしてくれました！")
+            
+        return {"status": "received"}
     except Exception as e:
         print(f"Vote Error: {e}")
-        return "VoteError"
-
-# ドキュメント
-@app.get("/docs")
-def docs():
-    return render_template("docs.html")
-
-@app.get("/")
-def index():
-    return redirect("/docs")
-
-asgi_app = WSGIMiddleware(app)
+        raise HTTPException(status_code=500, detail="VoteError")
+    
+asgi_app = app
