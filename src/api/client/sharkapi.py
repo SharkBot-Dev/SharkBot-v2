@@ -36,7 +36,13 @@ class SharkBot:
             async with session.get(self.BASE_URL + f'/economy/{guildId}') as resp:
                 json = await resp.json()
                 return Economy(json)
-            
+
+    async def fetchEconomyLeaderboard(self, guildId: str):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.BASE_URL + f'/economy/{guildId}/leaderboard') as resp:
+                json = await resp.json()
+                return [EconomyMember(j) for j in json]
+
     async def fetchEconomyMember(self, guildId: str, userId: str):
         async with aiohttp.ClientSession() as session:
             async with session.get(self.BASE_URL + f'/economy/{guildId}/{userId}') as resp:

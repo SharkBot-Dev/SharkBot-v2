@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Optional, List
 
 import asyncio
 import aiohttp
@@ -78,6 +78,11 @@ class UpdateMoneyPayload(BaseModel):
     money: Optional[int] = Field(None, example=500, description="設定する所持金の額")
     bank: Optional[int] = Field(None, example=1000, description="設定する銀行の額")
 
+class LeaderboardEntry(BaseModel):
+    user_id: str = Field(..., example="123456789012345678", description="ユーザーID")
+    money: int = Field(..., example=1000, description="所持金")
+    bank: int = Field(..., example=5000, description="銀行残高")
+
 @app.get("/economy/{guildid}", description="経済の情報を取得する。", summary="経済の情報を取得", response_model=EconomyInfo, tags=["Economy"])
 async def economy_getinfo(guildid: str):
     col = db_main["ServerMoneyCurrency"]
@@ -86,6 +91,21 @@ async def economy_getinfo(guildid: str):
     
     currency = dbfind.get("Name", "コイン") if dbfind else "コイン"
     return {"currency": currency}
+
+@app.get("/economy/{guildid}/leaderboard", description="サーバー内の所持金ランキングトップ10を取得する。", summary="所持金ランキング取得", response_model=List[LeaderboardEntry], tags=["Economy"])
+async def economy_leaderboard(guildid: str):
+    col = db_main["ServerMoney"]
+    cursor = col.find({"_id": {"$regex": f"^{guildid}-"}}).sort("count", -1).limit(10)
+    
+    results = []
+    async for doc in cursor:
+        try:
+            u_id = doc["_id"].split("-")[1]
+            results.append(LeaderboardEntry(user_id=u_id, money=doc.get("count", 0), bank=doc.get("bank", 0)))
+        except IndexError:
+            continue
+    
+    return results
 
 @app.get("/economy/{guildid}/{userid}", description="特定ユーザーがどのぐらいコインを持っているかを取得する。", summary="経済内のユーザー情報を取得する", response_model=UserBalance, tags=["Economy"])
 async def economy_getmoney(guildid: str, userid: str):
