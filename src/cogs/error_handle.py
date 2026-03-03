@@ -5,7 +5,6 @@ from models import permissions_text
 
 from models import make_embed
 
-
 class ErrorHandleCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -52,6 +51,47 @@ class ErrorHandleCog(commands.Cog):
                     )
                 else:
                     await interaction.followup.send(embed=embed)
+
+                # 権限エラーを報告
+                try:
+                    db = self.bot.async_db["MainTwo"].LoggingCommands
+                    try:
+                        dbfind = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
+                    except Exception:
+                        return
+                    
+                    if dbfind:
+                        guild = interaction.guild
+                        if not guild:
+                            return
+                        channel = guild.get_channel(dbfind.get("Channel"))
+                        if not channel:
+                            return
+                                
+                        if isinstance(interaction.command, discord.app_commands.Command):
+                            await channel.send(
+                                embed=make_embed.error_embed(title="権限エラーが発生しました。")
+                                .add_field(name="コマンド名", value=interaction.command.qualified_name)
+                                .set_footer(
+                                    text=interaction.user.name,
+                                    icon_url=interaction.user.avatar.url
+                                    if interaction.user.avatar
+                                    else interaction.user.default_avatar.url,
+                                )
+                            )
+                        elif isinstance(interaction.command, discord.app_commands.ContextMenu):
+                            await channel.send(
+                                embed=make_embed.error_embed(title="権限エラーが発生しました。")
+                                .add_field(name="コマンド名", value=interaction.command.qualified_name)
+                                .set_footer(
+                                    text=interaction.user.name,
+                                    icon_url=interaction.user.avatar.url
+                                    if interaction.user.avatar
+                                    else interaction.user.default_avatar.url,
+                                )
+                            )
+                except:
+                    pass
                 return
 
             print("App command error:", error)
@@ -66,6 +106,46 @@ class ErrorHandleCog(commands.Cog):
                 )
             else:
                 await interaction.followup.send(embed=embed)
+
+            try:
+                db = self.bot.async_db["MainTwo"].LoggingCommands
+                try:
+                    dbfind = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
+                except Exception:
+                    return
+                    
+                if dbfind:
+                    guild = interaction.guild
+                    if not guild:
+                        return
+                    channel = guild.get_channel(dbfind.get("Channel"))
+                    if not channel:
+                        return
+
+                    if isinstance(interaction.command, discord.app_commands.Command):
+                        await channel.send(
+                            embed=make_embed.error_embed(title="予期しないエラーが発生しました。")
+                            .add_field(name="コマンド名", value=interaction.command.qualified_name, inline=False)
+                            .set_footer(
+                                text=interaction.user.name,
+                                icon_url=interaction.user.avatar.url
+                                if interaction.user.avatar
+                                else interaction.user.default_avatar.url,
+                            ).add_field(name="エラーコード", value=f"```{error}```", inline=False)
+                        )
+                    elif isinstance(interaction.command, discord.app_commands.ContextMenu):
+                        await channel.send(
+                            embed=make_embed.error_embed(title="予期しないエラーが発生しました。")
+                            .add_field(name="コマンド名", value=interaction.command.qualified_name, inline=False)
+                            .set_footer(
+                                text=interaction.user.name,
+                                icon_url=interaction.user.avatar.url
+                                if interaction.user.avatar
+                                else interaction.user.default_avatar.url,
+                            ).add_field(name="エラーコード", value=f"```{error}```", inline=False)
+                        )
+            except:
+                return
 
     @commands.Cog.listener("on_error")
     async def on_error(self, event: str, *args, **kwargs):
