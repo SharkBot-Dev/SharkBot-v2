@@ -23,6 +23,13 @@ class SharkBot:
         self.BASE_URL = "https://api.sharkbot.xyz"
         self.APIKEY = apikey
 
+    # ==== 検索関連 ====
+    async def fetchNews(self):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.BASE_URL + f'/news') as resp:
+                json = await resp.json()
+                return json.get('news_url')
+
     # ==== 経済関連 ====
     async def fetchEconomy(self, guildId: str):
         async with aiohttp.ClientSession() as session:
