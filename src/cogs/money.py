@@ -452,7 +452,6 @@ class GachaGroup(app_commands.Group):
         super().__init__(name="gacha", description="ガチャ系のコマンドです。")
 
     @app_commands.command(name="create", description="ガチャを作成します。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     @app_commands.checks.has_permissions(manage_guild=True)
     async def economy_gacha_create(
         self,
@@ -486,7 +485,6 @@ class GachaGroup(app_commands.Group):
     @app_commands.command(
         name="import", description="ガチャをjsonからインポートします。"
     )
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     @app_commands.checks.has_permissions(manage_guild=True)
     async def economy_gacha_json_import(
         self, interaction: discord.Interaction, ファイル: discord.Attachment
@@ -534,7 +532,6 @@ class GachaGroup(app_commands.Group):
     @app_commands.command(
         name="export", description="ガチャをjsonにエクスポートします。"
     )
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     @app_commands.checks.has_permissions(manage_guild=True)
     async def economy_gacha_json_export(
         self, interaction: discord.Interaction, ガチャ名: str
@@ -581,7 +578,6 @@ class GachaGroup(app_commands.Group):
         name="multi-add",
         description="確率操作をするために、一つのアイテムを複数追加します。",
     )
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     @app_commands.checks.has_permissions(manage_guild=True)
     async def economy_gacha_multi_add(
         self,
@@ -631,7 +627,6 @@ class GachaGroup(app_commands.Group):
         )
 
     @app_commands.command(name="add", description="ガチャにアイテムを追加します。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     @app_commands.checks.has_permissions(manage_guild=True)
     async def economy_gacha_add(
         self, interaction: discord.Interaction, ガチャ名: str, アイテム名: str
@@ -670,7 +665,6 @@ class GachaGroup(app_commands.Group):
         )
 
     @app_commands.command(name="remove", description="ガチャのアイテムを削除します。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     @app_commands.checks.has_permissions(manage_guild=True)
     async def economy_gacha_remove(
         self, interaction: discord.Interaction, ガチャ名: str, アイテム名: str
@@ -699,7 +693,6 @@ class GachaGroup(app_commands.Group):
     @app_commands.command(
         name="clear", description="ガチャのアイテムをリセットします。"
     )
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     @app_commands.checks.has_permissions(manage_guild=True)
     async def economy_gacha_clear(
         self, interaction: discord.Interaction, ガチャ名: str
@@ -733,7 +726,6 @@ class GachaGroup(app_commands.Group):
     @app_commands.command(
         name="items", description="ガチャから出るアイテムを設定します。"
     )
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     @app_commands.checks.has_permissions(manage_guild=True)
     async def economy_gacha_items(
         self, interaction: discord.Interaction, ガチャ名: str
@@ -761,7 +753,6 @@ class GachaGroup(app_commands.Group):
         )
 
     @app_commands.command(name="list", description="ガチャリストを確認します。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_gacha_list(self, interaction: discord.Interaction):
         await interaction.response.defer()
         db = interaction.client.async_db["Main"].ServerMoneyGacha
@@ -780,7 +771,6 @@ class GachaGroup(app_commands.Group):
         )
 
     @app_commands.command(name="buy", description="ガチャを引きます。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_gacha_buy(self, interaction: discord.Interaction, ガチャ名: str):
         db = interaction.client.async_db["Main"].ServerMoneyGacha
         dbfind = await db.find_one(
@@ -854,7 +844,6 @@ class GamesGroup(app_commands.Group):
         super().__init__(name="games", description="ゲームで遊びます。")
 
     @app_commands.command(name="coinflip", description="コインの裏表を予想します。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_games_coinflip_server(
         self, interaction: discord.Interaction, 裏表: str, 金額: int
     ):
@@ -908,7 +897,6 @@ class GamesGroup(app_commands.Group):
             )
 
     @app_commands.command(name="blackjack", description="ブラックジャックをします。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_games_blackjack_server(
         self, interaction: discord.Interaction, 金額: int
     ):
@@ -956,7 +944,6 @@ class GamesGroup(app_commands.Group):
     @app_commands.command(
         name="scratch-card", description="スクラッチカードを削ります。"
     )
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_games_scratch_card(
         self, interaction: discord.Interaction, 金額: int
     ):
@@ -988,7 +975,6 @@ class GamesGroup(app_commands.Group):
         )
 
     @app_commands.command(name="info", description="ゲームの情報を取得します。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_games_info_server(self, interaction: discord.Interaction):
         await interaction.response.defer()
         await interaction.followup.send(
@@ -1301,7 +1287,6 @@ class ServerMoneyCog(commands.Cog):
 
     # ====== work ======
     @server_economy.command(name="work", description="60分に1回働けます。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_work_server(self, interaction: discord.Interaction):
         await interaction.response.defer()
         m = random.randint(300, 1500)
@@ -1331,7 +1316,6 @@ class ServerMoneyCog(commands.Cog):
         )
 
     @server_economy.command(name="beg", description="物乞いをしてお金を得ます。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_beg_server(self, interaction: discord.Interaction):
         await interaction.response.defer()
         m = random.randint(10, 300)
@@ -1371,7 +1355,6 @@ class ServerMoneyCog(commands.Cog):
     @server_economy.command(
         name="crime", description="犯罪をしてお金を得ます。(リスクあり)"
     )
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     @app_commands.choices(
         内容=[
             app_commands.Choice(name="強盗", value="gotou"),
@@ -1435,7 +1418,6 @@ class ServerMoneyCog(commands.Cog):
     @server_economy.command(
         name="balance", description="サーバー内で残高を取得します。"
     )
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_balance_server(
         self, interaction: discord.Interaction, メンバー: discord.User = None
     ):
@@ -1454,7 +1436,6 @@ class ServerMoneyCog(commands.Cog):
     @server_economy.command(
         name="pay", description="指定したメンバーにサーバー内通貨を送金します。"
     )
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_pay_server(
         self, interaction: discord.Interaction, メンバー: discord.User, 金額: int
     ):
@@ -1513,7 +1494,6 @@ class ServerMoneyCog(commands.Cog):
         )
 
     @server_economy.command(name="deposit", description="銀行にお金を預けます。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_deposit_server(self, interaction: discord.Interaction, 金額: int):
         await interaction.response.defer()
         m = Money(interaction.client)
@@ -1536,7 +1516,6 @@ class ServerMoneyCog(commands.Cog):
         )
 
     @server_economy.command(name="withdraw", description="銀行からお金を引き出します。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_withdraw_server(
         self, interaction: discord.Interaction, 金額: int
     ):
@@ -1562,7 +1541,6 @@ class ServerMoneyCog(commands.Cog):
 
     # ====== ranking ======
     @server_economy.command(name="ranking", description="お金持ちランキングを見ます。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_ranking_server(self, interaction: discord.Interaction):
         text = await Money(interaction.client).get_server_ranking(interaction.guild)
         await interaction.response.send_message(
@@ -1573,7 +1551,6 @@ class ServerMoneyCog(commands.Cog):
 
     # ====== buy ======
     @server_economy.command(name="buy", description="サーバー内のアイテムを買います。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_buy_server(
         self, interaction: discord.Interaction, アイテム名: str
     ):
@@ -1607,13 +1584,14 @@ class ServerMoneyCog(commands.Cog):
         )
         await interaction.followup.send(
             embed=make_embed.success_embed(
-                title="アイテムを買いました。", description=f"「{アイテム名}」"
+                title="アイテムを買いました。"
             )
+            .add_field(name="買ったアイテム", value=アイテム名, inline=False)
+            .add_field(name="アイテムを使用する方法", value="/economy useにアイテム名を指定すれば\n使用することができます。", inline=False)
         )
 
     # ====== use ======
     @server_economy.command(name="use", description="サーバー内のアイテムを使います。")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_use_server(
         self, interaction: discord.Interaction, アイテム名: str
     ):
@@ -1671,7 +1649,6 @@ class ServerMoneyCog(commands.Cog):
     @server_economy.command(
         name="items", description="サーバー内のアイテム一覧を見ます。"
     )
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
     async def economy_items_server(self, interaction: discord.Interaction):
         await interaction.response.defer()
         text = await Money(interaction.client).get_server_items_list(
