@@ -14,9 +14,6 @@ class AutoTextCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    # -------------------------
-    # Text channel name helper
-    # -------------------------
     def default_text_name(self, vc: discord.VoiceChannel):
         return f"{vc.name}-聞き専".lower()
 
