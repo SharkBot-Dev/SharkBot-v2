@@ -368,59 +368,65 @@ async def setup(bot: commands.Bot):
             return await interaction.response.send_message(
                 ephemeral=True, content="管理者は通報できません。"
             )
-        # await interaction.response.defer(ephemeral=True)
-        await interaction.response.defer(ephemeral=True)
+        
         db = bot.async_db["Main"].ReportChannel
         try:
             dbfind = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
         except:
-            return await interaction.followup.send(
+            return await interaction.response.send_message(
                 content="通報するチャンネルが見つかりませんでした", ephemeral=True
             )
         if dbfind is None:
-            return await interaction.followup.send(
+            return await interaction.response.send_message(
                 content="通報するチャンネルが見つかりませんでした", ephemeral=True
             )
-        channel = bot.get_channel(dbfind.get("Channel", None))
+        channel = interaction.guild.get_channel(dbfind.get("Channel", None))
         if not channel:
-            return await interaction.followup.send(
+            return await interaction.response.send_message(
                 content="通報するチャンネルが見つかりませんでした", ephemeral=True
             )
+        
+        class ReportModal(discord.ui.Modal):
+            def __init__(self):
+                super().__init__(title="通報の詳細")
 
-        await channel.send(
-            embed=discord.Embed(
-                title=f"{interaction.user.name} が通報しました。",
-                color=discord.Color.yellow(),
+            reason = discord.ui.Label(
+                text="通報理由を入力",
+                description="通報理由を入力してください。",
+                component=discord.ui.TextInput(
+                    style=discord.TextStyle.long, max_length=200, required=True, default="なし"
+                ),
             )
-            .add_field(
-                name="通報されたメッセージ", value=message.jump_url, inline=False
-            )
-            .add_field(
-                name="通報されたメッセージのあるチャンネル",
-                value=message.channel.mention,
-                inline=False,
-            )
-            .add_field(
-                name="通報された人",
-                value=f"{message.author.mention} ({message.author.id})",
-                inline=False,
-            )
-            .add_field(
-                name="通報した人",
-                value=f"{interaction.user.mention} ({interaction.user.id})",
-                inline=False,
-            )
-            .set_thumbnail(
-                url=message.author.avatar.url
-                if message.author.avatar
-                else message.author.default_avatar.url
-            )
-        )
 
-        return await interaction.followup.send(
-            content="通報が完了しました。\n運営が確認しますので、しばらくお待ちください。",
-            ephemeral=True,
-        )
+            async def on_submit(self, interaction_modal: discord.Interaction):
+                assert isinstance(self.reason.component, discord.ui.TextInput)
+
+                await interaction_modal.response.defer(ephemeral=True)
+
+                class ReportView(discord.ui.LayoutView):
+                    container = discord.ui.Container(
+                        discord.ui.TextDisplay(
+                            f"### <:flag:1402997897594798235> {interaction.user.name} が通報しました。",
+                        ),
+                        discord.ui.Section(discord.ui.TextDisplay(
+                            f"メッセージの詳細\n<:Fake:1362276665937494058>送信者: {message.author.mention} ({message.author.id})\n💬送信先チャンネル: {message.channel.mention}\n🔗メッセージURL: {message.jump_url}",
+                        ), accessory=discord.ui.Thumbnail(message.author.display_avatar.url)),
+                        discord.ui.Separator(),
+                        discord.ui.TextDisplay(
+                            f"通報者の詳細\n<:Fake:1362276665937494058>送信者: {interaction.user.mention} ({interaction.user.id})\n💬通報理由: {self.reason.component.value}",
+                        ),
+                    )
+
+                await channel.send(
+                    view=ReportView(), allowed_mentions=discord.AllowedMentions.none()
+                )
+
+                return await interaction_modal.followup.send(
+                    embed=make_embed.success_embed(title="通報が完了しました。", description="運営が対応するまでしばらくお待ちください。"),
+                    ephemeral=True,
+                )
+            
+        await interaction.response.send_modal(ReportModal())
 
     @app_commands.context_menu(name="メッセージ固定")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
