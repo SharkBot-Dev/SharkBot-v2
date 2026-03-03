@@ -1004,7 +1004,6 @@ class ManageGroup(app_commands.Group):
     @app_commands.command(name="add", description="お金を追加します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def economy_manage_money_add(
         self, interaction: discord.Interaction, メンバー: discord.Member, 金額: int
     ):
@@ -1019,7 +1018,6 @@ class ManageGroup(app_commands.Group):
     @app_commands.command(name="remove", description="お金を減らします。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def economy_manage_money_remove(
         self, interaction: discord.Interaction, メンバー: discord.Member, 金額: int
     ):
@@ -1034,7 +1032,6 @@ class ManageGroup(app_commands.Group):
     @app_commands.command(name="currency", description="新しい通貨名を設定します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def economy_manage_currency(
         self, interaction: discord.Interaction, 通貨名: str
     ):
@@ -1051,7 +1048,6 @@ class ManageGroup(app_commands.Group):
     )
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def economy_manage_chatmoney(
         self, interaction: discord.Interaction, 金額: int = None
     ):
@@ -1085,7 +1081,6 @@ class ManageGroup(app_commands.Group):
     )
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.choices(
         種類=[
             app_commands.Choice(name="仕事", value="work"),
@@ -1117,7 +1112,6 @@ class ItemGroup(app_commands.Group):
     @app_commands.command(name="create", description="アイテムを作成します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def economy_item_create_server(
         self,
         interaction: discord.Interaction,
@@ -1144,7 +1138,6 @@ class ItemGroup(app_commands.Group):
     @app_commands.command(name="remove", description="アイテムを削除します。")
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def economy_item_remove_server(
         self, interaction: discord.Interaction, アイテム名: str
     ):
@@ -1173,7 +1166,6 @@ class ShopPanelGroup(app_commands.Group):
     )
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def economy_shop_item_create(
         self,
         interaction: discord.Interaction,
