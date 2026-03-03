@@ -40,6 +40,9 @@ class AlertCog(commands.Cog):
                 title = soup.find_all("div", class_="toppickup")[0]
                 url = title.find_all("a")[0]
 
+                # API用に保存
+                await self.bot.redis.set("news", f"https:{url['href']}")
+
                 news_db = self.bot.async_db["Main"].NewsAlert
                 async for n in news_db.find({}):
                     try:

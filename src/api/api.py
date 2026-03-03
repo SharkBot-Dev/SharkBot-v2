@@ -144,6 +144,17 @@ async def economy_patchmoney(
 
     return {"success": True}
 
+class NewsInfo(BaseModel):
+    news_url: str = Field(..., example="ニュースのURL", description="ニュースのURL")
+
+@app.get("/news", description="最新ニュースを取得する", summary="最新ニュースを取得", response_model=NewsInfo, tags=["Search"])
+async def news_info():
+    news = await redis_client.get("news")
+
+    return {
+        "news_url": news
+    }
+
 @app.post("/topgg/webhook", include_in_schema=False)
 async def topgg_vote_webhook(request: Request, authorization: Optional[str] = Header(None)):
     target_apikey = os.environ.get("APIKEY")
