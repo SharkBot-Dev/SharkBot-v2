@@ -52,9 +52,11 @@ class AutoResetCog(commands.Cog):
     async def on_auto_reset_event(self, guild_id: int, channel_id: int, hour: int):
         guild = self.bot.get_guild(guild_id)
         if not guild:
+            await self.bot.loop_delete("auto_reset_event", guild_id, channel_id)
             return
         channel = guild.get_channel(channel_id)
         if not channel:
+            await self.bot.loop_delete("auto_reset_event", guild_id, channel_id)
             return
 
         db = self.bot.async_db["MainTwo"].AutoResetChannelBeta
@@ -63,13 +65,21 @@ class AutoResetCog(commands.Cog):
             {"Guild": guild_id, "Channel": channel_id, "Reminder": hour}
         )
         if not exists:
+            await self.bot.loop_delete("auto_reset_event", guild_id, channel_id)
             return
 
         await self.bot.loop_delete("auto_reset_event", guild_id, channel_id)
 
-        new_ch = await channel.clone(reason="Auto reset")
-        await new_ch.edit(position=channel.position + 1)
-        await channel.delete(reason="Auto reset")
+        now = discord.utils.utcnow()
+        two_weeks = datetime.timedelta(days=14)
+
+        new_ch = channel
+        def check(msg: discord.Message):
+            if (now - msg.created_at) > two_weeks:
+                return False
+            return True
+
+        await new_ch.purge(limit=100, check=check)
 
         await new_ch.send(
             embed=make_embed.success_embed(
