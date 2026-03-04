@@ -256,5 +256,13 @@ async def help(interaction: discord.Interaction):
         ephemeral=True,
     )
 
+@bot.tree.command(name="serverlist", description="サーバーリストを表示します（オーナーのみ）")
+async def serverlist(interaction: discord.Interaction):
+    if str(interaction.user.id) != os.environ.get('OWNER_ID'):
+        await interaction.response.send_message(ephemeral=True, embed=error_embed("オーナーのみ使用できます。"))
+        return
+
+    await interaction.response.defer(ephemeral=True)
+    await interaction.followup.send(embed=success_embed(title="サーバーの一覧です", description="\n".join([f"{g.name} ({g.id})" for g in bot.guilds])))
 
 bot.run(os.getenv("DISCORD_TOKEN"))
