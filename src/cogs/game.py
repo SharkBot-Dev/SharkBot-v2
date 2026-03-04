@@ -820,6 +820,11 @@ class GameCog(commands.Cog):
             f"🎲 {interaction.user.mention}: {', '.join(str_rolls)} → {sum(rolls)}"
         )
 
+    @game.command(name="coinflip", description="コインフリップをします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    async def coinflip(self, interaction: discord.Interaction):
+        await interaction.response.send_message(f"🪙{random.choice(['表', '裏'])} が出ました")
+
     @game.command(name="omikuji", description="おみくじを引きます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
