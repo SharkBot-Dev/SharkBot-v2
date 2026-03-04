@@ -54,13 +54,18 @@ bot = commands.Bot(command_prefix="!", intents=intents, tree_cls=CustomTree)
 YOUTUBE_RE = r"(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+"
 
 guild_queues = {}
-
+guild_loop = {}
+current_track = {}
 
 def get_queue(gid: int):
     if gid not in guild_queues:
         guild_queues[gid] = asyncio.Queue()
     return guild_queues[gid]
 
+def is_loop(gid: int):
+    if gid not in guild_loop:
+        guild_loop[gid] = False
+    return guild_loop[gid]
 
 async def yt_extract_async(url: str, search: bool = False):
     def run():
@@ -89,6 +94,8 @@ async def yt_get_audio_url(info):
 
     return audio["url"]
 
+def is_loop(gid: int):
+    return guild_loop.get(gid, False)
 
 async def play_next(vc, guild_id):
     queue = get_queue(guild_id)
@@ -98,6 +105,8 @@ async def play_next(vc, guild_id):
         return
 
     url = await queue.get()
+    
+    current_track[guild_id] = url
 
     info = await yt_extract_async(url)
     audio_url = await yt_get_audio_url(info)
@@ -107,13 +116,18 @@ async def play_next(vc, guild_id):
         "options": "-vn",
     }
 
+    def after_playing(error):
+        if is_loop(guild_id):
+            last_url = current_track.get(guild_id)
+            if last_url:
+                bot.loop.call_soon_threadsafe(queue.put_nowait, last_url)
+        
+        asyncio.run_coroutine_threadsafe(play_next(vc, guild_id), bot.loop)
+
     vc.play(
         discord.FFmpegPCMAudio(audio_url, **ffmpeg_opts),
-        after=lambda e: asyncio.run_coroutine_threadsafe(
-            play_next(vc, guild_id), bot.loop
-        ),
+        after=after_playing
     )
-
 
 @tasks.loop(seconds=10)
 async def loop_pres():
@@ -189,6 +203,13 @@ async def skip(interaction: discord.Interaction):
         embed=success_embed(title="スキップしました。")
     )
 
+@bot.tree.command(name="loop", description="曲のループの設定をします。")
+@app_commands.describe(is_loop="ループするか しないか")
+async def loop(interaction: discord.Interaction, is_loop: bool):
+    gid = interaction.guild.id
+    guild_loop[gid] = not guild_loop.get(gid, False)
+    state = "有効" if guild_loop[gid] else "無効"
+    await interaction.response.send_message(embed=success_embed(title=f"ループを {state} にしました。"))
 
 @bot.tree.command(name="queue", description="再生キューを表示します")
 async def queue_cmd(interaction: discord.Interaction):
@@ -227,6 +248,7 @@ async def help(interaction: discord.Interaction):
 /play 音楽を再生します。
 /stop 音楽をストップします。
 /skip 音楽をスキップします。
+/loop 音楽をループします。
 /queue 再生キューを表示します。
 /help ヘルプを表示します。
 """,
