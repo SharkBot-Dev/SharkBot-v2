@@ -33,6 +33,7 @@ class BatchCog(commands.Cog):
     async def loop_save_botinfo(self):
         try:
             await self.bot.redis.set("guilds_count", str(len(self.bot.guilds)))
+            await self.bot.redis.set("users_count", str(len(self.bot.users)))
             await self.bot.redis.set("shards_count", str(self.bot.shard_count))
             await self.bot.redis.set("bot_ping", str(round(self.bot.latency * 1000)))
         except:

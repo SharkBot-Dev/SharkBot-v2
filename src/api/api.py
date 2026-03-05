@@ -52,17 +52,20 @@ async def index():
 
 class Status(BaseModel):
     guilds_count: str = Field(..., example="100", description="Botの導入数")
+    users_count: str = Field(..., example="1000", description="Botの認識できるユーザー数")
     shards_count: str = Field(..., example="0", description="Botのシャード数")
     bot_ping: str = Field(..., example="170", description="BotのPing値")
 
 @app.get("/status", description="Botのステータスを取得する。", tags=["System"], summary="ボットのステータス取得", response_model=Status)
 async def status_bot():
     guilds_count = await redis_client.get("guilds_count")
+    users_count = await redis_client.get("users_count")
     shards_count = await redis_client.get("shards_count")
     bot_ping = await redis_client.get("bot_ping")
     
     return {
         "guilds_count": guilds_count,
+        "users_count": users_count,
         "shards_count": shards_count,
         "bot_ping": bot_ping
     }
