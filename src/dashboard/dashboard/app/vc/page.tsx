@@ -48,7 +48,7 @@ export default async function OpenVCPage({ searchParams }: Props) {
         <h1 className="text-3xl font-bold mb-2">
           Discordボイスチャット掲示板
         </h1>
-        <p className="text-zinc-400">今すぐ参加できるボイスチャット一覧</p>
+        <p className="text-zinc-400">今すぐ参加できるボイスチャット一覧<br/>この掲示板に掲載、使用した場合は<Link href="https://sharkbot.xyz/" style={{ fontWeight: "800" }}>掲示板利用規約</Link>に同意したものとします。</p>
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

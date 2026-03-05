@@ -249,6 +249,9 @@
             <a class="blue_button" href="https://dashboard.sharkbot.xyz/servers">
                 サーバー掲示板
             </a>
+            <a class="blue_button" href="https://dashboard.sharkbot.xyz/vc">
+                VC掲示板
+            </a>
         </div>
 
         <h3>利用規約など</h3>
@@ -258,6 +261,9 @@
             </a>
             <a class="blue_button" onclick="load_privacy_policy(); privacy_policy_modal.showModal();">
                 プライバシーポリシー
+            </a>
+            <a class="blue_button" onclick="load_terms_vc(); vc_terms_modal.showModal();">
+                掲示板利用規約
             </a>
         </div>
 
@@ -274,6 +280,14 @@
                 <h2>プライバシーポリシー</h2>
                 <p id="p_text">ここに入れる</p>
                 <button id="p_close" style="border-radius: 20px; background-color: #35373d; color: white;">閉じる</button>
+            </div>
+        </dialog>
+
+        <dialog id="vc_terms_modal">
+            <div class="modal-content">
+                <h2>掲示板の利用規約</h2>
+                <p id="list_text">ここに入れる</p>
+                <button id="vc_terms_modal_close" style="border-radius: 20px; background-color: #35373d; color: white;">閉じる</button>
             </div>
         </dialog>
     </div>
@@ -378,6 +392,67 @@
 
         terms_modal_close.addEventListener('click', () => {
             terms_modal.close();
+        });
+
+
+        function load_terms_vc() {
+            document.getElementById("list_text").innerText = `
+第1条（用語の定義）
+
+本規約において使用する用語の定義は、以下の通りとします。
+「Bot」：本サービスが提供する「SharkBot」を指します。
+「掲示板」：Botを通じて提供される「サーバーリスト」および「VCリスト」への掲載・閲覧機能を指します。
+「利用者」：本規約に同意し、本サービスを利用する全てのユーザーを指します。
+
+第2条（禁止事項）
+
+利用者は、本サービスの利用にあたり、以下の行為をしてはならないものとします。
+公序良俗・法令違反：犯罪行為に関連する行為、または公序良俗に反する内容を掲示板に掲載する行為。
+妨害行為：Botのサーバーまたはネットワーク機能を破壊・妨害する行為。
+攻撃的行為：Botに対するサイバー攻撃、または運営を妨害するおそれのある行為。
+プライバシー侵害：他のユーザーの個人情報等を収集・蓄積、または公開する行為。
+悪用・乱用：公式コマンドやBotの機能を、本来の目的（サーバー・VCの宣伝）以外で悪用する行為。
+虚偽の掲載：実態のないサーバーやVC、または虚偽の内容を掲示板に掲載する行為。
+
+第3条（利用制限）
+運営は、利用者が以下のいずれかに該当すると判断した場合、事前の通知なく利用停止等の措置を講じることができるものとします。
+過去または現在、荒らし行為に関与していると判断される場合。
+Botの機能を悪用、または嫌がらせ目的で利用している場合。
+その他、運営が本サービスの利用を不適切（相当でない）と判断した場合。
+
+第4条（サービスの停止・終了）
+運営は、以下のいずれかの事由があると判断した場合、利用者への事前通知なく本サービスを一時的、または永久的に停止できるものとします。
+地震、落雷、火災、停電、天災などの不可抗力により提供が困難な場合。
+システムの保守点検、更新、またはデータベースの修復が必要な場合。
+通信回線や外部サービスの都合により利用が不能となった場合。
+運営資金の枯渇等、運営の継続が困難となった場合。
+※ 停止により利用者に生じた損害について、運営は一切の責任を負いません。
+
+第5条（免責事項）
+運営は、本サービスに関して利用者に生じた損害について、運営に故意または重大な過失がある場合を除き、一切の責任を負いません。
+掲示板を通じて行われる利用者間の交流やトラブルについて、運営は関与せず、一切の責任を負いません。
+
+第6条（規約の変更）
+運営は、利用者の承諾を得ることなく、いつでも本規約の内容を変更できるものとします。変更後の規約は、本サービス上に表示した時点より効力を生じるものとします。
+
+第7条（準拠法）
+本規約の解釈にあたっては、日本法を準拠法とします。
+
+以上のことに同意できない場合は、
+サービスを使用できないものとする。また、サービスを使用したら、
+この利用規約を読んでいなくてもこの利用規約に同意したこととなる。
+          `
+        }
+
+        const vc_terms_modal = document.getElementById('vc_terms_modal');
+        const vc_terms_modal_close = document.getElementById('vc_terms_modal_close');
+
+        p_close.addEventListener('click', () => {
+            privacy_policy_modal.close();
+        });
+
+        vc_terms_modal_close.addEventListener('click', () => {
+            vc_terms_modal.close();
         });
 
         async function getBotInfo() {
