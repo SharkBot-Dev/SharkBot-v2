@@ -84,6 +84,23 @@ class OpenVCCog(commands.Cog):
         else:
             await interaction.followup.send(embed=make_embed.error_embed(title="そのチャンネルは登録されていません。"))
 
+    async def mention_get(self, interaction: discord.Interaction):
+        db = self.bot.async_db["Main"].BumpUpMention
+        try:
+            dbfind = await db.find_one(
+                {"Channel": interaction.channel.id}, {"_id": False}
+            )
+        except:
+            return "メンションするロールがありません。"
+        if dbfind is None:
+            return "メンションするロールがありません。"
+
+        try:
+            role = interaction.guild.get_role(dbfind.get("Role", None))
+            return role.mention
+        except:
+            return "メンションするロールがありません。"
+
     @openvc.command(name="up", description="掲示板の掲載順位を上げます。")
     @app_commands.checks.cooldown(1, 3600, key=lambda i: i.guild_id)
     async def openvc_up(self, interaction: discord.Interaction):
@@ -100,8 +117,7 @@ class OpenVCCog(commands.Cog):
         if result.matched_count > 0:
             embed = make_embed.success_embed(
                 title="サーバーをUpしました！",
-                description="2時間後に再度Upできます。",
-                color=discord.Color.brand_green()
+                description="2時間後に再度Upできます。"
             )
             await interaction.followup.send(embed=embed)
         else:
