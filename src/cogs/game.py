@@ -823,7 +823,9 @@ class GameCog(commands.Cog):
     @game.command(name="coinflip", description="コインフリップをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     async def coinflip(self, interaction: discord.Interaction):
-        await interaction.response.send_message(f"🪙{random.choice(['表', '裏'])} が出ました")
+        view = discord.ui.View()
+        view.add_item(discord.ui.Button(label="Webバージョン", url="https://sharkbot-dev.github.io/CoinFlip/"))
+        await interaction.response.send_message(f"🪙{random.choice(['表', '裏'])} が出ました", view=view)
 
     @game.command(name="omikuji", description="おみくじを引きます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
