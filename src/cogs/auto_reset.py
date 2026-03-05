@@ -6,7 +6,7 @@ import asyncio
 from discord import app_commands
 from consts import mongodb
 from models import make_embed
-
+from motor.motor_asyncio import AsyncIOMotorCollection
 
 class AutoResetCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -79,7 +79,7 @@ class AutoResetCog(commands.Cog):
                 return False
             return True
 
-        await new_ch.purge(limit=100, check=check)
+        await new_ch.purge(limit=300, check=check)
 
         await new_ch.send(
             embed=make_embed.success_embed(
@@ -180,6 +180,23 @@ class AutoResetCog(commands.Cog):
             embed=make_embed.success_embed(title="自動リセットを無効化しました。")
         )
 
+    @autoreset.command(
+        name="list", description="自動リセット対象チャンネルを取得します。"
+    )
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_channels=True)
+    async def _auto_reset_list(
+        self, interaction: discord.Interaction
+    ):
+        await interaction.response.defer()
+
+        db = self.bot.async_db["MainTwo"].AutoResetChannelBeta
+        if not isinstance(db, AsyncIOMotorCollection):
+            return
+        ar_list = await db.find({"Guild": interaction.guild.id}).to_list()
+
+        await interaction.followup.send(embed=make_embed.success_embed(title="自動リセット対象のチャンネル", description="\n".join([f"<#{ar_l.get('Channel')}> - {ar_l.get('Reminder')}" for ar_l in ar_list])))
 
 async def setup(bot):
     await bot.add_cog(AutoResetCog(bot))
