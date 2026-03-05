@@ -374,16 +374,16 @@ async def setup(bot: commands.Bot):
             dbfind = await db.find_one({"Guild": interaction.guild.id}, {"_id": False})
         except:
             return await interaction.response.send_message(
-                content="通報するチャンネルが見つかりませんでした", ephemeral=True
+                content="通報機能がセットアップされていません。", ephemeral=True
             )
         if dbfind is None:
             return await interaction.response.send_message(
-                content="通報するチャンネルが見つかりませんでした", ephemeral=True
+                content="通報機能がセットアップされていません。", ephemeral=True
             )
         channel = interaction.guild.get_channel(dbfind.get("Channel", None))
         if not channel:
             return await interaction.response.send_message(
-                content="通報するチャンネルが見つかりませんでした", ephemeral=True
+                content="通報するチャンネルが見つかりませんでした。", ephemeral=True
             )
         
         class ReportModal(discord.ui.Modal):
