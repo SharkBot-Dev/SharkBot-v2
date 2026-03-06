@@ -1,5 +1,7 @@
 import asyncio
+from collections import Counter
 import datetime
+import aiohttp
 from discord.ext import commands
 import discord
 import random
@@ -459,26 +461,80 @@ class GachaGroup(app_commands.Group):
         名前: str,
         金額: int,
         説明: str = "ガチャが引けます。",
-        ロール: discord.Role = None,
+        必須なロール: discord.Role = None,
     ):
         db = interaction.client.async_db["Main"].ServerMoneyGacha
 
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id, "Name": 名前},
-            {
+            {'$set': {
                 "Guild": interaction.guild.id,
                 "Name": 名前,
                 "Money": 金額,
                 "Text": 説明,
                 "Item": [],
-                "Role": ロール.id if ロール else 0,
-            },
+                "Role": 必須なロール.id if 必須なロール else 0,
+            }},
             upsert=True,
         )
 
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title="ガチャを作成しました。", color=discord.Color.green()
+            embed=make_embed.success_embed(
+                title="ガチャを作成しました。"
+            )
+        )
+
+    @app_commands.command(name="delete", description="ガチャを削除します。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def economy_gacha_delete(
+        self,
+        interaction: discord.Interaction,
+        名前: str
+    ):
+        db = interaction.client.async_db["Main"].ServerMoneyGacha
+
+        await db.delete_one(
+            {"Guild": interaction.guild.id, "Name": 名前}
+        )
+
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title="ガチャを削除しました。"
+            )
+        )
+
+    @app_commands.command(name="edit", description="ガチャを編集します。")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def economy_gacha_edit(
+        self,
+        interaction: discord.Interaction,
+        名前: str,
+        新しい名前: str,
+        金額: int = None,
+        説明: str = None
+    ):
+        db = interaction.client.async_db["Main"].ServerMoneyGacha
+
+        dic = {
+            "Guild": interaction.guild.id,
+            "Name": 新しい名前,
+        }
+
+        if not 金額 is None:
+            dic["Money"] = 金額
+
+        if not 説明 is None:
+            dic["Text"] = 説明
+
+        await db.update_one(
+            {"Guild": interaction.guild.id, "Name": 名前},
+            {'$set': dic},
+            upsert=True,
+        )
+
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(
+                title="ガチャを削除しました。"
             )
         )
 
@@ -510,16 +566,16 @@ class GachaGroup(app_commands.Group):
 
         db = interaction.client.async_db["Main"].ServerMoneyGacha
 
-        await db.replace_one(
+        await db.update_one(
             {"Guild": interaction.guild.id, "Name": res.get("Name", "ガチャ名")},
-            {
+            {"$set": {
                 "Guild": interaction.guild.id,
                 "Name": res.get("Name", "ガチャ名"),
                 "Money": res.get("Money", "ガチャ金額"),
                 "Text": res.get("Text", "ガチャ説明"),
                 "Item": [i.get("Name") for i in res.get("Item", [])],
                 "Role": res.get("Role", 0),
-            },
+            }},
             upsert=True,
         )
 
@@ -724,7 +780,50 @@ class GachaGroup(app_commands.Group):
         )
 
     @app_commands.command(
-        name="items", description="ガチャから出るアイテムを設定します。"
+        name="chance", description="ガチャの確立を可視化します。"
+    )
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def economy_gacha_chance(
+        self, interaction: discord.Interaction, ガチャ名: str
+    ):
+        await interaction.response.defer()
+
+        db = interaction.client.async_db["Main"].ServerMoneyGacha
+
+        dbfind = await db.find_one(
+            {"Guild": interaction.guild.id, "Name": ガチャ名}, {"_id": False}
+        )
+        if dbfind is None:
+            return await interaction.response.send_message(
+                ephemeral=True, content="ガチャが見つかりません。"
+            )
+        
+        item_list = dbfind["Item"]
+
+        counts = Counter(item_list)
+        total_count = len(item_list)
+
+        json_data = {
+            "labels": [f"{name} ({count}個)" for name, count in counts.items()],
+            "values": [count / total_count for count in counts.values()],
+            "title": f"ガチャ排出率内訳 (全{total_count}アイテム)",
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "http://localhost:3067/piechart", json=json_data
+            ) as response:
+                if response.status == 200:
+                    io_ = io.BytesIO(await response.read())
+                    await interaction.followup.send(
+                        file=discord.File(io_, filename="gacha_rate.png")
+                    )
+                    io_.close()
+                else:
+                    await interaction.followup.send("グラフの生成に失敗しました。")
+
+    @app_commands.command(
+        name="items", description="ガチャから出るアイテムを確認します。"
     )
     @app_commands.checks.has_permissions(manage_guild=True)
     async def economy_gacha_items(
