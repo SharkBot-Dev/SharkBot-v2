@@ -51,7 +51,7 @@ dependencies = [
     "motor==3.7.1",
     "multidict==6.7.0",
     "numpy==2.4.1",
-    "packaging==25.0",
+    "packaging==26.0",
     "pillow==11.3.0",
     "propcache==0.4.1",
     "pycparser==2.23",
