@@ -663,6 +663,7 @@ class LoggingCog(commands.Cog):
     async def log_setup(
         self, interaction: discord.Interaction, event: app_commands.Choice[str] = None
     ):
+        await interaction.response.defer()
         db = self.bot.async_db["Main"].EventLoggingChannel
 
         query = {"Guild": interaction.guild.id, "Channel": interaction.channel.id}
@@ -701,7 +702,7 @@ class LoggingCog(commands.Cog):
                 upsert=True,
             )
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             embed=make_embed.success_embed(
                 title=f"{event.name if event else 'すべてのイベント'} のログをセットしました。"
             )
