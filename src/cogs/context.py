@@ -469,15 +469,15 @@ async def setup(bot: commands.Bot):
                     view=view,
                 )
                 db = interaction.client.async_db["Main"].LockMessage
-                await db.replace_one(
+                await db.update_one(
                     {"Channel": interaction.channel.id, "Guild": interaction.guild.id},
-                    {
+                    {'$set': {
                         "Channel": interaction.channel.id,
                         "Guild": interaction.guild.id,
                         "Title": message.embeds[0].title,
                         "Desc": message.embeds[0].description,
                         "MessageID": msg.id,
-                    },
+                    }},
                     upsert=True,
                 )
                 return await interaction.response.send_message(
@@ -527,131 +527,47 @@ async def setup(bot: commands.Bot):
 
             @discord.ui.select(
                 cls=discord.ui.Select,
-                placeholder="翻訳先を選択",
+                placeholder="翻訳先を選択 / Select Language",
                 options=[
-                    discord.SelectOption(label="日本語へ (to ja)"),
-                    discord.SelectOption(label="英語へ (to en)"),
+                    discord.SelectOption(label="日本語へ (to ja)", value="ja"),
+                    discord.SelectOption(label="英語へ (to en)", value="en"),
                 ],
             )
-            async def select(
-                self, interaction: discord.Interaction, select: discord.ui.Select
-            ):
-                if select.values[0] == "日本語へ (to ja)":
-                    await interaction.response.defer()
+            async def select(self, interaction: discord.Interaction, select: discord.ui.Select):
+                target_lang = select.values[0]
+                lang_name = "日本語" if target_lang == "ja" else "英語"
+                
+                await interaction.response.defer(ephemeral=True)
 
-                    if not message.content:
-                        if not message.embeds:
-                            embed = discord.Embed(
-                                title="翻訳に失敗しました", color=discord.Color.red()
-                            )
-                            await interaction.followup.send(embed=embed)
-                            return
+                content_to_translate = self.message.clean_content
+                if not content_to_translate and self.message.embeds:
+                    content_to_translate = self.message.embeds[0].description
 
-                        if not message.embeds[0].description:
-                            embed = discord.Embed(
-                                title="翻訳に失敗しました", color=discord.Color.red()
-                            )
-                            await interaction.followup.send(embed=embed)
-                            return
+                if not content_to_translate:
+                    embed = make_embed.error_embed(title="翻訳するテキストが見つかりませんでした")
+                    await interaction.followup.send(embed=embed)
+                    return
 
-                        try:
-                            translated_text = await web_translate.translate(
-                                web_translate.targetToSource("ja"),
-                                "ja",
-                                message.embeds[0].description,
-                            )
+                try:
+                    translated_data = await web_translate.translate(
+                        web_translate.targetToSource(target_lang),
+                        target_lang,
+                        content_to_translate,
+                    )
+                    
+                    translated_text = translated_data.get('text')
 
-                            embed = discord.Embed(
-                                title="翻訳 (日本語 へ)",
-                                description=f"{translated_text.get('text')}",
-                                color=discord.Color.green(),
-                            )
-                            await message.reply(embed=embed)
+                    embed = discord.Embed(
+                        title=f"<:check:1419898127975972937> {lang_name}に翻訳しました。",
+                        description=translated_text,
+                        color=discord.Color.green()
+                    )
+                    embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
+                    await self.message.reply(embed=embed)
 
-                        except Exception:
-                            embed = discord.Embed(
-                                title="翻訳に失敗しました", color=discord.Color.red()
-                            )
-                            await interaction.followup.send(embed=embed)
-                        return
-
-                    try:
-                        translated_text = await web_translate.translate(
-                            web_translate.targetToSource("ja"),
-                            "ja",
-                            message.clean_content,
-                        )
-
-                        embed = discord.Embed(
-                            title="翻訳 (日本語 へ)",
-                            description=f"{translated_text.get('text')}",
-                            color=discord.Color.green(),
-                        )
-                        await message.reply(embed=embed)
-
-                    except Exception:
-                        embed = discord.Embed(
-                            title="翻訳に失敗しました", color=discord.Color.red()
-                        )
-                        await interaction.followup.send(embed=embed)
-                elif select.values[0] == "英語へ (to en)":
-                    await interaction.response.defer()
-
-                    if not message.content:
-                        if not message.embeds:
-                            embed = discord.Embed(
-                                title="翻訳に失敗しました", color=discord.Color.red()
-                            )
-                            await interaction.followup.send(embed=embed)
-                            return
-
-                        if not message.embeds[0].description:
-                            embed = discord.Embed(
-                                title="翻訳に失敗しました", color=discord.Color.red()
-                            )
-                            await interaction.followup.send(embed=embed)
-                            return
-
-                        try:
-                            translated_text = await web_translate.translate(
-                                web_translate.targetToSource("en"),
-                                "en",
-                                message.embeds[0].description,
-                            )
-
-                            embed = discord.Embed(
-                                title="翻訳 (英語 へ)",
-                                description=f"{translated_text.get('text')}",
-                                color=discord.Color.green(),
-                            )
-                            await message.reply(embed=embed)
-
-                        except Exception:
-                            embed = discord.Embed(
-                                title="翻訳に失敗しました", color=discord.Color.red()
-                            )
-                            await interaction.followup.send(embed=embed)
-                        return
-
-                    try:
-                        translated_text = await web_translate.translate(
-                            web_translate.targetToSource("en"),
-                            "en",
-                            message.clean_content,
-                        )
-
-                        embed = discord.Embed(
-                            title="翻訳 (英語 へ)",
-                            description=f"{translated_text.get('text')}",
-                            color=discord.Color.green(),
-                        )
-                        await message.reply(embed=embed)
-
-                    except Exception:
-                        embed = discord.Embed(
-                            title="翻訳に失敗しました", color=discord.Color.red()
-                        )
-                        await interaction.followup.send(embed=embed)
+                except Exception as e:
+                    embed = make_embed.error_embed(title="翻訳に失敗しました")
+                    await interaction.followup.send(embed=embed)
 
         await interaction.response.send_message(
             ephemeral=True,
