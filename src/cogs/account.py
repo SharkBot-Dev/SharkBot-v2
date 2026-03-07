@@ -133,6 +133,15 @@ class AccountCog(commands.Cog):
         self,
         interaction: discord.Interaction
     ):
+        db = interaction.client.async_db["DashboardBot"].Account
+
+        check = await db.find_one({
+            "user_id": interaction.user.id
+        })
+        if not check:
+            await interaction.response.send_message(embed=make_embed.error_embed(title="アカウントが存在しません。"), ephemeral=True)
+            return
+
         await interaction.response.send_message(ephemeral=True, view=discord.ui.View().add_item(discord.ui.Button(label="投票する", url="https://top.gg/ja/bot/1322100616369147924/vote")), embed=make_embed.success_embed(title="コインを受け取る", description="以下のボタンから投票するとコインがもらえます。"))
 
 async def setup(bot):
