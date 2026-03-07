@@ -322,30 +322,43 @@ class Money:
     async def get_server_ranking(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].ServerMoney
 
-        cursor = db.find({"Guild": guild.id})
-        all_users = await cursor.to_list(length=100)
+        pipeline = [
+            {"$match": {"Guild": guild.id}},
+            {
+                "$addFields": {
+                    "total": {
+                        "$add": [
+                            {"$ifNull": ["$count", 0]}, 
+                            {"$ifNull": ["$bank", 0]}
+                        ]
+                    }
+                }
+            },
+            {"$sort": {"total": -1}},
+            {"$limit": 10}
+        ]
+        
+        cursor = db.aggregate(pipeline)
+        ranked_users = await cursor.to_list(length=10)
 
-        if not all_users:
+        if not ranked_users:
             return "このサーバーのランキングはありません。"
 
-        ranked_users = sorted(
-            all_users, key=lambda u: u.get("count", 0) + u.get("bank", 0), reverse=True
-        )[:10]
+        raw_c_n = await self.get_currency_name(guild)
+        c_n = raw_c_n if raw_c_n is not None else "コイン"
 
-        leaderboard_text = f"**{guild.name} のお金持ちランキング**\n\n"
+        lines = []
 
-        c_n = await self.get_currency_name(guild)
-
-        for i, user_data in enumerate(ranked_users, start=1):
-            user_id = user_data["User"]
+        for i, data in enumerate(ranked_users, start=1):
+            user_id = data.get("User")
+            total_money = data.get("total") or 0
+            
             member = guild.get_member(user_id)
+            name = member.display_name if member else f"ID: {user_id}"
+            
+            lines.append(f"{i}. {name} — {total_money:,}{c_n}")
 
-            name = member.display_name if member else f"不明: {user_id}"
-            total_money = user_data.get("count", 0) + user_data.get("bank", 0)
-
-            leaderboard_text += f"{i}. {name} — {total_money:,}{c_n}\n"
-
-        return leaderboard_text
+        return "\n".join(lines)
 
     # 通貨名管理
     async def set_currency_name(self, guild: discord.Guild, name: str):
@@ -434,19 +447,39 @@ class Money:
             {"Guild": guild.id, "ItemName": itemname}, {"_id": False}
         )
         return dbfind
-
+    
     async def get_server_items_list(self, guild: discord.Guild, author: discord.User):
-        text = ""
-        db = self.bot.async_db["Main"].ServerMoneyItems
-        c_n = await self.get_currency_name(guild)
-        async for b in db.find({"Guild": guild.id}):
-            i_n = b.get("ItemName")
-            dbfind = await self.bot.async_db["Main"].ServerMoneyItem.find_one(
-                {"_id": f"{guild.id}-{author.id}-{i_n}"}, {"_id": False}
-            )
-            count = dbfind.get("count") if dbfind else 0
-            text += f"{i_n}({b.get('Money', 0)}{c_n}) .. {count}個\n"
-        return text
+        raw_c_n = await self.get_currency_name(guild)
+        c_n = raw_c_n if raw_c_n is not None else "コイン"
+
+        db_items = self.bot.async_db["Main"].ServerMoneyItems
+        db_user_inventory = self.bot.async_db["Main"].ServerMoneyItem
+
+        items_cursor = db_items.find({"Guild": guild.id})
+        all_items = await items_cursor.to_list(length=100)
+
+        if not all_items:
+            return "このサーバーにアイテムはありません。"
+
+        user_inventory_cursor = db_user_inventory.find({"_id": {"$regex": f"^{guild.id}-{author.id}-"}})
+        user_items = await user_inventory_cursor.to_list(length=100)
+        
+        inventory_dict = {}
+        for entry in user_items:
+            name_part = entry.get("_id", "").split("-")[-1]
+            inventory_dict[name_part] = entry.get("count", 0) or 0
+
+        lines = []
+        
+        for item in all_items:
+            item_name = item.get("ItemName", "不明なアイテム")
+            price = item.get("Money", 0) or 0
+            
+            count = inventory_dict.get(item_name, 0)
+            
+            lines.append(f"**{item_name}** ({price:,}{c_n}) ─ `{count}`個所持")
+
+        return "\n".join(lines)
 
 
 class GachaGroup(app_commands.Group):
