@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>情報・規約 | shb.red</title>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #6495ED;
+            --accent-color: #00d2ff;
+            --bg-dark: #1a1a1a;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: radial-gradient(circle at top right, #2c3e50, #000000);
+            color: white;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 95%;
+            max-width: 800px;
+            margin: 40px 0;
+        }
+
+        .box {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            border-radius: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .icon-wrapper {
+            background: white;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 0 20px rgba(100, 149, 237, 0.5);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            background: linear-gradient(to right, #fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: 0.3s;
+            border-radius: 15px;
+        }
+
+        .tab-btn:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .tab-btn.active {
+            color: white;
+            background: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+            line-height: 1.8;
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.9);
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 15px;
+            margin-top: 25px;
+        }
+
+        ul { padding-left: 20px; }
+        code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: var(--accent-color);
+        }
+
+        .footer-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .footer-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .tab-content::-webkit-scrollbar { width: 6px; }
+        .tab-content::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+
+    <div class="container">
+        <div class="box">
+            <div class="header">
+                <div class="icon-wrapper">
+                    <img src="/static/images/shark.png" width="45" height="45" alt="Shark Icon">
+                </div>
+                <h1>Service Information</h1>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="openTab(event, 'terms')">利用規約</button>
+                <button class="tab-btn" onclick="openTab(event, 'privacy')">プライバシー</button>
+                <button class="tab-btn" onclick="openTab(event, 'dev')">開発者情報</button>
+            </div>
+
+            <div id="terms" class="tab-content active">
+                <h2>1. 利用規約</h2>
+                <p>本サービスを利用することにより、利用者は以下の規約に同意したものとみなされます。</p>
+                <strong>禁止事項:</strong>
+                <ul>
+                    <li>スパムメール、フィッシング詐欺、マルウェア配布目的の利用。</li>
+                    <li>違法コンテンツ（著作権侵害、公序良俗に反するもの）への誘導。</li>
+                    <li>過度な自動リクエストによるサーバーへの負荷。</li>
+                </ul>
+                <strong>免責事項:</strong>
+                <p>本サービスは「現状のまま」提供されます。管理者は、システムの停止やデータ消失、転送先の内容から生じるいかなる損害も責任を負いません。短縮URLの永続的な保持は保証されません。</p>
+            </div>
+
+            <div id="privacy" class="tab-content">
+                <h2>2. プライバシーポリシー</h2>
+                <p>ユーザーのプライバシー保護を重視しています。</p>
+                <strong>収集する情報:</strong>
+                <ul>
+                    <li>入力された元のURL。</li>
+                    <li>解析や不正防止を目的としたアクセスログ（IPアドレス、日時等）。</li>
+                </ul>
+                <strong>情報の利用:</strong>
+                <p>リダイレクト機能の提供、およびサービスの安全維持のみに使用します。法的要請がある場合を除き、第三者に共有することはありません。</p>
+            </div>
+
+            <div id="dev" class="tab-content">
+                <h2>3. 開発者向け情報</h2>
+                <p>軽量・高速なURL短縮プラットフォームです。</p>
+                <strong>技術仕様:</strong>
+                <ul>
+                    <li><strong>Engine:</strong> Python / Flask & SQLite3</li>
+                </ul>
+                <strong>API (Experimental):</strong>
+                <p><code>GET /shorten?url=VALUE</code></p>
+                <p>JSONレスポンスにて短縮URLを返却します。外部アプリからの連携にご利用いただけます。</p>
+            </div>
+
+            <div class="footer-link">
+                <a href="/">← ホームへ戻る</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { "value": 60 },
+                "color": { "value": "#ffffff" },
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.2 },
+                "size": { "value": 2 },
+                "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.1, "width": 1 },
+                "move": { "enable": true, "speed": 1.5 }
+            },
+            "interactivity": {
+                "events": { "onhover": { "enable": true, "mode": "grab" } }
+            },
+            "retina_detect": true
+        });
+    </script>
+</body>
+</html>

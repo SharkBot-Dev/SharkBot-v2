@@ -189,12 +189,17 @@
             color: var(--bg-dark);
         }
 
-        .api-info {
+        .info {
             font-size: 0.75rem;
             margin-top: 25px;
             opacity: 0.5;
             letter-spacing: 0.5px;
         }
+
+        .info a:link { color: white; }
+        .info a:visited { color: white; }
+        .info a:hover { color: white; }
+        .info a:active { color: white; }
 
         code {
             background: rgba(0,0,0,0.3);
@@ -225,8 +230,8 @@
                 <button class="copy-btn" id="copy-btn" onclick="copyToClipboard()">URLをコピー</button>
             </div>
 
-            <p class="api-info">
-                Developer API: <code>/shorten?url={URL}</code>
+            <p class="info">
+                <a href="/info">利用規約・プライバシー・開発者向け情報</a>
             </p>
         </div>
     </div>
