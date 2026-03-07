@@ -89,7 +89,7 @@ class AccountInfo(BaseModel):
     avatar_url: str = Field(..., example="example", description="アバターのURL")
     money: int = Field(..., example="100", description="アカウントの所持金")
 
-@app.get("/account/{userid}", response_model=AccountInfo)
+@app.get("/account/{userid}", response_model=AccountInfo, summary="アカウントの情報を取得", description="アカウントの情報を取得します。", tags=["Account"])
 async def account_info(userid: str):
     try:
         userId = int(userid)
