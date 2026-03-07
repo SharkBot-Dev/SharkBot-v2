@@ -1,4 +1,5 @@
 import os
+import random
 from typing import Optional, List
 
 import asyncio
@@ -44,6 +45,14 @@ async def add_topgg(user_id: str):
         await col.update_one({"_id": int(user_id)}, {"$inc": {"count": 1}})
     else:
         await col.insert_one({"_id": int(user_id), "count": 1})
+    return True
+
+async def add_account_money(user_id: str):
+    col = mongo_client["DashboardBot"].Account
+
+    user_data = await col.find_one({"user_id": int(user_id)})
+    if user_data:
+        await col.update_one({"user_id": int(user_id)}, {"$inc": {"money": random.randint(300, 1300)}})
     return True
 
 @app.get("/", include_in_schema=False)
@@ -190,6 +199,7 @@ async def topgg_vote_webhook(request: Request, authorization: Optional[str] = He
 
     try:
         await add_topgg(data["user"])
+        await add_account_money(data["user"])
         
         webhook_url = os.environ.get("WEBHOOK")
         if webhook_url:

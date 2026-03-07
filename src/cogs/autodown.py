@@ -125,11 +125,10 @@ class AutoDownCog(commands.Cog):
             if voice_state and voice_state.channel:
                 try:
                     await after.move_to(None)
-                    print(f"[AutoDown] {after} をVCから切断しました。")
                 except discord.Forbidden:
-                    print(f"[AutoDown] {after} を切断できません（権限不足）")
+                    pass
                 except discord.HTTPException as e:
-                    print(f"[AutoDown] HTTPエラー: {e}")
+                    pass
 
     @commands.Cog.listener("on_presence_update")
     async def on_presence_update(self, before: discord.Member, after: discord.Member):

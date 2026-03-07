@@ -467,6 +467,43 @@ class AdminCog(commands.Cog):
                 )
             )
 
+    @admin.command(name="money", description="コインを追加・削除します。")
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="追加", value="add"),
+            app_commands.Choice(name="削除", value="remove"),
+            app_commands.Choice(name="設定", value="set"),
+        ]
+    )
+    async def money_admin(self, interaction: discord.Interaction, ユーザー: discord.User, 操作: app_commands.Choice[str], 数値: int):
+        if interaction.user.id != 1335428061541437531:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="あなたはSharkBotのオーナーではないため実行できません。"
+                ),
+            )
+
+        await interaction.response.defer()
+
+        db = interaction.client.async_db["DashboardBot"].Account
+
+        check = await db.find_one({
+            "user_id": ユーザー.id
+        })
+        if not check:
+            await interaction.followup.send(embed=make_embed.error_embed(title="アカウントが存在しません。"))
+            return
+        
+        if 操作.value == "add":
+            await db.update_one({"user_id": ユーザー.id}, {"$inc": {"money": 数値}})
+        elif 操作.value == "remove":
+            await db.update_one({"user_id": ユーザー.id}, {"$inc": {"money": 数値}})
+        else:
+            await db.update_one({"user_id": ユーザー.id}, {"$set": {"money": 数値}})
+
+        await interaction.followup.send(embed=make_embed.success_embed(title=f"{ユーザー.name}のコインを{操作.name}しました。"))
+
     @commands.Cog.listener("on_guild_join")
     async def on_guild_join_blockuser(self, guild: discord.Guild):
         # await guild.leave()
