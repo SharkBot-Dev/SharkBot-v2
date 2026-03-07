@@ -11,114 +11,248 @@
 
     <title>短縮URLサービス | shb.red</title>
 
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
+        :root {
+            --primary-color: #6495ED;
+            --accent-color: #00d2ff;
+            --bg-dark: #1a1a1a;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
         body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #353535;
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: radial-gradient(circle at top right, #2c3e50, #000000);
+            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            overflow: hidden;
+        }
+
+        /* 背景アニメーション用 */
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 90%;
+            max-width: 480px;
         }
 
         .box {
-            background-color: cornflowerblue;
-            color: white;
-            padding: 40px 20px;
-            border-radius: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 50px 30px;
+            border-radius: 40px;
             text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            max-width: 500px;
-            width: 90%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            animation: fadeIn 0.8s ease-out;
         }
 
-        h1 { margin-bottom: 10px; font-size: 1.8rem; color: #fff; }
-        h4 { font-weight: normal; opacity: 0.9; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .icon-wrapper {
+            background: white;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 20px rgba(100, 149, 237, 0.5);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: -1px;
+            background: linear-gradient(to right, #fff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h4 {
+            font-weight: 300;
+            opacity: 0.8;
+            margin-top: 5px;
+            margin-bottom: 35px;
+        }
 
         .input-group {
-            margin-top: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            position: relative;
+            margin-top: 20px;
         }
 
         input[type="url"] {
-            padding: 12px 20px;
-            border-radius: 25px;
-            border: none;
-            background-color: rgba(0, 0, 0, 0.8);
+            width: 100%;
+            padding: 18px 25px;
+            box-sizing: border-box;
+            border-radius: 30px;
+            border: 2px solid transparent;
+            background: rgba(0, 0, 0, 0.4);
             color: white;
             font-size: 1rem;
             outline: none;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
         }
 
-        button {
-            padding: 12px 25px;
-            background-color: #000;
-            color: #fff;
+        input[type="url"]:focus {
+            border-color: var(--primary-color);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 15px rgba(100, 149, 237, 0.3);
+        }
+
+        button.main-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary-color);
+            color: white;
             border: none;
-            border-radius: 25px;
+            border-radius: 30px;
             cursor: pointer;
             font-weight: bold;
-            transition: transform 0.2s, background-color 0.2s;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
-        button:hover {
-            background-color: #333;
-            transform: scale(1.05);
+        button.main-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(100, 149, 237, 0.4);
+            filter: brightness(1.1);
+        }
+
+        button.main-btn:active {
+            transform: translateY(0);
         }
 
         #result {
             margin-top: 30px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            word-break: break-all;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed var(--glass-border);
+            border-radius: 20px;
             display: none;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; scale: 0.9; }
+            to { opacity: 1; scale: 1; }
         }
 
         .short-url-link {
-            color: #fff;
+            display: block;
+            margin: 10px 0;
+            color: var(--accent-color);
+            font-size: 1.2rem;
             font-weight: bold;
-            text-decoration: underline;
+            text-decoration: none;
+            word-break: break-all;
         }
 
         .copy-btn {
-            margin-top: 10px;
-            font-size: 0.8rem;
-            padding: 5px 15px;
-            background: #fff;
-            color: cornflowerblue;
+            margin-top: 15px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 15px;
+            border: 1px solid white;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: white;
+            color: var(--bg-dark);
+        }
+
+        .api-info {
+            font-size: 0.75rem;
+            margin-top: 25px;
+            opacity: 0.5;
+            letter-spacing: 0.5px;
+        }
+
+        code {
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
-    <div class="box">
-        <img src="/static/images/shark.png" width="80" height="80" alt="Shark Icon">
-        <h1>shb.red</h1>
-        <h4>SharkBotのURL短縮サービス</h4>
+    <div id="particles-js"></div>
 
-        <div class="input-group">
-            <input type="url" id="url" placeholder="https://example.com" required>
-            <button onclick="create_url()">短縮URLを作成</button>
+    <div class="container">
+        <div class="box">
+            <div class="icon-wrapper">
+                <img src="/static/images/shark.png" width="60" height="60" alt="Shark Icon">
+            </div>
+            <h1>shb.red</h1>
+            <h4>URL Shortener</h4>
+
+            <div class="input-group">
+                <input type="url" id="url" placeholder="https://example.com/very-long-link" required>
+                <button class="main-btn" onclick="create_url()" id="submit-btn">短縮URLを作成</button>
+            </div>
+
+            <div id="result">
+                <div style="font-size: 0.8rem; opacity: 0.8;">短縮URLが完成しました</div>
+                <div id="url-container"></div>
+                <button class="copy-btn" id="copy-btn" onclick="copyToClipboard()">URLをコピー</button>
+            </div>
+
+            <p class="api-info">
+                Developer API: <code>/shorten?url={URL}</code>
+            </p>
         </div>
-
-        <div id="result">
-            <div id="url-container"></div>
-            <button class="copy-btn" id="copy-btn" onclick="copyToClipboard()">コピーする</button>
-        </div>
-
-        <p style="font-size: 0.7rem; margin-top: 20px; opacity: 0.7;">
-            API: /shorten?url=URL で利用可能
-        </p>
     </div>
 
     <script>
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { "value": 80 },
+                "color": { "value": "#ffffff" },
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.2 },
+                "size": { "value": 3 },
+                "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.1, "width": 1 },
+                "move": { "enable": true, "speed": 2 }
+            },
+            "interactivity": {
+                "events": { "onhover": { "enable": true, "mode": "grab" } }
+            },
+            "retina_detect": true
+        });
+
         async function create_url() {
             const urlInput = document.getElementById('url');
             const resultDiv = document.getElementById('result');
             const urlContainer = document.getElementById('url-container');
+            const submitBtn = document.getElementById('submit-btn');
             const url = urlInput.value.trim();
 
             if (!url) {
@@ -129,9 +263,12 @@
             try {
                 new URL(url);
             } catch (e) {
-                alert('有効なURLを入力してください（http:// または https:// から始めてください）');
+                alert('有効なURLを入力してください（http:// から始めてください）');
                 return;
             }
+
+            submitBtn.innerText = '作成中...';
+            submitBtn.disabled = true;
 
             try {
                 const response = await fetch(`/shorten?url=${encodeURIComponent(url)}`);
@@ -144,11 +281,13 @@
 
                 resultDiv.style.display = 'block';
                 urlContainer.innerHTML = `
-                    <span>完成しました：</span><br>
                     <a href="${data.short_url}" class="short-url-link" target="_blank" id="generated-url">${data.short_url}</a>
                 `;
             } catch (error) {
                 alert('通信エラーが発生しました。');
+            } finally {
+                submitBtn.innerText = '短縮URLを作成';
+                submitBtn.disabled = false;
             }
         }
 
@@ -156,14 +295,16 @@
             const urlText = document.getElementById('generated-url').textContent;
             navigator.clipboard.writeText(urlText).then(() => {
                 const btn = document.getElementById('copy-btn');
-                btn.textContent = 'コピー完了！';
-                btn.style.backgroundColor = '#4CAF50';
-                btn.style.color = '#fff';
+                const originalText = btn.textContent;
+                
+                btn.textContent = 'Copied! ✨';
+                btn.style.backgroundColor = '#fff';
+                btn.style.color = '#333';
                 
                 setTimeout(() => {
-                    btn.textContent = 'コピーする';
-                    btn.style.backgroundColor = '#fff';
-                    btn.style.color = 'cornflowerblue';
+                    btn.textContent = originalText;
+                    btn.style.backgroundColor = 'transparent';
+                    btn.style.color = 'white';
                 }, 2000);
             });
         }
