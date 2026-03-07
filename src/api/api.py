@@ -8,7 +8,7 @@ import redis.asyncio as redis
 from motor.motor_asyncio import AsyncIOMotorClient
 
 import dotenv
-from fastapi import FastAPI, Request, Header, HTTPException, Body
+from fastapi import FastAPI, Request, Header, HTTPException, Body, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -59,6 +59,8 @@ async def add_account_money(user_id: str):
 async def index():
     return RedirectResponse(url="/docs")
 
+# ==== Bot関連のAPI ====
+
 class Status(BaseModel):
     guilds_count: str = Field(..., example="100", description="Botの導入数")
     users_count: str = Field(..., example="1000", description="Botの認識できるユーザー数")
@@ -78,6 +80,42 @@ async def status_bot():
         "shards_count": shards_count,
         "bot_ping": bot_ping
     }
+
+# ==== アカウント関連のAPI ====
+
+class AccountInfo(BaseModel):
+    user_id: str = Field(..., example="123456789012345678", description="ユーザーId")
+    user_name: str = Field(..., example="example", description="ユーザー名")
+    avatar_url: str = Field(..., example="example", description="アバターのURL")
+    money: int = Field(..., example="100", description="アカウントの所持金")
+
+@app.get("/account/{userid}", response_model=AccountInfo)
+async def account_info(userid: str):
+    try:
+        userId = int(userid)
+    except ValueError:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "指定形式が正しくありません"}
+        )
+
+    col = mongo_client["DashboardBot"].Account
+    dbfind = await col.find_one({"user_id": userId}, {"_id": False})
+    
+    if not dbfind:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={"error": "アカウントが存在しません。"}
+        )
+    
+    return {
+        "user_id": userid,
+        "user_name": dbfind.get('user_name'),
+        "avatar_url": dbfind.get('avatar_url'),
+        "money": dbfind.get('money')
+    }
+
+# ==== サーバー内経済関連のAPI ====
 
 class EconomyInfo(BaseModel):
     currency: str = Field(..., example="コイン", description="サーバー固有の通貨名")
@@ -175,6 +213,8 @@ async def economy_patchmoney(
         raise HTTPException(status_code=404, detail="指定されたユーザーが見つかりません")
 
     return {"success": True}
+
+# ==== 検索API ====
 
 class NewsInfo(BaseModel):
     news_url: str = Field(..., example="ニュースのURL", description="ニュースのURL")
