@@ -325,198 +325,6 @@ class SayGroup(app_commands.Group):
             ).set_footer(text="コピーして貼り付けると会話中にしようできます。"),
         )
 
-
-class AudioGroup(app_commands.Group):
-    def __init__(self):
-        super().__init__(name="audio", description="音声系のコマンドです。")
-
-    @app_commands.command(name="tts", description="テキストを音声にします。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.choices(
-        声の種類=[
-            app_commands.Choice(name="ゆっくり霊夢", value="reimu"),
-            app_commands.Choice(name="ゆっくり魔理沙", value="marisa"),
-            app_commands.Choice(name="ひろゆき", value="hiroyuki"),
-        ]
-    )
-    async def tts_(
-        self,
-        interaction: discord.Interaction,
-        テキスト: str,
-        声の種類: app_commands.Choice[str],
-    ):
-        await interaction.response.defer()
-        if 声の種類.value == "reimu":
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"https://www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f1&kanji={urllib.parse.quote(テキスト)}"
-                ) as response:
-                    io_ = io.BytesIO(await response.read())
-                    await interaction.followup.send(
-                        file=discord.File(io_, filename="tts.mp3")
-                    )
-                    io_.close()
-        elif 声の種類.value == "marisa":
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"https://www.yukumo.net/api/v2/aqtk1/koe.mp3?type=f2&kanji={urllib.parse.quote(テキスト)}"
-                ) as response:
-                    io_ = io.BytesIO(await response.read())
-                    await interaction.followup.send(
-                        file=discord.File(io_, filename="tts.mp3")
-                    )
-                    io_.close()
-        elif 声の種類.value == "hiroyuki":
-            json_data = {
-                "variant": "maker-tts",
-                "text": テキスト,
-            }
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    f"https://backend.coefont.cloud/coefonts/19d55439-312d-4a1d-a27b-28f0f31bedc5/try",
-                    json=json_data,
-                ) as response:
-                    j = await response.json()
-                    if not j.get("location"):
-                        return await interaction.followup.send(
-                            embed=discord.Embed(
-                                title="音声生成に失敗しました。",
-                                color=discord.Color.red(),
-                            )
-                        )
-                    async with session.get(j["location"]) as response_wav:
-                        io_ = io.BytesIO(await response_wav.read())
-                        await interaction.followup.send(
-                            file=discord.File(io_, filename="tts.wav")
-                        )
-                        io_.close()
-
-    @app_commands.command(name="distortion", description="音声を音割れさせます。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def distortion(
-        self, interaction: discord.Interaction, 音声: discord.Attachment
-    ):
-        MAX_IMAGE_SIZE = 5 * 1024 * 1024
-        if 音声.size > MAX_IMAGE_SIZE:
-            await interaction.response.send_message(
-                f"音声は最大 5MB まで対応しています。", ephemeral=True
-            )
-            return
-
-        await interaction.response.defer()
-        await aiofiles.os.makedirs(
-            f"files/static/{interaction.user.id}/", exist_ok=True
-        )
-
-        input_audio = f"files/static/{interaction.user.id}/{uuid.uuid4()}.mp3"
-        mp3_file = f"{uuid.uuid4()}.mp3"
-        output_audio = f"files/static/{interaction.user.id}/{mp3_file}"
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(音声.url) as resp:
-                resp.raise_for_status()
-                async with aiofiles.open(input_audio, "wb") as f:
-                    await f.write(await resp.read())
-
-        cmd = ["ffmpeg", "-i", input_audio, "-af", "volume=31dB", output_audio]
-
-        process = await asyncio.create_subprocess_exec(
-            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-
-        stdout, stderr = await process.communicate()
-
-        if process.returncode != 0:
-            await interaction.followup.send(f"音声処理中にエラーが発生しました。")
-            return
-
-        await interaction.followup.send(
-            file=discord.File(output_audio, filename="distortion.mp3")
-        )
-
-
-class MovieGroup(app_commands.Group):
-    def __init__(self):
-        super().__init__(name="movie", description="動画生成系のコマンドです。")
-
-    @app_commands.command(
-        name="sea", description="海の背景の動画に画像を組み合わせます。"
-    )
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def sea(self, interaction: discord.Interaction, 画像: discord.Attachment):
-        return await interaction.response.send_message(
-            ephemeral=True,
-            embed=make_embed.error_embed(
-                title="現在メンテナンス中です。", description="よろしくお願いします。"
-            ),
-        )
-
-        MAX_IMAGE_SIZE = 5 * 1024 * 1024
-        if 画像.size > MAX_IMAGE_SIZE:
-            await interaction.response.send_message(
-                f"画像は最大 5MB まで対応しています。", ephemeral=True
-            )
-            return
-
-        await interaction.response.defer()
-        await aiofiles.os.makedirs(
-            f"files/static/{interaction.user.id}/", exist_ok=True
-        )
-
-        input_video = "data/sea.mp4"
-        input_image = f"files/static/{interaction.user.id}/{uuid.uuid4()}.png"
-        mp4_file = f"{uuid.uuid4()}.mp4"
-        output_video = f"files/static/{interaction.user.id}/{mp4_file}"
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(画像.url) as resp:
-                resp.raise_for_status()
-                async with aiofiles.open(input_image, "wb") as f:
-                    await f.write(await resp.read())
-
-        def resize_image():
-            img = Image.open(input_image)
-            res_img = img.resize((300, 300))
-            res_img.save(input_image, format="png")
-            return
-
-        await asyncio.to_thread(resize_image)
-
-        cmd = [
-            "ffmpeg",
-            "-y",
-            "-i",
-            input_video,
-            "-i",
-            input_image,
-            "-filter_complex",
-            "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2",
-            output_video,
-        ]
-
-        process = await asyncio.create_subprocess_exec(
-            *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-
-        stdout, stderr = await process.communicate()
-
-        filepath = f"https://file.sharkbot.xyz/static/{interaction.user.id}/{mp4_file}"
-
-        await interaction.followup.send(
-            embed=discord.Embed(
-                title="海の背景の動画に画像を組み合わせた動画",
-                description="一日の終わりにファイルが削除されます。",
-                color=discord.Color.green(),
-            ),
-            view=discord.ui.View().add_item(
-                discord.ui.Button(label="結果を確認する", url=filepath)
-            ),
-        )
-
-
 class TextGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="text", description="テキスト系の面白いコマンド")
@@ -930,55 +738,6 @@ class NounaiGroup(app_commands.Group):
             )
         )
 
-    @app_commands.command(name="kakeizu", description="家系図メーカーで遊びます")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def kakeizu(self, interaction: discord.Interaction, 名前: str):
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title="家系図メーカー", color=discord.Color.green()
-            ).set_image(
-                url=f"https://usokomaker.com/kakeizu_fantasy/r/img/{urllib.parse.quote(名前)}.gif"
-            )
-        )
-
-    @app_commands.command(name="busyo", description="武将メーカーで遊びます")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def busyo(self, interaction: discord.Interaction, 名前: str):
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title="武将メーカー", color=discord.Color.green()
-            ).set_image(
-                url=f"https://usokomaker.com/busyo/img/{urllib.parse.quote(名前)}.gif"
-            )
-        )
-
-    @app_commands.command(name="kabuto", description="兜メーカーで遊びます")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def kabuto(self, interaction: discord.Interaction, 名前: str):
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title="兜メーカー", color=discord.Color.green()
-            ).set_image(
-                url=f"https://usokomaker.com/kabuto/img/{urllib.parse.quote(名前)}.gif"
-            )
-        )
-
-    @app_commands.command(name="tenshoku", description="転職メーカーで遊びます")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def tenshoku(self, interaction: discord.Interaction, 名前: str):
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title="転職メーカー", color=discord.Color.green()
-            ).set_image(
-                url=f"https://usokomaker.com/tenshoku/img/{urllib.parse.quote(名前)}.gif"
-            )
-        )
-
-
 class AnimalGroup(app_commands.Group):
     def __init__(self):
         super().__init__(name="animal", description="動物系の面白いコマンド")
@@ -1343,7 +1102,6 @@ class ImageGroup(app_commands.Group):
         elif 背景色.value == "blue":
             back = (128, 124, 247)
             text = (0, 0, 0)
-        c = 0
 
         pattern = r"<(?:(@!?|#|@&)(\d+))>"
 
@@ -1364,33 +1122,19 @@ class ImageGroup(app_commands.Group):
 
         content = re.sub(pattern, replacer, 発言)
 
-        while True:
-            if c > 8:
-                return await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="予期しないエラーが発生しました。",
-                        color=discord.Color.red(),
-                    )
-                )
-            miq_ = await miq.make_quote_async(
-                ユーザー.display_name, content, av, back, text, color, negapoji, True
-            )
-            image_binary = io.BytesIO()
-            await asyncio.to_thread(miq_.save, image_binary, "PNG")
-            image_binary.seek(0)
-            try:
-                file = discord.File(fp=image_binary, filename="fake_quote.png")
-                await interaction.followup.send(
-                    file=file, content=f"-# {c}回再試行しました。"
-                )
-            except aiohttp.ClientOSError:
-                c += 1
-                image_binary.close()
-                await asyncio.sleep(0.5)
-                continue
-            image_binary.close()
-            await quest.quest_clear(interaction, "miq")
-            return
+        miq_ = await miq.make_quote_async(
+            ユーザー.display_name, content, av, back, text, color, negapoji, True
+        )
+        image_binary = io.BytesIO()
+        await asyncio.to_thread(miq_.save, image_binary, "PNG")
+        image_binary.seek(0)
+        file = discord.File(fp=image_binary, filename="fake_quote.png")
+        await interaction.followup.send(
+            file=file
+        )
+        image_binary.close()
+        await quest.quest_clear(interaction, "miq")
+        return
 
     @app_commands.command(name="ascii", description="アスキーアートを作成します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -1453,125 +1197,17 @@ class ImageGroup(app_commands.Group):
                     return output
             return image
 
-        c = 0
-        while True:
-            if c > 8:
-                return await interaction.followup.send(
-                    embed=discord.Embed(
-                        title="予期しないエラーが発生しました。",
-                        color=discord.Color.red(),
-                    ),
-                    ephemeral=True,
-                )
-
-            img = io.BytesIO(await 添付ファイル.read())
-            try:
-                image = await asyncio.to_thread(make_image, タイプ.name, img)
-                await interaction.followup.send(
-                    file=discord.File(image, filename=f"{タイプ.name}.png"),
-                    content=f"-# {c}回再試行しました。",
-                    ephemeral=True,
-                )
-            except Exception as e:
-                c += 1
-                await asyncio.sleep(0.5)
-                continue
-            finally:
-                img.close()
-                image.close()
-            return
-
-    @app_commands.command(name="profile", description="自己紹介カードを作成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def profile_card(self, interaction: discord.Interaction):
-        class CardModal(discord.ui.Modal):
-            def __init__(self):
-                super().__init__(title="自己紹介カードを作成", timeout=180)
-
-            introduction = discord.ui.Label(
-                text="自己紹介を入力",
-                description="自己紹介を入力してください。",
-                component=discord.ui.TextInput(
-                    style=discord.TextStyle.long, required=True
-                ),
+        img = io.BytesIO(await 添付ファイル.read())
+        try:
+            image = await asyncio.to_thread(make_image, タイプ.name, img)
+            await interaction.followup.send(
+                file=discord.File(image, filename=f"{タイプ.name}.png"),
+                ephemeral=True,
             )
-
-            async def on_submit(self, interaction_: discord.Interaction):
-                await interaction_.response.defer()
-
-                assert isinstance(self.introduction.component, discord.ui.TextInput)
-
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(
-                        str(
-                            interaction.user.avatar.url
-                            if interaction.user.avatar
-                            else interaction.user.default_avatar.url
-                        )
-                    ) as resp:
-                        avatar_bytes = await resp.read()
-
-                def make_card(
-                    user: discord.User, avatar_bytes: io.BytesIO, introduction: str
-                ):
-                    img = Image.new("RGB", (600, 300), color=(54, 57, 63))
-                    draw = ImageDraw.Draw(img)
-
-                    try:
-                        font_title = ImageFont.truetype("data/DiscordFont.ttf", 30)
-                        font_text = ImageFont.truetype("data/DiscordFont.ttf", 20)
-                    except:
-                        font_title = ImageFont.load_default()
-                        font_text = ImageFont.load_default()
-
-                    avatar = Image.open(avatar_bytes).convert("RGB")
-                    avatar = avatar.resize((128, 128))
-
-                    mask = Image.new("L", avatar.size, 0)
-                    mask_draw = ImageDraw.Draw(mask)
-                    mask_draw.ellipse((0, 0, 128, 128), fill=255)
-                    img.paste(avatar, (30, 30), mask)
-
-                    draw.text(
-                        (180, 40),
-                        f"{user.name}#{user.discriminator}",
-                        font=font_title,
-                        fill=(255, 255, 255),
-                    )
-                    draw.text(
-                        (180, 100),
-                        f"ID: {user.id}",
-                        font=font_text,
-                        fill=(200, 200, 200),
-                    )
-                    draw.text(
-                        (30, 200),
-                        f"自己紹介: {introduction}",
-                        font=font_text,
-                        fill=(255, 255, 255),
-                    )
-
-                    image_binary = io.BytesIO()
-
-                    img.save(image_binary, "PNG")
-                    image_binary.seek(0)
-                    return image_binary
-
-                a_io = io.BytesIO(avatar_bytes)
-
-                i = await asyncio.to_thread(
-                    make_card, interaction.user, a_io, self.introduction.component.value
-                )
-                a_io.close()
-
-                await interaction_.followup.send(
-                    file=discord.File(i, filename="profile.png")
-                )
-                i.close()
-
-        await interaction.response.send_modal(CardModal())
-
+        finally:
+            img.close()
+            image.close()
+        return
 
 class FunCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -1588,8 +1224,6 @@ class FunCog(commands.Cog):
     fun.add_command(ImageGroup())
     fun.add_command(AnimalGroup())
     fun.add_command(NounaiGroup())
-    fun.add_command(MovieGroup())
-    fun.add_command(AudioGroup())
     fun.add_command(SayGroup())
     fun.add_command(BirthdayGroup())
 
