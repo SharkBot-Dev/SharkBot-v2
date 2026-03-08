@@ -1310,7 +1310,7 @@ class FunCog(commands.Cog):
                     if ca == 11:
                         await wh.send(
                             content=await markov.generate_text(
-                                HIROYUKI_TEXT, message.clean_content[:50], 100
+                                HIROYUKI_TEXT, message.clean_content[:50], 20
                             ),
                             username="パワー系ひろゆき",
                             avatar_url="https://assets.st-note.com/production/uploads/images/152150583/rectangle_large_type_2_8a80ddb83cbc1b260fe6b958986ca4bd.jpeg?width=1280",
@@ -1333,20 +1333,13 @@ class FunCog(commands.Cog):
 
                     await wh.send(
                         content=await markov.generate_text(
-                            HIROYUKI_TEXT, message.clean_content[:50], 100
+                            HIROYUKI_TEXT, message.clean_content[:30], 20
                         ),
                         username="ひろゆき",
                         avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg",
                     )
 
-                r = random.randint(0, 2)
-
-                if r == 0:
-                    await send_hiroyuki()
-                else:
-                    for _ in range(0, r):
-                        await send_hiroyuki()
-                        await asyncio.sleep(1)
+                await send_hiroyuki()
 
         except Exception as e:
             await db.delete_one({"Guild": message.guild.id})

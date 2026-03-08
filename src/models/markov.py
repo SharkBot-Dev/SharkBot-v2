@@ -28,12 +28,19 @@ Bot相手にイラついて恥ずかしくないの？w
 事故物件でビデオと回しててワンちゃん何か撮れたら
 YouTubeとかですげー再生数伸びるんで
 データなんかねえよ
+子どものことを考えるのであれば、努力をすれば報われると教えてあげること
+学校でしか学べない価値ってなんだろう、、
+目の前にわからないことがあったときに、先生に聞く能力よりも、ググって調べる能力が高くないと、プログラミングはできません
+やらない理由を作る人が多いんですよね
+好きなものは好き。だって好きだから
+人のことなんか放っておいて、自分のことだけ考えていればいいんです
 """
 
 
 async def generate_text(text: str, started_word: str, max_words: int = 50):
     loop = asyncio.get_running_loop()
-    tokenizer = await loop.run_in_executor(None, Tokenizer)
+
+    tokenizer = await loop.run_in_executor(None, Tokenizer) 
 
     words = [
         token.surface
@@ -41,37 +48,35 @@ async def generate_text(text: str, started_word: str, max_words: int = 50):
     ]
 
     markov = {}
-    for i in range(len(words) - 2):
-        key = (words[i], words[i + 1])
-        next_word = words[i + 2]
+    for i in range(len(words) - 3):
+        key = (words[i], words[i + 1], words[i + 2])
+        next_word = words[i + 3]
         markov.setdefault(key, []).append(next_word)
 
-    def generate_sentence(start_word=None, max_words=50):
-        if start_word:
-            candidates = [k for k in markov.keys() if start_word in k]
-            start = (
-                random.choice(candidates)
-                if candidates
-                else random.choice(list(markov.keys()))
-            )
-        else:
-            start = random.choice(list(markov.keys()))
-
-        sentence = [start[0], start[1]]
-        for _ in range(max_words):
-            key = tuple(sentence[-2:])
+    def generate_sentence(start_word, max_len):
+        candidates = [k for k in markov.keys() if start_word in k]
+        start = random.choice(candidates) if candidates else random.choice(list(markov.keys()))
+        
+        sentence = list(start)
+        
+        for _ in range(max_len):
+            key = tuple(sentence[-3:])
             if key in markov:
                 next_word = random.choice(markov[key])
                 sentence.append(next_word)
-                if next_word in ("。", "！", "？"):
+                
+                if next_word == "。":
+                    conversational_endings = ["？", "。"]
+                    if random.random() < 0.3:
+                        sentence[-1] = random.choice(conversational_endings)
                     break
             else:
                 break
+        
         return "".join(sentence)
 
     gen_text = await loop.run_in_executor(
         None, partial(generate_sentence, started_word, max_words)
     )
-    if gen_text.startswith(started_word):
-        return gen_text
-    return started_word + gen_text
+        
+    return gen_text
