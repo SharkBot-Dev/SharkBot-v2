@@ -79,4 +79,4 @@ async def generate_text(text: str, started_word: str, max_words: int = 50):
         None, partial(generate_sentence, started_word, max_words)
     )
         
-    return gen_text
+    return gen_text.removeprefix("の").removeprefix("？")

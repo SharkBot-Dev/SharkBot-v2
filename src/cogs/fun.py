@@ -1310,7 +1310,7 @@ class FunCog(commands.Cog):
                     if ca == 11:
                         await wh.send(
                             content=await markov.generate_text(
-                                HIROYUKI_TEXT, message.clean_content[:50], 20
+                                HIROYUKI_TEXT, message.clean_content[:50], 50
                             ),
                             username="パワー系ひろゆき",
                             avatar_url="https://assets.st-note.com/production/uploads/images/152150583/rectangle_large_type_2_8a80ddb83cbc1b260fe6b958986ca4bd.jpeg?width=1280",
@@ -1333,7 +1333,7 @@ class FunCog(commands.Cog):
 
                     await wh.send(
                         content=await markov.generate_text(
-                            HIROYUKI_TEXT, message.clean_content[:30], 20
+                            HIROYUKI_TEXT, message.clean_content[:30], 50
                         ),
                         username="ひろゆき",
                         avatar_url="https://dol.ismcdn.jp/mwimgs/d/5/-/img_88f89f52d1e1833ee8de671a178c006544566.jpg",
