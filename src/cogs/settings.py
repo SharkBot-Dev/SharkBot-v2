@@ -799,8 +799,8 @@ class SettingCog(commands.Cog):
             await asyncio.sleep(3)
 
             try:
-                embed = discord.Embed(
-                    title="ロールが復元されました。", color=discord.Color.green()
+                embed = make_embed.success_embed(
+                    title="ロールが復元されました。"
                 )
                 if added_roles:
                     embed.add_field(name="復元したロール", value="\n".join(added_roles))

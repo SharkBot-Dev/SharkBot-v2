@@ -9,25 +9,8 @@ import datetime
 class WelcomeCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.join_cache = {}
         print("init -> WelcomeCog")
-
-    async def get_user_color_welcome(self, user: discord.User):
-        db = self.bot.async_db["Main"].UserColor
-        try:
-            dbfind = await db.find_one({"User": user.id}, {"_id": False})
-        except:
-            return discord.Color.green()
-        if dbfind is None:
-            return discord.Color.green()
-        if dbfind["Color"] == "red":
-            return discord.Color.red()
-        elif dbfind["Color"] == "yellow":
-            return discord.Color.yellow()
-        elif dbfind["Color"] == "blue":
-            return discord.Color.blue()
-        elif dbfind["Color"] == "random":
-            return discord.Color.random()
-        return discord.Color.green()
 
     @commands.Cog.listener("on_member_join")
     async def on_member_join_welcome_card(self, member: discord.Member):
@@ -77,41 +60,43 @@ class WelcomeCog(commands.Cog):
             return
 
     @commands.Cog.listener("on_member_join")
-    async def on_member_join_sokunuke_rta(self, member: discord.Member):
-        g = member.guild
+    async def on_member_join_rta_cache(self, member: discord.Member):
         db = self.bot.async_db["Main"].FastGoodByeRTAMessage
-
-        try:
-            dbfind = await db.find_one({"Guild": g.id}, {"_id": False})
-        except Exception as e:
-            print(f"DB error: {e}")
-            return
-
+        dbfind = await db.find_one({"Guild": member.guild.id}, {"_id": False})
+        
         if not dbfind:
             return
 
-        ch = g.get_channel(dbfind.get("Channel", 0))
-        if not ch:
+        self.join_cache[member.id] = member.joined_at or datetime.datetime.now(datetime.timezone.utc)
+
+    @commands.Cog.listener("on_member_remove")
+    async def on_member_remove_rta(self, member: discord.Member):
+        g = member.guild
+        
+        db = self.bot.async_db["Main"].FastGoodByeRTAMessage
+        dbfind = await db.find_one({"Guild": g.id}, {"_id": False})
+        
+        if not dbfind or not (ch := g.get_channel(dbfind.get("Channel", 0))):
             return
 
-        def check(m: discord.Member):
-            return m.guild.id == g.id and m.id == member.id
-
-        try:
-            m = await self.bot.wait_for("member_remove", check=check, timeout=60)
-        except asyncio.TimeoutError:
-            return
-        except Exception as e:
-            print(f"wait_for error: {e}")
+        join_time = self.join_cache.pop(member.id, member.joined_at)
+        
+        if not join_time:
             return
 
-        joined_after = datetime.datetime.now(datetime.timezone.utc) - member.joined_at
+        now = datetime.datetime.now(datetime.timezone.utc)
+        duration = now - join_time
+        seconds = duration.total_seconds()
+
+        if seconds > 60:
+            return
 
         embed = discord.Embed(
-            title=f"{m.name} さんが即抜けしたよ・・",
+            title=f"{member.name} さんが即抜けしました。",
             color=discord.Color.yellow(),
-            description=f"{round(joined_after.seconds, 6)} 秒で即抜けしました。",
-        ).set_thumbnail(url=m.display_avatar.url)
+            description=f"**{seconds:.2f}** 秒で即抜けしました。",
+        ).set_thumbnail(url=member.display_avatar.url)
+        
         await ch.send(embed=embed)
 
     @commands.Cog.listener("on_member_join")
