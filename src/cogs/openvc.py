@@ -11,7 +11,7 @@ class OpenVCCog(commands.Cog):
         self.bot = bot
         print("init -> OpenVCCog")
 
-    openvc = app_commands.Group(name="openvc", description="ボイスチャットの掲示板関連のコマンドです。")
+    openvc = app_commands.Group(name="openvc", description="ボイスチャットの掲示板関連のコマンドです。", allowed_installs=app_commands.AppInstallationType(guild=True, user=False))
 
     @openvc.command(name="register", description="特定のVCを公開設定として登録します。")
     @app_commands.checks.has_permissions(manage_channels=True, create_instant_invite=True)
