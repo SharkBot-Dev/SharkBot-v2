@@ -1,5 +1,6 @@
 import io
 import random
+import aiohttp
 from discord.ext import commands
 import discord
 import datetime
@@ -9,7 +10,8 @@ import asyncio
 import re
 
 timeout_pattern = re.compile(r"(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?")
-
+PASTEBIN_RE = re.compile(r"https?://(?:www\.)?pastebin\.com/(?:raw/)?([a-zA-Z0-9]+)")
+SERVER_ID_RE = re.compile(r"\d{17,20}")
 
 def parse_time(timestr: str):
     match = timeout_pattern.fullmatch(timestr.strip().lower())
@@ -24,6 +26,26 @@ def parse_time(timestr: str):
         seconds=int(seconds),
     )
 
+async def resolve_server_ids(input_str):
+    paste_match = PASTEBIN_RE.search(input_str)
+    
+    if paste_match:
+        paste_id = paste_match.group(1)
+        raw_url = f"https://pastebin.com/raw/{paste_id}"
+        
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(raw_url) as response:
+                    if response.status == 200:
+                        text = await response.text()
+                        return SERVER_ID_RE.findall(text)
+                    else:
+                        return []
+            except Exception as e:
+                return []
+
+    else:
+        return SERVER_ID_RE.findall(input_str)
 
 class PauseGroup(app_commands.Group):
     def __init__(self):
@@ -1223,22 +1245,29 @@ class ModCog(commands.Cog):
     )
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def server_ban(self, interaction: discord.Interaction, サーバーid: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
+        await interaction.response.defer()
+        serverids = await resolve_server_ids(サーバーid)
+
+        _ = 0
 
         db = self.bot.async_db["Main"].GuildBAN
-        await db.update_one(
-            {"Guild": str(interaction.guild.id), "BANGuild": サーバーid},
-            {"$set": {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}},
-            upsert=True,
-        )
-        return await interaction.response.send_message(
+
+        for s_id in serverids:
+            await db.update_one(
+                {"Guild": str(interaction.guild.id), "BANGuild": int(s_id)},
+                {"$set": {"Guild": str(interaction.guild.id), "BANGuild": int(s_id)}},
+                upsert=True,
+            )
+
+            _ += 1
+
+            if _ < 10:
+                await asyncio.sleep(0.5)
+
+        return await interaction.followup.send(
             embed=make_embed.success_embed(
-                title="サーバーをBANしました。",
+                title=f"{_}個のサーバーをBANしました。",
                 description="次からそのサーバーに入っているユーザーを認証できなくします。",
             )
         )
@@ -1249,19 +1278,25 @@ class ModCog(commands.Cog):
     )
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def server_unban(self, interaction: discord.Interaction, サーバーid: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
+        await interaction.response.defer()
+        serverids = await resolve_server_ids(サーバーid)
+
+        _ = 0
 
         db = self.bot.async_db["Main"].GuildBAN
-        await db.delete_one(
-            {"Guild": str(interaction.guild.id), "BANGuild": サーバーid}
-        )
-        return await interaction.response.send_message(
-            embed=make_embed.success_embed(title="サーバーのBANを解除しました。")
+
+        for s_id in serverids:
+            await db.delete_one(
+                {"Guild": str(interaction.guild.id), "BANGuild": int(s_id)}
+            )
+            _ += 1
+
+            if _ < 10:
+                await asyncio.sleep(0.5)
+
+        return await interaction.followup.send(
+            embed=make_embed.success_embed(title=f"{_}個のサーバーのBANを解除しました。")
         )
 
     @moderation.command(
