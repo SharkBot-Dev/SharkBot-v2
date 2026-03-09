@@ -26,6 +26,7 @@ export default async function OpenVCPage({ searchParams }: Props) {
   const totalPages = Math.ceil(totalVCs / limit);
 
   const pipeline = [
+    { $sort: { "last_up": -1 } }, 
     { $unwind: "$channels" },
     {
       $project: {
@@ -34,6 +35,7 @@ export default async function OpenVCPage({ searchParams }: Props) {
         channel_name: "$channels.channel_name",
         invite_url: "$channels.invite_url",
         user_count: { $ifNull: ["$channels.user_count", 0] },
+        last_up: 1 
       }
     },
     { $skip: skip },
