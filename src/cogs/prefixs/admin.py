@@ -30,6 +30,15 @@ class Prefix_AdminCog(commands.Cog):
         self.bot = bot
         print("init -> Prefix_AdminCog")
 
+    async def get_admins(self, user: discord.User):
+        db = self.bot.async_db["Main"].BotAdmins
+        user_data = await db.find_one({"User": user.id})
+
+        if not user_data:
+            return False
+        else:
+            return True
+
     @commands.command(name="reload", aliases=["r"], hidden=True)
     async def reload(self, ctx: commands.Context, cogname: str):
         if ctx.author.id == 1335428061541437531:
@@ -90,7 +99,7 @@ class Prefix_AdminCog(commands.Cog):
             await ctx.channel.send(text)
 
     @commands.group(
-        name="test", description="Bot管理者用コマンド。Bot管理者しか実行できません。"
+        name="test", hidden=True
     )
     async def test_command(self, ctx: commands.Context):
         if ctx.author.id == 1335428061541437531:
@@ -125,6 +134,57 @@ class Prefix_AdminCog(commands.Cog):
 
             await ctx.reply(f"コマンドをセーブしました。\n{count}件。")
 
+    @commands.command(name="regdel", description="サーバー掲示板からサーバーを削除します。")
+    async def regdel(self, ctx: commands.Context, gid: str):
+        isadmin = await self.get_admins(ctx.author)
+
+        if isadmin:
+            try:
+                int(gid)
+            except:
+                return await ctx.reply("サーバーIDが無効です。")
+            db = self.bot.async_db["Main"].Register
+
+            try:
+                dbfind = await db.find_one({"Guild": int(gid)}, {"_id": False})
+            except:
+                return
+            if dbfind is None:
+                await ctx.reply("サーバーが登録されていません。")
+                return
+            
+            await db.delete_one({
+                "Guild": int(gid)
+            })
+            
+            await ctx.reply(embed=make_embed.success_embed(title="サーバーを削除しました。", description=f"サーバー名: ||{dbfind.get('Name')}||\n招待リンク: ||{dbfind.get('Invite')}||"))
+
+        else:
+            return
+
+    @commands.command(name="reginfo", description="サーバー掲示板のデータを取得します。")
+    async def reginfo(self, ctx: commands.Context, gid: str):
+        isadmin = await self.get_admins(ctx.author)
+
+        if isadmin:
+            try:
+                int(gid)
+            except:
+                return await ctx.reply("サーバーIDが無効です。")
+            db = self.bot.async_db["Main"].Register
+
+            try:
+                dbfind = await db.find_one({"Guild": int(gid)}, {"_id": False})
+            except:
+                return
+            if dbfind is None:
+                await ctx.reply("サーバーが登録されていません。")
+                return
+            
+            await ctx.reply(embed=make_embed.success_embed(title="サーバーを取得しました。", description=f"サーバー名: {dbfind.get('Name')}\n招待リンク: {dbfind.get('Invite')}\n説明: {dbfind.get('Description')}"))
+
+        else:
+            return
 
 async def setup(bot):
     await bot.add_cog(Prefix_AdminCog(bot))

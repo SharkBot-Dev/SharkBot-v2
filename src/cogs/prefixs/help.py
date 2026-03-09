@@ -37,17 +37,7 @@ class Prefixs_HelpCog(commands.Cog):
             )
 
             for cmd in list(self.bot.commands)[start : start + 20]:
-                if "load" in cmd.name:
-                    continue
-                if "jishaku" in cmd.name:
-                    continue
-                if "sync_slash" == cmd.name:
-                    continue
-                if "save" == cmd.name:
-                    continue
-                if "task" == cmd.name:
-                    continue
-                if "send" == cmd.name:
+                if cmd.hidden:
                     continue
 
                 al = ", ".join(cmd.aliases)
