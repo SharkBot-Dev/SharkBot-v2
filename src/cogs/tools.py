@@ -866,58 +866,67 @@ class NetworkGroup(app_commands.Group):
             name="network", description="ネットワークツール系コマンドです。"
         )
 
-    @app_commands.command(name="whois", description="Whoisします。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def whois(self, interaction: discord.Interaction, ドメイン: str):
-        await interaction.response.defer()
-        data = await fetch_whois(ドメイン)
-        return await interaction.followup.send(file=discord.File(data, "whois.txt"))
-
     @app_commands.command(name="nslookup", description="DNS情報を見ます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def nslookup(self, interaction: discord.Interaction, ドメイン: str):
-        await interaction.response.defer()
-        l = []
+        await interaction.response.send_message(embed=make_embed.loading_embed(f"取得しています..."))
+        
         domain = ドメイン
         json_data = {
-            "domain": domain,
-            "dnsServer": "cloudflare",
+            "domain": domain
         }
+
         async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "https://www.nslookup.io/api/v1/records", json=json_data
+            async with session.get(
+                "https://www.nslookup.io/api/v1/records", params=json_data
             ) as response:
                 js = await response.json()
+                
+                print(js)
+
                 records_data = js.get("records", {})
                 categorized_records = {}
 
                 for record_type, record_info in records_data.items():
-                    response = record_info.get("response", {})
-                    answers = response.get("answer", [])
 
+                    resp_obj = record_info.get("response", {})
+                    
+                    entries = []
+                    answers = resp_obj.get("answer", [])
                     for answer in answers:
                         record_details = answer.get("record", {})
-                        ip_info = answer.get("ipInfo", {})
+                        raw_val = record_details.get('raw')
+                        if raw_val:
+                            entries.append(raw_val)
 
-                        record_entry = f"{record_details.get('raw', 'N/A')}"
+                    if not entries:
+                        authorities = resp_obj.get("authority", [])
+                        for auth in authorities:
+                            record_details = auth.get("record", {})
+                            raw_val = record_details.get('raw')
+                            if raw_val:
+                                entries.append(raw_val)
 
-                        if record_type not in categorized_records:
-                            categorized_records[record_type] = []
-                        categorized_records[record_type].append(record_entry)
+                    if entries:
+                        categorized_records[record_type] = entries
 
                 embed = make_embed.success_embed(
-                    title="NSLookupをしてDNS情報を取得しました。"
+                    title=f"NSLookupをしました。"
                 )
 
-                for record_type, entries in categorized_records.items():
-                    value_text = "\n".join(entries)
-                    embed.add_field(
-                        name=record_type.upper(), value=value_text[:1024], inline=False
-                    )
+                if not categorized_records:
+                    embed.description = "有効なレコードが見つかりませんでした。"
+                else:
+                    for record_type, entries in categorized_records.items():
+                        value_text = "\n".join([f"`{e}`" for e in entries])
+                        embed.add_field(
+                            name=record_type.upper(), 
+                            value=value_text[:1024], 
+                            inline=False
+                        )
 
-                await interaction.followup.send(embed=embed)
+                await interaction.edit_original_response(embed=embed)
 
     @app_commands.command(name="iplookup", description="IP情報を見ます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -964,7 +973,7 @@ class NetworkGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def webshot(self, interaction: discord.Interaction, url: str):
-        await interaction.response.defer()
+        await interaction.response.send_message(embed=make_embed.loading_embed(f"撮影しています..."))
 
         connector = aiohttp_socks.ProxyConnector("127.0.0.1", port=9050)
         async with aiohttp.ClientSession(connector=connector) as session:
@@ -1012,7 +1021,7 @@ class NetworkGroup(app_commands.Group):
                     js = json.loads(await response_2.text())
 
                     if not js["status"]:
-                        await interaction.followup.send(embed=make_embed.error_embed(title="スクリーンショットに失敗しました。"))
+                        await interaction.edit_original_response(embed=make_embed.error_embed(title="スクリーンショットに失敗しました。"))
                         return
 
                     loop = asyncio.get_event_loop()
@@ -1021,11 +1030,11 @@ class NetworkGroup(app_commands.Group):
                     image_binary.seek(0)
                     file = discord.File(fp=image_binary, filename="webshot.png")
 
-                    await interaction.followup.send(
+                    await interaction.edit_original_response(
                         embed=make_embed.success_embed(
                             title="スクリーンショットを撮影しました。"
                         ).set_image(url="attachment://webshot.png"),
-                        file=file
+                        attachments=[file]
                     )
 
                     image_binary.close()
