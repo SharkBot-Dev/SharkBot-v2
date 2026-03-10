@@ -6,325 +6,194 @@ from discord import app_commands
 import random
 from models import make_embed
 
+from datetime import datetime, timedelta
+
+from motor.motor_asyncio import AsyncIOMotorCollection
 
 class AnimalCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-
-    async def one_kind_animal(self, user: discord.User):
-        db = self.bot.async_db["Main"].Animals
-        try:
-            return await db.find_one({"User": user.id}, {"_id": False}) is not None
-        except Exception:
-            return False
-
-    async def is_keeping_animal(self, user: discord.User, kinds: str):
-        db = self.bot.async_db["Main"].Animals
-        try:
-            return (
-                await db.find_one({"User": user.id, "Kinds": kinds}, {"_id": False})
-                is not None
-            )
-        except Exception:
-            return False
-
-    async def add_level(self, user: discord.User, kinds: str, amount: int = 1):
-        db = self.bot.async_db["Main"].Animals
-        await db.update_one(
-            {"User": user.id, "Kinds": kinds},
-            {"$inc": {"Level": amount}},
-        )
-
-    async def add_xp(self, user: discord.User, kinds: str, amount: int = 1):
-        db = self.bot.async_db["Main"].Animals
-        await db.update_one(
-            {"User": user.id, "Kinds": kinds},
-            {"$inc": {"XP": amount}},
-        )
-        # レベルアップ判定
-        await self.check_level_up(user, kinds)
-
-    async def get_animal_status(self, user: discord.User, kinds: str):
-        db = self.bot.async_db["Main"].Animals
-        try:
-            return await db.find_one({"User": user.id, "Kinds": kinds}, {"_id": False})
-        except Exception:
-            return None
-
-    async def change_status(self, user: discord.User, kinds: str, message: str):
-        db = self.bot.async_db["Main"].Animals
-        await db.update_one(
-            {"User": user.id, "Kinds": kinds}, {"$set": {"Status": message}}
-        )
-
-    async def check_level_up(self, user: discord.User, kinds: str):
-        db = self.bot.async_db["Main"].Animals
-        status = await self.get_animal_status(user, kinds)
-        if status and status.get("XP", 0) >= status.get("IV", 60):
-            await db.update_one({"User": user.id, "Kinds": kinds}, {"$set": {"XP": 0}})
-            await self.add_level(user, kinds, 1)
-
-    @commands.Cog.listener("on_message")
-    async def on_message_animal(self, message: discord.Message):
-        if message.author.bot or not message.guild:
-            return
-
-        if not await self.one_kind_animal(message.author):
-            return
-
-        achi_db = self.bot.async_db["Main"].Animals
-        async for animal in achi_db.find({"User": message.author.id}):
-            try:
-                kinds = animal.get("Kinds", "None")
-                status = await self.get_animal_status(message.author, kinds)
-
-                await self.add_xp(message.author, kinds, 1)
-
-                now = datetime.utcnow()
-                last_feed = status.get("LastFeed")
-
-                if last_feed and isinstance(last_feed, datetime):
-                    if now - last_feed >= timedelta(hours=1):
-                        await self.change_status(
-                            message.author,
-                            animal.get("Kinds", "None"),
-                            "餌をほしがっている・・",
-                        )
-
-            except Exception:
-                continue
+        self.db = self.bot.async_db["DashboardBot"].Account
 
     animal = app_commands.Group(
-        name="animal", description="ペットを関連のコマンドです。"
+        name="animal", description="ペット関連のコマンドです。"
     )
 
-    @animal.command(name="keeping", description="ペットを新しく飼います。")
-    @app_commands.choices(
-        種類=[
-            app_commands.Choice(name="犬", value="dog"),
-            app_commands.Choice(name="猫", value="cat"),
-            app_commands.Choice(name="馬", value="horse"),
-            app_commands.Choice(name="牛", value="caw"),
-            app_commands.Choice(name="ハムスター", value="hamster"),
-        ]
-    )
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def animal_keeping(
+    @animal.command(name="keeping", description="ペットを飼います。(1000コイン)")
+    async def animal_keeping(self, interaction: discord.Interaction, 名前: str):
+        db = self.db
+
+        if not isinstance(db, AsyncIOMotorCollection):
+            return
+        
+        check = await db.find_one({
+            "user_id": interaction.user.id
+        })
+
+        if not check:
+            await interaction.response.send_message(embed=make_embed.error_embed(title="アカウントが存在しません。", description="/account create で作成可能"), ephemeral=True)
+            return
+        
+        if check.get("money", 0) < 1000:
+            await interaction.response.send_message(embed=make_embed.error_embed(title="コインが足りません。", description="/account work or daily で稼げます。"), ephemeral=True)
+            return
+
+        await interaction.response.defer()
+
+        new_pet = {
+            "name": 名前,
+            "items": [],
+            "value": 500,
+            "last_train": datetime.fromtimestamp(0)
+        }
+
+        await db.update_one({
+            "user_id": interaction.user.id
+        }, {
+            "$push": {"pets": new_pet},
+            "$inc": {"money": -1000}
+        })
+
+        await interaction.followup.send(embed=make_embed.success_embed(title=f"「{名前}」を飼い始めました！"))
+
+    async def choice_animal_names_autocomplete(
         self,
         interaction: discord.Interaction,
-        種類: app_commands.Choice[str],
-        名前: str,
+        current: str,
     ):
-        await interaction.response.defer()
-        db = self.bot.async_db["Main"].Animals
-        if not await self.is_keeping_animal(interaction.user, 種類.value):
-            await db.update_one(
-                {"User": interaction.user.id, "Kinds": 種類.value},
-                {
-                    "$set": {
-                        "User": interaction.user.id,
-                        "Kinds": 種類.value,
-                        "Name": 名前,
-                        "Level": 0,
-                        "XP": 0,
-                        "Status": "いつも通り",
-                        "IV": random.randint(100, 130),
-                        "LastFeed": None,
-                    }
-                },
-                upsert=True,
-            )
-            await interaction.followup.send(
-                embed=make_embed.success_embed(
-                    title="ペットを飼いました！",
-                    description=f"名前: {名前}\n種類: {種類.name}",
-                )
-            )
-        else:
-            await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="すでにその種類のペットを飼っています！"
-                )
-            )
+        db = self.db
+        check = await db.find_one({"user_id": interaction.user.id})
+        
+        if not check or "pets" not in check:
+            return []
+
+        return [
+            app_commands.Choice(name=p["name"], value=p["name"])
+            for p in check["pets"] if current.lower() in p["name"].lower()
+        ][:25]
 
     @animal.command(name="status", description="ペットのステータスを確認します。")
-    @app_commands.choices(
-        種類=[
-            app_commands.Choice(name="犬", value="dog"),
-            app_commands.Choice(name="猫", value="cat"),
-            app_commands.Choice(name="馬", value="horse"),
-            app_commands.Choice(name="牛", value="caw"),
-            app_commands.Choice(name="ハムスター", value="hamster"),
-        ]
-    )
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def animal_status(
-        self,
-        interaction: discord.Interaction,
-        種類: app_commands.Choice[str],
-        ユーザー: discord.User = None,
-    ):
-        await interaction.response.defer()
-        target = ユーザー or interaction.user
+    @app_commands.autocomplete(名前=choice_animal_names_autocomplete)
+    async def animal_status(self, interaction: discord.Interaction, 名前: str):
+        db = self.db
+        check = await db.find_one({"user_id": interaction.user.id})
 
-        if not await self.is_keeping_animal(target, 種類.value):
-            return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="まだそのペットを飼っていません！",
-                    description="/animal keeping で飼えます。",
-                )
-            )
+        pet = next((p for p in check.get("pets", []) if p["name"] == 名前), None)
 
-        status = await self.get_animal_status(target, 種類.value)
+        if not pet:
+            await interaction.response.send_message("その名前のペットは見つかりませんでした。", ephemeral=True)
+            return
 
-        now = datetime.utcnow()
-        last_feed = status.get("LastFeed")
+        await interaction.response.send_message(embed=make_embed.success_embed(title=f"{名前}のステータス").add_field(name="名前", value=pet["name"], inline=False).add_field(name="価値", value=pet["value"], inline=False))
 
-        if last_feed and isinstance(last_feed, datetime):
-            if now - last_feed >= timedelta(hours=1):
-                await self.change_status(target, 種類.value, "餌をほしがっている・・")
+    @animal.command(name="feed", description="ペットに餌をあげます。(50コイン / 価値+50)")
+    @app_commands.autocomplete(名前=choice_animal_names_autocomplete)
+    async def animal_feed(self, interaction: discord.Interaction, 名前: str):
+        db = self.db
+        user_id = interaction.user.id
 
-        await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title=f"{status.get('Name', '名前')}のステータス",
-                description=(
-                    f"名前: {status.get('Name')}\n"
-                    f"種類: {種類.name}\n"
-                    f"レベル: {status.get('Level', 0)}\n"
-                    f"XP: {status.get('XP', 0)} / {status.get('IV', 60)}\n"
-                    f"ステータス: {status.get('Status', 'いつも通り')}"
-                ),
-            )
+        user_data = await db.find_one({"user_id": user_id})
+        if not user_data:
+            await interaction.response.send_message(embed=make_embed.error_embed(title="アカウントが存在しません。", description="/account create で作成可能"), ephemeral=True)
+            return
+        
+        if user_data.get("money", 0) < 50:
+            await interaction.response.send_message(embed=make_embed.error_embed(title="コインが足りません。", description="50コイン必要です。"), ephemeral=True)
+            return
+
+        result = await db.update_one(
+            {"user_id": user_id, "pets.name": 名前},
+            {
+                "$inc": {
+                    "money": -50, 
+                    "pets.$.value": 50
+                }
+            }
         )
 
-    @animal.command(name="feed", description="ペットに餌をあげます。")
-    @app_commands.choices(
-        種類=[
-            app_commands.Choice(name="犬", value="dog"),
-            app_commands.Choice(name="猫", value="cat"),
-            app_commands.Choice(name="馬", value="horse"),
-            app_commands.Choice(name="牛", value="caw"),
-            app_commands.Choice(name="ハムスター", value="hamster"),
-        ]
-    )
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def animal_feed(
-        self, interaction: discord.Interaction, 種類: app_commands.Choice[str]
-    ):
-        await interaction.response.defer()
-        db = self.bot.async_db["Main"].Animals
+        if result.modified_count == 0:
+            await interaction.response.send_message(f"「{名前}」というペットは見つかりませんでした。", ephemeral=True)
+            return
 
-        status = await self.get_animal_status(interaction.user, 種類.value)
-        if not status:
-            return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="そのペットは飼っていません！",
-                    description="/animal keeping で飼えます。",
-                )
-            )
+        await interaction.response.send_message(embed=make_embed.success_embed(title=f"「{名前}」に餌をあげました！", description="価値が50上がりました。"))
 
-        now = datetime.utcnow()
-        last_feed = status.get("LastFeed")
+    @animal.command(name="train", description="ペットを訓練します。")
+    @app_commands.autocomplete(名前=choice_animal_names_autocomplete)
+    async def animal_train(self, interaction: discord.Interaction, 名前: str):
+        db = self.db
+        user_id = interaction.user.id
+        now = datetime.now()
+        cooldown_seconds = 3600
 
-        if last_feed and isinstance(last_feed, datetime):
-            elapsed = now - last_feed
-            if elapsed < timedelta(hours=1):
-                remaining = timedelta(hours=1) - elapsed
-                minutes, seconds = divmod(int(remaining.total_seconds()), 60)
-                return await interaction.followup.send(
+        user_data = await db.find_one({"user_id": user_id})
+        pet = next((p for p in user_data.get("pets", []) if p["name"] == 名前), None)
+
+        if not pet:
+            await interaction.response.send_message(f"「{名前}」は見つかりませんでした。", ephemeral=True)
+            return
+
+        last_train = pet.get("last_train")
+        if isinstance(last_train, datetime):
+            elapsed = (now - last_train).total_seconds()
+            if elapsed < cooldown_seconds:
+                remaining = int((cooldown_seconds - elapsed) / 60)
+                await interaction.response.send_message(
                     embed=make_embed.error_embed(
-                        title="まだ餌をあげられません！",
-                        description=f"次に餌をあげられるまで **{minutes}分{seconds}秒**",
-                    )
+                        title="まだ訓練できません。",
+                        description=f"あと {remaining}分 休憩が必要です。"
+                    ), ephemeral=True
                 )
+                return
 
-        xp_gain = random.randint(5, 15)
-        await self.add_xp(interaction.user, 種類.value, xp_gain)
+        value = random.randint(50, 150)
 
         await db.update_one(
-            {"User": interaction.user.id, "Kinds": 種類.value},
-            {"$set": {"LastFeed": now}},
+            {"user_id": user_id, "pets.name": 名前},
+            {
+                "$inc": {"pets.$.value": value},
+                "$set": {"pets.$.last_train": now}
+            }
         )
-        await self.change_status(interaction.user, 種類.value, "いつも通り")
 
-        await interaction.followup.send(
+        await interaction.response.send_message(
             embed=make_embed.success_embed(
-                title=f"{status.get('Name', '名無し')}に餌をあげました！",
-                description=f"XPが **+{xp_gain}** 増えたよ！",
+                title=f"「{名前}」を訓練しました！",
+                description=f"価値が{value}上昇しました。"
             )
         )
 
-    @animal.command(name="train", description="ペットをしつけ（訓練）します。")
-    @app_commands.choices(
-        種類=[
-            app_commands.Choice(name="犬", value="dog"),
-            app_commands.Choice(name="猫", value="cat"),
-            app_commands.Choice(name="馬", value="horse"),
-            app_commands.Choice(name="牛", value="caw"),
-            app_commands.Choice(name="ハムスター", value="hamster"),
-        ]
-    )
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def animal_train(
-        self, interaction: discord.Interaction, 種類: app_commands.Choice[str]
-    ):
-        await interaction.response.defer()
-        db = self.bot.async_db["Main"].Animals
+    @animal.command(name="sell", description="ペットを売却してコインにします。")
+    @app_commands.autocomplete(名前=choice_animal_names_autocomplete)
+    async def animal_sell(self, interaction: discord.Interaction, 名前: str):
+        db = self.db
+        user_id = interaction.user.id
 
-        status = await self.get_animal_status(interaction.user, 種類.value)
-        if not status:
-            return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="そのペットは飼っていません！",
-                    description="/animal keeping で飼えます。",
-                )
-            )
+        user_data = await db.find_one({"user_id": user_id})
+        if not user_data or "pets" not in user_data:
+            await interaction.response.send_message(embed=make_embed.error_embed(title="ペットを飼っていません。"), ephemeral=True)
+            return
 
-        now = datetime.utcnow()
-        last_feed = status.get("LastTrain")
+        pet = next((p for p in user_data["pets"] if p["name"] == 名前), None)
 
-        if last_feed and isinstance(last_feed, datetime):
-            elapsed = now - last_feed
-            if elapsed < timedelta(hours=1):
-                remaining = timedelta(hours=1) - elapsed
-                minutes, seconds = divmod(int(remaining.total_seconds()), 60)
-                return await interaction.followup.send(
-                    embed=make_embed.error_embed(
-                        title="まだ訓練できません！",
-                        description=f"次に訓練ができるまで **{minutes}分{seconds}秒**",
-                    )
-                )
+        if not pet:
+            await interaction.response.send_message(f"「{名前}」というペットは見つかりませんでした。", ephemeral=True)
+            return
 
-        success = random.random() < 0.7
-        if success:
-            xp_gain = random.randint(10, 20)
-            await self.add_xp(interaction.user, 種類.value, xp_gain)
-            result_text = f"訓練に成功しました！ \nXPが **+{xp_gain}** 増えたよ！"
-        else:
-            xp_gain = random.randint(0, 5)
-            await self.add_xp(interaction.user, 種類.value, xp_gain)
-            result_text = (
-                f"訓練に失敗しました… \nXPが **+{xp_gain}** しか増えなかった。"
-            )
+        sell_price = pet.get("value", 0)
 
-        await self.change_status(interaction.user, 種類.value, "訓練中…")
+        await db.update_one({
+            "user_id": user_id
+        }, {
+            "$pull": {"pets": {"name": 名前}},
+            "$inc": {"money": sell_price} 
+        })
 
-        await db.update_one(
-            {"User": interaction.user.id, "Kinds": 種類.value},
-            {"$set": {"LastTrain": now}},
-        )
-
-        await interaction.followup.send(
+        await interaction.response.send_message(
             embed=make_embed.success_embed(
-                title=f"{status.get('Name', '名無し')}の訓練結果",
-                description=result_text,
+                title="ペットを売却しました。",
+                description=f"「{名前}」を売却し、{sell_price}コイン を受け取りました。"
             )
         )
-
 
 async def setup(bot):
     await bot.add_cog(AnimalCog(bot))

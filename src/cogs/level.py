@@ -1,4 +1,5 @@
 import datetime
+import math
 
 from discord.ext import commands
 from discord import app_commands
@@ -250,7 +251,7 @@ class LevelCog(commands.Cog):
             duration = now - start_time
             seconds = duration.total_seconds()
             
-            xp_gained = int(seconds / 60) * 2
+            xp_gained = int(math.sqrt(seconds / 60) * 2)
 
             if xp_gained < 1:
                 await db.update_one(
