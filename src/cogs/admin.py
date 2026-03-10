@@ -1,12 +1,15 @@
 import ast
 import datetime
 from pathlib import Path
+import re
 import sys
 import traceback
 from discord.ext import commands
 import discord
+import urllib.parse
 
 from models import make_embed, save_commands, translate
+from consts import settings
 
 from discord import app_commands
 
@@ -14,7 +17,7 @@ import asyncio
 
 import importlib.util
 
-import redis.asyncio as redis
+import aiohttp
 
 class AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -661,6 +664,80 @@ class AdminCog(commands.Cog):
 
         except Exception as e:
             await interaction.edit_original_response(embed=make_embed.error_embed(title="操作に失敗しました。", description=str(e)))
+
+    @admin.command(name="short", description="SharkBotの運営する短縮URLサービスを操作します。")
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="コード情報取得", value="codelookup"),
+            app_commands.Choice(name="コード使用者取得", value="userlookup")
+        ]
+    )
+    async def admin_short(
+        self, 
+        interaction: discord.Interaction, 
+        操作: app_commands.Choice[str], 
+        内容: str
+    ):
+        if interaction.user.id != 1335428061541437531:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(title="あなたはSharkBotのオーナーではないため実行できません。")
+            )
+        
+        await interaction.response.defer(ephemeral=True)
+
+        target_code = None
+        if 内容.startswith("https://"):
+            match = re.search(r"shb\.red/s/([a-zA-Z0-9_-]+)", 内容)
+            if match:
+                target_code = match.group(1)
+            else:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="URLからコードを抽出できませんでした。"))
+        else:
+            target_code = 内容.strip()
+
+        async with aiohttp.ClientSession() as session:
+            if 操作.value == "codelookup":
+                url = f"https://shb.red/admin/lookup/{urllib.parse.quote(target_code)}"
+                headers = {"X-Admin-Token": settings.SHORT_TOKEN}
+                
+                async with session.get(url, headers=headers) as response:
+
+                    if response.status != 200:
+                        error_data = await response.json()
+                        msg = error_data.get("message", "不明なエラーが発生しました。")
+                        return await interaction.followup.send(embed=make_embed.error_embed(title=f"取得失敗 ({response.status})", description=msg))
+
+                    data = await response.json()
+
+                    code = data.get("code", "不明")
+                    created_at = data.get("created_at", "不明")
+                    ip = data.get("ip", "不明")
+                    original_url = data.get("original_url", "不明")
+
+                    embed = make_embed.success_embed(
+                        title="作成者情報を取得しました",
+                        description=f"**コード:** `{code}`\n**作成日:** `{created_at}`\n**作成者IP:** `{ip}`\n**元URL:** {original_url}"
+                    )
+                    await interaction.followup.send(embed=embed)
+
+            elif 操作.value == "userlookup":
+                url = f"https://shb.red/admin/history/{urllib.parse.quote(target_code)}"
+                async with session.get(url, headers={"X-Admin-Token": settings.SHORT_TOKEN}) as response:
+                    if response.status != 200:
+                        return await interaction.followup.send(embed=make_embed.error_embed(title="履歴の取得に失敗しました。"))
+                    
+                    data = await response.json()
+                    history = data.get("history", [])
+                    
+                    if not history:
+                        return await interaction.followup.send(content="アクセス履歴はありませんでした。")
+
+                    history_str = "\n".join([f"・{h['accessed_at']} ({h['ip']})" for h in history[:10]])
+                    await interaction.followup.send(embed=make_embed.success_embed(title=f"アクセス履歴 (最新10件)", description=history_str))
+
+            else:
+                await interaction.followup.send(content="未実装の操作です。")
 
     @commands.Cog.listener("on_guild_join")
     async def on_guild_join_blockuser(self, guild: discord.Guild):

@@ -76,6 +76,50 @@ def admin_myip():
     
     return ip_address
 
+@app.route("/admin/history/<code>")
+def admin_history(code):
+    ip_address = get_client_ip()
+
+    if ipban_db.find_one({"ip": ip_address}):
+        return jsonify({"error": "Forbidden", "message": "アクセス権限がありません。"}), 403
+
+    admin_token = request.headers.get("X-Admin-Token")
+    if admin_token != settings.SECRET_ADMIN_TOKEN:
+        return jsonify({"error": "Unauthorized", "message": "認証が必要です。"}), 401
+
+    with get_db() as conn:
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        
+        cur.execute(
+            """
+            SELECT url_code, accessed_at, ip_address, user_agent 
+            FROM access_logs 
+            WHERE url_code = ? 
+            ORDER BY accessed_at DESC 
+            LIMIT 100
+            """, 
+            (code,)
+        )
+        rows = cur.fetchall()
+
+        if not rows:
+            return jsonify({"code": code, "history": [], "message": "ログが見つかりませんでした。"}), 200
+
+        history_list = []
+        for row in rows:
+            history_list.append({
+                "accessed_at": row["accessed_at"],
+                "ip": row["ip_address"],
+                "ua": row["user_agent"]
+            })
+
+        return jsonify({
+            "code": code,
+            "total_count": len(history_list),
+            "history": history_list
+        })
+
 @app.route("/admin/lookup/<code>")
 def admin_lookup(code):
     ip_address = get_client_ip()
