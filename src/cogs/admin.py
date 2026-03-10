@@ -19,6 +19,7 @@ import redis.asyncio as redis
 class AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.DEBUG_LIST = [1343124570131009579, 1424924684566396950, 706905953320304772, 1361909980873359390]
         print("init -> AdminCog")
 
     async def get_admins(self, user: discord.User):
@@ -129,6 +130,70 @@ class AdminCog(commands.Cog):
         await interaction.followup.send(
             embed=make_embed.success_embed(title="スラッシュコマンドを同期しました。")
         )
+
+    @admin.command(name="debug-sync", description="スラッシュコマンドをデバッグサーバーに同期します。")
+    async def debug_sync_setting(self, interaction: discord.Interaction):
+        if interaction.user.id != 1335428061541437531:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="あなたはSharkBotのオーナーではないため実行できません。"
+                ),
+            )
+
+        await interaction.response.defer()
+
+        for d in self.DEBUG_LIST:
+            guild = discord.Object(id=d)
+            await self.bot.tree.sync(guild=guild)
+
+        text = '\n'.join([str(_) for _ in self.DEBUG_LIST])
+
+        await interaction.followup.send(
+            embed=make_embed.success_embed(title="以下のサーバーに同期しました。", description=text)
+        )
+
+    @admin.command(
+        name="ipban", description="IPを一部サイトで制限します。"
+    )
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="追加", value="add"),
+            app_commands.Choice(name="削除", value="remove"),
+        ]
+    )
+    async def ip_ban(
+        self,
+        interaction: discord.Interaction,
+        操作: app_commands.Choice[str],
+        内容: str,
+        理由: str,
+    ):
+        isadmin = await self.get_admins(interaction.user)
+
+        if not isadmin:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="あなたはSharkBotの管理者ではないため実行できません。"
+                ),
+            )
+
+        await interaction.response.defer()
+
+        db = self.bot.async_db["MainTwo"].BlockIP
+
+        if 操作.value == "add":
+            await db.insert_one({
+                "ip": 内容,
+                "reason": 理由
+            })
+        else:
+            await db.delete_one({
+                "ip": 内容
+            })
+
+        await interaction.followup.send(embed=make_embed.success_embed(title=f"{内容} を{操作.name}しました。"))
 
     @admin.command(
         name="ban", description="Botからbanをします。サーバーからはbanされません。"

@@ -4,9 +4,14 @@ import random
 import os
 from flask import Flask, request, jsonify, redirect, render_template
 from urllib.parse import urlparse
+from pymongo import MongoClient
 from uvicorn.middleware.wsgi import WSGIMiddleware
 
 app = Flask(__name__, static_folder="static")
+
+mongo = MongoClient("mongodb://localhost:27017/")
+ipban_db = mongo["MainTwo"].BlockIP
+
 DATABASE = "database.db"
 
 def get_db():
@@ -48,6 +53,15 @@ def generate_code(length=6):
 
 @app.route("/", methods=["GET"])
 def index():
+    ip_address = get_client_ip()
+
+    check = ipban_db.find_one({
+        "ip": ip_address
+    })
+
+    if check:
+        return "権限がありません。"
+
     return render_template("index.html")
 
 @app.route("/shorten", methods=["GET"])
@@ -60,6 +74,13 @@ def shorten():
 
     if not original_url.startswith(("http://", "https://")):
         return jsonify({"error": "有効なURLを入力してください"}), 400
+    
+    check = ipban_db.find_one({
+        "ip": ip_address
+    })
+
+    if check:
+        return jsonify({"error": "権限がありません。"}), 400
 
     try:
         with get_db() as conn:
@@ -119,6 +140,15 @@ def redirect_to_original(code):
 
 @app.route("/info")
 def info():
+    ip_address = get_client_ip()
+
+    check = ipban_db.find_one({
+        "ip": ip_address
+    })
+
+    if check:
+        return "権限がありません。"
+
     return render_template("info.html")
 
 asgi_app = WSGIMiddleware(app)
