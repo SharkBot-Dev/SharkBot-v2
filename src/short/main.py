@@ -7,6 +7,9 @@ from urllib.parse import urlparse
 from pymongo import MongoClient
 from uvicorn.middleware.wsgi import WSGIMiddleware
 
+# 設定類
+import settings
+
 app = Flask(__name__, static_folder="static")
 
 mongo = MongoClient("mongodb://localhost:27017/")
@@ -60,9 +63,48 @@ def index():
     })
 
     if check:
-        return "権限がありません。"
+        return "アクセス権限がありません。"
 
     return render_template("index.html")
+
+@app.route("/admin/myip")
+def admin_myip():
+    ip_address = get_client_ip()
+
+    if ipban_db.find_one({"ip": ip_address}):
+        return jsonify({"error": "Forbidden", "message": "アクセス権限がありません。"}), 403
+    
+    return ip_address
+
+@app.route("/admin/lookup/<code>")
+def admin_lookup(code):
+    ip_address = get_client_ip()
+
+    if ipban_db.find_one({"ip": ip_address}):
+        return jsonify({"error": "Forbidden", "message": "アクセス権限がありません。"}), 403
+
+    admin_token = request.headers.get("X-Admin-Token")
+    if admin_token != settings.SECRET_ADMIN_TOKEN:
+        return jsonify({"error": "Unauthorized", "message": "認証が必要です。"}), 401
+
+    with get_db() as conn:
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT code, original_url, created_by_ip, created_at FROM urls WHERE code = ?", 
+            (code,)
+        )
+        row = cur.fetchone()
+
+        if row:
+            return jsonify({
+                "code": row["code"],
+                "original_url": row["original_url"],
+                "ip": row["created_by_ip"],
+                "created_at": row["created_at"]
+            })
+        else:
+            return jsonify({"error": "Not Found", "message": "指定された短縮URLは見つかりませんでした。"}), 404
 
 @app.route("/shorten", methods=["GET"])
 def shorten():
@@ -80,7 +122,7 @@ def shorten():
     })
 
     if check:
-        return jsonify({"error": "権限がありません。"}), 400
+        return jsonify({"error": "アクセス権限がありません。"}), 403
 
     try:
         with get_db() as conn:
@@ -147,7 +189,7 @@ def info():
     })
 
     if check:
-        return "権限がありません。"
+        return "アクセス権限がありません。"
 
     return render_template("info.html")
 

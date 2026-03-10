@@ -267,6 +267,7 @@ node_modules
 dashboard/dashboard/public
 
 youtube/settings.py
+src/short/settings.py
 Graph/chart.png
 
 node_modules
