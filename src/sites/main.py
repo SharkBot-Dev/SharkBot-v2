@@ -75,7 +75,7 @@ def get_serverban(guilds, target_guild: str):
         banned_data = list(db.find({"Guild": target_guild}, {"_id": False}))
 
         if not banned_data:
-            return False
+            return False, "???+"
 
         banned_list = [str(item["BANGuild"]) for item in banned_data if "BANGuild" in item]
 
@@ -83,11 +83,11 @@ def get_serverban(guilds, target_guild: str):
             current_g_id = g["id"]
 
             if current_g_id in banned_list:
-                return True
+                return True, g["name"]
                 
-        return False
+        return False, "???"
     except Exception as e:
-        return False
+        return False, "???"
 
 
 def add_role(token: str, user_id: str, guild_id: str, role_id: str):
@@ -215,12 +215,13 @@ def invite_auth_backend():
         ).json()
 
         db.delete_one({"Code": state})
-        che = get_serverban(guilds, usermoney["Guild"])
+        che, name = get_serverban(guilds, usermoney["Guild"])
         if che:
             return jsonify(
                 {
                     "status": "error",
                     "reason": "サーバーオーナーが禁止しているサーバーに参加しています。",
+                    "server_name": name
                 }
             ), 400
 
