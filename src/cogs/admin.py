@@ -14,6 +14,7 @@ import asyncio
 
 import importlib.util
 
+import redis.asyncio as redis
 
 class AdminCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -503,6 +504,88 @@ class AdminCog(commands.Cog):
             await db.update_one({"user_id": ユーザー.id}, {"$set": {"money": 数値}})
 
         await interaction.followup.send(embed=make_embed.success_embed(title=f"{ユーザー.name}のコインを{操作.name}しました。"))
+
+    @admin.command(name="redis", description="Redisにアクセスします。")
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="取得 (Get/GetAll)", value="get"),
+            app_commands.Choice(name="設定・追加 (Set/Push/Add)", value="set"),
+            app_commands.Choice(name="削除 (Del)", value="remove")
+        ],
+        タイプ=[
+            app_commands.Choice(name="文字列 (String)", value="string"),
+            app_commands.Choice(name="リスト (List)", value="list"),
+            app_commands.Choice(name="セット (Set)", value="set"),
+            app_commands.Choice(name="ハッシュ (Hash)", value="hash")
+        ]
+    )
+    async def admin_redis(
+        self, 
+        interaction: discord.Interaction, 
+        操作: app_commands.Choice[str], 
+        タイプ: app_commands.Choice[str], 
+        キー: str, 
+        値: str = None
+    ):
+        if interaction.user.id != 1335428061541437531:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(title="あなたはSharkBotのオーナーではないため実行できません。")
+            )
+
+        await interaction.response.send_message(embed=make_embed.loading_embed(title="操作中です..."))
+
+        if not self.bot.redis:
+            return await interaction.edit_original_response(embed=make_embed.error_embed(title="Redisに接続されていません。"))
+
+        op = 操作.value
+        data_type = タイプ.value
+        res_title = ""
+        res_desc = ""
+
+        try:
+            if op == "get":
+                if data_type == "string":
+                    res_desc = await self.bot.redis.get(キー)
+                elif data_type == "list":
+                    res_desc = await self.bot.redis.lrange(キー, 0, -1)
+                elif data_type == "set":
+                    res_desc = list(await self.bot.redis.smembers(キー))
+                elif data_type == "hash":
+                    res_desc = await self.bot.redis.hgetall(キー)
+                
+                res_title = "取得しました。"
+
+            elif op == "set":
+                if not 値:
+                    return await interaction.edit_original_response(embed=make_embed.error_embed(title="設定には値が必要です。"))
+                
+                if data_type == "string":
+                    await self.bot.redis.set(キー, 値)
+                elif data_type == "list":
+                    await self.bot.redis.rpush(キー, 値)
+                elif data_type == "set":
+                    await self.bot.redis.sadd(キー, 値)
+                elif data_type == "hash":
+                    if ":" not in 値:
+                        return await interaction.edit_original_response(embed=make_embed.error_embed(title="Hash形式は 'フィールド:値' で入力してください。"))
+                    f, v = 値.split(":", 1)
+                    await self.bot.redis.hset(キー, f, v)
+                
+                res_title = "設定・追加しました。"
+                res_desc = 値
+
+            elif op == "remove":
+                await self.bot.redis.delete(キー)
+                res_title = "削除しました。"
+                res_desc = f"Key `{キー}` を削除しました。"
+
+            embed = make_embed.success_embed(title=res_title, description=f"```py\n{res_desc}\n```")
+            embed.set_footer(text=f"Key: {キー} | Type: {data_type}")
+            await interaction.edit_original_response(embed=embed)
+
+        except Exception as e:
+            await interaction.edit_original_response(embed=make_embed.error_embed(title="操作に失敗しました。", description=str(e)))
 
     @commands.Cog.listener("on_guild_join")
     async def on_guild_join_blockuser(self, guild: discord.Guild):
