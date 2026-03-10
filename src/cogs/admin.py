@@ -30,10 +30,15 @@ class AdminCog(commands.Cog):
         else:
             return True
 
+    # サポートサーバー: 1343124570131009579
+    # テストサーバー: 1424924684566396950
+    # SGCサーバー: 706905953320304772
+    # 絵文字サーバーたち: 1361909980873359390
+
     admin = app_commands.Group(
         name="admin",
         description="SharkBot管理者向けのコマンドです。",
-        guild_ids=[1343124570131009579, 1424924684566396950]
+        guild_ids=[1343124570131009579, 1424924684566396950, 706905953320304772, 1361909980873359390]
     )
 
     @admin.command(name="cogs", description="cogの操作をします。")
