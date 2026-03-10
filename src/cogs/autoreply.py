@@ -18,31 +18,6 @@ user_last_message_time2 = {}
 
 cooldown_autoreply_word = {}
 
-blacklist_word = [
-    "ちん",
-    "うんち",
-    "ヘイト",
-    "児童",
-    "ポルノ",
-    "死ね",
-    "氏ね",
-    "ファック",
-    "セックス",
-    "ペニス",
-    "ちんこ",
-    "ちんぽ",
-    "喘",
-    "孕",
-    "まんこ",
-    "ちんちん",
-    "おっぱい",
-    "くそ",
-    "タヒね",
-    "ﾀﾋね",
-    "オナホ",
-]
-
-
 class AutoReplyCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -128,10 +103,6 @@ class AutoReplyCog(commands.Cog):
         if dbfind.get("Roles", []) != []:
             for r in dbfind.get("Roles", []):
                 if message.guild.get_role(r) in message.author.roles:
-                    for b in blacklist_word:
-                        if b in word:
-                            return await message.reply("不適切な言葉が含まれています。")
-
                     word = word.split("|")
 
                     if len(word) != 1:
@@ -147,9 +118,6 @@ class AutoReplyCog(commands.Cog):
                         return
                     return
             return
-        for b in blacklist_word:
-            if b in word:
-                return await message.reply("不適切な言葉が含まれています。")
 
         word = word.split("|")
 
@@ -232,11 +200,6 @@ class AutoReplyCog(commands.Cog):
             f"{b.get('Word')} - {b.get('ReplyWord')}"
             async for b in db.find({"Guild": interaction.guild.id})
         ]
-        for b in blacklist_word:
-            if b in "\n".join(word_list):
-                return await interaction.followup.send(
-                    "不適切なワードが検出されました。"
-                )
         await interaction.followup.send(
             embed=make_embed.success_embed(title="自動返信のリストです").add_field(
                 name="特定のワードに対して", value="\n".join(word_list)
