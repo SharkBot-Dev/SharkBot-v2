@@ -69,19 +69,24 @@ def server():
     return render_template("server.html", server=servers, ct=len(servers))
 
 
-def get_serverban(guilds, guild: str):
+def get_serverban(guilds, target_guild: str):
     try:
         db = client["Main"].GuildBAN
+        banned_data = list(db.find({"Guild": target_guild}, {"_id": False}))
+
+        if not banned_data:
+            return False
+
+        banned_list = [str(item["BANGuild"]) for item in banned_data if "BANGuild" in item]
+
         for g in guilds:
-            usermoney = db.find_one(
-                {"BANGuild": g["id"], "Guild": guild}, {"_id": False}
-            )
-            if usermoney is None:
-                continue
-            else:
+            current_g_id = g["id"]
+
+            if current_g_id in banned_list:
                 return True
+                
         return False
-    except:
+    except Exception as e:
         return False
 
 

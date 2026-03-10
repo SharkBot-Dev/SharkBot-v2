@@ -1255,8 +1255,8 @@ class ModCog(commands.Cog):
 
         for s_id in serverids:
             await db.update_one(
-                {"Guild": str(interaction.guild.id), "BANGuild": int(s_id)},
-                {"$set": {"Guild": str(interaction.guild.id), "BANGuild": int(s_id)}},
+                {"Guild": str(interaction.guild.id), "BANGuild": s_id},
+                {"$set": {"Guild": str(interaction.guild.id), "BANGuild": s_id}},
                 upsert=True,
             )
 
@@ -1287,8 +1287,14 @@ class ModCog(commands.Cog):
         db = self.bot.async_db["Main"].GuildBAN
 
         for s_id in serverids:
+            try:
+                await db.delete_one(
+                    {"Guild": str(interaction.guild.id), "BANGuild": int(s_id)}
+                )
+            except:
+                pass
             await db.delete_one(
-                {"Guild": str(interaction.guild.id), "BANGuild": int(s_id)}
+                {"Guild": str(interaction.guild.id), "BANGuild": s_id}
             )
             _ += 1
 
