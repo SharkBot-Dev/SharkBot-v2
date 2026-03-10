@@ -33,7 +33,7 @@ class AdminCog(commands.Cog):
     admin = app_commands.Group(
         name="admin",
         description="SharkBot管理者向けのコマンドです。",
-        allowed_installs=app_commands.AppInstallationType(guild=True, user=True),
+        guild_ids=[1343124570131009579, 1424924684566396950]
     )
 
     @admin.command(name="cogs", description="cogの操作をします。")
@@ -103,7 +103,7 @@ class AdminCog(commands.Cog):
                 )
 
     @admin.command(name="sync", description="スラッシュコマンドを同期します。")
-    async def sync_setting(self, interaction: discord.Interaction):
+    async def sync_setting(self, interaction: discord.Interaction, サーバーid: str = None):
         if interaction.user.id != 1335428061541437531:
             return await interaction.response.send_message(
                 ephemeral=True,
@@ -114,7 +114,12 @@ class AdminCog(commands.Cog):
 
         await interaction.response.defer()
 
-        await self.bot.tree.sync()
+        if サーバーid:
+
+            guild = discord.Object(id=int(サーバーid))
+            await self.bot.tree.sync(guild=guild)
+        else:
+            await self.bot.tree.sync()
 
         await interaction.followup.send(
             embed=make_embed.success_embed(title="スラッシュコマンドを同期しました。")

@@ -52,9 +52,13 @@ class Prefix_AdminCog(commands.Cog):
             await ctx.reply(f"LoadOK .. `cogs.{cogname}`")
 
     @commands.command(name="sync_slash", aliases=["sy"], hidden=True)
-    async def sync_slash(self, ctx: commands.Context):
+    async def sync_slash(self, ctx: commands.Context, guild_id: str = None):
         if ctx.author.id == 1335428061541437531:
-            await self.bot.tree.sync()
+            if guild_id:
+                guild = discord.Object(id=int(guild_id))
+                await self.bot.tree.sync(guild=guild)
+            else:
+                await self.bot.tree.sync()
             await ctx.reply("スラッシュコマンドを同期しました。")
 
     @commands.command(name="reload_lang", hidden=True)
