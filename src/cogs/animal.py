@@ -78,8 +78,6 @@ class AnimalCog(commands.Cog):
                 kinds = animal.get("Kinds", "None")
                 status = await self.get_animal_status(message.author, kinds)
 
-                await self.add_xp(message.author, kinds, 1)
-
                 now = datetime.utcnow()
                 last_feed = status.get("LastFeed")
 
