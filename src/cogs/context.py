@@ -679,6 +679,28 @@ async def setup(bot: commands.Bot):
 
         return
 
+    async def banner_show(origin_interaction: discord.Interaction, interaction: discord.Interaction, member: discord.Member):
+        await interaction.response.defer(ephemeral=True)
+        
+        user = await bot.fetch_user(member.id)
+
+        if not user.banner:
+            return await interaction.followup.send(embed=make_embed.error_embed(title="バナーがありません。"), ephemeral=True)
+
+        embed = make_embed.success_embed(title="バナーを表示しました。")
+        embed.set_image(url=user.banner.url)
+
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+    async def roles_show(origin_interaction: discord.Interaction, interaction: discord.Interaction, member: discord.Member):
+        await interaction.response.defer(ephemeral=True)
+
+        roles = [f"{_.mention} ({_.id})" for _ in member.roles]
+
+        embed = make_embed.success_embed(title="所有ロールを表示しました。", description='\n'.join(roles))
+
+        await interaction.followup.send(embed=embed, ephemeral=True, allowed_mentions=discord.AllowedMentions.none())
+
     async def permission_show(origin_interaction: discord.Interaction, interaction: discord.Interaction, member: discord.Member):
         await interaction.response.defer(ephemeral=True)
         try:
@@ -690,19 +712,17 @@ async def setup(bot: commands.Bot):
             user_perms_str = ", ".join(user_perms)
             avatar = member.avatar.url if member.avatar else member.display_avatar.url
             await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.success_embed(
                     title=f"{member.name}さんの権限",
-                    description=user_perms_str,
-                    color=discord.Color.green(),
+                    description=user_perms_str
                 ).set_thumbnail(url=avatar),
                 ephemeral=True
             )
         except Exception as e:
             return await interaction.followup.send(
-                embed=discord.Embed(
+                embed=make_embed.error_embed(
                     title=f"{member.name}さんの権限",
-                    description=f"権限の取得に失敗しました。\n`{e}`",
-                    color=discord.Color.red(),
+                    description=f"権限の取得に失敗しました。\n`{e}`"
                 ),
                 ephemeral=True
             )
@@ -712,22 +732,24 @@ async def setup(bot: commands.Bot):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.allowed_installs(guilds=True, users=True)
     async def users(interaction: discord.Interaction, member: discord.Member):
+        base_funcs = [
+            context.ContextUserFunction("ユーザー情報", user_info),
+            context.ContextMessageFunction("アバター表示", avatar_show),
+            context.ContextMessageFunction("バナー表示", banner_show)
+        ]
+
         if interaction.is_user_integration() and not interaction.is_guild_integration():
-            view = context.ContextMoreView(interaction, [
-                context.ContextUserFunction("ユーザー情報", user_info),
-                context.ContextMessageFunction("アバター表示", avatar_show)
-            ], member)
+            view = context.ContextMoreView(interaction, base_funcs, member)
 
             await interaction.response.send_message(
                 view=view,
                 ephemeral=True,
             )
         else:
-            view = context.ContextMoreView(interaction, [
-                context.ContextUserFunction("ユーザー情報", user_info),
-                context.ContextMessageFunction("アバター表示", avatar_show),
-                context.ContextMessageFunction("権限表示", permission_show)
-            ], member)
+            base_funcs.append(context.ContextMessageFunction("権限表示", permission_show))
+            base_funcs.append(context.ContextUserFunction("所有ロール表示", roles_show))
+
+            view = context.ContextMoreView(interaction, base_funcs, member)
 
             await interaction.response.send_message(
                 view=view,
