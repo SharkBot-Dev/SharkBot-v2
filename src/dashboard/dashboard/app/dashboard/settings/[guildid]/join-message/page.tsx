@@ -48,7 +48,6 @@ export default async function JoinMessagePage({ params }: { params: { guildid: s
         const exists = channelsData.some((c: any) => c.id === channel);
 
         if (!exists) {
-            console.log("チャンネルが存在しません。")
             return;
         }
 
