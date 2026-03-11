@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import datetime
 
 import requests
-from models import block, make_embed, miq, web_translate
+from models import block, make_embed, miq, web_translate, context
 from models.permissions_text import PERMISSION_TRANSLATIONS
 import asyncio
 
@@ -579,12 +579,8 @@ async def setup(bot: commands.Bot):
             ).set_footer(text=f"mid:{message.id}"),
         )
 
-    @app_commands.context_menu(name="ユーザー情報")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.allowed_installs(guilds=True, users=True)
-    async def user_info(interaction: discord.Interaction, member: discord.Member):
-        await interaction.response.defer()
+    async def user_info(origin_interaction: discord.Interaction, interaction: discord.Interaction, member: discord.Member):
+        await interaction.response.defer(ephemeral=True)
         JST = datetime.timezone(datetime.timedelta(hours=9))
 
         if interaction.is_user_integration() and not interaction.is_guild_integration():
@@ -625,19 +621,17 @@ async def setup(bot: commands.Bot):
         )
         if member.avatar:
             await interaction.followup.send(
-                embed=embed.set_thumbnail(url=member.avatar.url)
+                embed=embed.set_thumbnail(url=member.avatar.url),
+                ephemeral=True
             )
         else:
             await interaction.followup.send(
-                embed=embed.set_thumbnail(url=member.default_avatar.url)
+                embed=embed.set_thumbnail(url=member.default_avatar.url),
+                ephemeral=True
             )
 
-    @app_commands.context_menu(name="アバター表示")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.allowed_installs(guilds=True, users=True)
-    async def avatar_show(interaction: discord.Interaction, member: discord.Member):
-        await interaction.response.defer()
+    async def avatar_show(origin_interaction: discord.Interaction, interaction: discord.Interaction, member: discord.Member):
+        await interaction.response.defer(ephemeral=True)
         if member.avatar == None:
 
             class AvatarLayout(discord.ui.LayoutView):
@@ -655,7 +649,7 @@ async def setup(bot: commands.Bot):
                     accent_colour=discord.Colour.green(),
                 )
 
-            await interaction.followup.send(view=AvatarLayout())
+            await interaction.followup.send(view=AvatarLayout(), ephemeral=True)
 
         else:
 
@@ -681,17 +675,12 @@ async def setup(bot: commands.Bot):
                     accent_colour=discord.Colour.green(),
                 )
 
-            await interaction.followup.send(view=AvatarLayout())
+            await interaction.followup.send(view=AvatarLayout(), ephemeral=True)
 
         return
 
-    @app_commands.context_menu(name="権限を見る")
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    async def permissions_check(
-        interaction: discord.Interaction, member: discord.Member
-    ):
-        await interaction.response.defer()
+    async def permission_show(origin_interaction: discord.Interaction, interaction: discord.Interaction, member: discord.Member):
+        await interaction.response.defer(ephemeral=True)
         try:
             user_perms = [
                 PERMISSION_TRANSLATIONS.get(perm, perm)
@@ -705,7 +694,8 @@ async def setup(bot: commands.Bot):
                     title=f"{member.name}さんの権限",
                     description=user_perms_str,
                     color=discord.Color.green(),
-                ).set_thumbnail(url=avatar)
+                ).set_thumbnail(url=avatar),
+                ephemeral=True
             )
         except Exception as e:
             return await interaction.followup.send(
@@ -713,97 +703,119 @@ async def setup(bot: commands.Bot):
                     title=f"{member.name}さんの権限",
                     description=f"権限の取得に失敗しました。\n`{e}`",
                     color=discord.Color.red(),
-                )
+                ),
+                ephemeral=True
             )
+
+    @app_commands.context_menu(name="情報関連")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    async def users(interaction: discord.Interaction, member: discord.Member):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            view = context.ContextMoreView(interaction, [
+                context.ContextUserFunction("ユーザー情報", user_info),
+                context.ContextMessageFunction("アバター表示", avatar_show)
+            ], member)
+
+            await interaction.response.send_message(
+                view=view,
+                ephemeral=True,
+            )
+        else:
+            view = context.ContextMoreView(interaction, [
+                context.ContextUserFunction("ユーザー情報", user_info),
+                context.ContextMessageFunction("アバター表示", avatar_show),
+                context.ContextMessageFunction("権限表示", permission_show)
+            ], member)
+
+            await interaction.response.send_message(
+                view=view,
+                ephemeral=True,
+            )
+
+    async def interaction_info(origin_interaction: discord.Interaction, interaction: discord.Interaction, message: discord.Message):
+        meta = message.interaction_metadata
+
+        if not meta:
+            await interaction.response.send_message(
+                    ephemeral=True,
+                    embed=make_embed.error_embed(
+                    title="情報が見つかりません",
+                    description="このメッセージはインタラクション（コマンド等）によって送信されたものではありません。",
+                ),
+            )
+            return
+
+        await interaction.response.defer(ephemeral=True, thinking=False)
+
+        embed = make_embed.success_embed(title="インタラクション詳細情報")
+
+        if meta.user:
+            user_info = f"{meta.user.mention}\nID: `{meta.user.id}`"
+            embed.add_field(name="実行者", value=user_info, inline=True)
+
+            avatar_url = meta.user.display_avatar.url
+            embed.set_thumbnail(url=avatar_url)
+
+        cmd_type = str(meta.type).split(".")[-1].replace("_", " ").title()
+        embed.add_field(name="種類", value=f"`{cmd_type}`", inline=True)
+
+        embed.add_field(
+            name="インタラクションID", value=f"`{meta.id}`", inline=False
+        )
+
+        embed.add_field(
+            name="実行日時",
+            value=f"{discord.utils.format_dt(message.created_at, 'F')} ({discord.utils.format_dt(message.created_at, 'R')})",
+            inline=False,
+        )
+
+        embed.add_field(
+            name="BotID",
+            value=f"{message.author.mention}\nID: `{message.author.id}`",
+            inline=True,
+        )
+
+        if hasattr(meta, "target_user") and meta.target_user:
+            embed.add_field(
+                name="ターゲット",
+                value=f"{meta.target_user.mention}",
+                inline=True,
+            )
+
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+    async def dm_transfer(origin_interaction: discord.Interaction, interaction: discord.Interaction, message: discord.Message):
+        await interaction.response.defer(ephemeral=True)
+                
+        try:
+            channel = interaction.user.dm_channel
+            if not channel:
+                channel = await interaction.user.create_dm()
+
+            await message.forward(channel)
+        except:
+            await interaction.followup.send(embed=make_embed.error_embed(title="保存に失敗しました。", description="DMを開放してください。"), ephemeral=True)
+            return
+                
+        await interaction.followup.send(embed=make_embed.success_embed(title="保存しました。", description="DMを確認してください。"), ephemeral=True)
+
+    async def test_message(origin_interaction: discord.Interaction, interaction: discord.Interaction, message: discord.Message):
+        await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="テストしました！"))
 
     @app_commands.context_menu(name="その他")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.allowed_installs(guilds=True, users=True)
     async def message_more(interaction: discord.Interaction, message: discord.Message):
-        class MoreView(discord.ui.View):
-            def __init__(self, *, timeout=180, interaction: discord.Interaction):
-                super().__init__(timeout=timeout)
-                self.interaction = interaction
-
-            @discord.ui.button(label="インタラクション情報")
-            async def interaction_info(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                meta = message.interaction_metadata
-
-                if not meta:
-                    await interaction.response.send_message(
-                        ephemeral=True,
-                        embed=make_embed.error_embed(
-                            title="情報が見つかりません",
-                            description="このメッセージはインタラクション（コマンド等）によって送信されたものではありません。",
-                        ),
-                    )
-                    return
-
-                await interaction.response.defer(ephemeral=True, thinking=False)
-
-                embed = make_embed.success_embed(title="インタラクション詳細情報")
-
-                if meta.user:
-                    user_info = f"{meta.user.mention}\nID: `{meta.user.id}`"
-                    embed.add_field(name="実行者", value=user_info, inline=True)
-
-                    avatar_url = meta.user.display_avatar.url
-                    embed.set_thumbnail(url=avatar_url)
-
-                cmd_type = str(meta.type).split(".")[-1].replace("_", " ").title()
-                embed.add_field(name="種類", value=f"`{cmd_type}`", inline=True)
-
-                embed.add_field(
-                    name="インタラクションID", value=f"`{meta.id}`", inline=False
-                )
-
-                embed.add_field(
-                    name="実行日時",
-                    value=f"{discord.utils.format_dt(message.created_at, 'F')} ({discord.utils.format_dt(message.created_at, 'R')})",
-                    inline=False,
-                )
-
-                embed.add_field(
-                    name="BotID",
-                    value=f"{message.author.mention}\nID: `{message.author.id}`",
-                    inline=True,
-                )
-
-                if hasattr(meta, "target_user") and meta.target_user:
-                    embed.add_field(
-                        name="ターゲット",
-                        value=f"{meta.target_user.mention}",
-                        inline=True,
-                    )
-
-                await self.interaction.followup.send(embed=embed)
-
-            @discord.ui.button(label="DMに保存")
-            async def dm_save(
-                self, interaction: discord.Interaction, button: discord.ui.Button
-            ):
-                await interaction.response.defer(ephemeral=True)
-                
-                try:
-                    embed = discord.Embed(color=discord.Color.green(), description=message.content, title="<:check:1419898127975972937> 保存しました。").set_author(name=f"{message.author.name} ({message.author.id})", icon_url=message.author.display_avatar.url).set_footer(text=f"{message.guild.name} ({message.guild.id})", icon_url=message.guild.icon.url if message.guild.icon else None)
-                    if message.attachments != []:
-                        embed.add_field(name="添付ファイル", value="\n".join([f"[{a.filename}]({a.url})" for a in message.attachments]))
-                    
-                    await interaction.user.send(embed=embed)
-                except:
-                    await interaction.followup.send(embed=make_embed.error_embed(title="保存に失敗しました。", description="DMを開放してください。"), ephemeral=True)
-                    return
-                
-                await interaction.followup.send(embed=make_embed.success_embed(title="保存しました。", description="DMを確認してください。"), ephemeral=True)
+        view = context.ContextMoreView(interaction, [
+            context.ContextMessageFunction("インタラクション情報", interaction_info),
+            context.ContextMessageFunction("DMに転送", dm_transfer)
+        ], message)
 
         await interaction.response.send_message(
-            embed=discord.Embed(
-                title="以下から選択してください。", color=discord.Color.green()
-            ),
-            view=MoreView(interaction=interaction),
+            view=view,
             ephemeral=True,
         )
 
@@ -815,6 +827,4 @@ async def setup(bot: commands.Bot):
     bot.tree.add_command(message_more)
 
     # ユーザーに使うコマンド
-    bot.tree.add_command(user_info)
-    bot.tree.add_command(avatar_show)
-    bot.tree.add_command(permissions_check)
+    bot.tree.add_command(users)
