@@ -727,7 +727,7 @@ async def setup(bot: commands.Bot):
                 ephemeral=True
             )
 
-    @app_commands.context_menu(name="情報関連")
+    @app_commands.context_menu(name="ユーザー情報")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.allowed_installs(guilds=True, users=True)
