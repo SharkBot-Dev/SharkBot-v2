@@ -17,6 +17,23 @@ class ContextUserFunction:
     async def execute(self, origin_interaction: discord.Interaction, interaction: discord.Interaction, user):
         await self.function(origin_interaction, interaction, user)
 
+class BaseToggle:
+    def __init__(self, name: str, default_boolean: bool, toggled_call_function):
+        self.name = name
+        self.toggled_call_function = toggled_call_function
+        self.value = default_boolean
+
+    async def _execute_toggle(self, interaction: discord.Interaction, target):
+        self.value = not self.value
+
+class ContextMessageToggle(BaseToggle):
+    async def toggle(self, interaction: discord.Interaction, message: discord.Message):
+        await self._execute_toggle(interaction, message)
+
+class ContextUserToggle(BaseToggle):
+    async def toggle(self, interaction: discord.Interaction, user):
+        await self._execute_toggle(interaction, user)
+
 class ContextMoreView(discord.ui.LayoutView):
     def __init__(self, interaction: discord.Interaction, functions: list, target):
         super().__init__(timeout=180)
@@ -45,11 +62,25 @@ class ContextMoreView(discord.ui.LayoutView):
         end = start + self.per_page
 
         for func in self.functions[start:end]:
-            section = discord.ui.Section(discord.ui.TextDisplay(func.name), accessory=discord.ui.Button(
-                label="実行",
-                custom_id=f"context_func_{func.name}",
-                style=discord.ButtonStyle.blurple
-            ))
+            if type(func) == ContextMessageToggle or type(func) == ContextUserToggle:
+                if func.value:
+                    section = discord.ui.Section(discord.ui.TextDisplay(func.name), accessory=discord.ui.Button(
+                        label="無効化",
+                        custom_id=f"context_toggle_{func.name}",
+                        style=discord.ButtonStyle.green
+                    ))
+                else:
+                    section = discord.ui.Section(discord.ui.TextDisplay(func.name), accessory=discord.ui.Button(
+                        label="有効化",
+                        custom_id=f"context_toggle_{func.name}",
+                        style=discord.ButtonStyle.red
+                    ))
+            else:
+                section = discord.ui.Section(discord.ui.TextDisplay(func.name), accessory=discord.ui.Button(
+                    label="実行",
+                    custom_id=f"context_func_{func.name}",
+                    style=discord.ButtonStyle.blurple
+                ))
 
             container.add_item(section)
 
@@ -111,5 +142,24 @@ class ContextMoreView(discord.ui.LayoutView):
                         await func.execute(self.interaction, interaction, self.target)
 
                     return False
+
+        if cid.startswith("context_toggle_"):
+            name = cid.replace("context_toggle_", "")
+
+            for func in self.functions:
+                if func.name != name:
+                    continue
+
+                if not isinstance(func, (ContextMessageToggle, ContextUserToggle)):
+                    continue
+
+                await func.toggle(interaction, self.target)
+
+                self.render()
+                await interaction.response.edit_message(view=self)
+
+                await func.toggled_call_function(interaction, self.target, func.value)
+
+                return False
 
         return True

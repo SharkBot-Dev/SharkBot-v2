@@ -823,8 +823,8 @@ async def setup(bot: commands.Bot):
                 
         await interaction.followup.send(embed=make_embed.success_embed(title="保存しました。", description="DMを確認してください。"), ephemeral=True)
 
-    async def test_message(origin_interaction: discord.Interaction, interaction: discord.Interaction, message: discord.Message):
-        await interaction.response.send_message(ephemeral=True, embed=make_embed.success_embed(title="テストしました！"))
+    async def test_message(interaction: discord.Interaction, message: discord.Message, boolean: bool):
+        return
 
     @app_commands.context_menu(name="その他")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
