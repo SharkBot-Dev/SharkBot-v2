@@ -404,6 +404,26 @@ class LevelCog(commands.Cog):
         
         await interaction.followup.send(embed=make_embed.success_embed(title="報酬設定の更新", description=msg))
 
+    @level.command(name="blacklist", description="ブラックリストに登録するロールを設定")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    async def level_blacklist(self, interaction: discord.Interaction, ロール: discord.Role = None):
+        await interaction.response.defer()
+        if not await self.check_level_enabled(interaction.guild):
+            return await interaction.followup.send("レベル機能は無効です。")
+
+        if not ロール:
+            return await interaction.followup.send("ロールを指定してください。")
+
+        b_role = await self.get_blacklist_role(interaction.guild)
+        if ロール.id in b_role:
+            msg = f"ブラックリストから{ロール.mention}を削除しました。"
+            await self.remove_blacklist_role(interaction.guild, ロール)
+        else:
+            msg = f"ブラックリストに{ロール.mention}を追加しました。\nそのロールを持つ人がレベルが上がらなくなります。"
+            await self.add_blacklist_role(interaction.guild, ロール)
+
+        await interaction.followup.send(embed=make_embed.success_embed(title="ブラックリストの更新", description=msg))
+
     @level.command(name="edit", description="ユーザーのレベル・XPを直接編集します。")
     @app_commands.describe(カテゴリ="編集する対象を選択してください")
     @app_commands.choices(カテゴリ=[
