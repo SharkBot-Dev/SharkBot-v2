@@ -16,6 +16,9 @@ export default async function LevelPage({ params }: { params: { guildid: string 
         const sessionId = cookieStore.get("session_id")?.value;
         if (!sessionId) return;
 
+        const guild = await getGuild(sessionId, guildid);
+        if (!guild) return;
+
         const checkenable = formData.get("checkenable") === "true" || formData.get("checkenable") === "on";
         const is_slient = formData.get("is_slient") === "true" || formData.get("is_slient") === "on";
         const channel = formData.get("levelupchannel") as string;
@@ -65,6 +68,9 @@ export default async function LevelPage({ params }: { params: { guildid: string 
         const sessionId = cookieStore.get("session_id")?.value;
         if (!sessionId) return;
 
+        const guild = await getGuild(sessionId, guildid);
+        if (!guild) return;
+
         try {
             const role = formData.get("role") as string;
             const level = formData.get("level") as string;
@@ -92,6 +98,9 @@ export default async function LevelPage({ params }: { params: { guildid: string 
         const cookieStore = await cookies();
         const sessionId = cookieStore.get("session_id")?.value;
         if (!sessionId) return;
+
+        const guild = await getGuild(sessionId, guildid);
+        if (!guild) return;
 
         const level = formData.get('level');
         const category = formData.get('category');
