@@ -188,6 +188,44 @@ class LevelCog(commands.Cog):
         except Exception as e:
             print(f"Error in set_role: {e}")
 
+    async def add_blacklist_role(
+        self,
+        guild: discord.Guild,
+        role: discord.Role = None,
+    ):
+        db = self.bot.async_db["Main"].LevelingUpRole
+        try:
+            if role is None:
+                await db.delete_one({"Guild": guild.id})
+                return
+
+            await db.update_one(
+                {"Guild": guild.id},
+                {"$set": {"Guild": guild.id}, "$addToSet": {"Blacklist": role.id}},
+                upsert=True,
+            )
+        except Exception as e:
+            return
+        
+    async def remove_blacklist_role(
+        self,
+        guild: discord.Guild,
+        role: discord.Role = None,
+    ):
+        db = self.bot.async_db["Main"].LevelingUpRole
+        try:
+            if role is None:
+                await db.delete_one({"Guild": guild.id})
+                return
+
+            await db.update_one(
+                {"Guild": guild.id},
+                {"$set": {"Guild": guild.id}, "$pull": {"Blacklist": role.id}},
+                upsert=True,
+            )
+        except Exception as e:
+            return
+
     async def get_role(self, guild: discord.Guild, level: int):
         db = self.bot.async_db["Main"].LevelingUpRole
         try:
@@ -197,6 +235,16 @@ class LevelCog(commands.Cog):
             return dbfind["Role"] if dbfind else None
         except Exception:
             return None
+        
+    async def get_blacklist_role(self, guild: discord.Guild):
+        db = self.bot.async_db["Main"].LevelingUpRole
+        try:
+            dbfind = await db.find_one(
+                {"Guild": guild.id}, {"_id": False}
+            )
+            return dbfind["Blacklist"] if dbfind else []
+        except Exception:
+            return []
 
     async def get_timing(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].LevelingUpTiming
@@ -385,6 +433,12 @@ class LevelCog(commands.Cog):
         except:
             return
         if enabled:
+            blacklist_role = await self.get_blacklist_role(message.guild)
+            roles = [_.id for _ in message.author.roles]
+            for b in blacklist_role:
+                if b in roles:
+                    return
+
             db = self.bot.async_db["Main"].Leveling
             try:
                 dbfind = await db.find_one(
@@ -761,6 +815,46 @@ class LevelCog(commands.Cog):
             return await interaction.followup.send(
                 embed=make_embed.error_embed(title="レベルは無効です。")
             )
+
+    @level.command(
+        name="blacklist", 
+        description="レベルが上がらないようにするロールを指定する（再度指定で解除）"
+    )
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    @app_commands.describe(ロール="対象のロールを選択してください")
+    async def level_blacklist(
+        self, interaction: discord.Interaction, ロール: discord.Role
+    ):
+        await interaction.response.defer()
+
+        try:
+            enabled = await self.check_level_enabled(interaction.guild)
+            if not enabled:
+                raise ValueError("Disabled")
+        except Exception:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(title="レベル機能は現在無効です。")
+            )
+
+        blacklist_ids = await self.get_blacklist_role(interaction.guild)
+        
+        if ロール.id not in blacklist_ids:
+            await self.add_blacklist_role(interaction.guild, ロール)
+            description = f"{ロール.mention} をブラックリストに追加しました。\nこのロールを持つユーザーは経験値を獲得しません。"
+        else:
+            await self.remove_blacklist_role(interaction.guild, ロール)
+            description = f"{ロール.mention} をブラックリストから削除しました。"
+
+        embed = make_embed.success_embed(
+            title="設定を更新しました", 
+            description=description
+        )
+        await interaction.followup.send(
+            embed=embed, 
+            allowed_mentions=discord.AllowedMentions.none()
+        )
 
     @level.command(
         name="message", description="レベルアップ時のメッセージを変更します。"
