@@ -95,6 +95,10 @@ class LevelCog(commands.Cog):
                 except Exception as e:
                     print(f"Role grant error: {e}")
 
+        is_silent = await self.get_silent(guild)
+        if is_silent:
+            return
+
         msg_template = await self.get_message(guild.id, category)
         cat_display = {"Total": "総合", "Text": "テキスト", "Voice": "ボイス"}.get(category, category)
         
@@ -129,9 +133,14 @@ class LevelCog(commands.Cog):
         return dbfind["Role"] if dbfind else None
 
     async def get_blacklist_role(self, guild: discord.Guild):
-        db = self.bot.async_db["Main"].LevelingUpRole
+        db = self.bot.async_db["Main"].LevelingSetting
         dbfind = await db.find_one({"Guild": guild.id})
         return dbfind.get("Blacklist", []) if dbfind else []
+
+    async def get_silent(self, guild: discord.Guild):
+        db = self.bot.async_db["Main"].LevelingSetting
+        dbfind = await db.find_one({"Guild": guild.id})
+        return dbfind.get("Silent", False) if dbfind else False
 
     async def get_xp_rate(self, guild_id: int):
         db = self.bot.async_db["Main"].LevelingSetting
@@ -306,12 +315,16 @@ class LevelCog(commands.Cog):
             await db.delete_one({"Guild": guild.id, "Level": level})
 
     async def add_blacklist_role(self, guild: discord.Guild, role: discord.Role):
-        db = self.bot.async_db["Main"].LevelingUpRole
+        db = self.bot.async_db["Main"].LevelingSetting
         await db.update_one({"Guild": guild.id}, {"$addToSet": {"Blacklist": role.id}}, upsert=True)
 
     async def remove_blacklist_role(self, guild: discord.Guild, role: discord.Role):
-        db = self.bot.async_db["Main"].LevelingUpRole
+        db = self.bot.async_db["Main"].LevelingSetting
         await db.update_one({"Guild": guild.id}, {"$pull": {"Blacklist": role.id}})
+
+    async def set_silent(self, guild: discord.Guild, boolean: bool):
+        db = self.bot.async_db["Main"].LevelingSetting
+        await db.update_one({"Guild": guild.id}, {"$set": {"Silent": boolean}}, upsert=True)
 
     @level.command(name="message", description="レベルアップ時の通知メッセージをカテゴリ別に編集します。")
     @app_commands.describe(
@@ -376,6 +389,19 @@ class LevelCog(commands.Cog):
             title, desc = "レベルアップの通知チャンネルを削除しました。", "今後はメッセージが送信されたチャンネルで通知されます。"
         
         await interaction.followup.send(embed=make_embed.success_embed(title=title, description=desc))
+
+    @level.command(name="silent", description="レベルアップの通知を送信しないようにする設定をします。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.describe(静かにするか="Falseで送信、Trueで送信しない")
+    async def level_silent(self, interaction: discord.Interaction, 静かにするか: bool):
+        await interaction.response.defer()
+        if not await self.check_level_enabled(interaction.guild):
+            return await interaction.followup.send(embed=make_embed.error_embed(title="レベルは無効です。"))
+
+        await self.set_silent(interaction.guild, 静かにするか)
+        msg = "送信しない" if 静かにするか else "送信する"
+
+        await interaction.followup.send(embed=make_embed.success_embed(title="設定を更新しました。", description=f"レベルアップメッセージを{msg}ようにしました。"))
 
     @level.command(name="role", description="カテゴリごとのレベルアップ報酬ロールを設定します。")
     @app_commands.describe(カテゴリ="報酬を設定する対象", レベル="到達目標レベル", ロール="付与するロール（指定なしで削除）")
