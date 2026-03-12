@@ -40,6 +40,15 @@ class LevelCog(commands.Cog):
             return initial_data
         return data
 
+    async def get_message(self, guild_id: int, category: str):
+        db = self.bot.async_db["Main"].LevelingSetting
+        dbfind = await db.find_one({"Guild": guild_id})
+        
+        default = f"`{{user}}`さんの **{{category}}** レベルが「{{newlevel}}」になったよ！"
+        if dbfind:
+            return dbfind.get(f"{category}Message", default)
+        return default
+    
     async def update_xp(self, guild: discord.Guild, user: discord.Member, category: str, amount: int):
         db = self.bot.async_db["Main"].Leveling
         data = await self.get_user_data(guild.id, user.id)
@@ -48,17 +57,19 @@ class LevelCog(commands.Cog):
         
         new_cat_xp = data.get(f"{category}XP", 0) + amount
         new_cat_lv = data.get(f"{category}Level", 0)
+        cat_leveled_up = False
         while new_cat_xp >= timing:
             new_cat_xp -= timing
             new_cat_lv += 1
+            cat_leveled_up = True
 
         new_total_xp = data.get("XP", 0) + amount
         new_total_lv = data.get("Level", 0)
-        leveled_up = False
+        total_leveled_up = False
         while new_total_xp >= timing:
             new_total_xp -= timing
             new_total_lv += 1
-            leveled_up = True
+            total_leveled_up = True
 
         update_fields = {
             f"{category}XP": new_cat_xp,
@@ -66,34 +77,41 @@ class LevelCog(commands.Cog):
             "XP": new_total_xp,
             "Level": new_total_lv
         }
-        
         await db.update_one({"Guild": guild.id, "User": user.id}, {"$set": update_fields})
 
-        if leveled_up:
-            await self.handle_levelup(guild, user, new_total_lv)
+        if cat_leveled_up:
+            await self.handle_levelup(guild, user, category, new_cat_lv)
+        
+        if total_leveled_up:
+            await self.handle_levelup(guild, user, "Total", new_total_lv)
 
-    async def handle_levelup(self, guild: discord.Guild, user: discord.Member, new_lv: int):
-        role_id = await self.get_role(guild, new_lv)
+    async def handle_levelup(self, guild: discord.Guild, user: discord.Member, category: str, new_lv: int):
+        role_id = await self.get_role(guild, category, new_lv)
         if role_id:
             role = guild.get_role(role_id)
             if role and role not in user.roles:
-                try: await user.add_roles(role)
-                except: pass
+                try:
+                    await user.add_roles(role, reason=f"Level up ({category})")
+                except Exception as e:
+                    print(f"Role grant error: {e}")
 
-        msg_template = await self.get_message(guild.id)
-        content = msg_template.replace("{user}", user.name).replace("{newlevel}", str(new_lv))
+        msg_template = await self.get_message(guild.id, category)
+        cat_display = {"Total": "総合", "Text": "テキスト", "Voice": "ボイス"}.get(category, category)
+        
+        content = msg_template.replace("{user}", user.display_name)\
+                             .replace("{newlevel}", str(new_lv))\
+                             .replace("{category}", cat_display)
         
         cha_id = await self.get_channel(guild)
         embed = discord.Embed(description=content, color=discord.Color.yellow())
         
         if cha_id:
             channel = guild.get_channel(cha_id)
-            if channel: await channel.send(embed=embed)
-
-    async def get_message(self, guild_id: int):
-        db = self.bot.async_db["Main"].LevelingSetting
-        dbfind = await db.find_one({"Guild": guild_id})
-        return dbfind.get("Message", "`{user}`さんのレベルが「{newlevel}」になったよ！") if dbfind else "`{user}`さんのレベルが「{newlevel}」になったよ！"
+            if channel:
+                try:
+                    await channel.send(embed=embed)
+                except:
+                    pass
 
     async def get_timing(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].LevelingUpTiming
@@ -105,15 +123,22 @@ class LevelCog(commands.Cog):
         dbfind = await db.find_one({"Guild": guild.id})
         return dbfind["Channel"] if dbfind else None
 
-    async def get_role(self, guild: discord.Guild, level: int):
+    async def get_role(self, guild: discord.Guild, category: str, level: int):
         db = self.bot.async_db["Main"].LevelingUpRole
-        dbfind = await db.find_one({"Guild": guild.id, "Level": level})
+        dbfind = await db.find_one({"Guild": guild.id, "Level": level, "Category": category})
         return dbfind["Role"] if dbfind else None
 
     async def get_blacklist_role(self, guild: discord.Guild):
         db = self.bot.async_db["Main"].LevelingUpRole
         dbfind = await db.find_one({"Guild": guild.id})
         return dbfind.get("Blacklist", []) if dbfind else []
+
+    async def get_xp_rate(self, guild_id: int):
+        db = self.bot.async_db["Main"].LevelingSetting
+        data = await db.find_one({"Guild": guild_id})
+        if data:
+            return data.get("MinXP", 1), data.get("MaxXP", 3)
+        return 1, 3
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -123,7 +148,11 @@ class LevelCog(commands.Cog):
         blacklist = await self.get_blacklist_role(message.guild)
         if any(role.id in blacklist for role in message.author.roles): return
 
-        await self.update_xp(message.guild, message.author, "Text", random.randint(1, 3))
+        min_xp, max_xp = await self.get_xp_rate(message.guild.id)
+        gained_xp = random.randint(min_xp, max_xp)
+
+        if gained_xp > 0:
+            await self.update_xp(message.guild, message.author, "Text", gained_xp)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before, after):
@@ -284,6 +313,54 @@ class LevelCog(commands.Cog):
         db = self.bot.async_db["Main"].LevelingUpRole
         await db.update_one({"Guild": guild.id}, {"$pull": {"Blacklist": role.id}})
 
+    @level.command(name="message", description="レベルアップ時の通知メッセージをカテゴリ別に編集します。")
+    @app_commands.describe(
+        カテゴリ="どのレベルが上がった時のメッセージか選択してください",
+        メッセージ="メッセージ内容（{user}, {newlevel}, {category} が使えます）"
+    )
+    @app_commands.choices(カテゴリ=[
+        app_commands.Choice(name="総合 (Total)", value="Total"),
+        app_commands.Choice(name="テキスト (Text)", value="Text"),
+        app_commands.Choice(name="ボイス (Voice)", value="Voice"),
+    ])
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def level_message(self, interaction: discord.Interaction, カテゴリ: str, メッセージ: str = None):
+        await interaction.response.defer()
+        
+        if not await self.check_level_enabled(interaction.guild):
+            return await interaction.followup.send(embed=make_embed.error_embed(title="レベル機能は無効です。"))
+
+        db = self.bot.async_db["Main"].LevelingSetting
+        field_name = f"{カテゴリ}Message"
+
+        if メッセージ:
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$set": {field_name: メッセージ}},
+                upsert=True
+            )
+            
+            preview = メッセージ.replace("{user}", interaction.user.display_name)\
+                              .replace("{newlevel}", "10")\
+                              .replace("{category}", カテゴリ)
+            
+            embed = make_embed.success_embed(
+                title=f"{カテゴリ} の通知メッセージを設定しました",
+                description=f"**実際の表示例:**\n{preview}\n\n"
+                            f"**使用可能な変数:**\n"
+                            f"`{{user}}` : ユーザー名\n"
+                            f"`{{newlevel}}` : 到達レベル\n"
+                            f"`{{category}}` : カテゴリ名"
+            )
+        else:
+            await db.update_one(
+                {"Guild": interaction.guild.id},
+                {"$unset": {field_name: ""}}
+            )
+            embed = make_embed.success_embed(title=f"{カテゴリ} のメッセージをリセットしました。")
+
+        await interaction.followup.send(embed=embed)
+
     @level.command(name="channel", description="レベルアップの通知のチャンネルを設定します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     async def level_channel(self, interaction: discord.Interaction, チャンネル: discord.TextChannel = None):
@@ -368,6 +445,29 @@ class LevelCog(commands.Cog):
         await interaction.followup.send(embed=make_embed.success_embed(
             title="レベルアップタイミング設定",
             description=f"現在の設定: **{xp}XP** ごとにレベルアップします。"
+        ))
+
+    @level.command(name="rate", description="メッセージ送信時に獲得できるXPの範囲を設定します。")
+    @app_commands.describe(最小値="獲得できるXPの下限 (例: 0)", 最大値="獲得できるXPの上限 (例: 5)")
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def level_rate(self, interaction: discord.Interaction, 最小値: int, 最大値: int):
+        await interaction.response.defer()
+        
+        if 最小値 < 0 or 最大値 < 1:
+            return await interaction.followup.send("最小値は0以上、最大値は1以上にしてください。")
+        if 最小値 > 最大値:
+            return await interaction.followup.send("最小値は最大値より小さく設定してください。")
+
+        db = self.bot.async_db["Main"].LevelingSetting
+        await db.update_one(
+            {"Guild": interaction.guild.id},
+            {"$set": {"MinXP": 最小値, "MaxXP": 最大値}},
+            upsert=True
+        )
+
+        await interaction.followup.send(embed=make_embed.success_embed(
+            title="経験値レートを更新しました",
+            description=f"メッセージ送信時の獲得XP: **{最小値} 〜 {最大値} XP**"
         ))
 
     @level.command(name="rewards", description="現在の報酬リストを表示します。")
@@ -458,7 +558,7 @@ class LevelCog(commands.Cog):
                 if progress > 0:
                     draw.rounded_rectangle([bar_x, bar_y, bar_x + int(bar_w * progress), bar_y + bar_h], radius=5, fill=base_color)
                 
-                start_y += 50 # 次の行へ
+                start_y += 50
 
             output = io.BytesIO()
             img.save(output, format="PNG")
