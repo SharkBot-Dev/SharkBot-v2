@@ -406,13 +406,10 @@ class LevelCog(commands.Cog):
 
     @level.command(name="blacklist", description="ブラックリストに登録するロールを設定")
     @app_commands.checks.has_permissions(manage_roles=True)
-    async def level_blacklist(self, interaction: discord.Interaction, ロール: discord.Role = None):
+    async def level_blacklist(self, interaction: discord.Interaction, ロール: discord.Role):
         await interaction.response.defer()
         if not await self.check_level_enabled(interaction.guild):
             return await interaction.followup.send("レベル機能は無効です。")
-
-        if not ロール:
-            return await interaction.followup.send("ロールを指定してください。")
 
         b_role = await self.get_blacklist_role(interaction.guild)
         if ロール.id in b_role:
@@ -423,6 +420,20 @@ class LevelCog(commands.Cog):
             await self.add_blacklist_role(interaction.guild, ロール)
 
         await interaction.followup.send(embed=make_embed.success_embed(title="ブラックリストの更新", description=msg))
+
+    @level.command(name="blacklists", description="ブラックリストロールをリスト化します。")
+    @app_commands.checks.has_permissions(manage_roles=True)
+    async def level_blacklists(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        if not await self.check_level_enabled(interaction.guild):
+            return await interaction.followup.send("レベル機能は無効です。")
+
+        b_role = await self.get_blacklist_role(interaction.guild)
+        roles = [f"<@&{_}>" for _ in b_role]
+
+        embed = make_embed.success_embed(title="ブラックリストロール一覧", description="\n".join(roles))
+
+        await interaction.followup.send(embed=embed)
 
     @level.command(name="edit", description="ユーザーのレベル・XPを直接編集します。")
     @app_commands.describe(カテゴリ="編集する対象を選択してください")
@@ -658,53 +669,22 @@ class LevelCog(commands.Cog):
             content=f"サーバー内の全レベルをリセットしました。"
         )
 
-    @level.command(name="migrate", description="既存のデータを新システム形式へ移行します。")
-    @app_commands.checks.has_permissions(administrator=True)
-    async def level_migrate(self, interaction: discord.Interaction):
-        if interaction.user.id != 1335428061541437531:
-            return await interaction.response.send_message(
-                ephemeral=True,
-                embed=make_embed.error_embed(title="あなたはSharkBotのオーナーではないため実行できません。")
-            )
-
-        await interaction.response.defer(ephemeral=True)
+    @level.command(name="messages", description="レベルのメッセージ設定を表示します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def level_messages(self, interaction: discord.Interaction):
+        await interaction.response.defer()
         
-        db_leveling = self.bot.async_db["Main"].Leveling
-        db_roles = self.bot.async_db["Main"].LevelingUpRole
+        if not await self.check_level_enabled(interaction.guild):
+            return await interaction.followup.send(embed=make_embed.error_embed(title="レベル機能は無効です。"))
         
-        user_result = await db_leveling.update_many(
-            {
-                "$or": [
-                    {"TextXP": {"$exists": False}},
-                    {"VoiceXP": {"$exists": False}},
-                    {"TextLevel": {"$exists": False}},
-                    {"VoiceLevel": {"$exists": False}}
-                ]
-            },
-            {
-                "$set": {
-                    "TextXP": 0,
-                    "TextLevel": 0,
-                    "VoiceXP": 0,
-                    "VoiceLevel": 0
-                }
-            }
-        )
+        embed = make_embed.success_embed(title="レベルのメッセージ設定")
 
-        role_result = await db_roles.update_many(
-            {"Category": {"$exists": False}, "Level": {"$exists": True}},
-            {"$set": {"Category": "Total"}}
-        )
+        title_map = {"Total": "総合", "Text": "テキスト", "Voice": "ボイス"}
+        for k, v in title_map.items():
+            message = await self.get_message(interaction.guild.id, k)
+            embed.add_field(name=v, value=message, inline=False)
 
-        embed = make_embed.success_embed(
-            title="データ移行が完了しました",
-            description=(
-                f"**ユーザーデータ修正:** {user_result.modified_count} 件\n"
-                f"**報酬ロール設定修正:** {role_result.modified_count} 件\n\n"
-                "既存のデータにテキスト/ボイス用のフィールドを追加し、"
-                "以前の報酬設定を「総合レベル報酬」として登録しました。"
-            )
-        )
         await interaction.followup.send(embed=embed)
 
 async def setup(bot):
