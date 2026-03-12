@@ -173,6 +173,8 @@ export default async function LevelPage({ params }: { params: { guildid: string 
 
     const leveling_role_find = await db.db("Main").collection("LevelingUpRole").find({Guild: new Long(guildid)}).toArray();
 
+    return <h1>現在メンテナンス中です。<br/>ご迷惑をおかけし、申し訳ございません。</h1>
+
     return (
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">{guild.name} のレベル</h1>
