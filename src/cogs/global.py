@@ -1,3 +1,5 @@
+import random
+
 from discord.ext import commands
 import discord
 import time
@@ -10,6 +12,8 @@ import urllib.parse
 
 from models import command_disable, make_embed, is_ban, globalchat
 import re
+
+from cryptography.fernet import Fernet
 
 from consts import settings
 
@@ -27,6 +31,39 @@ cooldown_up = {}
 invite_only_check = re.compile(
     r"^(https?://)?(www\.)?(discord\.gg/|discord\.com/invite/)[a-zA-Z0-9]+$"
 )
+
+class RandomJoinView(discord.ui.View):
+    def __init__(self, bot):
+        super().__init__(timeout=60)
+        self.bot = bot
+        
+    @discord.ui.button(label="参加する！", style=discord.ButtonStyle.primary, emoji="🎲")
+    async def join_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.defer(ephemeral=True)
+        
+        button.disabled = True
+        await interaction.edit_original_response(view=self)
+
+        db_reg = self.bot.async_db["Main"].Register
+        guilds_list = await db_reg.find({}).to_list(length=100)
+        random.shuffle(guilds_list)
+
+        success = False
+        for g_data in guilds_list:
+            target_id = g_data["Guild"]
+            guild = self.bot.get_guild(target_id)
+
+            if not guild or interaction.user in guild.members:
+                continue
+
+            invite = g_data.get('Invite')
+
+            await interaction.followup.send(f"{guild.name} を当てました！\n\n{invite}", ephemeral=True)
+            success = True
+            break
+
+        if not success:
+            await interaction.followup.send("新しく参加できるサーバーが現在ありません。", ephemeral=True)
 
 class RuleModal(discord.ui.Modal):
     def __init__(self, room_name: str):
@@ -1240,6 +1277,26 @@ class GlobalCog(commands.Cog):
                 description="以下のurlからアクセスできます。\nhttps://dashboard.sharkbot.xyz/servers",
             )
         )
+
+    @globalchat.command(name="random", description="ボタンを押してランダムなサーバーに参加します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(1, 60, key=lambda i: i.user.id)
+    async def global_random(self, interaction: discord.Interaction):
+        view = RandomJoinView(self.bot)
+        await interaction.response.send_message(
+            embed=make_embed.success_embed(title="ランダムなサーバーに参加する", description="以下のボタンを押すと\nランダムな掲示板に登録されている\nサーバーの招待リンクを取得します。"),
+            view=view,
+            ephemeral=True
+        )
+
+    @global_random.error
+    async def global_random_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
+        if isinstance(error, app_commands.CommandOnCooldown):
+            retry_after = round(error.retry_after, 1)
+            await interaction.response.send_message(
+                embed=make_embed.error_embed(title="クールダウン中です。", description="不正使用防止のためです。\nよろしくお願いします。"),
+                ephemeral=True
+            )
 
     @globalchat.command(
         name="register", description="サーバー掲示板に登録・登録解除します。"

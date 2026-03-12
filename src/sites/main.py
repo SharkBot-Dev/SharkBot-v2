@@ -17,12 +17,22 @@ import settings
 
 import requests
 
+from cryptography.fernet import Fernet
+
 from uvicorn.middleware.wsgi import WSGIMiddleware
 
 app = Flask(__name__, static_folder="./static/", template_folder="./Templates/")
 
 client = MongoClient("mongodb://localhost:27017/")
 
+ENCRYPTION_KEY = settings.OAUTH2_TOKEN_KEY.encode()
+cipher_suite = Fernet(ENCRYPTION_KEY)
+
+def encrypt_token(token: str) -> bytes:
+    return cipher_suite.encrypt(token.encode())
+
+def decrypt_token(encrypted_token: bytes) -> str:
+    return cipher_suite.decrypt(encrypted_token).decode()
 
 @app.route("/", methods=["GET"])
 def main():
@@ -251,6 +261,67 @@ def invite_auth_backend():
 def auth_error_page():
     return render_template("auth_error.html")
 
+@app.route("/register", methods=["GET"])
+def register_join_bot():
+    params = request.args
+    if not params:
+        return redirect("/")
+
+    authorization_code = params.get("code")
+    state = params.get("state")
+
+    db = client["DashboardBot"].JoinGuildAccount
+    find = db.find_one({"Code": state}, {"_id": False})
+    if find is None:
+        return jsonify(
+            {"status": "error", "reason": "一度認証に使われたようです。"}
+        ), 400
+    
+    if not find.get('Code'):
+        return jsonify(
+            {"status": "error", "reason": "一度認証に使われたようです。"}
+        ), 400
+    
+    request_postdata = {
+        "client_id": settings.CLIENT_ID,
+        "client_secret": settings.CLIENT_SECRET,
+        "grant_type": "authorization_code",
+        "code": authorization_code,
+        "redirect_uri": "https://www.sharkbot.xyz/register",
+    }
+    accesstoken_request = requests.post(
+        "https://discord.com/api/oauth2/token", data=request_postdata
+    )
+    responce_json = accesstoken_request.json()
+
+    if "access_token" not in responce_json:
+        return jsonify(
+            {"status": "error", "reason": "Discord OAuth token request failed"}
+        ), 400
+    
+    access_token = responce_json["access_token"]
+    refresh_token = responce_json["refresh_token"]
+
+    user_info = requests.get(
+        "https://discord.com/api/users/@me",
+        headers={"Authorization": f"Bearer {access_token}"},
+    ).json()
+
+    encrypted_token = encrypt_token(access_token)
+    encrypted_refresh_token = encrypt_token(refresh_token)
+
+    db.update_one({
+        "Code": state
+    }, {
+        "$set": {
+            "UserID": user_info["id"],
+            "Token": encrypted_token,
+            "RefToken": encrypted_refresh_token,
+            "Code": None
+        }
+    })
+
+    return render_template("register.html", username=user_info["username"])
 
 @app.route("/login", methods=["GET"])
 def login():

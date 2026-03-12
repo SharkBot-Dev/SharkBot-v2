@@ -1,8 +1,10 @@
 import datetime
+import secrets
 
 from discord.ext import commands
 import discord
 from discord import app_commands
+import urllib.parse
 
 from models import make_embed
 from motor.motor_asyncio import AsyncIOMotorCollection
@@ -48,6 +50,22 @@ class AccountCog(commands.Cog):
         })
 
         await interaction.followup.send(embed=make_embed.success_embed(title="アカウントを作成しました。", description="/account status で\nアカウントのステータスを\n確認できます。"))
+
+    @account.command(name="join", description="シームレスにサーバー参加するための認証をします。")
+    async def account_join(
+        self,
+        interaction: discord.Interaction
+    ):
+        db = interaction.client.async_db["DashboardBot"].JoinGuildAccount
+        code = secrets.token_urlsafe(30)
+        await db.update_one({
+            "UserID": str(interaction.user.id)
+        }, {"$set": {
+            "Code": code,
+            "Token": None,
+            "RefToken": None
+        }}, upsert=True)
+        await interaction.response.send_message(embed=make_embed.success_embed(title="認証をしてください。", description="以下のボタンから認証をしてください。\n\nこの認証をすることで、招待リンクを使用せずに\nサーバー参加することができるようになります。"), view=discord.ui.View().add_item(discord.ui.Button(label="認証をする", url=f"https://discord.com/oauth2/authorize?client_id=1322100616369147924&response_type=code&redirect_uri=https%3A%2F%2Fwww.sharkbot.xyz%2Fregister&scope=guilds+identify+guilds.join&state={urllib.parse.quote(code)}")), ephemeral=True)
 
     @account.command(name="status", description="アカウントのステータスを表示します。")
     async def account_status(
