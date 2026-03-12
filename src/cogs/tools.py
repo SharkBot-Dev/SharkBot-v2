@@ -866,6 +866,15 @@ class NetworkGroup(app_commands.Group):
             name="network", description="ネットワークツール系コマンドです。"
         )
 
+    @app_commands.command(name="whois", description="Whoisします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def whois(self, interaction: discord.Interaction, ドメイン: str):
+        await interaction.response.defer()
+        data = await fetch_whois(ドメイン)
+        await interaction.followup.send(file=discord.File(data, "whois.txt"))
+        data.close()
+
     @app_commands.command(name="nslookup", description="DNS情報を見ます。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -972,72 +981,117 @@ class NetworkGroup(app_commands.Group):
     )
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def webshot(self, interaction: discord.Interaction, url: str):
+    @app_commands.choices(
+        ブラウザ=[
+            app_commands.Choice(name="Chrome", value="chrome"),
+            app_commands.Choice(name="IE", value="ie")
+        ]
+    )
+    async def webshot(self, interaction: discord.Interaction, ブラウザ: app_commands.Choice[str], url: str):
         await interaction.response.send_message(embed=make_embed.loading_embed(f"撮影しています..."))
 
         connector = aiohttp_socks.ProxyConnector("127.0.0.1", port=9050)
         async with aiohttp.ClientSession(connector=connector) as session:
-            async with session.get("https://rakko.tools/tools/125/") as response:
-                regex = r"var (?:tokenId|token) = '([^']+)'"
+            if ブラウザ.value == "chrome":
+                async with session.get("https://rakko.tools/tools/125/") as response:
+                    regex = r"var (?:tokenId|token) = '([^']+)'"
 
-                text = await response.text()
+                    text = await response.text()
 
-                match = re.findall(regex, text)
+                    match = re.findall(regex, text)
 
-                data = {
-                    "token_id": match[0],
-                    "token": match[1],
-                    'url': url,
-                    'type': 'png',
-                    'width': '1024',
-                    'height': '768',
-                    'fullPage': '0',
-                    'zoom': '100',
-                    'device': '',
-                }
+                    data = {
+                        "token_id": match[0],
+                        "token": match[1],
+                        'url': url,
+                        'type': 'png',
+                        'width': '1024',
+                        'height': '768',
+                        'fullPage': '0',
+                        'zoom': '100',
+                        'device': '',
+                    }
 
+                    headers = {
+                        'accept': 'application/json, text/javascript, */*; q=0.01',
+                        'accept-language': 'ja,en-US;q=0.9,en;q=0.8',
+                        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'origin': 'https://rakko.tools',
+                        'priority': 'u=1, i',
+                        'referer': 'https://rakko.tools/tools/125/',
+                        'sec-ch-ua': '"Not:A-Brand";v="99", "Google Chrome";v="145", "Chromium";v="145"',
+                        'sec-ch-ua-mobile': '?0',
+                        'sec-ch-ua-platform': '"Windows"',
+                        'sec-fetch-dest': 'empty',
+                        'sec-fetch-mode': 'cors',
+                        'sec-fetch-site': 'same-origin',
+                        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
+                        'x-requested-with': 'XMLHttpRequest'
+                    }
+
+                    async with session.post(
+                        "https://rakko.tools/tools/125/screenController.php",
+                        data=data,
+                        headers=headers,
+                    ) as response_2:
+                        js = json.loads(await response_2.text())
+
+                        if not js["status"]:
+                            await interaction.edit_original_response(embed=make_embed.error_embed(title="スクリーンショットに失敗しました。"))
+                            return
+
+                        loop = asyncio.get_event_loop()
+                        image_binary = await loop.run_in_executor(None, decode_image, js["data"])
+
+                        image_binary.seek(0)
+                        file = discord.File(fp=image_binary, filename="webshot.png")
+
+                        await interaction.edit_original_response(
+                            embed=make_embed.success_embed(
+                                title="スクリーンショットを撮影しました。"
+                            ).set_image(url="attachment://webshot.png"),
+                            attachments=[file]
+                        )
+
+                        image_binary.close()
+            elif ブラウザ.value == "ie":
                 headers = {
-                    'accept': 'application/json, text/javascript, */*; q=0.01',
-                    'accept-language': 'ja,en-US;q=0.9,en;q=0.8',
-                    'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'origin': 'https://rakko.tools',
-                    'priority': 'u=1, i',
-                    'referer': 'https://rakko.tools/tools/125/',
+                    'Accept': 'application/json, text/javascript, */*; q=0.01',
+                    'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
+                    'Connection': 'keep-alive',
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'Origin': 'https://securl.nu',
+                    'Referer': 'https://securl.nu/',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Site': 'same-origin',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'sec-ch-ua': '"Not:A-Brand";v="99", "Google Chrome";v="145", "Chromium";v="145"',
                     'sec-ch-ua-mobile': '?0',
-                    'sec-ch-ua-platform': '"Windows"',
-                    'sec-fetch-dest': 'empty',
-                    'sec-fetch-mode': 'cors',
-                    'sec-fetch-site': 'same-origin',
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
-                    'x-requested-with': 'XMLHttpRequest'
+                    'sec-ch-ua-platform': '"Windows"'
                 }
 
-                async with session.post(
-                    "https://rakko.tools/tools/125/screenController.php",
-                    data=data,
-                    headers=headers,
-                ) as response_2:
-                    js = json.loads(await response_2.text())
+                data = {
+                    'url': url,
+                    'waitTime': '1',
+                    'browserWidth': '965',
+                    'browserHeight': '683',
+                    'from': '',
+                }
 
-                    if not js["status"]:
+                async with session.post('https://securl.nu/jx/get_page_jx.php', headers=headers, data=data) as response:
+                    try:
+                        response.raise_for_status()
+
+                        json_data = json.loads(await response.text())
+                        img = json_data["img"]
+                        await interaction.edit_original_response(embed=make_embed.success_embed(
+                            title="スクリーンショットを撮影しました。"
+                        ).set_image(url=F"https://securl.nu{img}"))
+                    except Exception as e:
                         await interaction.edit_original_response(embed=make_embed.error_embed(title="スクリーンショットに失敗しました。"))
                         return
-
-                    loop = asyncio.get_event_loop()
-                    image_binary = await loop.run_in_executor(None, decode_image, js["data"])
-
-                    image_binary.seek(0)
-                    file = discord.File(fp=image_binary, filename="webshot.png")
-
-                    await interaction.edit_original_response(
-                        embed=make_embed.success_embed(
-                            title="スクリーンショットを撮影しました。"
-                        ).set_image(url="attachment://webshot.png"),
-                        attachments=[file]
-                    )
-
-                    image_binary.close()
 
     @app_commands.command(name="ping", description="ドメインにpingを送信します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
