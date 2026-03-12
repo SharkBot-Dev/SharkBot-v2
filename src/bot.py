@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import MongoClient
@@ -15,7 +15,7 @@ intent = discord.Intents.all()
 class NewSharkBot(commands.AutoShardedBot):
     def __init__(self):
         super().__init__(
-            command_prefix=self.ChangePrefix,
+            command_prefix=self.get_custom_prefix,
             help_command=None,
             intents=intent,
             tree_cls=custom_tree.CustomTree,
@@ -25,19 +25,18 @@ class NewSharkBot(commands.AutoShardedBot):
         self.sync_db = MongoClient("mongodb://localhost:27017")
         self.redis: redis.Redis = None
 
-    def ChangePrefix(self, bot, message):
-        pdb = self.sync_db["DashboardBot"].CustomPrefixBot
-        try:
-            dbfind = pdb.find_one({"Guild": message.guild.id}, {"_id": False})
-        except:
-            return ["!.", "?."]
-        if dbfind is None:
-            return ["!.", "?."]
-        return [dbfind["Prefix"], "!.", "?."]
+        self.prefix_cache = {}
 
+    def get_custom_prefix(self, bot, message):
+        if not message.guild:
+            return ["!.", "?."]
+        
+        custom = self.prefix_cache.get(message.guild.id)
+        if custom:
+            return [custom, "!.", "?."]
+        return ["!.", "?."]
 
 bot = NewSharkBot()
-
 
 @bot.event
 async def on_ready():

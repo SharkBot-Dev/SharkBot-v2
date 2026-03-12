@@ -28,6 +28,7 @@ class BatchCog(commands.Cog):
         )
         self.loop_pres.start()
         self.loop_save_botinfo.start()
+        self.update_prefix_cache.start()
 
     @tasks.loop(seconds=10)
     async def loop_save_botinfo(self):
@@ -50,6 +51,15 @@ class BatchCog(commands.Cog):
         except:
             pass
 
+
+    @tasks.loop(seconds=10.0)
+    async def update_prefix_cache(self):
+        pdb = self.bot.async_db["DashboardBot"].CustomPrefixBot
+        new_cache = {}
+        async for doc in pdb.find({}, {"Guild": 1, "Prefix": 1}):
+            new_cache[doc["Guild"]] = doc["Prefix"]
+        
+        self.bot.prefix_cache = new_cache
 
 async def setup(bot):
     await bot.add_cog(BatchCog(bot))
