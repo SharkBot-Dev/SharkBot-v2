@@ -732,29 +732,35 @@ async def setup(bot: commands.Bot):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.allowed_installs(guilds=True, users=True)
     async def users(interaction: discord.Interaction, member: discord.Member):
-        base_funcs = [
-            context.ContextUserFunction("ユーザー情報", user_info),
-            context.ContextMessageFunction("アバター表示", avatar_show),
-            context.ContextMessageFunction("バナー表示", banner_show)
-        ]
+        await user_info(interaction, interaction, member)
 
-        if interaction.is_user_integration() and not interaction.is_guild_integration():
-            view = context.ContextMoreView(interaction, base_funcs, member)
+    @app_commands.context_menu(name="アバター表示")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    async def avatar_show_context(interaction: discord.Interaction, member: discord.Member):
+        await avatar_show(interaction, interaction, member)
 
-            await interaction.response.send_message(
-                view=view,
-                ephemeral=True,
-            )
-        else:
-            base_funcs.append(context.ContextMessageFunction("権限表示", permission_show))
-            base_funcs.append(context.ContextUserFunction("所有ロール表示", roles_show))
+    @app_commands.context_menu(name="バナー表示")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=True)
+    async def banner_show_context(interaction: discord.Interaction, member: discord.Member):
+        await banner_show(interaction, interaction, member)
 
-            view = context.ContextMoreView(interaction, base_funcs, member)
+    @app_commands.context_menu(name="権限表示")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=False)
+    async def permission_show_context(interaction: discord.Interaction, member: discord.Member):
+        await permission_show(interaction, interaction, member)
 
-            await interaction.response.send_message(
-                view=view,
-                ephemeral=True,
-            )
+    @app_commands.context_menu(name="所有ロール表示")
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=False)
+    async def roles_show_context(interaction: discord.Interaction, member: discord.Member):
+        await roles_show(interaction, interaction, member)
 
     async def interaction_info(origin_interaction: discord.Interaction, interaction: discord.Interaction, message: discord.Message):
         meta = message.interaction_metadata
@@ -850,3 +856,7 @@ async def setup(bot: commands.Bot):
 
     # ユーザーに使うコマンド
     bot.tree.add_command(users)
+    bot.tree.add_command(avatar_show_context)
+    bot.tree.add_command(banner_show_context)
+    bot.tree.add_command(permission_show_context)
+    bot.tree.add_command(roles_show_context)
