@@ -31,6 +31,9 @@ class Prefixs_ErrorHandleCog(commands.Cog):
         elif isinstance(error, commands.MissingRequiredArgument):
             a = None
             return a
+        elif isinstance(error, commands.MissingPermissions):
+            a = None
+            return a
         else:
             print(f"Prefix Command error: {error}")
             return await ctx.reply(
