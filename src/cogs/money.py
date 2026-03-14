@@ -1441,6 +1441,15 @@ class ServerMoneyCog(commands.Cog):
 
     @app_commands.command(name="work", description="60分に1回働けます。")
     async def top_economy_work_server(self, interaction: discord.Interaction):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
+
         await interaction.response.defer()
         m = random.randint(300, 1500)
         ok, remaining = await Money(interaction.client).add_cooldown(

@@ -468,6 +468,15 @@ class ModCog(commands.Cog):
     async def top_kick(
         self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str = None
     ):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
+
         await self.process_kick(interaction, ユーザー, 理由)
 
     @moderation.command(name="kick", description="メンバーをキックします。")
@@ -513,6 +522,15 @@ class ModCog(commands.Cog):
     async def top_ban(
         self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
     ):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
+        
         await self.process_ban(interaction, ユーザー, 理由)
 
     @moderation.command(name="ban", description="ユーザーをBanをします。")
@@ -899,6 +917,15 @@ class ModCog(commands.Cog):
         メッセージ数: int,
         ユーザー: discord.User = None,
     ):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="このコマンドは使用できません。",
+                    description="サーバーにBotをインストールして使用してください。",
+                ),
+            )
+
         await self.process_clear(interaction, メッセージ数, ユーザー)
 
     @moderation.command(name="clear", description="メッセージを一斉削除します。")
