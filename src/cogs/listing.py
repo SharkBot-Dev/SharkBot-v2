@@ -224,41 +224,44 @@ class ListingCog(commands.Cog):
         invite_list = await interaction.guild.invites()
 
         if not invite_list:
-            return await interaction.followup.send("有効な招待リンクがありません。")
+            return await interaction.followup.send("有効な招待リンクが見つかりませんでした。")
 
-        ranking = {}
+        inviter_counts = {}
         for invite in invite_list:
-            inviter = invite.inviter.mention if invite.inviter else "不明"
-            ranking[inviter] = ranking.get(inviter, 0) + invite.uses
+            if invite.inviter:
+                user_id = invite.inviter.id
+                inviter_counts[user_id] = inviter_counts.get(user_id, 0) + invite.uses
+            else:
+                inviter_counts["unknown"] = inviter_counts.get("unknown", 0) + invite.uses
 
-        sorted_ranking = sorted(ranking.items(), key=lambda x: x[1], reverse=True)
+        sorted_ranking = sorted(inviter_counts.items(), key=lambda x: x[1], reverse=True)
 
-        split_size = 20
-        split_ranking_chunks = [
-            sorted_ranking[i : i + split_size]
-            for i in range(0, len(sorted_ranking), split_size)
-        ]
-
+        split_size = 10
+        chunks = [sorted_ranking[i : i + split_size] for i in range(0, len(sorted_ranking), split_size)]
+        total_pages = len(chunks)
         embeds = []
-        total_pages = len(split_ranking_chunks)
 
-        for i, chunk in enumerate(split_ranking_chunks):
-            description = "\n".join(
-                [f"{inviter} ： **{count}** 回" for inviter, count in chunk]
-            )
+        for page_idx, chunk in enumerate(chunks):
+            lines = []
+            for rank_idx, (user_id, count) in enumerate(chunk, start=(page_idx * split_size) + 1):
+                user_display = f"<@{user_id}>" if user_id != "unknown" else "不明な作成者"
+                lines.append(f"**{rank_idx}.** {user_display} ： `{count}` 回")
 
-            embed = discord.Embed(
+            description = "\n".join(lines) if lines else "データがありません。"
+
+            embed = make_embed.success_embed(
                 title=f"招待ランキング (合計 {len(sorted_ranking)}名)",
-                description=description,
-                color=discord.Color.blue(),
+                description=description
             )
-            embed.set_footer(text=f"Page {i + 1} / {total_pages}")
+            embed.set_footer(text=f"Page {page_idx + 1} / {total_pages}")
             embeds.append(embed)
 
-        view = pages.Pages(embeds=embeds, now_page=0)
+        view = pages.Pages(embeds=embeds, now_page=0, page_owner=interaction.user)
 
-        msg = await interaction.followup.send(
-            embed=embeds[0], view=view, allowed_mentions=discord.AllowedMentions.none()
+        await interaction.followup.send(
+            embed=embeds[0], 
+            view=view, 
+            allowed_mentions=discord.AllowedMentions.none() 
         )
 
     @listing.command(name="ban", description="Banしたメンバーをリスト化します.")
