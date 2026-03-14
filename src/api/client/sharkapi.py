@@ -11,6 +11,14 @@ class EconomyMember:
         self.money = json.get('money', 0)
         self.bank = json.get('bank', 0)
 
+class AccountInfo:
+    def __init__(self, json: dict):
+        self.data = json
+        self.money = json.get('money', 0)
+        self.user_id = json.get('user_id', 0)
+        self.user_name = json.get('user_name', 0)
+        self.avatar_url = json.get('avatar_url', 0)
+
 class BotStatus:
     def __init__(self, json: dict):
         self.data = json
@@ -22,6 +30,13 @@ class SharkBot:
     def __init__(self, apikey: str = None):
         self.BASE_URL = "https://api.sharkbot.xyz"
         self.APIKEY = apikey
+
+    # ==== アカウント関連 ====
+    async def fetchAccount(self, userId: str):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.BASE_URL + f'/account/{userId}') as resp:
+                json = await resp.json()
+                return AccountInfo(json)
 
     # ==== 検索関連 ====
     async def fetchNews(self):
