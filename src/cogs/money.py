@@ -1439,6 +1439,35 @@ class ServerMoneyCog(commands.Cog):
             )
         )
 
+    @app_commands.command(name="work", description="60分に1回働けます。")
+    async def top_economy_work_server(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        m = random.randint(300, 1500)
+        ok, remaining = await Money(interaction.client).add_cooldown(
+            guild=interaction.guild,
+            author=interaction.user,
+            cooldown=3600,
+            cooldown_type="work",
+        )
+
+        if not ok:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="まだ働けません。",
+                    description=f"あと {str(datetime.timedelta(seconds=remaining))} 待ってください。",
+                )
+            )
+
+        await Money(interaction.client).add_server_money(
+            interaction.guild, interaction.user, m
+        )
+        c_n = await Money(interaction.client).get_currency_name(interaction.guild)
+        await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title="働きました。", description=f"{m}{c_n}入手しました。"
+            )
+        )
+
     @server_economy.command(name="beg", description="物乞いをしてお金を得ます。")
     async def economy_beg_server(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -1543,6 +1572,24 @@ class ServerMoneyCog(commands.Cog):
         name="balance", description="サーバー内で残高を取得します。"
     )
     async def economy_balance_server(
+        self, interaction: discord.Interaction, メンバー: discord.User = None
+    ):
+        await interaction.response.defer()
+        target = メンバー or interaction.user
+        m = Money(interaction.client)
+        sm = await m.get_server_money(interaction.guild, target)
+        sb_m = await m.get_server_money_bank(interaction.guild, target)
+        c_n = await m.get_currency_name(interaction.guild)
+        await interaction.followup.send(
+            embed=make_embed.success_embed(title=f"{target.name}の残高です。")
+            .add_field(name="手持ち", value=f"{sm}{c_n}")
+            .add_field(name="預金", value=f"{sb_m}{c_n}")
+        )
+
+    @app_commands.command(
+        name="balance", description="サーバー内で残高を取得します。"
+    )
+    async def top_economy_balance_server(
         self, interaction: discord.Interaction, メンバー: discord.User = None
     ):
         await interaction.response.defer()

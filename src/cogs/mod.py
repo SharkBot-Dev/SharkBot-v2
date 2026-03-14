@@ -415,12 +415,92 @@ class MuteGroup(app_commands.Group):
             )
         )
 
+class ModCog(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        print("init -> ModCog")
 
-class BanGroup(app_commands.Group):
-    def __init__(self):
-        super().__init__(name="ban", description="Ban系のコマンド。")
+    moderation = app_commands.Group(
+        name="moderation", description="モデレーション系のコマンドです。"
+    )
 
+    moderation.add_command(MuteGroup())
+    moderation.add_command(PauseGroup())
+
+    @moderation.command(name="kick", description="メンバーをキックします。")
+    @app_commands.checks.has_permissions(kick_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def kick(
+        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str = None
+    ):
+        if ユーザー.id == interaction.user.id:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(title="自分自身はキックできません。"),
+                ephemeral=True,
+            )
+        if interaction.guild.get_member(ユーザー.id) is None:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="このサーバーにいないメンバーはキックできません。"
+                )
+            )
+        await interaction.response.defer()
+        try:
+            await interaction.guild.kick(
+                ユーザー,
+                reason=理由
+                if 理由
+                else "なし" + f"\n{interaction.user.id} によってKick",
+            )
+        except:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="キックに失敗しました。", description="権限が足りないかも！？"
+                )
+            )
+        return await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title=f"{ユーザー.name}をKickしました。",
+                description=f"理由: {理由 if 理由 else 'なし'}"
+                + f"\n{interaction.user.id} によってKick",
+            )
+        )
+    
     @app_commands.command(name="ban", description="ユーザーをBanをします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def top_ban(
+        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
+    ):
+        if ユーザー.id == interaction.user.id:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(title="自分自身はBanできません。"),
+                ephemeral=True,
+            )
+        await interaction.response.defer()
+        try:
+            await interaction.guild.ban(
+                ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN"
+            )
+        except:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="Banに失敗しました。", description="権限が足りないかも！？"
+                )
+            )
+        return await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title=f"{ユーザー.name}をBanしました。"
+            ).add_field(
+                name="理由",
+                value=理由 + f"\n{interaction.user.id} によってBAN",
+                inline=False,
+            )
+        )
+
+    @moderation.command(name="ban", description="ユーザーをBanをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -453,7 +533,7 @@ class BanGroup(app_commands.Group):
             )
         )
 
-    @app_commands.command(name="unban", description="ユーザーのBanを解除します。")
+    @moderation.command(name="unban", description="ユーザーのBanを解除します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -487,7 +567,7 @@ class BanGroup(app_commands.Group):
             )
         )
 
-    @app_commands.command(
+    @moderation.command(
         name="silentban", description="メッセージを削除せずにメンバーをbanをします。"
     )
     @app_commands.checks.has_permissions(ban_members=True)
@@ -532,144 +612,7 @@ class BanGroup(app_commands.Group):
             )
         )
 
-    @app_commands.command(
-        name="reverseban", description="Ban解除条件を与えてメンバーをbanします。"
-    )
-    @app_commands.checks.has_permissions(ban_members=True)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def reverseban(
-        self,
-        interaction: discord.Interaction,
-        メンバー: discord.User,
-        理由: str,
-        解除条件: str,
-    ):
-        guild = interaction.guild
-        member = guild.get_member(メンバー.id)
-
-        if not member:
-            return await interaction.response.send_message(
-                embed=make_embed.error_embed("このサーバーにいない人はBANできません。"),
-                ephemeral=True,
-            )
-
-        if member.id == interaction.user.id:
-            return await interaction.response.send_message(
-                embed=make_embed.error_embed("自分自身はBANできません。"),
-                ephemeral=True,
-            )
-
-        await interaction.response.defer()
-
-        try:
-            await member.send(
-                embed=discord.Embed(
-                    title=f"{guild.name} からBANされました",
-                    description="BAN解除には以下の条件を満たしてください。\n条件を満たしたらBanされた\nサーバーのオーナーに連絡してください。",
-                    color=discord.Color.green(),
-                ).add_field(name="解除条件", value=解除条件)
-            )
-        except discord.Forbidden:
-            pass
-
-        await interaction.client.async_db["MainTwo"].ReverseBan.update_one(
-            {"guild_id": guild.id, "user_id": member.id},
-            {
-                "$set": {
-                    "reason": 理由,
-                    "condition": 解除条件,
-                    "moderator_id": interaction.user.id,
-                    "banned_at": datetime.datetime.utcnow(),
-                }
-            },
-            upsert=True,
-        )
-
-        await guild.ban(
-            member,
-            reason=f"{理由} | ReverseBan by {interaction.user} ({interaction.user.id})",
-        )
-
-        await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title=f"{member.name} を ReverseBan しました"
-            )
-            .add_field(name="理由", value=理由, inline=False)
-            .add_field(name="解除条件", value=解除条件, inline=False)
-        )
-
-    @app_commands.command(
-        name="remove-reverseban", description="Ban条件付きのBanを解除します。"
-    )
-    @app_commands.checks.has_permissions(ban_members=True)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def remove_reverseban(
-        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
-    ):
-        await interaction.response.defer()
-        db = interaction.client.async_db["MainTwo"].ReverseBan
-
-        async def check_reverseban_condition(guild_id: int, user_id: int):
-            data = await db.find_one({"guild_id": guild_id, "user_id": user_id})
-            return data
-
-        data = await check_reverseban_condition(interaction.guild.id, ユーザー.id)
-
-        if not data:
-            return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="そのユーザーはReverseBanされていません。"
-                )
-            )
-
-        try:
-            await interaction.guild.unban(ユーザー, reason=理由)
-        except:
-            pass
-
-        await db.delete_one({"guild_id": interaction.guild.id, "user_id": ユーザー.id})
-
-        embed = make_embed.success_embed(title="ReverseBan を解除しました。")
-        embed.add_field(name="理由", value=理由, inline=False)
-        embed.add_field(name="解除条件", value=data["condition"], inline=False)
-
-        await interaction.followup.send(embed=embed)
-
-    @app_commands.command(
-        name="info-reverseban",
-        description="BanをしたユーザーのBan解除条件を確認します。",
-    )
-    @app_commands.checks.has_permissions(ban_members=True)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def check_reverseban(
-        self, interaction: discord.Interaction, ユーザー: discord.User
-    ):
-        await interaction.response.defer()
-        db = interaction.client.async_db["MainTwo"].ReverseBan
-
-        async def check_reverseban_condition(guild_id: int, user_id: int):
-            data = await db.find_one({"guild_id": guild_id, "user_id": user_id})
-            return data
-
-        data = await check_reverseban_condition(interaction.guild.id, ユーザー.id)
-
-        if not data:
-            return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="このユーザーに ReverseBan はありません。"
-                )
-            )
-
-        embed = make_embed.success_embed(title="ReverseBan 条件確認")
-        embed.add_field(name="理由", value=data["reason"], inline=False)
-        embed.add_field(name="解除条件", value=data["condition"], inline=False)
-
-        await interaction.followup.send(embed=embed)
-
-    @app_commands.command(name="softban", description="ユーザーをSoftBanします。")
+    @moderation.command(name="softban", description="ユーザーをSoftBanします。")
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -702,7 +645,7 @@ class BanGroup(app_commands.Group):
             embed=make_embed.success_embed(title=f"{ユーザー.name}をSoftBanしました。")
         )
 
-    @app_commands.command(name="massban", description="複数ユーザーを一気にbanします。")
+    @moderation.command(name="massban", description="複数ユーザーを一気にbanします。")
     @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -761,60 +704,6 @@ class BanGroup(app_commands.Group):
 
         await interaction.channel.send(
             f"{b.banned}人をBANしました。失敗: {b.failed}人。"
-        )
-
-
-class ModCog(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
-        print("init -> ModCog")
-
-    moderation = app_commands.Group(
-        name="moderation", description="モデレーション系のコマンドです。"
-    )
-
-    moderation.add_command(BanGroup())
-    moderation.add_command(MuteGroup())
-    moderation.add_command(PauseGroup())
-
-    @moderation.command(name="kick", description="メンバーをキックします。")
-    @app_commands.checks.has_permissions(kick_members=True)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def kick(
-        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str = None
-    ):
-        if ユーザー.id == interaction.user.id:
-            return await interaction.response.send_message(
-                embed=make_embed.error_embed(title="自分自身はキックできません。"),
-                ephemeral=True,
-            )
-        if interaction.guild.get_member(ユーザー.id) is None:
-            return await interaction.response.send_message(
-                embed=make_embed.error_embed(
-                    title="このサーバーにいないメンバーはキックできません。"
-                )
-            )
-        await interaction.response.defer()
-        try:
-            await interaction.guild.kick(
-                ユーザー,
-                reason=理由
-                if 理由
-                else "なし" + f"\n{interaction.user.id} によってKick",
-            )
-        except:
-            return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="キックに失敗しました。", description="権限が足りないかも！？"
-                )
-            )
-        return await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title=f"{ユーザー.name}をKickしました。",
-                description=f"理由: {理由 if 理由 else 'なし'}"
-                + f"\n{interaction.user.id} によってKick",
-            )
         )
 
     @moderation.command(name="timeout", description="メンバーをタイムアウトします。")
@@ -943,11 +832,6 @@ class ModCog(commands.Cog):
     async def max_timeout(
         self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
     ):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=discord.Embed(
@@ -981,6 +865,46 @@ class ModCog(commands.Cog):
                 title=f"{ユーザー.name}を最大までタイムアウトしました。",
                 color=discord.Color.green(),
             )
+        )
+
+    @app_commands.command(name="clear", description="メッセージを一斉削除します。")
+    @app_commands.checks.has_permissions(manage_channels=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def top_clear(
+        self,
+        interaction: discord.Interaction,
+        メッセージ数: int,
+        ユーザー: discord.User = None,
+    ):
+        await interaction.response.defer(ephemeral=True)
+
+        now = discord.utils.utcnow()
+        two_weeks = datetime.timedelta(days=14)
+
+        def check(msg: discord.Message):
+            if (now - msg.created_at) > two_weeks:
+                return False
+            if ユーザー is not None and msg.author.id != ユーザー.id:
+                return False
+            return True
+
+        deleted = await interaction.channel.purge(limit=メッセージ数, check=check)
+
+        if len(deleted) == 0:
+            await interaction.followup.send(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title=f"メッセージを一個も削除できませんでした。"
+                ),
+            )
+            return
+
+        await interaction.followup.send(
+            ephemeral=True,
+            embed=make_embed.success_embed(
+                title=f"{len(deleted)}個のメッセージを削除しました。"
+            ),
         )
 
     @moderation.command(name="clear", description="メッセージを一斉削除します。")

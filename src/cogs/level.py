@@ -550,15 +550,7 @@ class LevelCog(commands.Cog):
 
         await interaction.followup.send(embed=embed)
 
-    @level.command(name="card", description="総合・テキスト・ボイスのレベルカードを作成します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def level_card(self, interaction: discord.Interaction):
-        if not await self.check_level_enabled(interaction.guild):
-            return await interaction.response.send_message(
-                embed=make_embed.error_embed(title="レベル機能は無効です。"), ephemeral=True
-            )
-        
+    async def process_rankcard(self, interaction: discord.Interaction):
         await interaction.response.defer()
 
         def generate_rank_card(
@@ -643,6 +635,28 @@ class LevelCog(commands.Cog):
 
         await interaction.followup.send(file=discord.File(rank_card_file, "rank_card.png"))
         rank_card_file.close()
+
+    @app_commands.command(name="rank", description="ランクを表示します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def level_rank(self, interaction: discord.Interaction):
+        if not await self.check_level_enabled(interaction.guild):
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(title="レベル機能は無効です。"), ephemeral=True
+            )
+        
+        await self.process_rankcard(interaction)
+
+    @level.command(name="card", description="レベルカードを作成します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def level_card(self, interaction: discord.Interaction):
+        if not await self.check_level_enabled(interaction.guild):
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(title="レベル機能は無効です。"), ephemeral=True
+            )
+        
+        await self.process_rankcard(interaction)
 
     @level.command(name="ranking", description="レベルのランキングを表示します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
