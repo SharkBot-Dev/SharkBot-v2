@@ -477,7 +477,7 @@ class Money:
             
             count = inventory_dict.get(item_name, 0)
             
-            lines.append(f"**{item_name}** ({price:,}{c_n}) ─ `{count}`個所持")
+            lines.append(f"**{item_name}** ({price}{c_n}) ─ `{count}`個所持")
 
         return "\n".join(lines)
 

@@ -4,265 +4,130 @@ from discord import app_commands
 import random
 import asyncio
 
+from models import make_embed
 
 class GiveawayCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    async def user_write(
-        self, guild: discord.Guild, user: discord.User, level: int, xp: int
-    ):
-        try:
-            db = self.bot.async_db["Main"].Leveling
-            await db.update_one(
-                {"Guild": guild.id, "User": user.id},
-                {
-                    "$set": {
-                        "Guild": guild.id,
-                        "User": user.id,
-                        "Level": level,
-                        "XP": xp,
-                    }
-                },
-                upsert=True,
-            )
-        except:
-            return
+    async def get_user_leveling(self, guild_id: int, user_id: int):
+        db = self.bot.async_db["Main"].Leveling
+        data = await db.find_one({"Guild": guild_id, "User": user_id})
+        return (data.get("Level", 0), data.get("XP", 0)) if data else (0, 0)
 
-    async def get_level(self, guild: discord.Guild, user: discord.User):
-        try:
-            db = self.bot.async_db["Main"].Leveling
-            try:
-                dbfind = await db.find_one(
-                    {"Guild": guild.id, "User": user.id}, {"_id": False}
-                )
-            except:
-                return None
-            if dbfind is None:
-                return None
-            else:
-                return dbfind["Level"]
-        except:
-            return
+    async def update_user_leveling(self, guild_id: int, user_id: int, level: int, xp: int):
+        db = self.bot.async_db["Main"].Leveling
+        await db.update_one({"Guild": guild_id, "User": user_id}, {"$set": {"Level": level, "XP": xp}}, upsert=True)
 
-    async def get_xp(self, guild: discord.Guild, user: discord.User):
-        try:
-            db = self.bot.async_db["Main"].Leveling
-            try:
-                dbfind = await db.find_one(
-                    {"Guild": guild.id, "User": user.id}, {"_id": False}
-                )
-            except:
-                return None
-            if dbfind is None:
-                return None
-            else:
-                return dbfind["XP"]
-        except:
-            return
-
-    async def add_server_money(
-        self, guild: discord.Guild, author: discord.User, coin: int
-    ):
+    async def add_server_money(self, guild_id: int, user_id: int, coin: int):
         db = self.bot.async_db["Main"].ServerMoney
-        user_data = await db.find_one({"_id": f"{guild.id}-{author.id}"})
-        if user_data:
-            await db.update_one(
-                {"_id": f"{guild.id}-{author.id}"}, {"$inc": {"count": coin}}
-            )
-        else:
-            await db.insert_one(
-                {
-                    "_id": f"{guild.id}-{author.id}",
-                    "count": coin,
-                    "Guild": guild.id,
-                    "User": author.id,
-                }
-            )
-        return True
+        await db.update_one({"_id": f"{guild_id}-{user_id}"}, {"$inc": {"count": coin}, "$set": {"Guild": guild_id, "User": user_id}}, upsert=True)
 
-    async def add_server_item(
-        self, guild: discord.Guild, author: discord.User, itemname: str, count: int
-    ):
+    async def add_server_item(self, guild_id: int, user_id: int, itemname: str, count: int):
         db = self.bot.async_db["Main"].ServerMoneyItem
-        _id = f"{guild.id}-{author.id}-{itemname}"
-        user_data = await db.find_one({"_id": _id})
-        if user_data:
-            await db.update_one({"_id": _id}, {"$inc": {"count": count}})
-        else:
-            await db.insert_one(
-                {
-                    "_id": _id,
-                    "Guild": guild.id,
-                    "User": author.id,
-                    "ItemName": itemname,
-                    "count": count,
-                }
-            )
-        return True
+        _id = f"{guild_id}-{user_id}-{itemname}"
+        await db.update_one({"_id": _id}, {"$inc": {"count": count}, "$set": {"Guild": guild_id, "User": user_id, "ItemName": itemname}}, upsert=True)
 
-    async def get_server_items(self, guild: discord.Guild, itemname: str):
-        db = self.bot.async_db["Main"].ServerMoneyItems
-        dbfind = await db.find_one(
-            {"Guild": guild.id, "ItemName": itemname}, {"_id": False}
-        )
-        return dbfind
+    async def giveaway_select_winner(self, interaction: discord.Interaction, data: dict, is_reroll: bool = False):
+        members = data.get("Members", [])
+        prize_text = data.get('Item', '不明')
+        guild = interaction.guild
 
-    async def giveaway_create(
-        self,
-        interaction: discord.Interaction,
-        タイトル: str,
-        景品名: str,
-        xp: int = 0,
-        coin: int = 0,
-        itemname: str = "0",
-        count: int = 1,
-    ):
-        await interaction.response.send_message(
-            ephemeral=True, content="Giveawayを作成しました。"
-        )
-        msg = await interaction.channel.send(
-            embed=discord.Embed(
-                title=タイトル,
-                description=f"`{景品名}`がもらえるかも！？",
-                color=discord.Color.gold(),
-            ),
-            view=discord.ui.View()
-            .add_item(
-                discord.ui.Button(
-                    label="参加する",
-                    custom_id="giveaway+",
-                    style=discord.ButtonStyle.blurple,
-                )
-            )
-            .add_item(
-                discord.ui.Button(
-                    label="終了する",
-                    custom_id="giveaway_end+",
-                    style=discord.ButtonStyle.red,
-                )
-            ),
-        )
+        if not members:
+            return await interaction.followup.send("参加者がいないため、抽選できませんでした。", ephemeral=True)
+
+        winner_id = random.choice(members)
+        try:
+            winner = guild.get_member(winner_id) or await guild.fetch_member(winner_id)
+        except:
+            winner = None
+
+        if not winner:
+            return await interaction.followup.send(f"当選者（ID: {winner_id}）がサーバーに見つかりませんでした。再度お試しください。", ephemeral=True)
+
+        if data.get("XP", 0) > 0:
+            lv, current_xp = await self.get_user_leveling(guild.id, winner.id)
+            await self.update_user_leveling(guild.id, winner.id, lv, current_xp + data["XP"])
+        
+        if data.get("Coin", 0) > 0:
+            await self.add_server_money(guild.id, winner.id, data["Coin"])
+        
+        if data.get("Itemname") != "0":
+            await self.add_server_item(guild.id, winner.id, data["Itemname"], data.get("Count", 1))
+
+        prefix = "【再抽選】" if is_reroll else ""
+        content = f"{prefix}{winner.name} さん、おめでとうございます！"
+        
+        view = discord.ui.View(timeout=None)
+        view.add_item(discord.ui.Button(label="再抽選", custom_id=f"giveaway_reroll_{interaction.message.id}", style=discord.ButtonStyle.gray))
+        
+        await interaction.channel.send(view=view, embed=make_embed.success_embed(title=content, description=f"**{prize_text}** に当選しました！"), content=winner.mention)
+
+    async def giveaway_create(self, interaction: discord.Interaction, title: str, prize: str, xp: int, coin: int, itemname: str, count: int):
+        embed = discord.Embed(title=title, description=f"**景品:** `{prize}`\nボタンを押して参加！", color=discord.Color.gold())
+        view = discord.ui.View(timeout=None)
+        view.add_item(discord.ui.Button(label="参加する", custom_id="giveaway_join", style=discord.ButtonStyle.blurple))
+        view.add_item(discord.ui.Button(label="終了する", custom_id="giveaway_end", style=discord.ButtonStyle.red))
+
+        await interaction.response.send_message("Giveawayを作成しました。", ephemeral=True)
+        msg = await interaction.channel.send(embed=embed, view=view)
+
         db = self.bot.async_db["Main"].Giveaway
         await db.update_one(
             {"Guild": interaction.guild.id, "Message": msg.id},
-            {
-                "$set": {
-                    "Guild": interaction.guild.id,
-                    "Message": msg.id,
-                    "Item": 景品名,
-                    "Members": [],
-                    "XP": xp,
-                    "Coin": coin,
-                    "Itemname": itemname,
-                    "Count": count,
-                }
-            },
-            upsert=True,
+            {"$set": {"Item": prize, "Members": [], "XP": xp, "Coin": coin, "Itemname": itemname, "Count": count, "Active": True}},
+            upsert=True
         )
 
-    async def giveaway_join(
-        self, interaction: discord.Interaction, message: discord.Message
-    ):
-        await interaction.response.send_message(
-            ephemeral=True, content="Giveawayに参加しました。"
-        )
+    @commands.Cog.listener()
+    async def on_interaction(self, interaction: discord.Interaction):
+        custom_id = interaction.data.get("custom_id", "")
+        if not custom_id: return
+
         db = self.bot.async_db["Main"].Giveaway
-        await db.update_one(
-            {"Guild": interaction.guild.id, "Message": message.id},
-            {"$addToSet": {"Members": interaction.user.id}},
-            upsert=True,
-        )
 
-    async def giveaway_end(
-        self, interaction: discord.Interaction, message: discord.Message
-    ):
-        db = self.bot.async_db["Main"].Giveaway
-        try:
-            dbfind = await db.find_one(
-                {"Guild": interaction.guild.id, "Message": message.id}, {"_id": False}
+        if custom_id == "giveaway_join":
+            res = await db.update_one(
+                {"Guild": interaction.guild.id, "Message": interaction.message.id, "Active": True},
+                {"$addToSet": {"Members": interaction.user.id}}
             )
-        except:
-            return
-        if dbfind is None:
-            return await interaction.response.send_message(
-                ephemeral=True, content="現在Giveawayをしていません。"
-            )
-        if dbfind.get("Members", []) == []:
-            await interaction.response.send_message(
-                ephemeral=True, content="誰も参加していませんでした。"
-            )
-            await message.edit(view=None)
-            return await db.delete_one(
-                {"Guild": interaction.guild.id, "Message": message.id}
-            )
-        await interaction.response.send_message(
-            ephemeral=True, content="Giveawayを終了させます。"
-        )
-        r = interaction.guild.get_member(random.choice(dbfind.get("Members", [0, 1])))
-        await message.edit(view=None)
-        await asyncio.sleep(1)
-        await message.channel.send(
-            content=f"{r.mention} さん、おめでとうございます！\n{dbfind.get('Item', '？')}に当選しました！"
-        )
-        if dbfind.get("XP", 0) != 0:
-            xp = await self.get_xp(interaction.guild, r)
-            lv = await self.get_level(interaction.guild, r)
-            await self.user_write(interaction.guild, r, lv, xp + dbfind.get("XP", 0))
-        if dbfind.get("Coin", 0) != 0:
-            await self.add_server_money(interaction.guild, r, dbfind.get("Coin", 0))
-        if dbfind.get("Itemname", "0") != "0":
-            sm = await self.get_server_items(
-                interaction.guild, dbfind.get("Itemname", "0")
-            )
-            if not sm:
-                return await db.delete_one(
-                    {"Guild": interaction.guild.id, "Message": message.id}
-                )
-            await self.add_server_item(
-                interaction.guild, r, dbfind.get("Itemname", "0"), dbfind.get("Count")
-            )
-        await db.delete_one({"Guild": interaction.guild.id, "Message": message.id})
+            msg = "参加しました！" if res.modified_count > 0 else "既に参加しているか、終了しています。"
+            await interaction.response.send_message(msg, ephemeral=True)
 
-    @commands.Cog.listener(name="on_interaction")
-    async def on_interaction_freechannel(self, interaction: discord.Interaction):
-        try:
-            if interaction.data["component_type"] == 2:
-                try:
-                    custom_id = interaction.data["custom_id"]
-                except:
-                    return
-                if custom_id.startswith("giveaway+"):
-                    await self.giveaway_join(interaction, interaction.message)
-                if custom_id.startswith("giveaway_end+"):
-                    if not interaction.user.guild_permissions.manage_guild:
-                        return
-                    await self.giveaway_end(interaction, interaction.message)
-        except:
-            return
+        elif custom_id == "giveaway_end":
+            if not interaction.user.guild_permissions.manage_guild:
+                return await interaction.response.send_message("権限がありません。", ephemeral=True)
+            
+            data = await db.find_one_and_update(
+                {"Guild": interaction.guild.id, "Message": interaction.message.id, "Active": True},
+                {"$set": {"Active": False}}
+            )
+            if not data:
+                return await interaction.response.send_message("既に終了しているか、データがありません。", ephemeral=True)
+            
+            await interaction.response.defer(ephemeral=True)
+            await interaction.message.edit(view=None)
+            await self.giveaway_select_winner(interaction, data)
 
-    giveaway = app_commands.Group(
-        name="giveaway", description="サーバー内でのプレゼント企画系のコマンドです。"
-    )
+        elif custom_id.startswith("giveaway_reroll_"):
+            if not interaction.user.guild_permissions.manage_guild:
+                return await interaction.response.send_message("権限がありません。", ephemeral=True)
+            
+            original_msg_id = int(custom_id.replace("giveaway_reroll_", ""))
+            data = await db.find_one({"Message": original_msg_id})
+            
+            if not data:
+                return await interaction.response.send_message("抽選データが見つかりません。", ephemeral=True)
+            
+            await interaction.response.defer(ephemeral=True)
+            await self.giveaway_select_winner(interaction, data, is_reroll=True)
 
-    @giveaway.command(
-        name="create", description="サーバー内でのプレゼント企画を実施します。"
-    )
-    @app_commands.checks.cooldown(2, 10, key=lambda i: (i.guild_id))
+    giveaway = app_commands.Group(name="giveaway", description="サーバー内プレゼント企画")
+
+    @giveaway.command(name="create", description="プレゼント企画を開始")
     @app_commands.checks.has_permissions(manage_guild=True)
-    async def giveaway_create_(
-        self,
-        interaction: discord.Interaction,
-        タイトル: str,
-        景品名: str,
-        xp: int = 0,
-        コイン: int = 0,
-        アイテム名: str = "0",
-    ):
-        await self.giveaway_create(
-            interaction, タイトル, 景品名, xp, コイン, アイテム名
-        )
-
+    async def giveaway_create_cmd(self, interaction: discord.Interaction, タイトル: str, 景品名: str, xp: int = 0, コイン: int = 0, アイテム名: str = "0", 個数: int = 1):
+        await self.giveaway_create(interaction, タイトル, 景品名, xp, コイン, アイテム名, 個数)
 
 async def setup(bot):
     await bot.add_cog(GiveawayCog(bot))
