@@ -2148,11 +2148,6 @@ class SettingCog(commands.Cog):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def prefix(self, interaction: discord.Interaction, prefix: str):
-        if not await command_disable.command_enabled_check(interaction):
-            return await interaction.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         await interaction.response.defer()
         db = self.bot.async_db["DashboardBot"].CustomPrefixBot
         await db.update_one(
@@ -2175,11 +2170,6 @@ class SettingCog(commands.Cog):
     async def setting_score(
         self, interaction_: discord.Interaction, ユーザー: discord.User
     ):
-        if not await command_disable.command_enabled_check(interaction_):
-            return await interaction_.response.send_message(
-                ephemeral=True, content="そのコマンドは無効化されています。"
-            )
-
         class ScoreSettingView(discord.ui.View):
             def __init__(self, db, ユーザーs):
                 super().__init__(timeout=None)

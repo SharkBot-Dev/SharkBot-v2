@@ -29,12 +29,12 @@ class NewSharkBot(commands.AutoShardedBot):
 
     def get_custom_prefix(self, bot, message):
         if not message.guild:
-            return ["!.", "?."]
+            return ["!/", "?/"]
         
         custom = self.prefix_cache.get(message.guild.id)
         if custom:
-            return [custom, "!.", "?."]
-        return ["!.", "?."]
+            return [custom, "!/", "?/"]
+        return ["!/", "?/"]
 
 bot = NewSharkBot()
 

@@ -7,7 +7,7 @@ import random
 from discord.ext import commands
 import discord
 
-from models import make_embed, save_commands, translate
+from models import make_embed, save_commands, translate, cmdcount
 
 from discord import app_commands
 
@@ -189,6 +189,31 @@ class Prefix_AdminCog(commands.Cog):
 
         else:
             return
+        
+    @commands.Cog.listener("on_app_command_completion")
+    async def on_app_command_completion_log_slash(
+        self, interaction: discord.Interaction, command
+    ):
+        cmdcount.slash_count += 1
+
+    @commands.Cog.listener("on_command")
+    async def on_command_log_prefix(
+        self, ctx: commands.Context
+    ):
+        cmdcount.prefix_count += 1
+
+    @commands.command(name="cmdcount", description="コマンド実行回数を取得する", hidden=True)
+    async def cmdcount(self, ctx: commands.Context):
+        isadmin = await self.get_admins(ctx.author)
+
+        if not isadmin:
+            return
+        
+        slash = cmdcount.slash_count
+        prefix = cmdcount.prefix_count
+        fast = discord.utils.format_dt(cmdcount.fast_datetime, "S")
+
+        await ctx.reply(f"スラッシュコマンド: {slash}回\nPrefixコマンド: {prefix}回\nカウント開始時刻: {fast}")
 
 async def setup(bot):
     await bot.add_cog(Prefix_AdminCog(bot))
