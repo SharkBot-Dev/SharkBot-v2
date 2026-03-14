@@ -1246,10 +1246,9 @@ class ToolsCog(commands.Cog):
             mens = "メンションなし"
         try:
             await message.reply(
-                embed=discord.Embed(
+                embed=make_embed.success_embed(
                     title="AFKを解除しました。",
-                    description=f"{dbfind['Reason']}",
-                    color=discord.Color.green(),
+                    description=f"{dbfind['Reason']}"
                 )
                 .add_field(
                     name="今から何する？",
@@ -1257,6 +1256,7 @@ class ToolsCog(commands.Cog):
                     inline=False,
                 )
                 .add_field(name="メンション一覧", value=mens, inline=False)
+                .set_footer(text="このメッセージは5秒後に削除されます。"), delete_after=5
             )
         except:
             pass
@@ -1268,17 +1268,17 @@ class ToolsCog(commands.Cog):
 
     async def afk_mention_write(self, user: int, message: discord.Message):
         database = self.bot.async_db["Main"].AFKMention
-        await database.replace_one(
+        await database.update_one(
             {
                 "User": user,
                 "Channel": message.channel.id,
                 "MentionUser": message.author.id,
             },
-            {
+            {"$set": {
                 "User": user,
                 "MentionUser": message.author.id,
                 "Channel": message.channel.id,
-            },
+            }},
             upsert=True,
         )
 
