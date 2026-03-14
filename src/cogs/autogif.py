@@ -7,7 +7,7 @@ import aiohttp
 from consts import settings
 import asyncio
 
-from models import make_embed, translate
+from models import make_embed, translate, web_translate
 
 cooldown_autogif = {}
 
@@ -74,30 +74,26 @@ async def reply_gif(message: discord.Message):
     if message.content == "":
         return
 
-    translator = await asyncio.to_thread(GoogleTranslator, source="auto", target="en")
-    translated_text = await asyncio.to_thread(translator.translate, message.content)
+    text = await web_translate.translate("ja", "en", message.clean_content)
 
     async with aiohttp.ClientSession() as session:
         async with session.get(
-            f"https://g.tenor.com/v2/search?q={translated_text}&key={settings.TENOR_API}&limit=1&media_filter=minimal"
+            f"https://api.imgur.com/3/gallery/search",
+            params={"q": text['text']},
+            headers={"Authorization": f"Client-ID {settings.IMGUR_CLIENTID}"},
         ) as resp:
-            js = await resp.json()
-            try:
-                gif_url = (
-                    js.get("results", [])[0]
-                    .get("media_formats", {})
-                    .get("gif", {})
-                    .get("url", None)
-                )
-                await message.reply(
-                    embed=make_embed.success_embed(
-                        title=translate.get("ja", "autogif", "GIFで返しました。")
-                    ).set_image(url=gif_url)
-                )
-            except:
-                return
-            await asyncio.sleep(1)
-            await message.add_reaction("✅")
+            data = await resp.json()
+            if data and "data" in data:
+                for item in data["data"]:
+                    if item.get("animated"):
+                        return await message.reply(item["link"])
+                            
+                    if "images" in item:
+                        for image in item["images"]:
+                            if image.get("animated"):
+                                return await message.reply(image["link"])
+                            
+            await message.reply("🤔")
 
 
 class AutoGifCog(commands.Cog):
@@ -113,35 +109,32 @@ class AutoGifCog(commands.Cog):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def gif_search(self, interaction: discord.Interaction, 検索ワード: str):
         await interaction.response.defer()
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"https://g.tenor.com/v2/search?q={検索ワード}&key={settings.TENOR_API}&limit=1&media_filter=minimal"
-            ) as resp:
-                js = await resp.json()
-                try:
-                    gif_url = (
-                        js.get("results", [])[0]
-                        .get("media_formats", {})
-                        .get("gif", {})
-                        .get("url", None)
-                    )
-                    return await interaction.followup.send(
-                        embed=make_embed.success_embed(
-                            title=translate.get(
-                                interaction.extras["lang"], "autogif", "GIFの検索結果"
-                            )
-                        ).set_image(url=gif_url)
-                    )
-                except Exception as e:
-                    embed = make_embed.error_embed(
-                        title=translate.get(
-                            interaction.extras["lang"],
-                            "autogif",
-                            "gifが見つかりませんでした。",
-                        ),
-                        description=f"```{e}```",
-                    )
-                    return await interaction.followup.send(embed=embed)
+
+        text = await web_translate.translate("ja", "en", 検索ワード)
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"https://api.imgur.com/3/gallery/search",
+                    params={"q": text['text']},
+                    headers={"Authorization": f"Client-ID {settings.IMGUR_CLIENTID}"},
+                ) as resp:
+                    data = await resp.json()
+
+                    if data and "data" in data:
+                        for item in data["data"]:
+                            if item.get("animated"):
+                                return await interaction.followup.send(item["link"])
+                            
+                            if "images" in item:
+                                for image in item["images"]:
+                                    if image.get("animated"):
+                                        return await interaction.followup.send(image["link"])
+
+                    return await interaction.followup.send(embed=make_embed.error_embed(title="Gifが見つかりませんでした。"))
+        except Exception as e:
+            print(f"Error: {e}")
+            return await interaction.followup.send(embed=make_embed.error_embed(title="Gifが見つかりませんでした。"))
 
     @commands.Cog.listener("on_message")
     async def on_message_channel_autogif(self, message: discord.Message):
