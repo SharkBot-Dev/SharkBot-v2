@@ -427,13 +427,7 @@ class ModCog(commands.Cog):
     moderation.add_command(MuteGroup())
     moderation.add_command(PauseGroup())
 
-    @app_commands.command(name="kick", description="メンバーをキックします。")
-    @app_commands.checks.has_permissions(kick_members=True)
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def top_kick(
-        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str = None
-    ):
+    async def process_kick(self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str = None):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(title="自分自身はキックできません。"),
@@ -466,6 +460,15 @@ class ModCog(commands.Cog):
                 + f"\n{interaction.user.id} によってKick",
             )
         )
+
+    @app_commands.command(name="kick", description="メンバーをキックします。")
+    @app_commands.checks.has_permissions(kick_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def top_kick(
+        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str = None
+    ):
+        await self.process_kick(interaction, ユーザー, 理由)
 
     @moderation.command(name="kick", description="メンバーをキックします。")
     @app_commands.checks.has_permissions(kick_members=True)
@@ -474,46 +477,9 @@ class ModCog(commands.Cog):
     async def kick(
         self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str = None
     ):
-        if ユーザー.id == interaction.user.id:
-            return await interaction.response.send_message(
-                embed=make_embed.error_embed(title="自分自身はキックできません。"),
-                ephemeral=True,
-            )
-        if interaction.guild.get_member(ユーザー.id) is None:
-            return await interaction.response.send_message(
-                embed=make_embed.error_embed(
-                    title="このサーバーにいないメンバーはキックできません。"
-                )
-            )
-        await interaction.response.defer()
-        try:
-            await interaction.guild.kick(
-                ユーザー,
-                reason=理由
-                if 理由
-                else "なし" + f"\n{interaction.user.id} によってKick",
-            )
-        except:
-            return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="キックに失敗しました。", description="権限が足りないかも！？"
-                )
-            )
-        return await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title=f"{ユーザー.name}をKickしました。",
-                description=f"理由: {理由 if 理由 else 'なし'}"
-                + f"\n{interaction.user.id} によってKick",
-            )
-        )
+        await self.process_kick(interaction, ユーザー, 理由)
     
-    @app_commands.command(name="ban", description="ユーザーをBanをします。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.has_permissions(ban_members=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def top_ban(
-        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
-    ):
+    async def process_ban(self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str = None):
         if ユーザー.id == interaction.user.id:
             return await interaction.response.send_message(
                 embed=make_embed.error_embed(title="自分自身はBanできません。"),
@@ -540,6 +506,15 @@ class ModCog(commands.Cog):
             )
         )
 
+    @app_commands.command(name="ban", description="ユーザーをBanをします。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def top_ban(
+        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
+    ):
+        await self.process_ban(interaction, ユーザー, 理由)
+
     @moderation.command(name="ban", description="ユーザーをBanをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(ban_members=True)
@@ -547,31 +522,7 @@ class ModCog(commands.Cog):
     async def ban(
         self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
     ):
-        if ユーザー.id == interaction.user.id:
-            return await interaction.response.send_message(
-                embed=make_embed.error_embed(title="自分自身はBanできません。"),
-                ephemeral=True,
-            )
-        await interaction.response.defer()
-        try:
-            await interaction.guild.ban(
-                ユーザー, reason=理由 + f"\n{interaction.user.id} によってBAN"
-            )
-        except:
-            return await interaction.followup.send(
-                embed=make_embed.error_embed(
-                    title="Banに失敗しました。", description="権限が足りないかも！？"
-                )
-            )
-        return await interaction.followup.send(
-            embed=make_embed.success_embed(
-                title=f"{ユーザー.name}をBanしました。"
-            ).add_field(
-                name="理由",
-                value=理由 + f"\n{interaction.user.id} によってBAN",
-                inline=False,
-            )
-        )
+        await self.process_ban(interaction, ユーザー, 理由)
 
     @moderation.command(name="unban", description="ユーザーのBanを解除します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -906,6 +857,37 @@ class ModCog(commands.Cog):
                 color=discord.Color.green(),
             )
         )
+    
+    async def process_clear(self, interaction: discord.Interaction, メッセージ数: int, ユーザー: discord.User = None):
+        await interaction.response.defer(ephemeral=True)
+
+        now = discord.utils.utcnow()
+        two_weeks = datetime.timedelta(days=14)
+
+        def check(msg: discord.Message):
+            if (now - msg.created_at) > two_weeks:
+                return False
+            if ユーザー is not None and msg.author.id != ユーザー.id:
+                return False
+            return True
+
+        deleted = await interaction.channel.purge(limit=メッセージ数, check=check)
+
+        if len(deleted) == 0:
+            await interaction.followup.send(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title=f"メッセージを一個も削除できませんでした。"
+                ),
+            )
+            return
+
+        await interaction.followup.send(
+            ephemeral=True,
+            embed=make_embed.success_embed(
+                title=f"{len(deleted)}個のメッセージを削除しました。"
+            ),
+        )
 
     @app_commands.command(name="clear", description="メッセージを一斉削除します。")
     @app_commands.checks.has_permissions(manage_channels=True)
@@ -917,35 +899,7 @@ class ModCog(commands.Cog):
         メッセージ数: int,
         ユーザー: discord.User = None,
     ):
-        await interaction.response.defer(ephemeral=True)
-
-        now = discord.utils.utcnow()
-        two_weeks = datetime.timedelta(days=14)
-
-        def check(msg: discord.Message):
-            if (now - msg.created_at) > two_weeks:
-                return False
-            if ユーザー is not None and msg.author.id != ユーザー.id:
-                return False
-            return True
-
-        deleted = await interaction.channel.purge(limit=メッセージ数, check=check)
-
-        if len(deleted) == 0:
-            await interaction.followup.send(
-                ephemeral=True,
-                embed=make_embed.error_embed(
-                    title=f"メッセージを一個も削除できませんでした。"
-                ),
-            )
-            return
-
-        await interaction.followup.send(
-            ephemeral=True,
-            embed=make_embed.success_embed(
-                title=f"{len(deleted)}個のメッセージを削除しました。"
-            ),
-        )
+        await self.process_clear(interaction, メッセージ数, ユーザー)
 
     @moderation.command(name="clear", description="メッセージを一斉削除します。")
     @app_commands.checks.has_permissions(manage_channels=True)
@@ -957,35 +911,7 @@ class ModCog(commands.Cog):
         メッセージ数: int,
         ユーザー: discord.User = None,
     ):
-        await interaction.response.defer(ephemeral=True)
-
-        now = discord.utils.utcnow()
-        two_weeks = datetime.timedelta(days=14)
-
-        def check(msg: discord.Message):
-            if (now - msg.created_at) > two_weeks:
-                return False
-            if ユーザー is not None and msg.author.id != ユーザー.id:
-                return False
-            return True
-
-        deleted = await interaction.channel.purge(limit=メッセージ数, check=check)
-
-        if len(deleted) == 0:
-            await interaction.followup.send(
-                ephemeral=True,
-                embed=make_embed.error_embed(
-                    title=f"メッセージを一個も削除できませんでした。"
-                ),
-            )
-            return
-
-        await interaction.followup.send(
-            ephemeral=True,
-            embed=make_embed.success_embed(
-                title=f"{len(deleted)}個のメッセージを削除しました。"
-            ),
-        )
+        await self.process_clear(interaction, メッセージ数, ユーザー)
 
     @moderation.command(name="warn", description="メンバーを警告します。")
     @app_commands.checks.has_permissions(administrator=True)
