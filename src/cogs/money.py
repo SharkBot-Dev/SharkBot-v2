@@ -1440,6 +1440,7 @@ class ServerMoneyCog(commands.Cog):
         )
 
     @app_commands.command(name="work", description="60分に1回働けます。")
+    @app_commands.allowed_installs(guilds=True, users=False)
     async def top_economy_work_server(self, interaction: discord.Interaction):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
             return await interaction.response.send_message(
@@ -1598,6 +1599,7 @@ class ServerMoneyCog(commands.Cog):
     @app_commands.command(
         name="balance", description="サーバー内で残高を取得します。"
     )
+    @app_commands.allowed_installs(guilds=True, users=False)
     async def top_economy_balance_server(
         self, interaction: discord.Interaction, メンバー: discord.User = None
     ):

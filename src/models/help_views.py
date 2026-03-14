@@ -109,11 +109,18 @@ class CategorySelect(discord.ui.Select):
             discord.SelectOption(label=c["name"], description=c["description"][:100])
             for c in chunks
         ]
-        super().__init__(placeholder="カテゴリを選択してください", options=options)
+        super().__init__(placeholder="カテゴリまたはコマンドを選択してください", options=options)
 
     async def callback(self, interaction: discord.Interaction):
         cat = next(c for c in self.view_help.cmds if c["name"] == self.values[0])
-        self.view_help.current_category = cat
+        
+        if not cat["sub"]:
+            self.view_help.current_category = cat
+            self.view_help.current_command = cat
+        else:
+            self.view_help.current_category = cat
+            self.view_help.current_command = None
+
         self.view_help.command_page = 0
         self.view_help.update_ui()
         await interaction.response.edit_message(
@@ -154,7 +161,11 @@ class BackButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         if self.view_help.current_command:
-            self.view_help.current_command = None
+            if self.view_help.current_command == self.view_help.current_category:
+                self.view_help.current_category = None
+                self.view_help.current_command = None
+            else:
+                self.view_help.current_command = None
         elif self.view_help.current_category:
             self.view_help.current_category = None
 

@@ -1127,6 +1127,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
     @app_commands.command(name="server", description="サーバー情報を確認します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.allowed_installs(guilds=True, users=False)
     async def top_server_info(self, interaction: discord.Interaction):
         await self.search_process(interaction)
 

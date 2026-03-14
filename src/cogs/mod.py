@@ -465,6 +465,7 @@ class ModCog(commands.Cog):
     @app_commands.checks.has_permissions(kick_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.allowed_installs(guilds=True, users=False)
     async def top_kick(
         self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str = None
     ):
@@ -518,6 +519,7 @@ class ModCog(commands.Cog):
     @app_commands.command(name="ban", description="ユーザーをBanをします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.has_permissions(ban_members=True)
+    @app_commands.allowed_installs(guilds=True, users=False)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def top_ban(
         self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str
@@ -910,6 +912,7 @@ class ModCog(commands.Cog):
     @app_commands.command(name="clear", description="メッセージを一斉削除します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=False)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def top_clear(
         self,
