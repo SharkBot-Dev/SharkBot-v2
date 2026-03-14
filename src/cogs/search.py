@@ -1035,10 +1035,7 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
         except:
             return
 
-    @search.command(name="server", description="サーバー情報を確認します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def server_info(self, interaction: discord.Interaction):
+    async def search_process(self, interaction: discord.Interaction):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
             return await interaction.response.send_message(
                 ephemeral=True,
@@ -1126,6 +1123,18 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
             )
 
             await interaction.followup.send(embed=embed, view=view)
+
+    @app_commands.command(name="server", description="サーバー情報を確認します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def top_server_info(self, interaction: discord.Interaction):
+        await self.search_process(interaction)
+
+    @search.command(name="server", description="サーバー情報を確認します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def server_info(self, interaction: discord.Interaction):
+        await self.search_process(interaction)
 
     @search.command(name="channel", description="チャンネルを検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)

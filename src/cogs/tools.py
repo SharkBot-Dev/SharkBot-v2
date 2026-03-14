@@ -1955,6 +1955,31 @@ class ToolsCog(commands.Cog):
             ephemeral=True,
         )
 
+    @app_commands.command(name="afk", description="AFKを設定します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def top_afk(
+        self,
+        interaction: discord.Interaction,
+        理由: str,
+        終わったらやること: str = "まだ予定がありません。",
+    ):
+        await interaction.response.defer()
+        database = self.bot.async_db["Main"].AFK
+        await database.update_one(
+            {"User": interaction.user.id},
+            {
+                "$set": {
+                    "User": interaction.user.id,
+                    "Reason": 理由,
+                    "End": 終わったらやること,
+                }
+            },
+            upsert=True,
+        )
+        embed = make_embed.success_embed(title="AFKを設定しました。", description=理由)
+        await interaction.followup.send(embed=embed)
+
     @tools.command(name="afk", description="AFKを設定します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)

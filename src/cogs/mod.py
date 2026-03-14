@@ -427,6 +427,46 @@ class ModCog(commands.Cog):
     moderation.add_command(MuteGroup())
     moderation.add_command(PauseGroup())
 
+    @app_commands.command(name="kick", description="メンバーをキックします。")
+    @app_commands.checks.has_permissions(kick_members=True)
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def top_kick(
+        self, interaction: discord.Interaction, ユーザー: discord.User, 理由: str = None
+    ):
+        if ユーザー.id == interaction.user.id:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(title="自分自身はキックできません。"),
+                ephemeral=True,
+            )
+        if interaction.guild.get_member(ユーザー.id) is None:
+            return await interaction.response.send_message(
+                embed=make_embed.error_embed(
+                    title="このサーバーにいないメンバーはキックできません。"
+                )
+            )
+        await interaction.response.defer()
+        try:
+            await interaction.guild.kick(
+                ユーザー,
+                reason=理由
+                if 理由
+                else "なし" + f"\n{interaction.user.id} によってKick",
+            )
+        except:
+            return await interaction.followup.send(
+                embed=make_embed.error_embed(
+                    title="キックに失敗しました。", description="権限が足りないかも！？"
+                )
+            )
+        return await interaction.followup.send(
+            embed=make_embed.success_embed(
+                title=f"{ユーザー.name}をKickしました。",
+                description=f"理由: {理由 if 理由 else 'なし'}"
+                + f"\n{interaction.user.id} によってKick",
+            )
+        )
+
     @moderation.command(name="kick", description="メンバーをキックします。")
     @app_commands.checks.has_permissions(kick_members=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
