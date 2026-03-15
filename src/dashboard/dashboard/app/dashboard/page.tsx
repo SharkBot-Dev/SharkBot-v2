@@ -1,11 +1,23 @@
 import { cookies } from "next/headers";
+import { redirect } from 'next/navigation'
 import { connectDB } from "@/lib/mongodb";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ 
+  searchParams 
+}: { 
+  searchParams: { [key: string]: string | string[] | undefined } 
+}) {
   const cookieStore = await cookies();
   const sessionId = cookieStore.get("session_id")?.value;
 
-  if (!sessionId) return <p>ログイン情報が見つかりません。</p>;
+  if (!sessionId) return redirect("/api/auth/login");
+
+  const params = await searchParams;
+  const redirect_param = params.r;
+
+  if (redirect_param === "rankcard") {
+    redirect('/dashboard/rankcard');
+  }
 
   const db = await connectDB();
   const session = await db.db('Dashboard').collection("Sessions").findOne({ session_id: sessionId });

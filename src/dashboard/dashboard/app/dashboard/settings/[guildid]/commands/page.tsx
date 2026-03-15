@@ -51,7 +51,7 @@ export default async function CommandPage({ params }: { params: { guildid: strin
     const allCommandsDoc = await db.db("DashboardBot").collection("Commands").find().toArray();
     const commands = allCommandsDoc.map((doc: any) => {
         const parts = doc.name?.split(" ") || [];
-        const category = parts.length > 1 ? parts[0] : "その他";
+        const category = parts.length > 1 ? parts[0] : "メインコマンド";
         return {
             name: doc.name,
             description: doc.description || "説明が設定されていません。",

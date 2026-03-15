@@ -3,6 +3,12 @@ import { getLoginUser } from "@/lib/discord/fetch";
 import { connectDB } from "@/lib/mongodb";
 import { Long } from "mongodb";
 import RankCardBuilder from "./RankCardBuilder";
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+    title: 'ランクカード編集',
+    description: 'ランクカードの見た目を変えることができます。'
+}
 
 export default async function RankCardEditPage() {
     const cookieStore = await cookies();
@@ -55,8 +61,8 @@ export default async function RankCardEditPage() {
     return (
         <RankCardBuilder initialData={{
             username: loginuser.username,
-            level: 1,
-            xp: 1,
+            level: 3,
+            xp: 20,
             avatarUrl: `https://cdn.discordapp.com/avatars/${loginuser.id}/${loginuser.avatar}.png`,
             color: color
         }} action={setRankColor}></RankCardBuilder>

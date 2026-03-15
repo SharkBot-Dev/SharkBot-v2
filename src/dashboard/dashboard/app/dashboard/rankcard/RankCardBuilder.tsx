@@ -1,18 +1,26 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
+
+interface CategoryData {
+  label: string;
+  level: number;
+  xp: number;
+}
 
 export const generateRankCard = async (
   color: string | [number, number, number],
   username: string,
-  guildIconUrl: string | null,
   avatarUrl: string,
-  level: number,
-  xp: number,
-  nextXp: number = 1000
+  data: {
+    Level: number; XP: number;
+    TextLevel: number; TextXP: number;
+    VoiceLevel: number; VoiceXP: number;
+  },
+  nextXp: number = 80
 ): Promise<Blob> => {
   const W = 600;
-  const H = 200;
+  const H = 240;
 
   const canvas = document.createElement("canvas");
   canvas.width = W;
@@ -33,42 +41,50 @@ export const generateRankCard = async (
   const avatarImg = await loadImage(avatarUrl);
   
   ctx.beginPath();
-  ctx.arc(100, 100, 63, 0, Math.PI * 2);
+  ctx.arc(90, 90, 53, 0, Math.PI * 2);
   ctx.fillStyle = baseColor;
   ctx.fill();
 
   ctx.save();
   ctx.beginPath();
-  ctx.arc(100, 100, 60, 0, Math.PI * 2);
+  ctx.arc(90, 90, 50, 0, Math.PI * 2);
   ctx.clip();
-  ctx.drawImage(avatarImg, 40, 40, 120, 120);
+  ctx.drawImage(avatarImg, 40, 40, 100, 100);
   ctx.restore();
 
   ctx.textBaseline = "top";
-  
   ctx.font = "bold 28px sans-serif";
   ctx.fillStyle = "#FFFFFF";
-  ctx.fillText(username, 180, 40);
+  ctx.fillText(username, 160, 30);
 
-  const levelText = `LEVEL ${level}`;
-  ctx.font = "bold 28px 'DiscordFont', sans-serif";
-  ctx.fillStyle = baseColor;
-  ctx.fillText(levelText, 180, 85);
+  const categories: CategoryData[] = [
+    { label: "TOTAL", level: data.Level, xp: data.XP },
+    { label: "TEXT", level: data.TextLevel, xp: data.TextXP },
+    { label: "VOICE", level: data.VoiceLevel, xp: data.VoiceXP }
+  ];
 
-  const levelTextWidth = ctx.measureText(levelText).width;
-  const xpText = `${xp} / ${nextXp} XP`;
-  ctx.font = "18px 'DiscordFont', sans-serif";
-  ctx.fillStyle = "#AAAAAA";
-  ctx.fillText(xpText, 180 + levelTextWidth + 10, 90);
+  let startY = 75;
+  categories.forEach((cat) => {
+    ctx.font = "24px sans-serif";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(`${cat.label} Lv.${cat.level}`, 160, startY);
 
-  const barX = 180, barY = 130, barW = 380, barH = 25;
-  const progress = Math.min(xp / nextXp, 1.0);
+    const xpTxt = `${cat.xp}/${nextXp} XP`;
+    ctx.font = "16px sans-serif";
+    ctx.fillStyle = "#AAAAAA";
+    ctx.fillText(xpTxt, 480, startY + 5);
 
-  drawRoundedRect(ctx, barX, barY, barW, barH, 12, "#3c3c3c");
-  
-  if (progress > 0) {
-    drawRoundedRect(ctx, barX, barY, barW * progress, barH, 12, baseColor);
-  }
+    const barX = 160, barY = startY + 32, barW = 400, barH = 10;
+    const progress = Math.min(cat.xp / nextXp, 1.0);
+
+    drawRoundedRect(ctx, barX, barY, barW, barH, 5, "#3c3c3c");
+
+    if (progress > 0) {
+      drawRoundedRect(ctx, barX, barY, barW * progress, barH, 5, baseColor);
+    }
+
+    startY += 50;
+  });
 
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob!), "image/png");
@@ -90,151 +106,87 @@ const drawRoundedRect = (
   x: number, y: number, w: number, h: number, r: number, fill: string
 ) => {
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
+  ctx.roundRect(x, y, w, h, r);
   ctx.fillStyle = fill;
   ctx.fill();
 };
 
-interface RankCardBuilderProps {
-  initialData?: {
-    username: string;
-    level: number;
-    xp: number;
-    avatarUrl: string;
-    color: string;
-  };
-  action: any
-}
+export default function RankCardBuilder({ initialData, action }: any) {
+  const [username, setUsername] = useState(initialData?.username || "Global User");
+  const [selected_color, setSelectedColor] = useState(initialData?.color || "blue");
+  
+  const [level, setLevel] = useState(initialData?.level || 1);
+  const [xp, setXp] = useState(initialData?.xp || 250);
 
-const COLOR_MAP = new Map<string, string>([
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const COLOR_MAP = new Map<string, string>([
     ["red", "#7d344b"],
     ["yellow", "#889e1b"],
     ["blue", "#5058cc"],
     ["green", "#42f560"],
     ["gray", "#646464"]
-]);
-
-export default function RankCardBuilder({ initialData, action }: RankCardBuilderProps) {
-  const [username, setUsername] = useState(initialData?.username || "Global User");
-  const [level, setLevel] = useState(initialData?.level || 1);
-  const [xp, setXp] = useState(initialData?.xp || 250);
-  const [avatarUrl, setAvatarUrl] = useState(initialData?.avatarUrl || "https://via.placeholder.com/120");
-  
-  const [selected_color, setSelectedColor] = useState(initialData?.color || "gray");
-
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  ]);
 
   useEffect(() => {
     const updatePreview = async () => {
-      setIsGenerating(true);
-      try {
-        const blob = await generateRankCard(
-          COLOR_MAP.get(selected_color) as string,
-          username,
-          null,
-          avatarUrl,
-          level,
-          xp,
-          100
-        );
-        
-        if (previewUrl) URL.revokeObjectURL(previewUrl);
-        setPreviewUrl(URL.createObjectURL(blob));
-      } catch (err) {
-        console.error("生成エラー:", err);
-      } finally {
-        setIsGenerating(false);
-      }
+      const blob = await generateRankCard(
+        COLOR_MAP.get(selected_color) || "#5058cc",
+        username,
+        initialData?.avatarUrl || "https://via.placeholder.com/100",
+        {
+          Level: level, XP: xp,
+          TextLevel: Math.floor(level * 0.8), TextXP: Math.floor(xp * 0.6),
+          VoiceLevel: Math.floor(level * 0.4), VoiceXP: Math.floor(xp * 0.4)
+        }
+      );
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(URL.createObjectURL(blob));
     };
 
     const timer = setTimeout(updatePreview, 500);
     return () => clearTimeout(timer);
-  }, [username, level, xp, COLOR_MAP.get(selected_color), avatarUrl]);
+  }, [username, level, xp, selected_color]);
 
   return (
-    <div className="p-6 text-white">
-        <h2 className="text-2xl font-bold mb-6">ランクカード編集</h2>
+    <div className="p-6 text-white bg-[#2b2d31] min-h-screen">
+      <h2 className="text-2xl font-bold mb-6">ランクカード編集</h2>
 
-        <div className="mb-8 border-2 border-dashed border-gray-600 p-4 rounded-lg flex bg-[#1e1f22]">
-            {previewUrl ? (
-            <img src={previewUrl} alt="Rank Card Preview" className="max-w-full h-auto rounded shadow-md" />
-            ) : (
-            <div className="h-[200px] w-[600px] flex">生成中...</div>
-            )}
+      <div className="mb-8 border border-gray-700 p-4 rounded-lg flex justify-center bg-[#1e1f22]">
+        {previewUrl && (
+          <img src={previewUrl} alt="Preview" className="max-w-full h-auto rounded shadow-xl" />
+        )}
+      </div>
+
+      <form action={action} className="space-y-6">
+        <div className="p-4 bg-[#1e1f22] rounded-lg">
+          <p className="text-sm mb-3 text-gray-400">テーマカラー</p>
+          <div className="flex gap-3">
+            {Array.from(COLOR_MAP).map(([name, hex]) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => setSelectedColor(name)}
+                style={{ backgroundColor: hex }}
+                className={`w-10 h-10 rounded-full border-4 transition-all ${
+                  selected_color === name ? "border-white scale-110" : "border-transparent opacity-70"
+                }`}
+              />
+            ))}
+          </div>
         </div>
 
-        <form action={action}>
-            <div className="flex flex-wrap gap-3 p-2 bg-[#1e1f22] rounded-lg">
-                <input 
-                    type="hidden" 
-                    name="selected_color"
-                    value={selected_color} 
-                />
+        <input name="selected_color" value={selected_color} readOnly hidden></input>
 
-                {Array.from(COLOR_MAP).map(([name, hex]) => {
-                    const isSelected = selected_color.toLowerCase() === hex.toLowerCase();
-                    
-                    return (
-                    <button
-                        key={name}
-                        type="button"
-                        title={name}
-                        style={{ backgroundColor: hex }}
-                        onClick={() => setSelectedColor(name)}
-                        className={`w-10 h-10 rounded-full border-4 transition-all hover:scale-110 ${
-                        isSelected 
-                            ? "border-white shadow-[0_0_10px_rgba(255,255,255,0.5)] scale-110" 
-                            : "border-transparent opacity-80 hover:opacity-100"
-                        }`}
-                    />
-                    );
-                })}
-            </div><br/>
-
-            <div className="flex flex-wrap gap-3 p-2 bg-[#1e1f22] rounded-lg">
-                <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-400">レベル</label>
-                    <input
-                        type="number"
-                        value={level}
-                        onChange={(e) => setLevel(Number(e.target.value))}
-                        className="p-2 rounded bg-[#383a40] border border-[#1e1f22]"
-                    />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-400">現在のXP</label>
-                    <input
-                        type="number"
-                        value={xp}
-                        onChange={(e) => setXp(Number(e.target.value))}
-                        className="p-2 rounded bg-[#383a40] border border-[#1e1f22]"
-                    />
-                </div>
-            </div><br/>
-
-            <div className="flex flex-wrap gap-3 p-2 bg-[#1e1f22] rounded-lg">
-                <button
-                    type="submit"
-                    className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition"
-                >
-                    設定する
-                </button>
-
-                <a
-                    href="/dashboard"
-                    className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition"
-                >
-                    戻る
-                </a>
-            </div>
-        </form>
+        <div className="flex gap-3">
+          <button type="submit" className="bg-indigo-500 px-8 py-2 rounded font-bold hover:bg-indigo-600 transition">
+            保存する
+          </button>
+          <a href="/dashboard" className="bg-gray-600 px-8 py-2 rounded font-bold hover:bg-gray-700 transition">
+            キャンセル
+          </a>
+        </div>
+      </form>
     </div>
   );
 }

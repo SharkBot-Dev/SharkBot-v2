@@ -643,7 +643,7 @@ class LevelCog(commands.Cog):
             timing
         )
 
-        await interaction.followup.send(file=discord.File(rank_card_file, "rank_card.png"))
+        await interaction.followup.send(file=discord.File(rank_card_file, "rank_card.png"), view=discord.ui.View().add_item(discord.ui.Button(label="編集する", emoji="✨", url="https://dashboard.sharkbot.xyz/dashboard?r=rankcard")))
         rank_card_file.close()
 
     @app_commands.command(name="rank", description="ランクを表示します。")

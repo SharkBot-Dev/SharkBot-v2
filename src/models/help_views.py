@@ -7,6 +7,9 @@ def chunk_list(data_list, chunk_size):
         return [[]]
     return [data_list[i : i + chunk_size] for i in range(0, len(data_list), chunk_size)]
 
+class WebPageView(discord.ui.Button):
+    def __init__(self):
+        super().__init__(label="Webで見る", url="https://www.sharkbot.xyz/commands")
 
 class HelpView(discord.ui.View):
     def __init__(self, bot: commands.Bot, user_: discord.User):
@@ -56,6 +59,7 @@ class HelpView(discord.ui.View):
             self.add_item(HelpOpSelect(self))
             self.add_item(PageButton(self, -1))
             self.add_item(PageButton(self, 1))
+            self.add_item(WebPageView())
         elif self.current_command is None:
             self.add_item(BackButton(self))
             self.add_item(CommandSelect(self))
