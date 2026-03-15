@@ -883,10 +883,7 @@ class SearchCog(commands.Cog):
 
         await interaction.edit_original_response(embed=embed)
 
-    @search.command(name="user", description="ユーザーを検索します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def user_search(self, interaction: discord.Interaction, user: discord.User):
+    async def user_process(self, interaction: discord.Interaction, user: discord.User):
         await interaction.response.defer()
         JST = datetime.timezone(datetime.timedelta(hours=9))
         if interaction.is_user_integration() and not interaction.is_guild_integration():
@@ -1034,6 +1031,18 @@ HypeSquadEventsメンバーか？: {"✅" if user.public_flags.hypesquad else "�
                 )
         except:
             return
+
+    @app_commands.command(name="user", description="ユーザーを検索します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def top_user_search(self, interaction: discord.Interaction, user: discord.User):
+        await self.user_process(interaction, user)
+
+    @search.command(name="user", description="ユーザーを検索します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def user_search(self, interaction: discord.Interaction, user: discord.User):
+        await self.user_process(interaction, user)
 
     async def search_process(self, interaction: discord.Interaction):
         if interaction.is_user_integration() and not interaction.is_guild_integration():
