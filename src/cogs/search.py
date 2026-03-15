@@ -857,7 +857,7 @@ class SearchCog(commands.Cog):
             )
 
         await interaction.response.send_message(
-            embed=make_embed.success_embed(
+            embed=make_embed.loading_embed(
                 title="検索中です..", description="しばらくお待ちください。"
             )
         )
