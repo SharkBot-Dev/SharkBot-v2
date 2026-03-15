@@ -246,6 +246,9 @@ class GlobalCog(commands.Cog):
     async def on_thread_create_global(self, thread: discord.Thread):
         if thread.owner_id == self.bot.user.id:
             return
+        
+        if thread.owner.bot:
+            return
 
         db = self.bot.async_db["MainTwo"].GlobalThread
         parent_channel_id = thread.parent_id
@@ -260,6 +263,9 @@ class GlobalCog(commands.Cog):
         if current_time - last_message_time < 3:
             return
         user_last_message_time_thread[thread.guild.id] = current_time
+
+        await thread.send('グローバルスレッドは削除されました。\n詳しくは公式サーバーを確認してください。')
+        return
 
         thread_name = thread.name
         all_channels = data["channels"]
@@ -383,6 +389,9 @@ class GlobalCog(commands.Cog):
         if current_time - last_message_time < 3:
             return
         user_last_message_time_thread[message.guild.id] = current_time
+
+        await message.reply('グローバルスレッドは削除されました。\n詳しくは公式サーバーを確認してください。')
+        return
 
         async with aiohttp.ClientSession() as session:
             for t in target_group["threads"]:
@@ -901,7 +910,7 @@ class GlobalCog(commands.Cog):
         name="global", description="グローバルチャット系のコマンドです。"
     )
 
-    globalchat.add_command(GlobalThreadGroup())
+    # globalchat.add_command(GlobalThreadGroup())
 
     @globalchat.command(name="join", description="グローバルチャットに参加します。")
     @app_commands.checks.has_permissions(manage_channels=True, manage_webhooks=True)
