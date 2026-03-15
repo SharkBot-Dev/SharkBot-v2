@@ -1334,6 +1334,7 @@ class ShopPanelGroup(app_commands.Group):
 class ServerMoneyCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.moneylib = Money
         print("init -> ServerMoneyCog")
 
     @commands.Cog.listener("on_message")

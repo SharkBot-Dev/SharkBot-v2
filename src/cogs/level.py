@@ -15,7 +15,7 @@ from models import command_disable, make_embed
 
 
 class LevelCog(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         print("init -> LevelCog")
 
@@ -668,15 +668,7 @@ class LevelCog(commands.Cog):
         
         await self.process_rankcard(interaction)
 
-    @level.command(name="ranking", description="レベルのランキングを表示します。")
-    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-    @app_commands.describe(カテゴリ="どのランキングを表示するか選択してください")
-    @app_commands.choices(カテゴリ=[
-        app_commands.Choice(name="総合 (Total)", value="Level"),
-        app_commands.Choice(name="テキスト (Text)", value="TextLevel"),
-        app_commands.Choice(name="ボイス (Voice)", value="VoiceLevel"),
-    ])
-    async def level_ranking(self, interaction: discord.Interaction, カテゴリ: str = "Level"):
+    async def process_ranking(self, interaction: discord.Interaction, カテゴリ: str):
         await interaction.response.defer()
         
         if not await self.check_level_enabled(interaction.guild):
@@ -704,6 +696,40 @@ class LevelCog(commands.Cog):
             description=msg
         )
         await interaction.followup.send(embed=embed)
+
+    @app_commands.command(name="ranking", description="レベル・経済のランキングを表示します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.allowed_installs(guilds=True, users=False)
+    @app_commands.describe(カテゴリ="どのランキングを表示するか選択してください")
+    @app_commands.choices(カテゴリ=[
+        app_commands.Choice(name="総合 (Total)", value="Level"),
+        app_commands.Choice(name="テキスト (Text)", value="TextLevel"),
+        app_commands.Choice(name="ボイス (Voice)", value="VoiceLevel"),
+        app_commands.Choice(name="経済 (Economy)", value="Economy"),
+    ])
+    async def top_level_economy_ranking(self, interaction: discord.Interaction, カテゴリ: str = "Level"):
+        if カテゴリ == "Economy":
+            moneylib = self.bot.get_cog("ServerMoneyCog").moneylib(self.bot)
+            ranks = await moneylib.get_server_ranking(interaction.guild)
+            await interaction.response.send_message(
+                embed=make_embed.success_embed(
+                    title="お金持ちランキングです。", description=ranks
+                )
+            )
+            return 
+
+        await self.process_ranking(interaction, カテゴリ)
+
+    @level.command(name="ranking", description="レベルのランキングを表示します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.describe(カテゴリ="どのランキングを表示するか選択してください")
+    @app_commands.choices(カテゴリ=[
+        app_commands.Choice(name="総合 (Total)", value="Level"),
+        app_commands.Choice(name="テキスト (Text)", value="TextLevel"),
+        app_commands.Choice(name="ボイス (Voice)", value="VoiceLevel"),
+    ])
+    async def level_ranking(self, interaction: discord.Interaction, カテゴリ: str = "Level"):
+        await self.process_ranking(interaction, カテゴリ)
 
     @level.command(name="reset", description="レベルをリセットします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
