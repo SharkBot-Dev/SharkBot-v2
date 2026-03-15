@@ -69,10 +69,17 @@ class LevelCog(commands.Cog):
         new_total_xp = data.get("XP", 0) + amount
         new_total_lv = data.get("Level", 0)
         total_leveled_up = False
-        while new_total_xp >= timing:
-            new_total_xp -= timing
-            new_total_lv += 1
-            total_leveled_up = True
+
+        if category == "Voice":
+            if new_total_xp >= timing:
+                new_total_xp = 0
+                new_total_lv += 1
+                total_leveled_up = True
+        else:
+            while new_total_xp >= timing:
+                new_total_xp -= timing
+                new_total_lv += 1
+                total_leveled_up = True
 
         update_fields = {
             f"{category}XP": new_cat_xp,
