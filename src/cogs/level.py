@@ -62,6 +62,9 @@ class LevelCog(commands.Cog):
             new_cat_xp -= timing
             new_cat_lv += 1
             cat_leveled_up = True
+            if category == "Voice":
+                new_cat_xp = 0
+                break
 
         new_total_xp = data.get("XP", 0) + amount
         new_total_lv = data.get("Level", 0)
