@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/favicon.ico">
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <title>基本コマンドガイド</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --tag-bg: #334155;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        h1 { margin: 0; font-size: 1.8rem; letter-spacing: 1px; }
+        .subtitle { font-size: 0.9rem; opacity: 0.9; margin-top: 5px; }
+
+        main {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h2 {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 12px;
+            font-size: 1.3rem;
+            margin: 30px 0 15px 0;
+            color: var(--accent-color);
+        }
+
+        .notice {
+            background-color: rgba(56, 189, 248, 0.1);
+            border: 1px solid var(--accent-color);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        .command-item {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+        }
+
+        .command-item:active {
+            transform: scale(0.98);
+        }
+
+        .command-name {
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: #f472b6;
+            font-size: 1.1rem;
+            font-weight: bold;
+            background: var(--tag-bg);
+            padding: 4px 10px;
+            border-radius: 6px;
+            width: fit-content;
+            margin-bottom: 8px;
+        }
+
+        .command-desc {
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-sub);
+            font-size: 0.8rem;
+        }
+
+        @media (min-width: 768px) {
+            main { padding: 40px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="particles-js"></div>
+
+<header>
+    <h1>基本コマンド一覧</h1>
+    <div class="subtitle">SharkBotは基本的に<br>このコマンドを覚えれば使用できます。</div>
+</header>
+
+<main>
+    <h2>🛡️ モデレート機能</h2>
+    <div class="command-item">
+        <div class="command-name">/ban</div>
+        <div class="command-desc">指定したメンバーをサーバーから追放（BAN）します。</div>
+    </div>
+    <div class="command-item">
+        <div class="command-name">/kick</div>
+        <div class="command-desc">メンバーをサーバーからキックします。</div>
+    </div>
+    <div class="command-item">
+        <div class="command-name">/clear</div>
+        <div class="command-desc">メッセージを指定した数だけ一括削除します。</div>
+    </div>
+    <div class="command-item">
+        <div class="command-name">/server</div>
+        <div class="command-desc">サーバーの基本情報や人数を表示します。</div>
+    </div>
+    <div class="command-item">
+        <div class="command-name">/user</div>
+        <div class="command-desc">ユーザーの詳細情報を表示します。</div>
+    </div>
+
+    <h2>🧙 役職パネル機能</h2>
+    <div class="notice">
+        ⚠️ <strong>重要:</strong> 役職パネル機能で編集できるロールは<br> SharkBotのロールよりも下 に存在する必要があります。
+    </div>
+    <div class="command-item">
+        <div class="command-name">/panel role</div>
+        <div class="command-desc">役職パネルを作成します。</div>
+    </div>
+    <div class="command-item">
+        <div class="command-name">/panel auth</div>
+        <div class="command-desc">簡単な認証パネルを作成します。</div>
+    </div>
+
+    <h2>💰 経済機能</h2>
+    <div class="command-item">
+        <div class="command-name">/work</div>
+        <div class="command-desc">仕事をしてゲーム内通貨を入手します。</div>
+    </div>
+    <div class="command-item">
+        <div class="command-name">/balance</div>
+        <div class="command-desc">現在の所持金や全財産を確認します。</div>
+    </div>
+
+    <h2>📈 レベル機能</h2>
+    <div class="notice">
+        ⚠️ <strong>重要:</strong> レベル機能を利用するには <code>/level setting</code> で有効化する必要があります。
+    </div>
+    <div class="command-item">
+        <div class="command-name">/rank</div>
+        <div class="command-desc">現在のレベルと経験値を表示します。</div>
+    </div>
+    <div class="command-item">
+        <div class="command-name">/ranking</div>
+        <div class="command-desc">レベルと経済のサーバー内ランキングを表示します。</div>
+    </div>
+
+    <h2>🛠️ ツール機能</h2>
+    <div class="command-item">
+        <div class="command-name">/afk</div>
+        <div class="command-desc">放置モードを設定します。メンション時に自動返信します。</div>
+    </div>
+    <div class="command-item">
+        <div class="command-name">/help</div>
+        <div class="command-desc">Botの使い方のヘルプを表示します。</div>
+    </div>
+    <div class="command-item">
+        <div class="command-name">/dashboard</div>
+        <div class="command-desc">Web設定用ダッシュボードのURLを表示します。</div>
+    </div>
+</main>
+
+</body>
+
+<script>
+    particlesJS("particles-js", {
+        particles: {
+            number: { value: 60, density: { enable: true, value_area: 800 } },
+            color: { value: "#3498db" },
+            shape: { type: "circle" },
+            opacity: { value: 0.5, random: false },
+            size: { value: 3, random: true },
+            line_linked: { enable: true, distance: 150, color: "#3498db", opacity: 0.4, width: 1 },
+            move: { enable: true, speed: 1.5, direction: "none", random: false, straight: false, out_mode: "out" }
+        },
+        interactivity: {
+            detect_on: "canvas",
+            events: { onhover: { enable: true, mode: "grab" }, onclick: { enable: true, mode: "push" } }
+        },
+        retina_detect: true
+    });
+</script>
+</html>

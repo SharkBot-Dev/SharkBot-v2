@@ -38,6 +38,10 @@ def decrypt_token(encrypted_token: bytes) -> str:
 def main():
     return render_template("index_3.html")
 
+@app.route("/commands", methods=["GET"])
+def commands_page():
+    return render_template("commands.html")
+
 
 @app.route("/server/<server_id>", methods=["GET"])
 def server_page(server_id):
