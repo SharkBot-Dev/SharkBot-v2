@@ -39,45 +39,265 @@ class Paginator(discord.ui.View):
         self.current = (self.current + 1) % len(self.embeds)
         await self.update_message(interaction)
 
+class TagParser:
+    def evaluate_condition(self, condition: str) -> bool:
+        operators = [">=", "<=", "==", "!=", ">", "<"]
+        
+        for op in operators:
+            if op in condition:
+                left_raw, right_raw = condition.split(op, 1)
+                left = left_raw.strip()
+                right = right_raw.strip()
+
+                try:
+                    l_val = float(left)
+                    r_val = float(right)
+                    if op == "==": return l_val == r_val
+                    if op == "!=": return l_val != r_val
+                    if op == ">":  return l_val > r_val
+                    if op == "<":  return l_val < r_val
+                    if op == ">=": return l_val >= r_val
+                    if op == "<=": return l_val <= r_val
+                except ValueError:
+                    if op == "==": return left == right
+                    if op == "!=": return left != right
+                    return False
+        return False
+
+    def parse_if_blocks(self, text: str) -> str:
+        """{if} {elif} {else} {endif} を解析する"""
+        pattern = r"\{if:?([^{}]+)\}(.*?)\{endif\}"
+        
+        while True:
+            match = re.search(pattern, text, re.DOTALL)
+            if not match:
+                break
+            
+            condition = match.group(1)
+            full_content = match.group(2)
+            
+            parts = re.split(r"\{(elif:?[^{}]+|else)\}", full_content)
+            
+            res = ""
+            if self.evaluate_condition(condition):
+                res = parts[0]
+            else:
+                found = False
+                for i in range(1, len(parts), 2):
+                    tag = parts[i]
+                    content = parts[i+1] if i+1 < len(parts) else ""
+                    
+                    if tag.startswith("elif"):
+                        elif_cond = re.sub(r"^elif:?\s*", "", tag)
+                        if self.evaluate_condition(elif_cond):
+                            res = content
+                            found = True
+                            break
+                    elif tag == "else":
+                        res = content
+                        found = True
+                        break
+                if not found:
+                    res = ""
+
+            text = text[:match.start()] + res + text[match.end():]
+        return text
+
+    def process_variables(self, text: str) -> str:
+        """{set:変数名|値} と {get:変数名} を処理する"""
+        variables = {}
+
+        def set_var(match):
+            var_name = match.group(1).strip()
+            value = match.group(2).strip()
+            variables[var_name] = value
+            return ""
+
+        text = re.sub(r"\{set:([^|]+)\|([^}]+)\}", set_var, text)
+
+        for _ in range(5):
+            changed = False
+            for var_name, value in variables.items():
+                placeholder = f"{{get:{var_name}}}"
+                if placeholder in text:
+                    text = text.replace(placeholder, value)
+                    changed = True
+            if not changed: break
+        return text
+
+    async def parse_tags(self, text: str, args: str, author: discord.Member, guild: discord.Guild):
+        placeholders = {
+            "{args}": args or "",
+            "{author}": author.display_name,
+            "{author_id}": str(author.id),
+            "{author_mention}": author.mention,
+            "{guild_name}": guild.name,
+            "{count}": str(guild.member_count)
+        }
+        for placeholder, value in placeholders.items():
+            text = text.replace(placeholder, value)
+
+        def replace_random(match):
+            try:
+                parts = re.split(r'[~,]', match.group(1))
+                low, high = int(parts[0]), int(parts[1])
+                return str(random.randint(min(low, high), max(low, high)))
+            except: return "0"
+        text = re.sub(r'\{random:(-?\d+[~,]-?\d+)\}', replace_random, text)
+
+        text = self.process_variables(text)
+
+        text = self.parse_if_blocks(text)
+
+        text = re.sub(r'\{choice:(.*?)\}', lambda m: random.choice(m.group(1).split('|')), text)
+
+        role_pattern = r"\{addrole:(\d+)\}"
+        role_ids = set(re.findall(role_pattern, text))
+        for role_id in role_ids:
+            try:
+                role = guild.get_role(int(role_id))
+                if role:
+                    await author.add_roles(role, reason="Tag execution")
+                    await asyncio.sleep(0.2)
+            except: pass
+
+        text = re.sub(role_pattern, "", text)
+        return text.strip()
 
 class TagsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         print("init -> TagsCog")
 
-    async def parse_tags(self, text: str, args: str, author: discord.Member, guild: discord.Guild, message: discord.Message = None):
-        def replace_choice():
-            def select_option(match):
-                options = match.group(1).split('|')
-                return random.choice(options)
+    def evaluate_condition(self, condition: str) -> bool:
+        if "==" in condition:
+            left, right = condition.split("==", 1)
+            return left.strip() == right.strip()
+        elif "!=" in condition:
+            left, right = condition.split("!=", 1)
+            return left.strip() != right.strip()
+        return False
 
-            pattern = r'\{choice:(.*?)\}'
-            return re.sub(pattern, select_option, text)
+    def parse_if_blocks(self, text: str) -> str:
+        """
+        {if:条件} ... {elif:条件} ... {else} ... {endif} を解析する
+        """
+        pattern = r"\{if:?([^{}]+)\}(.*?)\{endif\}"
         
-        text = replace_choice()
+        while True:
+            match = re.search(pattern, text, re.DOTALL)
+            if not match:
+                break
+            
+            condition = match.group(1)
+            full_content = match.group(2)
+            
+            parts = re.split(r"\{(elif:?[^{}]+|else)\}", full_content)
+            
+            res = ""
+            if self.evaluate_condition(condition):
+                res = parts[0]
+            else:
+                found = False
+                for i in range(1, len(parts), 2):
+                    tag = parts[i]
+                    content = parts[i+1] if i+1 < len(parts) else ""
+                    
+                    if tag.startswith("elif"):
+                        elif_cond = re.sub(r"^elif:?\s*", "", tag)
+                        if self.evaluate_condition(elif_cond):
+                            res = content
+                            found = True
+                            break
+                    elif tag == "else":
+                        res = content
+                        found = True
+                        break
+                if not found:
+                    res = ""
 
-        pattern = r"\{addrole:([^}]+)\}"
-        role_ids = set(re.findall(pattern, text))
+            text = text[:match.start()] + res + text[match.end():]
+            
+        return text
+
+    def process_variables(self, text: str) -> str:
+        """{set:変数名|値} を処理し、{get:変数名} を置換する"""
+        
+        variables = {}
+
+        def set_var(match):
+            var_name = match.group(1).strip()
+            value = match.group(2).strip()
+            variables[var_name] = value
+            return ""
+
+        text = re.sub(r"\{set:([^|]+)\|([^}]+)\}", set_var, text)
+
+        for _ in range(5):
+            changed = False
+            for var_name, value in variables.items():
+                placeholder = f"{{get:{var_name}}}"
+                if placeholder in text:
+                    text = text.replace(placeholder, value)
+                    changed = True
+            if not changed: break
+            
+        return text
+
+    async def parse_tags(self, text: str, args: str, author: discord.Member, guild: discord.Guild):
+        placeholders = {
+            "{args}": args or "引数なし",
+            "{author}": author.display_name,
+            "{author_id}": str(author.id),
+            "{author_mention}": author.mention,
+            "{guild_name}": guild.name,
+            "{count}": str(guild.member_count)
+        }
+
+        for placeholder, value in placeholders.items():
+            text = text.replace(placeholder, value)
+
+        def replace_random(match):
+            try:
+                parts = re.split(r'[~,]', match.group(1))
+                val1 = int(parts[0])
+                val2 = int(parts[1])
+
+                limit = 1_000
+                val1 = max(min(val1, limit), -limit)
+                val2 = max(min(val2, limit), -limit)
+
+                low = min(val1, val2)
+                high = max(val1, val2)
+
+                return str(random.randint(low, high))
+            except (ValueError, IndexError, OverflowError):
+                return "0"
+        
+        text = re.sub(r'\{random:(-?\d+[~,]-?\d+)\}', replace_random, text)
+        text = re.sub(r'\{choice:(.*?)\}', lambda m: random.choice(m.group(1).split('|')), text)
+
+        text = self.process_variables(text)
+
+        text = self.parse_if_blocks(text)
+
+        role_pattern = r"\{addrole:(\d+)\}"
+        role_ids = set(re.findall(role_pattern, text))
         for role_id in role_ids:
             try:
                 role = guild.get_role(int(role_id))
-                await author.add_roles(role, reason="tagの実行のため。")
-
-                await asyncio.sleep(0.5)
+                if role:
+                    await author.add_roles(role, reason="Tag execution")
+                    await asyncio.sleep(0.2)
             except:
                 pass
 
-        cleaned_text = re.sub(r"\{addrole:[^}]+\}", "", text)
+        text = re.sub(role_pattern, "", text)
 
-        return (
-            cleaned_text.replace("{args}", args)
-            .replace("{author}", author.name)
-            .replace("{author_id}", str(author.id))
-        )
+        return text.strip()
 
     tag = app_commands.Group(name="tag", description="タグスクリプトを設定します。")
 
-    # ---------- タグ作成 ----------
     @tag.command(name="create", description="tagを作成します。")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -128,7 +348,6 @@ class TagsCog(commands.Cog):
 
         await interaction.response.send_modal(TagCreateModal())
 
-    # ---------- タグ削除 ----------
     @tag.command(name="delete", description="tagを削除します。")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
@@ -138,13 +357,6 @@ class TagsCog(commands.Cog):
         doc = await db.find_one({"guild_id": interaction.guild.id, "command": 名前})
         if not doc:
             embed = make_embed.error_embed(title="そのTagは存在しません。")
-            return await interaction.response.send_message(embed=embed)
-
-        if doc.get("slash"):
-            embed = make_embed.error_embed(
-                title="そのTagは削除できません。",
-                description="スラッシュコマンドから削除してからでお願いします。",
-            )
             return await interaction.response.send_message(embed=embed)
 
         await db.delete_one({"guild_id": interaction.guild.id, "command": 名前})
@@ -182,7 +394,7 @@ class TagsCog(commands.Cog):
             )
             for cmd in tags[start : start + 10]:
                 embed.add_field(
-                    name=cmd["command"], value=cmd.get("text", "説明なし"), inline=False
+                    name=cmd["command"] + f" ({cmd.get('used', 0)}回)", value=cmd.get("text", "説明なし"), inline=False
                 )
 
             embed.set_footer(text=f"{c} ページ目 / Prefix: {PREFIX}")
@@ -208,11 +420,18 @@ class TagsCog(commands.Cog):
                 ts_script = doc["tagscript"]
 
                 await interaction.followup.send(
-                    await self.parse_tags(ts_script, 引数, interaction.user, interaction.guild)
-                    + "\n-# これはタグからのメッセージです。"
+                    await TagParser().parse_tags(ts_script, 引数, interaction.user, interaction.guild)
                 )
             except Exception as e:
                 return await interaction.followup.send("エラーが発生しました。")
+            
+            await db_tags.update_one({
+                "guild_id": interaction.guild.id, "command": コマンド名
+            }, {
+                "$inc": {
+                    "used": 1
+                }
+            })
         else:
             await interaction.followup.send(
                 embed=make_embed.error_embed(
@@ -240,62 +459,51 @@ class TagsCog(commands.Cog):
             await interaction.response.send_message(
                 content="そのタグが見つかりません。", ephemeral=True
             )
-
-    @commands.Cog.listener(name="on_interaction")
-    async def on_interaction_slash(self, interaction: discord.Interaction):
-        try:
-            if interaction.type == discord.InteractionType.application_command:
-                db_tags = self.bot.async_db["Main"].Tags
-                data = interaction.data
-                doc = await db_tags.find_one(
-                    {"guild_id": interaction.guild.id, "slash": int(data["id"])}
-                )
-                if not doc:
-                    return
-                if interaction.data.get("options"):
-                    return await interaction.response.send_message(
-                        await self.parse_tags(
-                            doc.get("tagscript"),
-                            interaction.data["options"][0]["value"],
-                            interaction.user,
-                            interaction.guild
-                        )
-                        + "\n-# これはタグからのメッセージです。"
-                    )
-                await interaction.response.send_message(
-                    await self.parse_tags(doc.get("tagscript"), "No Args.", interaction.user, interaction.guild)
-                    + "\n-# これはタグからのメッセージです。"
-                )
-        except:
-            return
-
-    # ---------- メッセージ監視でカスタムタグ実行 ----------
+        
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot:
-            return
-
-        if not message.guild:
+        if message.author.bot or not message.guild:
             return
 
         db_prefix = self.bot.async_db["DashboardBot"].CustomPrefixBot
-        doc = await db_prefix.find_one({"Guild": message.guild.id})
-        PREFIX = doc.get("Prefix", "!.") if doc else "!."
+        doc_prefix = await db_prefix.find_one({"Guild": message.guild.id})
+        
+        custom_prefix = doc_prefix.get("Prefix") if doc_prefix else None
+        
+        default_prefixes = self.bot.command_prefix
+        if callable(default_prefixes):
+            default_prefixes = default_prefixes(self.bot, message)
+        
+        if isinstance(default_prefixes, str):
+            default_prefixes = [default_prefixes]
 
-        if not message.content.startswith(PREFIX):
+        valid_prefixes = set(default_prefixes)
+        if custom_prefix:
+            valid_prefixes.add(custom_prefix)
+
+        used_prefix = None
+        for p in valid_prefixes:
+            if message.content.startswith(p):
+                used_prefix = p
+                break
+        
+        if not used_prefix:
             return
 
-        parts = message.content[len(PREFIX) :].split()
+        content_no_prefix = message.content[len(used_prefix):].lstrip()
+        parts = content_no_prefix.split()
         if not parts:
             return
+            
         cmd_name = parts[0]
         args = " ".join(parts[1:]) if len(parts) > 1 else ""
 
         db_tags = self.bot.async_db["Main"].Tags
-        doc = await db_tags.find_one(
+        doc_tag = await db_tags.find_one(
             {"guild_id": message.guild.id, "command": cmd_name}
         )
-        if doc:
+
+        if doc_tag:
             try:
                 current_time = time.time()
                 last_message_time = cooldown_tags.get(message.guild.id, 0)
@@ -303,14 +511,22 @@ class TagsCog(commands.Cog):
                     return
                 cooldown_tags[message.guild.id] = current_time
 
-                ts_script = doc["tagscript"]
+                ts_script = doc_tag["tagscript"]
+                parsed_content = await TagParser().parse_tags(ts_script, args, message.author, message.guild)
 
-                await message.channel.send(
-                    await self.parse_tags(ts_script, args, message.author, message.guild, message=message)
-                    + "\n-# これはタグからのメッセージです。"
+                if parsed_content.strip():
+                    await message.channel.send(parsed_content)
+
+                await db_tags.update_one(
+                    {"guild_id": message.guild.id, "command": cmd_name},
+                    {"$inc": {"used": 1}}
                 )
             except Exception as e:
-                return await message.channel.send("エラーが発生しました。")
+                embed = make_embed.error_embed(
+                    title="Tagでエラーが発生しました。", 
+                    description=f"```{e}```"
+                )
+                await message.channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error):
