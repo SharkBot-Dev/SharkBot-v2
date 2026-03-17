@@ -577,7 +577,7 @@ class AdminCog(commands.Cog):
         if 操作.value == "add":
             await db.update_one({"user_id": ユーザー.id}, {"$inc": {"money": 数値}})
         elif 操作.value == "remove":
-            await db.update_one({"user_id": ユーザー.id}, {"$inc": {"money": 数値}})
+            await db.update_one({"user_id": ユーザー.id}, {"$inc": {"money": -数値}})
         else:
             await db.update_one({"user_id": ユーザー.id}, {"$set": {"money": 数値}})
 
