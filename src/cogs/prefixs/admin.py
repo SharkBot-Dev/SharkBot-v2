@@ -138,7 +138,7 @@ class Prefix_AdminCog(commands.Cog):
 
             await ctx.reply(f"コマンドをセーブしました。\n{count}件。")
 
-    @commands.command(name="regdel", description="サーバー掲示板からサーバーを削除します。")
+    @commands.command(name="regdel", description="サーバー掲示板からサーバーを削除します。", hidden=True)
     async def regdel(self, ctx: commands.Context, gid: str):
         isadmin = await self.get_admins(ctx.author)
 
@@ -166,7 +166,7 @@ class Prefix_AdminCog(commands.Cog):
         else:
             return
 
-    @commands.command(name="reginfo", description="サーバー掲示板のデータを取得します。")
+    @commands.command(name="reginfo", description="サーバー掲示板のデータを取得します。", hidden=True)
     async def reginfo(self, ctx: commands.Context, gid: str):
         isadmin = await self.get_admins(ctx.author)
 
