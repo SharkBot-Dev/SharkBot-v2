@@ -140,6 +140,15 @@ export default async function LevelPage({ params }: { params: { guildid: string 
         <div className="p-4 flex flex-col gap-6 text-gray-200">
             <h1 className="text-2xl font-bold">{guild.name} のレベル設定</h1>
 
+            <LineAndTextLayout text="主な説明"/>
+            <div className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow break-all">
+                メッセージを送信したり、ボイスチャンネルに参加したりすると、XPが貯まります。<br/>
+                XPがある程度貯まるとレベルが上がります。<br/>
+                レベルが上がった際にロールを<br/>付与させることも可能です。<br/>
+                現在のレベルは<br/>/rankコマンドで確認できます。<br/>
+                また、レベルのランキングは<br/>/rankingコマンドで確認できます。
+            </div>
+
             <LineAndTextLayout text="基本設定"/>
             <Form action={sendData} buttonlabel="設定を保存">
                 <div className="flex items-center gap-4 mb-4">

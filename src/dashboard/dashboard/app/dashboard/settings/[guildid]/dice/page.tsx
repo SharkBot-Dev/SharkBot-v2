@@ -68,6 +68,12 @@ export default async function DicePage({ params }: { params: { guildid: string }
         <div className="p-4">
         <h1 className="text-2xl font-bold mb-4">{guild.name} のダイス</h1>
 
+        <LineAndTextLayout text="主な説明"/>
+        <div className="flex flex-col gap-3 bg-gray-900 p-4 rounded-lg shadow break-all">
+            10d8, ddなどと送信すると、<br/>
+            Botがダイスを振ってくれます。
+        </div>
+
         <Form action={sendData} buttonlabel="設定">
             <LineAndTextLayout text="基本設定"></LineAndTextLayout>
             <span className="font-semibold mb-1">機能を有効にする</span>
