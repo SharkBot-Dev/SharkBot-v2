@@ -105,7 +105,12 @@ class AccountCog(commands.Cog):
         
         # 埋め込み
         embed = make_embed.success_embed(title=f"{user.name}さんのアカウント")
-        embed.add_field(name="アカウント作成日", value=created_date.astimezone(self.JST), inline=False)
+        if user.avatar:
+            embed.set_thumbnail(url=user.avatar.url)
+
+        time_string = created_date.astimezone(self.JST)
+
+        embed.add_field(name="アカウント作成日", value=time_string.strftime('%Y年%m月%d日 %H時%M分%S秒'), inline=False)
         embed.add_field(name="所持金", value=f"{money}コイン")
 
         # ランキングを取得
