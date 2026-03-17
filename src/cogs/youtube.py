@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 from discord.ext import commands, tasks
@@ -39,7 +40,7 @@ class YoutubeCog(commands.Cog):
         self.bot = bot
         print("init -> YoutubeCog")
 
-    @tasks.loop(hours=3)
+    @tasks.loop(hours=10)
     async def youtube_re_subscribe_channel_loop(self):
         db = self.bot.async_db["MainTwo"].YoutubeAlert
         
@@ -56,6 +57,8 @@ class YoutubeCog(commands.Cog):
                 res = await subscribe_channel(channel_id, settings.CALLBACK)
             except Exception as e:
                 continue
+
+            await asyncio.sleep(0.5)
 
     async def cog_load(self):
         self.youtube_re_subscribe_channel_loop.start()
