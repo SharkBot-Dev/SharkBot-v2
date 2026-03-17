@@ -1,4 +1,6 @@
+import asyncio
 import datetime
+import random
 import secrets
 
 from discord.ext import commands
@@ -8,6 +10,15 @@ import urllib.parse
 
 from models import make_embed
 from motor.motor_asyncio import AsyncIOMotorCollection
+
+SLOT_EMOJIS = ["🍎", "🍊", "🍇", "💎", "7️⃣"]
+PAYOUTS = {
+    "7️⃣": 5,
+    "💎": 3,
+    "🍎": 2,
+    "🍊": 2,
+    "🍇": 2,
+}
 
 class AccountCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -161,6 +172,65 @@ class AccountCog(commands.Cog):
             return
 
         await interaction.response.send_message(ephemeral=True, view=discord.ui.View().add_item(discord.ui.Button(label="投票する", url="https://top.gg/ja/bot/1322100616369147924/vote")), embed=make_embed.success_embed(title="コインを受け取る", description="以下のボタンから投票するとコインがもらえます。"))
+
+    @account.command(name="slot", description="スロットを使用します。")
+    async def account_slot(
+        self,
+        interaction: discord.Interaction,
+        コイン: int
+    ):
+        if コイン <= 0:
+            await interaction.response.send_message(embed=make_embed.error_embed(title="1コイン以上賭けてください。"), ephemeral=True)
+            return
+
+        db = interaction.client.async_db["DashboardBot"].Account
+        user_data = await db.find_one({"user_id": interaction.user.id})
+
+        if not user_data:
+            await interaction.response.send_message(
+                embed=make_embed.error_embed(title="アカウントが存在しません。"), 
+                ephemeral=True
+            )
+            return
+
+        if user_data.get("money", 0) < コイン:
+            await interaction.response.send_message(embed=make_embed.success_embed(title="コインが足りません。"), ephemeral=True)
+            return
+
+        await interaction.response.defer()
+
+        await db.update_one({"user_id": interaction.user.id}, {"$inc": {"money": -コイン}})
+
+        loading_emoji = "<a:loading:1480529495114121279>"
+        embed = make_embed.loading_embed(
+            "スロットを引いています・・", 
+            description=f"{loading_emoji} | {loading_emoji} | {loading_emoji}"
+        )
+        msg = await interaction.followup.send(embed=embed)
+
+        await asyncio.sleep(2)
+        result = [random.choice(SLOT_EMOJIS) for _ in range(3)]
+        result_str = f"**{result[0]} | {result[1]} | {result[2]}**"
+
+        is_win = result[0] == result[1] == result[2]
+        win_amount = 0
+
+        if is_win:
+            multiplier = PAYOUTS.get(result[0], 2)
+            win_amount = コイン * multiplier
+            await db.update_one({"user_id": interaction.user.id}, {"$inc": {"money": win_amount}})
+            
+            status_title = "おめでとうございます！"
+            status_desc = f"{result_str}\n\n揃いました！ **+{win_amount}** コイン獲得！"
+
+            res_embed = make_embed.success_embed(title=status_title, description=status_desc)
+        else:
+            status_title = "残念..."
+            status_desc = f"{result_str}\n\n外れです。 **-{コイン}** コイン失いました。"
+
+            res_embed = make_embed.error_embed(title=status_title, description=status_desc)
+        
+        await interaction.edit_original_response(embed=res_embed)
 
 async def setup(bot):
     await bot.add_cog(AccountCog(bot))
