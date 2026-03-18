@@ -290,3 +290,5 @@ src/premium/
 src/api/client/test.py
 
 DiscordFont.ttf
+
+src/models/topgg.py
