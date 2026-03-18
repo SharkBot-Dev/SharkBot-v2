@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from discord import Webhook
 
-from routers import account, bot, economy, search, topgg
+from routers import account, api, bot, economy, search, topgg
 
 dotenv.load_dotenv()
 
@@ -30,6 +30,7 @@ app.add_middleware(
 )
 
 app.include_router(account.router)
+app.include_router(api.router)
 app.include_router(bot.status_router)
 app.include_router(economy.router)
 app.include_router(search.router)

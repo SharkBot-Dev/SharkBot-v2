@@ -2973,50 +2973,70 @@ class SettingCog(commands.Cog):
                 ),
             )
 
-    @settings.command(name="apikey", description="SharkBotのAPIKeyを作成・削除します。")
+    @settings.command(name="apikey", description="SharkBotのAPIKeyを作成・確認・削除します。")
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.choices(
         操作=[
-            app_commands.Choice(name="作成", value="create"),
-            app_commands.Choice(name="削除", value="delete"),
-            app_commands.Choice(name="リスト化", value="list")
+            app_commands.Choice(name="作成 (名前が必要)", value="create"),
+            app_commands.Choice(name="削除 (名前が必要)", value="delete"),
+            app_commands.Choice(name="リスト表示", value="list")
         ]
     )
+    @app_commands.describe(操作="実行するアクションを選択", 名前="APIキーを識別するための名前")
     async def apikey_setting(
-        self, interaction: discord.Interaction, 操作: app_commands.Choice[str], 名前: str
+        self, interaction: discord.Interaction, 操作: app_commands.Choice[str], 名前: str = None
     ):
         await interaction.response.defer(ephemeral=True)
+        db = interaction.client.async_db["SharkAPI"].APIKeys
 
         if 操作.value == "create":
+            if not 名前:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="名前を指定してください。"))
+
             key = secrets.token_urlsafe(30)
-            db = interaction.client.async_db["SharkAPI"].APIKeys
-            await db.update_one({
-                "guild_id": interaction.guild_id,
-                "name": 名前
-            }, {
-                "$set": {
+            await db.update_one(
+                {"guild_id": interaction.guild_id, "name": 名前},
+                {"$set": {
                     "guild_id": interaction.guild_id,
                     "user_id": interaction.user.id,
                     "name": 名前,
-                    "apikey": key
-                }
-            }, upsert=True)
-            await interaction.followup.send(ephemeral=True, embed=make_embed.success_embed(title="APIKeyを作成しました。", description=key).set_footer(text="このキーは誰にも見せないでください。"))
+                    "apikey": key,
+                    "created_at": discord.utils.utcnow()
+                }},
+                upsert=True
+            )
+            
+            embed = make_embed.success_embed(
+                title="APIKeyを作成・更新しました",
+                description=f"名前: `{名前}`\nキー: `{key}`"
+            )
+            embed.set_footer(text="⚠️ このキーは一度しか表示されません。大切に保管してください。")
+            await interaction.followup.send(embed=embed)
+
         elif 操作.value == "delete":
-            db = interaction.client.async_db["SharkAPI"].APIKeys
-            await db.delete_one({
-                "guild_id": interaction.guild_id,
-                "name": 名前
-            })
-            await interaction.followup.send(ephemeral=True, embed=make_embed.success_embed(title="APIKeyを削除しました。", description=f"名前: {名前}"))
+            if not 名前:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="削除する名前を指定してください。"))
+
+            result = await db.delete_one({"guild_id": interaction.guild_id, "name": 名前})
+            
+            if result.deleted_count > 0:
+                await interaction.followup.send(embed=make_embed.success_embed(title="APIKeyを削除しました。", description=f"名前: `{名前}`"))
+            else:
+                await interaction.followup.send(embed=make_embed.error_embed(title="削除失敗", description=f"`{名前}` という名前のキーは見つかりませんでした。"))
+
         elif 操作.value == "list":
-            db = interaction.client.async_db["SharkAPI"].APIKeys
+            cursor = db.find({"guild_id": interaction.guild_id})
             api_list = [
-                f"{b.get('name')} - <@{b.get('user_id')}>"
-                async for b in db.find({"guild_id": interaction.guild_id})
+                f"• `{b.get('name')}` - 作成者: <@{b.get('user_id')}>"
+                async for b in cursor
             ]
-            await interaction.followup.send(ephemeral=True, embed=make_embed.success_embed(title="APIKeyのリストです", description='\n'.join(api_list)))
+
+            if not api_list:
+                return await interaction.followup.send(embed=make_embed.error_embed(title="登録済みのAPIKeyはありません。"))
+
+            description = "\n".join(api_list)
+            await interaction.followup.send(embed=make_embed.success_embed(title="APIKeyリスト", description=description))
 
 async def setup(bot):
     await bot.add_cog(SettingCog(bot))

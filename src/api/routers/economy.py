@@ -38,7 +38,7 @@ async def economy_leaderboard(guildid: str):
     
     return results
 
-@router.get("/{guildid}/{userid}", description="特定ユーザーがどのぐらいコインを持っているかを取得する。", summary="経済内のユーザー情報を取得する", response_model=UserBalance, tags=["Economy"])
+@router.get("/{guildid}/{userid}", description="特定ユーザーがどのぐらいコインを持っているかを取得する。", summary="経済内のユーザー情報を取得する", response_model=UserBalance)
 async def economy_getmoney(guildid: str, userid: str):
     col = db_main["ServerMoney"]
     user_data = await col.find_one({"_id": f"{guildid}-{userid}"}, {"_id": False})
@@ -51,7 +51,7 @@ async def economy_getmoney(guildid: str, userid: str):
         "bank": user_data.get('bank', 0)
     }
 
-@router.patch("/{guildid}/{userid}", description="特定のユーザーのコインの数を操作する", summary="特定のユーザーのコインの数を操作する", tags=["Economy"])
+@router.patch("/{guildid}/{userid}", description="特定のユーザーのコインの数を操作する", summary="特定のユーザーのコインの数を操作する")
 async def economy_patchmoney(
     guildid: str, 
     userid: str, 
