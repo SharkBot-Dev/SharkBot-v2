@@ -5,6 +5,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
+from urllib.parse import quote
+
 # import TagScriptEngine as tse
 from consts import badword
 import io
@@ -136,6 +138,15 @@ class TagParser:
         }
         for placeholder, value in placeholders.items():
             text = text.replace(placeholder, value)
+
+        def replace_urlencode(match):
+            try:
+                content = match.group(1)
+                return quote(content)
+            except:
+                return ""
+
+        text = re.sub(r'\{urlencode:(.*?)\}', replace_urlencode, text)
 
         def replace_random(match):
             try:
