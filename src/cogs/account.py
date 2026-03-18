@@ -20,9 +20,70 @@ PAYOUTS = {
     "🍇": 2,
 }
 
+class GlobalMoney:
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        self.JST = datetime.timezone(datetime.timedelta(hours=9))
+
+    async def work_execute(self, interaction: discord.Interaction):
+        db = interaction.client.async_db["DashboardBot"].Account
+        user_data = await db.find_one({"user_id": interaction.user.id})
+
+        if not user_data:
+            await interaction.response.send_message(
+                embed=make_embed.error_embed(title="アカウントが存在しません。"), 
+                ephemeral=True
+            )
+            return
+        
+        now = datetime.datetime.now(self.JST)
+        
+        last_work = user_data.get("last_work_time")
+        
+        if last_work:
+            if last_work.tzinfo is None:
+                last_work = last_work.replace(tzinfo=datetime.timezone.utc)
+            
+            last_work_jst = last_work.astimezone(self.JST)
+
+            delta = now - last_work_jst
+            total_seconds = delta.total_seconds()
+            
+            if total_seconds < 1200:
+                remaining = 1200 - int(total_seconds)
+                minutes = remaining // 60
+                seconds = remaining % 60
+                return await interaction.response.send_message(
+                    embed=make_embed.error_embed(
+                        title="まだ働けません！",
+                        description=f"あと {minutes}分{seconds}秒 待ってください。"
+                    ),
+                    ephemeral=True
+                )
+
+        reward = random.randint(800, 1200)
+        new_money = user_data.get("money", 0) + reward
+
+        await db.update_one(
+            {"user_id": interaction.user.id},
+            {
+                "$set": {
+                    "last_work_time": now,
+                    "money": new_money
+                }
+            }
+        )
+
+        embed = make_embed.success_embed(
+            title="働きました。",
+            description=f"{reward}コインを稼ぎました！\n現在の所持金: {new_money}コイン"
+        )
+        await interaction.response.send_message(embed=embed)
+
 class AccountCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.global_money = GlobalMoney(self.bot)
         self.JST = datetime.timezone(datetime.timedelta(hours=9))
 
     account = app_commands.Group(
@@ -183,59 +244,7 @@ class AccountCog(commands.Cog):
         self,
         interaction: discord.Interaction
     ):
-        db = interaction.client.async_db["DashboardBot"].Account
-        user_data = await db.find_one({"user_id": interaction.user.id})
-
-        if not user_data:
-            await interaction.response.send_message(
-                embed=make_embed.error_embed(title="アカウントが存在しません。"), 
-                ephemeral=True
-            )
-            return
-        
-        now = datetime.datetime.now(self.JST)
-        
-        last_work = user_data.get("last_work_time")
-        
-        if last_work:
-            if last_work.tzinfo is None:
-                last_work = last_work.replace(tzinfo=datetime.timezone.utc)
-            
-            last_work_jst = last_work.astimezone(self.JST)
-
-            delta = now - last_work_jst
-            total_seconds = delta.total_seconds()
-            
-            if total_seconds < 1200:
-                remaining = 1200 - int(total_seconds)
-                minutes = remaining // 60
-                seconds = remaining % 60
-                return await interaction.response.send_message(
-                    embed=make_embed.error_embed(
-                        title="まだ働けません！",
-                        description=f"あと {minutes}分{seconds}秒 待ってください。"
-                    ),
-                    ephemeral=True
-                )
-
-        reward = random.randint(800, 1200)
-        new_money = user_data.get("money", 0) + reward
-
-        await db.update_one(
-            {"user_id": interaction.user.id},
-            {
-                "$set": {
-                    "last_work_time": now,
-                    "money": new_money
-                }
-            }
-        )
-
-        embed = make_embed.success_embed(
-            title="働きました。",
-            description=f"{reward}コインを稼ぎました！\n現在の所持金: {new_money}コイン"
-        )
-        await interaction.response.send_message(embed=embed)
+        await self.global_money.work_execute(interaction)
 
     @account.command(name="slot", description="スロットを使用します。")
     async def account_slot(

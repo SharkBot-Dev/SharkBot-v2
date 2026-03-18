@@ -1332,7 +1332,7 @@ class ShopPanelGroup(app_commands.Group):
 
 
 class ServerMoneyCog(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.moneylib = Money
         print("init -> ServerMoneyCog")
@@ -1442,7 +1442,17 @@ class ServerMoneyCog(commands.Cog):
 
     @app_commands.command(name="work", description="60分に1回働けます。")
     @app_commands.allowed_installs(guilds=True, users=False)
-    async def top_economy_work_server(self, interaction: discord.Interaction):
+    @app_commands.choices(
+        経済の種類=[
+            app_commands.Choice(name="グローバル経済", value="global"),
+            app_commands.Choice(name="サーバー内経済", value="server"),
+        ]
+    )
+    async def top_economy_work_server(self, interaction: discord.Interaction, 経済の種類: app_commands.Choice[str]):
+        if 経済の種類.value == "global":
+            await self.bot.get_cog("AccountCog").global_money.work_execute(interaction)
+            return
+
         if interaction.is_user_integration() and not interaction.is_guild_integration():
             return await interaction.response.send_message(
                 ephemeral=True,
