@@ -27,6 +27,14 @@ class BotStatus:
         self.guilds_count = int(json.get('guilds_count', "0"))
         self.shards_count = int(json.get('shards_count', "0"))
 
+class APIKeyInfo:
+    def __init__(self, json: dict):
+        self.data = json
+        self.guild_id = int(json.get('guild_id', "0"))
+        self.user_id = int(json.get('user_id', "0"))
+        self.name = json.get('name', "0")
+        self.apikey = json.get('apikey', "0")
+
 class SharkBot:
     def __init__(self, apikey: str = None):
         self.BASE_URL = "https://api.sharkbot.xyz"
@@ -38,6 +46,15 @@ class SharkBot:
             async with session.get(self.BASE_URL + f'/account/{userId}') as resp:
                 json = await resp.json()
                 return AccountInfo(json)
+            
+    # ==== API関連 ====
+    async def fetchAPIKeyInfo(self, guildId: str):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.BASE_URL + f'/api/{guildId}', headers={
+                "Authorization": self.APIKEY
+            }) as resp:
+                json = await resp.json()
+                return APIKeyInfo(json)
 
     # ==== 検索関連 ====
     async def fetchNews(self):
@@ -85,3 +102,9 @@ class SharkBot:
             async with session.get(self.BASE_URL + "/status") as resp:
                 json = await resp.json()
                 return BotStatus(json)
+            
+    async def fetchBotPing(self):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(self.BASE_URL + "/status") as resp:
+                json = await resp.json()
+                return json["bot_ping"]
