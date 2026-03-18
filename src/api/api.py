@@ -30,7 +30,7 @@ app.add_middleware(
 )
 
 app.include_router(account.router)
-app.include_router(bot.router)
+app.include_router(bot.status_router)
 app.include_router(economy.router)
 app.include_router(search.router)
 app.include_router(topgg.router)
