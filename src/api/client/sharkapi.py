@@ -23,6 +23,7 @@ class BotStatus:
     def __init__(self, json: dict):
         self.data = json
         self.bot_ping = int(json.get('bot_ping', "0"))
+        self.users_count = int(json.get('users_count', "0"))
         self.guilds_count = int(json.get('guilds_count', "0"))
         self.shards_count = int(json.get('shards_count', "0"))
 
@@ -41,7 +42,7 @@ class SharkBot:
     # ==== 検索関連 ====
     async def fetchNews(self):
         async with aiohttp.ClientSession() as session:
-            async with session.get(self.BASE_URL + f'/news') as resp:
+            async with session.get(self.BASE_URL + f'/search/news') as resp:
                 json = await resp.json()
                 return json.get('news_url')
 
