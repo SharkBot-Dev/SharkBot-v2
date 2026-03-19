@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://cdn.discordapp.com/avatars/1322100616369147924/ea2f4e3e91a7ed3e096567b34c070600.png?size=1024">
+    <title>SharkBot Status</title>
+    <style>
+        :root {
+            --bg-color: #0a0c10;
+            --card-bg: #161b22;
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --online: #238636;
+            --idle: #d29922;
+            --offline: #da3633;
+            --accent: #3498db;
+        }
+
+        body {
+            background: var(--bg-color);
+            margin: 0;
+            font-family: "Inter", "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            color: var(--text-main);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .overall-status {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            background: rgba(35, 134, 54, 0.1);
+            color: var(--online);
+            border: 1px solid var(--online);
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+        }
+
+        .service-info h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .service-info p {
+            margin: 5px 0 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot.online { background-color: var(--online); box-shadow: 0 0 10px var(--online); }
+        .dot.idle { background-color: var(--idle); box-shadow: 0 0 10px var(--idle); }
+        .dot.offline { background-color: var(--offline); box-shadow: 0 0 10px var(--offline); }
+
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>SharkBot Status</h1>
+        </header>
+
+        <div class="status-grid">
+            <div class="card">
+                <div class="service-info">
+                    <h3>SharkBot Statistics</h3>
+                    <p>Live data from API</p>
+                </div>
+                <div class="stats-container" style="text-align: right; font-size: 0.9rem;">
+                    <div>Servers: <span id="server-count" style="color: var(--accent);">--</span></div>
+                    <div>Users: <span id="user-count" style="color: var(--accent);">--</span></div>
+                    <div>Shards: <span id="shard-count" style="color: var(--accent);">--</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="service-info">
+                    <h3>Bot Latency</h3>
+                    <p>Bot Response Time</p>
+                </div>
+                <div class="status-indicator">
+                    <span id="bot-ping-dot" class="dot"></span>
+                    <span id="bot-ping-value">-- ms</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="service-info">
+                    <h3>API Latency</h3>
+                    <p>API Response Time</p>
+                </div>
+                <div class="status-indicator">
+                    <span id="ping-dot" class="dot"></span>
+                    <span id="ping-value">-- ms</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchStatus() {
+            const startTime = Date.now();
+            
+            const serverElem = document.getElementById('server-count');
+            const userElem = document.getElementById('user-count');
+            const shardElem = document.getElementById('shard-count');
+            const botPingElem = document.getElementById('bot-ping-value');
+            const pingElem = document.getElementById('ping-value');
+            const pingDot = document.getElementById('ping-dot');
+
+            try {
+                const response = await fetch("https://api.sharkbot.xyz/status/", {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(5000)
+                });
+
+                if (!response.ok) throw new Error();
+
+                const data = await response.json();
+                const endTime = Date.now();
+                const ping = endTime - startTime;
+
+                serverElem.innerText = data.guilds_count || "0";
+                userElem.innerText = data.users_count || "0";
+                shardElem.innerText = data.shards_count || "0";
+
+                botPingElem.innerText = `${data.bot_ping} ms`;
+                pingElem.innerText = `${ping} ms`;
+                
+                if (ping < 200) {
+                    updateAPIPingUI('online', '#238636');
+                } else if (ping < 500) {
+                    updateAPIPingUI('idle', '#d29922'); 
+                } else {
+                    updateAPIPingUI('offline', '#da3633');
+                }
+
+                if (data.bot_ping < 200) {
+                    updateBotPingUI('online', '#238636');
+                } else if (data.bot_ping < 500) {
+                    updateBotPingUI('idle', '#d29922'); 
+                } else {
+                    updateBotPingUI('offline', '#da3633');
+                }
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                serverElem.innerText = "Error";
+                userElem.innerText = "Error";
+                pingElem.innerText = "Offline";
+                pingElem.style.color = "var(--offline)";
+                pingDot.className = "dot offline";
+            }
+        }
+
+        function updateAPIPingUI(statusClass, color) {
+            const pingElem = document.getElementById('ping-value');
+            const pingDot = document.getElementById('ping-dot');
+            pingElem.style.color = color;
+            pingDot.className = `dot ${statusClass}`;
+        }
+
+        function updateBotPingUI(statusClass, color) {
+            const pingElem = document.getElementById('bot-ping-value');
+            const pingDot = document.getElementById('bot-ping-dot');
+            pingElem.style.color = color;
+            pingDot.className = `dot ${statusClass}`;
+        }
+
+        fetchStatus();
+        setInterval(fetchStatus, 60000);
+    </script>
+</body>
+</html>
