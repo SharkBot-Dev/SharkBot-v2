@@ -242,13 +242,9 @@ class WebGroup(app_commands.Group):
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def news(self, interaction: discord.Interaction):
-        await interaction.response.defer()
-        async with aiohttp.ClientSession() as session:
-            async with session.get("https://mainichi.jp/", ssl=ssl_context) as response:
-                soup = BeautifulSoup(await response.text(), "html.parser")
-                title = soup.find_all("div", class_="toppickup")[0]
-                url = title.find_all("a")[0]
-                await interaction.followup.send(f"https:{url['href']}")
+        news_url = await interaction.client.redis.get('news')
+
+        await interaction.response.send_message(news_url)
 
     @app_commands.command(
         name="wikipedia", description="ウィキペディアから取得します。"
