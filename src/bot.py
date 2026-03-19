@@ -26,6 +26,7 @@ class NewSharkBot(commands.AutoShardedBot):
         self.redis: redis.Redis = None
 
         self.prefix_cache = {}
+        self.disabled_command = []
 
     def get_custom_prefix(self, bot, message):
         if not message.guild:

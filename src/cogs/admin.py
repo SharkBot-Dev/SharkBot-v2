@@ -739,6 +739,45 @@ class AdminCog(commands.Cog):
             else:
                 await interaction.followup.send(content="未実装の操作です。")
 
+    @admin.command(
+        name="disable", description="コマンドを強制的に全サーバーで無効化します。"
+    )
+    @app_commands.choices(
+        操作=[
+            app_commands.Choice(name="無効化", value="disable"),
+            app_commands.Choice(name="有効化", value="enable")
+        ]
+    )
+    async def disable_admin(
+        self,
+        interaction: discord.Interaction,
+        操作: app_commands.Choice[str],
+        コマンド名: str
+    ):
+        isadmin = await self.get_admins(interaction.user)
+
+        if not isadmin:
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="あなたはSharkBotの管理者ではないため実行できません。"
+                ),
+            )
+
+        if not isinstance(self.bot.disabled_command, list):
+            return
+
+        if 操作.value == "disable":
+            self.bot.disabled_command.append(コマンド名)
+        else:
+            if not コマンド名 in self.bot.disabled_command:
+                await interaction.response.send_message(embed=make_embed.error_embed(title=f"有効化できませんでした。", description=f"{コマンド名}は無効化されていません。"))
+                return
+            
+            self.bot.disabled_command.remove(コマンド名)
+
+        await interaction.response.send_message(embed=make_embed.success_embed(title=f"{操作.name}しました。", description=f"名前: `{コマンド名}`\n現在の無効化されたコマンド数: {len(self.bot.disabled_command)}個"))
+
     @commands.Cog.listener("on_guild_join")
     async def on_guild_join_blockuser(self, guild: discord.Guild):
         # await guild.leave()

@@ -11,6 +11,15 @@ from models import (
 
 cooldown_check = {}
 
+async def is_can_use_command(interaction: discord.Interaction):
+    commands = interaction.client.disabled_command
+    
+    cmd_name = command_disable.extract_command_name(interaction)
+
+    if cmd_name in commands:
+        return False
+    
+    return True
 
 class CustomTree(discord.app_commands.CommandTree):
     def _from_interaction(self, interaction: discord.Interaction) -> None:
@@ -22,6 +31,15 @@ class CustomTree(discord.app_commands.CommandTree):
                             title="DMではスラッシュコマンドを実行できません。"
                         ),
                         ephemeral=True,
+                    )
+                
+                if not await is_can_use_command(interaction):
+                    return await interaction.response.send_message(
+                        ephemeral=True,
+                        embed=make_embed.error_embed(
+                            title="そのコマンドは使用できません。",
+                            description="そのコマンドは**Botの管理者**により\n無効化されています。",
+                        ),
                     )
 
                 if not await command_disable.command_enabled_check(interaction):
