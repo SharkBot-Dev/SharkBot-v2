@@ -479,6 +479,54 @@ class EmbedMake(discord.ui.Modal, title="埋め込みを作成"):
                     color=discord.Color.red(),
                 ),
             )
+        
+class EchoModal(discord.ui.Modal, title="メッセージを作成"):
+
+    text = discord.ui.Label(
+        text="テキスト",
+        description="テキストを入力してください。",
+        component=discord.ui.TextInput(
+            style=discord.TextStyle.long, placeholder="テキスト！", required=True
+        ),
+    )
+
+    delete_after = discord.ui.Label(
+        text="何秒で削除するか",
+        description="何秒で削除するかを入力してください。",
+        component=discord.ui.TextInput(
+            style=discord.TextStyle.short, placeholder="0", required=False
+        ),
+    )
+
+    ephemeral = discord.ui.Label(
+        text="メッセージを自分だけに表示するか",
+        description="メッセージを自分だけに表示するかを選択してください。",
+        component=discord.ui.RadioGroup(
+            required=True, options=[
+                discord.RadioGroupOption(label="全員に表示する", value="no", default=True, description="メッセージを全員に表示します。"),
+                discord.RadioGroupOption(label="自分だけに表示する", value="yes", default=False, description="メッセージを自分だけに表示します。")
+            ]
+        ),
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        assert isinstance(self.text.component, discord.ui.TextInput)
+        assert isinstance(self.delete_after.component, discord.ui.TextInput)
+        assert isinstance(self.ephemeral.component, discord.ui.RadioGroup)
+
+        delete_after = self.delete_after.component.value
+        delete_after_int = int(delete_after) if delete_after else None
+
+        ephemeral = self.ephemeral.component.value
+        ephemeral_bool = True if ephemeral == "yes" else False
+
+        await interaction.response.send_message(
+            embed=discord.Embed(description=self.text.component.value).set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url),
+            view=discord.ui.View().add_item(discord.ui.Button(label="実行したユーザーによるメッセージ", disabled=True)),
+            allowed_mentions=discord.AllowedMentions.none(),
+            delete_after=delete_after_int,
+            ephemeral=ephemeral_bool
+        )
 
 
 cooldown_afk = {}
@@ -1382,6 +1430,16 @@ class ToolsCog(commands.Cog):
             await send_pc_embed_builder()
         else:
             await interaction.response.send_modal(EmbedMake())
+
+    @tools.command(name="echo", description="埋め込みを簡単に作成します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_guild=True)
+    async def tools_echo(
+        self,
+        interaction: discord.Interaction
+    ):
+        await interaction.response.send_modal(EchoModal())
 
     @commands.Cog.listener(name="on_interaction")
     async def on_interaction_button_redirect(self, interaction: discord.Interaction):
