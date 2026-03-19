@@ -6,6 +6,7 @@ import ssl
 from urllib.parse import urlparse
 import urllib.parse
 import aiohttp
+import aiohttp_socks
 from bs4 import BeautifulSoup
 from deep_translator import GoogleTranslator
 from discord.ext import commands
@@ -537,7 +538,6 @@ class WebGroup(app_commands.Group):
         )
 
         await interaction.followup.send(embed=embed, view=view)
-
 
 class SearchCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
