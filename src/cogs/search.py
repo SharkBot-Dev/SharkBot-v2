@@ -105,6 +105,11 @@ class NomTranslater:
             {"textarea": {"class": "maxfield outputfield form-control selectAll"}}
         )[1].get_text()
 
+SAFEWEB_RATINGS = {
+    "b": {"title": "このサイトは危険です。", "color": discord.Color.red()},
+    "w": {"title": "このサイトは注意が必要です。", "color": discord.Color.yellow()},
+    "g": {"title": "このサイトは評価されていません。", "color": discord.Color.blue()},
+}
 
 class WebGroup(app_commands.Group):
     def __init__(self):
@@ -312,91 +317,47 @@ class WebGroup(app_commands.Group):
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
     async def safeweb(self, interaction: discord.Interaction, url: str):
         await interaction.response.defer()
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "https://findredirect.com/api/redirects", json={"url": url}
-            ) as response_expand:
-                js_short = await response_expand.json()
 
-        async with aiohttp.ClientSession() as session_safeweb:
-            if not js_short[0].get("redirect", False):
-                q = urlparse(url).netloc
-                async with session_safeweb.get(
-                    f"https://safeweb.norton.com/safeweb/sites/v1/details?url={q}&insert=0",
-                    ssl=ssl_context,
-                ) as response:
-                    js = json.loads(await response.text())
-                    if js["rating"] == "b":
-                        await interaction.followup.send(
-                            embed=discord.Embed(
-                                title="このサイトは危険です。",
-                                description=f"URLの評価: {js['communityRating']}",
-                                color=discord.Color.red(),
-                            )
-                        )
-                    elif js["rating"] == "w":
-                        await interaction.followup.send(
-                            embed=discord.Embed(
-                                title="このサイトは注意が必要です。",
-                                description=f"URLの評価: {js['communityRating']}",
-                                color=discord.Color.yellow(),
-                            )
-                        )
-                    elif js["rating"] == "g":
-                        await interaction.followup.send(
-                            embed=discord.Embed(
-                                title="このサイトは評価されていません。",
-                                description=f"URLの評価: {js['communityRating']}",
-                                color=discord.Color.blue(),
-                            )
-                        )
-                    else:
-                        await interaction.followup.send(
-                            embed=discord.Embed(
-                                title="このサイトは多分安全です。",
-                                description=f"URLの評価: {js['communityRating']}",
-                                color=discord.Color.green(),
-                            )
-                        )
-            else:
-                q = urlparse(js_short[0].get("redirect", False)).netloc
-                async with session_safeweb.get(
-                    f"https://safeweb.norton.com/safeweb/sites/v1/details?url={q}&insert=0",
-                    ssl=ssl_context,
-                ) as response:
-                    js = json.loads(await response.text())
-                    if js["rating"] == "b":
-                        await interaction.followup.send(
-                            embed=discord.Embed(
-                                title="このサイトは危険です。",
-                                description=f"URLの評価: {js['communityRating']}",
-                                color=discord.Color.red(),
-                            )
-                        )
-                    elif js["rating"] == "w":
-                        await interaction.followup.send(
-                            embed=discord.Embed(
-                                title="このサイトは注意が必要です。",
-                                description=f"URLの評価: {js['communityRating']}",
-                                color=discord.Color.yellow(),
-                            )
-                        )
-                    elif js["rating"] == "g":
-                        await interaction.followup.send(
-                            embed=discord.Embed(
-                                title="このサイトは評価されていません。",
-                                description=f"URLの評価: {js['communityRating']}",
-                                color=discord.Color.blue(),
-                            )
-                        )
-                    else:
-                        await interaction.followup.send(
-                            embed=discord.Embed(
-                                title="このサイトは多分安全です。",
-                                description=f"URLの評価: {js['communityRating']}",
-                                color=discord.Color.green(),
-                            )
-                        )
+        try:
+            async with aiohttp.ClientSession() as session:
+                target_url = url
+                async with session.post("https://findredirect.com/api/redirects", json={"url": url}) as resp:
+                    if resp.status == 200:
+                        js_short = await resp.json()
+                        redirect_url = js_short[0].get("redirect")
+                        if redirect_url:
+                            target_url = redirect_url
+                
+                domain = urlparse(target_url).netloc
+                if not domain:
+                    await interaction.followup.send("有効なURLを入力してください。")
+                    return
+
+                api_url = f"https://safeweb.norton.com/safeweb/sites/v1/details?url={domain}&insert=0"
+                async with session.get(api_url, ssl=ssl_context) as response:
+                    if response.status != 200:
+                        await interaction.followup.send("安全性の確認中にエラーが発生しました。")
+                        return
+                    
+                    js = await response.json()
+                    rating_code = js.get("rating")
+                    community_rating = js.get("communityRating", "不明")
+
+                config = SAFEWEB_RATINGS.get(rating_code, {
+                    "title": "このサイトは多分安全です。",
+                    "color": discord.Color.green()
+                })
+
+                embed = discord.Embed(
+                    title=config["title"],
+                    description=f"対象ドメイン: `{domain}`\nURLの評価: {community_rating}",
+                    color=config["color"]
+                )
+                
+                await interaction.followup.send(embed=embed)
+
+        except Exception as e:
+            await interaction.followup.send(embed=make_embed.error_embed(title="取得に失敗しました。"))
 
     @app_commands.command(name="anime", description="アニメを検索します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
