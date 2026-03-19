@@ -138,110 +138,63 @@ class WebGroup(app_commands.Group):
     ):
         await interaction.response.defer()
 
+        target_text = ""
+
         if テキスト:
-            if 翻訳先.value == "nom":
-                loop = asyncio.get_running_loop()
-                nom = await loop.run_in_executor(None, partial(NomTranslater))
-                text = await loop.run_in_executor(
-                    None, partial(nom.translare, テキスト)
-                )
-
-                embed = make_embed.success_embed(
-                    title="翻訳 (ノムリッシュ語へ)", description=f"```{text}```"
-                )
-                await interaction.followup.send(embed=embed)
-                return
-
-            if 翻訳先.value == "rune":
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(
-                        f"https://api-ryo001339.onrender.com/rune/{urllib.parse.quote(テキスト)}",
-                        ssl=ssl_context,
-                    ) as response:
-                        js = await response.json()
-                        embed = make_embed.success_embed(
-                            title="ルーン文字へ",
-                            description=f"```{js.get('transformatedText', '？？？')}```",
-                        )
-                        await interaction.followup.send(embed=embed)
-                        return
-
+            target_text = テキスト
+        elif 画像:
+            if not 画像.filename.lower().endswith((".png", ".jpg", ".jpeg")):
+                return await interaction.followup.send(content="`.png`と`.jpg`のみ対応しています。")
+            
             try:
-                translated_text = await web_translate.translate(
-                    web_translate.targetToSource(翻訳先.value), 翻訳先.value, テキスト
-                )
-
-                embed = make_embed.success_embed(
-                    title=f"翻訳 ({翻訳先.value} へ)",
-                    description=f"```{translated_text.get('text')}```",
-                )
-                await interaction.followup.send(embed=embed)
-
+                image_bytes = await 画像.read()
+                with io.BytesIO(image_bytes) as i:
+                    target_text = await ocr_async(i)
+                
+                if not target_text or target_text.strip() == "":
+                    return await interaction.followup.send(content="画像からテキストを検出できませんでした。")
             except Exception:
-                embed = make_embed.error_embed(
-                    title="翻訳に失敗しました",
-                    description="指定された言語コードが正しいか確認してください。",
-                )
-                await interaction.followup.send(embed=embed)
+                return await interaction.followup.send(content="画像の読み取り中にエラーが発生しました。")
         else:
-            if not 画像:
-                return await interaction.followup.send(
-                    content="テキストか画像、どちらかを指定してください。"
-                )
-            if not 画像.filename.endswith((".png", ".jpg", ".jpeg")):
-                return await interaction.followup.send(
-                    content="`.png`と`.jpg`のみ対応しています。"
-                )
-            i = io.BytesIO(await 画像.read())
-            text_ocrd = await ocr_async(i)
-            i.close()
+            return await interaction.followup.send(content="テキストか画像、どちらかを指定してください。")
 
-            if text_ocrd == "":
-                return await interaction.followup.send(
-                    content="画像にはテキストがありません。"
-                )
-
+        try:
             if 翻訳先.value == "nom":
                 loop = asyncio.get_running_loop()
                 nom = await loop.run_in_executor(None, partial(NomTranslater))
-                text = await loop.run_in_executor(
-                    None, partial(nom.translare, text_ocrd)
-                )
+                result_text = await loop.run_in_executor(None, partial(nom.translare, target_text))
+                title = "翻訳 (ノムリッシュ語へ)"
 
-                embed = make_embed.success_embed(
-                    title="翻訳 (ノムリッシュ語へ)", description=f"```{text}```"
-                )
-                await interaction.followup.send(embed=embed)
-                return
-
-            if 翻訳先.value == "rune":
+            elif 翻訳先.value == "rune":
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(
-                        f"https://api-ryo001339.onrender.com/rune/{urllib.parse.quote(text_ocrd)}",
-                        ssl=ssl_context,
-                    ) as response:
+                    encoded_text = urllib.parse.quote(target_text)
+                    url = f"https://api-ryo001339.onrender.com/rune/{encoded_text}"
+                    async with session.get(url, ssl=ssl_context) as response:
+                        if response.status != 200:
+                            raise Exception("APIエラー")
                         js = await response.json()
-                        embed = make_embed.success_embed(
-                            title="ルーン文字へ",
-                            description=f"```{js.get('transformatedText', '？？？')}```",
-                        )
-                        await interaction.followup.send(embed=embed)
-                        return
+                        result_text = js.get('transformatedText', '？？？')
+                title = "ルーン文字へ"
 
-            try:
-                translated_text = await web_translate.translate(
-                    web_translate.targetToSource(翻訳先.value), 翻訳先.value, text_ocrd
+            else:
+                translated_data = await web_translate.translate(
+                    web_translate.targetToSource(翻訳先.value), 翻訳先.value, target_text
                 )
+                result_text = translated_data.get('text')
+                title = f"翻訳 ({翻訳先.value} へ)"
 
-                embed = make_embed.success_embed(
-                    title=f"翻訳 ({翻訳先.value} へ)",
-                    description=f"```{translated_text.get('text')}```",
-                )
-                await interaction.followup.send(embed=embed)
+            embed = make_embed.success_embed(
+                title=title,
+                description=f"```{result_text}```"
+            )
+            await interaction.followup.send(embed=embed)
 
-            except Exception as e:
-                embed = make_embed.error_embed(title="翻訳に失敗しました")
-                await interaction.followup.send(embed=embed)
+        except Exception as e:
+            embed = make_embed.error_embed(
+                title="翻訳に失敗しました",
+                description="処理中にエラーが発生しました。時間をおいて再度お試しください。"
+            )
+            await interaction.followup.send(embed=embed)
 
     @app_commands.command(name="news", description="ニュースを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
