@@ -1,25 +1,13 @@
-import os
-import random
-from typing import Optional, List
-
-import asyncio
-import aiohttp
-import redis.asyncio as redis
-from motor.motor_asyncio import AsyncIOMotorClient
-
-import dotenv
-from fastapi import FastAPI, Request, Header, HTTPException, Body, status
-from fastapi.responses import JSONResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from discord import Webhook
+import dotenv
 
 from routers import account, api, bot, economy, search, topgg
 
 dotenv.load_dotenv()
 
-app = FastAPI(title="SharkAPI")
+app = FastAPI(title="SharkAPI", description="SharkBotのAPIです。")
 
 app.add_middleware(
     CORSMiddleware,
