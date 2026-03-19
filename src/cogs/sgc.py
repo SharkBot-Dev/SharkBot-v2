@@ -21,6 +21,20 @@ class SuperGlobalChatCog(commands.Cog):
         self.MAIN_DB = self.bot.async_db["Main"].AlpheSuperGlobalChat
         print("init -> SuperGlobalChatCog")
 
+    # 招待リンクなどがあるかをチェック
+    def filter_global(self, content: str) -> bool:
+        blocked_words = [
+            "discord.com",
+            "discord.gg",
+            "x.gd",
+            "shorturl.asia",
+            "tiny.cc",
+            "everyone",
+            "here",
+        ]
+        return not any(word in content for word in blocked_words)
+
+    # Json作成
     async def sgc_make_json(self, message: discord.Message):
         dic = {
             "type": "message",
@@ -71,6 +85,9 @@ class SuperGlobalChatCog(commands.Cog):
     
     # ここからデバッグ
     async def send_super_global_chat_debug(self, message: discord.Message):
+        if not self.filter_global(message.content):
+            return
+
         db = self.DEBUG_DB
         channels = db.find()
 
@@ -151,6 +168,11 @@ class SuperGlobalChatCog(commands.Cog):
                     ref_content = p_dic.get("content", "内容なし")
                     break
 
+        content = dic.get('content', "???")
+        if not self.filter_global(content):
+            await message.add_reaction("❌")
+            return
+
         db = self.DEBUG_DB
         async with aiohttp.ClientSession() as session:
             async for ch in db.find():
@@ -182,6 +204,8 @@ class SuperGlobalChatCog(commands.Cog):
                         allowed_mentions=discord.AllowedMentions.none()
                     )
                 except: pass
+
+        await message.add_reaction("✅")
 
     async def demo_super_globalchat_check_message(self, message: discord.Message):
         db = self.DEBUG_DB
@@ -236,6 +260,9 @@ class SuperGlobalChatCog(commands.Cog):
 
     # ここから本番
     async def send_super_global_chat(self, message: discord.Message):
+        if not self.filter_global(message.content):
+            return
+
         db = self.MAIN_DB
         channels = db.find()
 
@@ -316,6 +343,11 @@ class SuperGlobalChatCog(commands.Cog):
                     ref_content = p_dic.get("content", "内容なし")
                     break
 
+        content = dic.get('content', "???")
+        if not self.filter_global(content):
+            await message.add_reaction("❌")
+            return
+
         db = self.MAIN_DB
         async with aiohttp.ClientSession() as session:
             async for ch in db.find():
@@ -347,6 +379,8 @@ class SuperGlobalChatCog(commands.Cog):
                         allowed_mentions=discord.AllowedMentions.none()
                     )
                 except: pass
+
+        await message.add_reaction("✅")
 
     async def super_globalchat_check_message(self, message: discord.Message):
         db = self.MAIN_DB
