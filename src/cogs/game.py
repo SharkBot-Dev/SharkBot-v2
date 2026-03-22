@@ -9,6 +9,8 @@ import urllib
 from urllib.parse import quote
 
 import re
+
+import jaconv
 from consts import settings
 
 import asyncio
@@ -25,6 +27,10 @@ from ossapi import OssapiAsync
 from models.akinator import characters, questions
 
 import math
+
+from janome.tokenizer import Tokenizer
+
+tokenizer = Tokenizer()
 
 
 def entropy(feature, probabilities, characters):
@@ -1271,22 +1277,16 @@ class GameCog(commands.Cog):
 
     @commands.Cog.listener("on_message")
     async def shiritori_on_message(self, message: discord.Message):
-        if message.author.bot:
-            return
-        if not message.guild:
+        if message.author.bot or not message.guild:
             return
 
         db = self.bot.async_db["MainTwo"].ShiritoriChannel
-        dbfind = await db.find_one(
-            {"Guild": message.guild.id, "Channel": message.channel.id}
-        )
-
+        dbfind = await db.find_one({"Guild": message.guild.id, "Channel": message.channel.id})
         if dbfind is None:
             return
 
-        word = message.content
-
-        if word == "":
+        word = message.content.strip()
+        if not word:
             return
 
         current_time = time.time()
@@ -1301,61 +1301,66 @@ class GameCog(commands.Cog):
                 {"$set": {"LastWord": None, "Word": []}},
                 upsert=True,
             )
-            return await message.reply(
-                embed=make_embed.success_embed(title="しりとりをリセットしました。")
-            )
+            return await message.reply(embed=make_embed.success_embed(title="しりとりをリセットしました。"))
 
-        if not re.fullmatch(r"[ぁ-んー゛゜、。！？]+", word):
-            await message.reply(
-                embed=make_embed.error_embed(title="ひらがなのみ使用可能です。")
-            )
-            return
+        is_all_hira = re.fullmatch(r"[ぁ-んー]+", word)
 
-        if word.endswith("ん"):
-            await message.reply(
-                embed=make_embed.error_embed(
-                    title="あなたの負け", description="「ん」で終わったため、負けです。"
+        if is_all_hira:
+            yomi = word
+        else:
+            tokens = list(await asyncio.to_thread(tokenizer.tokenize, word))
+            
+            if len(tokens) != 1 or tokens[0].part_of_speech.split(',')[0] != '名詞':
+                return await message.reply(
+                    embed=make_embed.error_embed(title="無効な入力", description="名詞を一つだけ入力してください。")
                 )
-            )
+            
+            yomi_katakana = tokens[0].reading if tokens[0].reading != '*' else word
+            yomi = await asyncio.to_thread(jaconv.kata2hira, yomi_katakana)
+
+        if yomi.endswith("ん"):
             await db.update_one(
                 {"Guild": message.guild.id, "Channel": message.channel.id},
                 {"$set": {"LastWord": None, "Word": []}},
                 upsert=True,
             )
-            return
+            return await message.reply(
+                embed=make_embed.error_embed(title="あなたの負け", description=f"「{word}({yomi})」は「ん」で終わっています！")
+            )
 
-        last_word = dbfind.get("LastWord")
-        if last_word:
-            if word[0] != last_word[-1]:
-                if not re.search(r"[ー゛゜、。！？]+", last_word[-1]):
-                    await message.reply(
-                        embed=make_embed.error_embed(
-                            title="始まりの文字が違います。",
-                            description=f"前の単語の最後の文字「{last_word[-1]}」から始まっていません！",
-                        )
+        last_word_yomi = dbfind.get("LastWordYomi")
+        if last_word_yomi:
+            target_char = last_word_yomi[-1]
+            if target_char == "ー" and len(last_word_yomi) > 1:
+                target_char = last_word_yomi[-2]
+
+            if yomi[0] != target_char:
+                return await message.reply(
+                    embed=make_embed.error_embed(
+                        title="始まりの文字が違います。",
+                        description=f"「{target_char}」から始まる単語を入力してください。(前の単語: {dbfind.get('LastWord')})",
                     )
-                    return
+                )
 
         used_words = dbfind.get("Word", [])
         if word in used_words:
-            await message.reply(
-                embed=make_embed.error_embed(
-                    title="あなたの負け", description="その言葉はすでに使われています！"
-                )
-            )
             await db.update_one(
                 {"Guild": message.guild.id, "Channel": message.channel.id},
                 {"$set": {"LastWord": None, "Word": []}},
                 upsert=True,
             )
-            return
+            return await message.reply(
+                embed=make_embed.error_embed(title="あなたの負け", description="その言葉はすでに使われています！")
+            )
 
         await db.update_one(
             {"Guild": message.guild.id, "Channel": message.channel.id},
-            {"$set": {"LastWord": word}, "$addToSet": {"Word": word}},
+            {
+                "$set": {"LastWord": word, "LastWordYomi": yomi}, 
+                "$addToSet": {"Word": word}
+            },
             upsert=True,
         )
-
         await message.add_reaction("✅")
 
     @game.command(
