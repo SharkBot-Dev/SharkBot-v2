@@ -926,7 +926,7 @@ class PanelCog(commands.Cog):
                         check_c = await self.check_ticket_cat(interaction)
                         current_time = time.time()
                         last_message_time = tku_cooldown.get(interaction.user.id, 0)
-                        if current_time - last_message_time < 30:
+                        if current_time - last_message_time < 10:
                             return await interaction.followup.send(
                                 "レートリミットです。", ephemeral=True
                             )
@@ -2333,7 +2333,7 @@ class PanelCog(commands.Cog):
         except Exception as e:
             return
 
-    @panel.command(name="poll", description="アンケート作成をします。")
+    @panel.command(name="poll", description="アンケートを作成します。")
     @app_commands.checks.has_permissions(manage_channels=True)
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
@@ -2346,103 +2346,55 @@ class PanelCog(commands.Cog):
         選択肢3: str = None,
         選択肢4: str = None,
         選択肢5: str = None,
+        選択肢6: str = None,
+        選択肢7: str = None,
+        選択肢8: str = None,
+        選択肢9: str = None,
+        選択肢10: str = None,
     ):
         await interaction.response.defer(ephemeral=True)
-        if not 選択肢2 and not 選択肢3 and not 選択肢4 and not 選択肢5:
-            msg_ = await interaction.channel.send(
-                embed=discord.Embed(
-                    title=タイトル, description=選択肢1, color=discord.Color.blue()
-                ).set_author(
-                    name=f"{interaction.user.name}",
-                    icon_url=interaction.user.avatar.url
-                    if interaction.user.avatar
-                    else interaction.user.default_avatar.url,
-                )
-            )
-            await msg_.add_reaction("👍")
-            await msg_.add_reaction("👎")
-            await interaction.followup.send(
-                embed=discord.Embed(
-                    title="作成しました。", color=discord.Color.green()
-                ),
-                ephemeral=True,
-            )
-            return
-        if not 選択肢3 and not 選択肢4 and not 選択肢5:
-            msg_ = await interaction.channel.send(
-                embed=discord.Embed(
-                    title=タイトル,
-                    description="🇦 " + 選択肢1 + f"\n🇧 {選択肢2}",
-                    color=discord.Color.blue(),
-                ).set_author(
-                    name=f"{interaction.user.name}",
-                    icon_url=interaction.user.avatar.url
-                    if interaction.user.avatar
-                    else interaction.user.default_avatar.url,
-                )
-            )
-            await msg_.add_reaction("🇦")
-            await msg_.add_reaction("🇧")
-            await interaction.followup.send(
-                embed=discord.Embed(
-                    title="作成しました。", color=discord.Color.green()
-                ),
-                ephemeral=True,
-            )
-            return
-        text = ""
-        # view = discord.ui.View()
-        # view.add_item(discord.ui.Button(label=f"{選択肢1}", custom_id=f"poll+{選択肢1}"))
-        text += f"1️⃣ {選択肢1}\n"
-        try:
-            if 選択肢2 != None:
-                # view.add_item(discord.ui.Button(label=f"{選択肢2}", custom_id=f"poll+{選択肢2}"))
-                text += f"2️⃣ {選択肢2}\n"
-        except:
-            pass
-        try:
-            if 選択肢3 != None:
-                # view.add_item(discord.ui.Button(label=f"{選択肢3}", custom_id=f"poll+{選択肢3}"))
-                text += f"3️⃣ {選択肢3}\n"
-        except:
-            pass
-        try:
-            if 選択肢4 != None:
-                # view.add_item(discord.ui.Button(label=f"{選択肢4}", custom_id=f"poll+{選択肢4}"))
-                text += f"4️⃣ {選択肢4}\n"
-        except:
-            pass
-        try:
-            if 選択肢5 != None:
-                # view.add_item(discord.ui.Button(label=f"{選択肢5}", custom_id=f"poll+{選択肢5}"))
-                text += f"5️⃣ {選択肢5}"
-        except:
-            pass
-        # view.add_item(discord.ui.Button(label=f"集計", custom_id=f"poll_done+{ctx.author.id}"))
-        # await ctx.channel.send(embed=discord.Embed(title=f"{タイトル}", description=f"{text}", color=discord.Color.green()), view=view)
-        msg_ = await interaction.channel.send(
-            embed=discord.Embed(
-                title=f"{タイトル}", description=f"{text}", color=discord.Color.blue()
-            ).set_author(
-                name=f"{interaction.user.name}",
-                icon_url=interaction.user.avatar.url
-                if interaction.user.avatar
-                else interaction.user.default_avatar.url,
-            )
+
+        raw_options = [
+            選択肢1, 選択肢2, 選択肢3, 選択肢4, 選択肢5,
+            選択肢6, 選択肢7, 選択肢8, 選択肢9, 選択肢10
+        ]
+        options = [opt for opt in raw_options if opt is not None]
+        
+        emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+        
+        description = ""
+        reactions = []
+
+        if len(options) == 1:
+            description = options[0]
+            reactions = ["👍", "👎"]
+        
+        elif len(options) == 2:
+            description = f"🇦 {options[0]}\n🇧 {options[1]}"
+            reactions = ["🇦", "🇧"]
+        
+        else:
+            for i, opt in enumerate(options):
+                description += f"{emojis[i]} {opt}\n"
+                reactions.append(emojis[i])
+
+        embed = discord.Embed(
+            title=タイトル, 
+            description=description, 
+            color=discord.Color.blue()
         )
-        await msg_.add_reaction("1️⃣")
-        if 選択肢2 != None:
-            await msg_.add_reaction("2️⃣")
-        if 選択肢3 != None:
-            await msg_.add_reaction("3️⃣")
-        if 選択肢4 != None:
-            await msg_.add_reaction("4️⃣")
-        if 選択肢5 != None:
-            await msg_.add_reaction("5️⃣")
-        await interaction.followup.send(
-            embed=make_embed.success_embed(title="作成しました。"),
-            ephemeral=True,
-        )
+        
+        user = interaction.user
+        avatar_url = user.avatar.url if user.avatar else user.default_avatar.url
+        embed.set_author(name=user.name, icon_url=avatar_url)
+
+        poll_msg = await interaction.channel.send(embed=embed)
+        for emoji in reactions:
+            await poll_msg.add_reaction(emoji)
+
+        success_embed = make_embed.success_embed(title="作成しました。")
+
+        await interaction.followup.send(embed=success_embed, ephemeral=True)
 
     @panel.command(name="ticket", description="チケットパネルを作成します。")
     @app_commands.checks.has_permissions(manage_channels=True)
@@ -2712,9 +2664,12 @@ class PanelCog(commands.Cog):
     @panel.command(name="top", description="一コメを取得します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def top(self, interaction: discord.Interaction):
+    async def top(self, interaction: discord.Interaction, チャンネル: discord.TextChannel = None):
         await interaction.response.defer()
-        async for top in interaction.channel.history(limit=1, oldest_first=True):
+
+        channel = チャンネル if チャンネル else interaction.channel
+
+        async for top in channel.history(limit=1, oldest_first=True):
             await interaction.followup.send(
                 embed=make_embed.success_embed(
                     title="最初のコメント (一コメ)",
