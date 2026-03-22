@@ -1,5 +1,4 @@
 import time
-from deep_translator import GoogleTranslator
 from discord.ext import commands
 import discord
 from discord import app_commands

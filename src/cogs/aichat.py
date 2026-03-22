@@ -12,9 +12,6 @@ from discord import app_commands
 from consts import badword, settings
 from models import command_disable, is_ban, make_embed
 
-from google.genai.client import Client
-from google.genai.types import GenerateContentConfig
-
 cooldown_aichat = {}
 
 

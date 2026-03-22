@@ -1,11 +1,9 @@
-from deep_translator import GoogleTranslator
 from discord.ext import commands
 import discord
 from discord import app_commands
 import time
 import aiohttp
 from consts import settings
-import asyncio
 
 from models import make_embed, translate, web_translate
 
