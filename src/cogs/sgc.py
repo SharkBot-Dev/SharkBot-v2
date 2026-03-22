@@ -62,24 +62,31 @@ class SuperGlobalChatCog(commands.Cog):
             dic["x-userPrimaryGuild"] = {"tag": pg.tag}
 
         if message.reference:
-            reference_mid = "0"
-            try:
-                ref_msg = message.reference.resolved
-                if not isinstance(ref_msg, discord.Message):
-                    ref_msg = await message.channel.fetch_message(message.reference.message_id)
+            reference_msg = await message.channel.fetch_message(
+                message.reference.message_id
+            )  # メッセージIDから、元のメッセージを取得
+            reference_mid = 0
+            if (
+                reference_msg.embeds
+                and self.bot.user.id == reference_msg.application_id
+            ):  # 返信の元のメッセージが、埋め込みメッセージかつ、このBOTが送信したメッセージのとき→グローバルチャットの他のサーバーからのメッセージと判断
+                arr = reference_msg.embeds[0].footer.text.split(
+                    " / "
+                )  # 埋め込みのフッターを「 / 」区切りで取得
 
-                if ref_msg.embeds and self.bot.user.id == ref_msg.author.id:
-                    footer_text = ref_msg.embeds[0].footer.text or ""
-                    for part in footer_text.split(" / "):
-                        if part.startswith("mID:"):
-                            reference_mid = part.replace("mID:", "", 1)
-                            break
-                else:
-                    reference_mid = str(ref_msg.id)
-            except Exception:
-                reference_mid = str(message.reference.message_id)
-                
-            dic["reference"] = reference_mid
+                for ref_msg in arr:  # 区切ったフッターをループ
+                    if "mID:" in ref_msg:  # 「mID:」が含まれるとき
+                        reference_mid = ref_msg.replace(
+                            "mID:", "", 1
+                        )  # 「mID:」を取り除いたものをメッセージIDとして取得
+                        break
+
+            elif (
+                reference_msg.author != reference_msg.application_id
+            ):  # 返信の元のメッセージが、このBOTが送信したメッセージでは無い時→同じチャンネルのメッセージと判断
+                reference_mid = str(reference_msg.id)  # 返信元メッセージIDを取得
+
+            dic.update({"reference": reference_mid})
 
         return json.dumps(dic, ensure_ascii=False)
     
@@ -153,9 +160,11 @@ class SuperGlobalChatCog(commands.Cog):
         past_logs = []
         reference_mid = dic.get("reference")
         if reference_mid and reference_mid != "0":
-            async for past_message in message.channel.history(limit=50):
+            async for past_message in message.channel.history(limit=1000):
                 try:
                     p_dic = json.loads(past_message.content)
+                    if p_dic["type"] != "message":
+                        continue
                     past_logs.append(p_dic)
                 except: continue
 
@@ -328,9 +337,11 @@ class SuperGlobalChatCog(commands.Cog):
         past_logs = []
         reference_mid = dic.get("reference")
         if reference_mid and reference_mid != "0":
-            async for past_message in message.channel.history(limit=50):
+            async for past_message in message.channel.history(limit=1000):
                 try:
                     p_dic = json.loads(past_message.content)
+                    if p_dic["type"] != "message":
+                        continue
                     past_logs.append(p_dic)
                 except: continue
 
