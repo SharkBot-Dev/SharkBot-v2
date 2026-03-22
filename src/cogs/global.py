@@ -925,6 +925,15 @@ class GlobalCog(commands.Cog):
                     description="テキストチャンネルでのみグローバルチャットに参加できます。",
                 ),
             )
+        
+        if 部屋名 == "sgc" or 部屋名 == "dsgc":
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=make_embed.error_embed(
+                    title="その名前は指定できません。",
+                    description="スーパーグローバルチャットの場合は、\n/global sgcで参加できます。",
+                ),
+            )
 
         await interaction.response.defer()
         if not 部屋名:
