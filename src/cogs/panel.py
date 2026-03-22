@@ -1678,6 +1678,8 @@ class PanelCog(commands.Cog):
                                 icon_url=avatar_url,
                             )
 
+                            answer_embed.set_thumbnail(url=avatar_url)
+
                             await interaction.channel.send(embed=answer_embed)
 
                             question_embed = discord.Embed(

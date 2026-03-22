@@ -112,6 +112,39 @@ class ListingCog(commands.Cog):
             embed=embeds[0], view=view, allowed_mentions=discord.AllowedMentions.none()
         )
 
+    @listing.command(
+        name="role-members", description="ロールを持っているメンバーをリスト化します。"
+    )
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    @app_commands.checks.has_permissions(manage_roles=True)
+    async def listing_role_members(self, interaction: discord.Interaction, ロール: discord.Role):
+        await interaction.response.defer()
+
+        r_m = ロール.members
+
+        split_size = 20
+        spliting_roles_list = [
+            r_m[i : i + split_size] for i in range(0, len(r_m), split_size)
+        ]
+
+        embeds = []
+        total_pages = len(spliting_roles_list)
+        for i, role_chunk in enumerate(spliting_roles_list):
+            embed = discord.Embed(
+                title=f"ロールを持っているメンバーの一覧 ({len(r_m)}種類)",
+                description="\n".join([f"{m.mention} (`{m.id}`)" for m in role_chunk]),
+                color=discord.Color.blue(),
+            )
+            embed.set_footer(text=f"Page {i + 1} / {total_pages}")
+            embeds.append(embed)
+
+        view = pages.Pages(embeds=embeds, now_page=0)
+
+        msg = await interaction.followup.send(
+            embed=embeds[0], view=view, allowed_mentions=discord.AllowedMentions.none(), content="※キャッシュの問題上、すべてのメンバーは表示できません。"
+        )
+
     @listing.command(name="role", description="ロールをリスト化します。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
