@@ -76,61 +76,49 @@ class AutoReplyCog(commands.Cog):
 
     @commands.Cog.listener("on_message")
     async def on_message_auto_reply_word(self, message: discord.Message):
-        if message.author.bot:
+        if message.author.bot or not message.guild or not message.content:
             return
-        if not message.content:
-            return
+
         db = self.bot.async_db["Main"].AutoReply
+        
         try:
             dbfind = await db.find_one(
-                {"Guild": message.guild.id, "Word": message.content}, {"_id": False}
+                {"Guild": message.guild.id, "Word": message.content}, 
+                {"_id": False}
             )
-        except:
+        except Exception as e:
             return
-        if dbfind is None:
+
+        if not dbfind:
             return
         current_time = time.time()
         last_message_time = cooldown_autoreply_word.get(message.guild.id, 0)
-        if current_time - last_message_time < 3:
+        if current_time - last_message_time < 1:
             return
-        cooldown_autoreply_word[message.guild.id] = current_time
-        word = dbfind.get("ReplyWord", None)
-        if not word:
+        
+        target_channel_id = dbfind.get("TextChannel", 0)
+        if target_channel_id != 0 and target_channel_id != message.channel.id:
             return
-        if dbfind.get("TextChannel", 0) != 0:
-            if dbfind.get("TextChannel", 0) != message.channel.id:
+
+        allowed_roles = dbfind.get("Roles", [])
+        if allowed_roles:
+            user_role_ids = [role.id for role in message.author.roles]
+            if not any(role_id in user_role_ids for role_id in allowed_roles):
                 return
-        if dbfind.get("Roles", []) != []:
-            for r in dbfind.get("Roles", []):
-                if message.guild.get_role(r) in message.author.roles:
-                    word = word.split("|")
 
-                    if len(word) != 1:
-                        word = random.choice(word)
-                    else:
-                        word = dbfind.get("ReplyWord", None)
-                    try:
-                        await message.reply(
-                            word.replace("\\n", "\n")
-                            + "\n-# このメッセージは自動返信機能によるものです。"
-                        )
-                    except:
-                        return
-                    return
+        reply_raw = dbfind.get("ReplyWord")
+        if not reply_raw:
             return
 
-        word = word.split("|")
+        choices = reply_raw.split("|")
+        reply_text = random.choice(choices).replace("\\n", "\n")
 
-        if len(word) != 1:
-            word = random.choice(word)
-        else:
-            word = dbfind.get("ReplyWord", None)
         try:
-            await message.reply(
-                word.replace("\\n", "\n")
-                + "\n-# このメッセージは自動返信機能によるものです。"
-            )
-        except:
+            cooldown_autoreply_word[message.guild.id] = current_time
+            await message.reply(reply_text)
+        except discord.Forbidden:
+            return
+        except discord.HTTPException as e:
             return
 
     autoreply = app_commands.Group(
