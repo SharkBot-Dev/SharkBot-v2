@@ -25,7 +25,7 @@ class GlobalMoney:
         self.bot = bot
         self.JST = datetime.timezone(datetime.timedelta(hours=9))
 
-    async def work_execute(self, interaction: discord.Interaction):
+    async def work_execute(self, interaction: discord.Interaction, is_silent: bool = False):
         db = interaction.client.async_db["DashboardBot"].Account
         user_data = await db.find_one({"user_id": interaction.user.id})
 
@@ -78,13 +78,150 @@ class GlobalMoney:
             title="働きました。",
             description=f"{reward}コインを稼ぎました！\n現在の所持金: {new_money}コイン"
         )
+
+        if is_silent:
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            return
         await interaction.response.send_message(embed=embed)
+
+    async def slot_execute(self, interaction: discord.Interaction, coin: int, is_slient: bool = False):
+        if coin <= 0:
+            await interaction.response.send_message(embed=make_embed.error_embed(title="1コイン以上賭けてください。"), ephemeral=True)
+            return
+
+        db = interaction.client.async_db["DashboardBot"].Account
+        user_data = await db.find_one({"user_id": interaction.user.id})
+
+        if not user_data:
+            await interaction.response.send_message(
+                embed=make_embed.error_embed(title="アカウントが存在しません。"), 
+                ephemeral=True
+            )
+            return
+
+        if user_data.get("money", 0) < coin:
+            await interaction.response.send_message(embed=make_embed.success_embed(title="コインが足りません。"), ephemeral=True)
+            return
+
+        if is_slient:
+            await interaction.response.defer(ephemeral=True, thinking=True)
+        else:
+            await interaction.response.defer()
+
+        await db.update_one({"user_id": interaction.user.id}, {"$inc": {"money": -coin}})
+
+        loading_emoji = "<a:loading:1480529495114121279>"
+        embed = make_embed.loading_embed(
+            "スロットを引いています・・", 
+            description=f"{loading_emoji} | {loading_emoji} | {loading_emoji}"
+        )
+        if is_slient:
+            msg = await interaction.followup.send(embed=embed, ephemeral=True)
+        else:
+            msg = await interaction.followup.send(embed=embed)
+
+        await asyncio.sleep(2)
+        result = [random.choice(SLOT_EMOJIS) for _ in range(3)]
+        result_str = f"**{result[0]} | {result[1]} | {result[2]}**"
+
+        is_win = result[0] == result[1] == result[2]
+        win_amount = 0
+
+        if is_win:
+            multiplier = PAYOUTS.get(result[0], 2)
+            win_amount = coin * multiplier
+            await db.update_one({"user_id": interaction.user.id}, {"$inc": {"money": win_amount}})
+            
+            status_title = "おめでとうございます！"
+            status_desc = f"{result_str}\n\n揃いました！ **+{win_amount}** コイン獲得！"
+
+            res_embed = make_embed.success_embed(title=status_title, description=status_desc)
+        else:
+            status_title = "残念..."
+            status_desc = f"{result_str}\n\n外れです。 **-{coin}** コイン失いました。"
+
+            res_embed = make_embed.error_embed(title=status_title, description=status_desc)
+        
+        await interaction.edit_original_response(embed=res_embed)
+
+class SlotModal(discord.ui.Modal, title="スロットに賭ける"):
+    coins = discord.ui.TextInput(
+        label="賭けるコインの数を入力",
+        placeholder="例: 100"
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            coin = int(self.coins.value)
+        except:
+            await interaction.response.send_message(ephemeral=True, embed=make_embed.error_embed(title="スロットに賭けられませんでした。", description="不正な文字列です。"))
+            return
+
+        await GlobalMoney(interaction.client).slot_execute(interaction, coin, True)
+
+class AccountsPanel(discord.ui.View):
+    def __init__(self, *, timeout = 180):
+        super().__init__(timeout=timeout)
+
+    @discord.ui.button(label="働く", style=discord.ButtonStyle.blurple)
+    async def accounts_work(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await GlobalMoney(interaction.client).work_execute(interaction, True)
+
+    @discord.ui.button(label="スロットに賭ける", style=discord.ButtonStyle.red)
+    async def accounts_slot(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(SlotModal())
 
 class AccountCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.global_money = GlobalMoney(self.bot)
         self.JST = datetime.timezone(datetime.timedelta(hours=9))
+
+    @app_commands.command(name="accounts", description="アカウントのパネルを表示します。")
+    @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+    @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
+    async def top_accounts(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+
+        db = interaction.client.async_db["DashboardBot"].Account
+
+        if not isinstance(db, AsyncIOMotorCollection):
+            return
+        
+        check = await db.find_one({
+            "user_id": interaction.user.id
+        })
+        if not check:
+            await interaction.followup.send(embed=make_embed.error_embed(title="アカウントが存在しません。"))
+            return
+        
+        embed = make_embed.success_embed(title="アカウントの操作パネル")
+        embed.set_thumbnail(url=interaction.user.display_avatar.url)
+
+        created_date = check.get('created_date')
+        time_string = created_date.astimezone(self.JST)
+
+        embed.add_field(name="アカウント作成日", value=time_string.strftime('%Y年%m月%d日 %H時%M分%S秒'), inline=False)
+
+        money = check.get('money')
+        embed.add_field(name="所持金", value=f"{money}コイン")
+        
+        pipeline = [
+            {"$sort": {"money": -1}},
+            {"$group": {"_id": None, "users": {"$push": "$$ROOT"}}},
+            {"$unwind": {"path": "$users", "includeArrayIndex": "rank"}},
+            {"$match": {"users.user_id": interaction.user.id}},
+            {"$project": {"rank": {"$add": ["$rank", 1]}, "money": "$users.money"}}
+        ]
+
+        cursor = db.aggregate(pipeline)
+        result = await cursor.to_list(length=1)
+
+        if result:
+            rank = result[0]["rank"]
+            embed.add_field(name="順位", value=f"{rank}位")
+
+        await interaction.followup.send(embed=embed, view=AccountsPanel())
 
     account = app_commands.Group(
         name="account",
@@ -252,58 +389,7 @@ class AccountCog(commands.Cog):
         interaction: discord.Interaction,
         コイン: int
     ):
-        if コイン <= 0:
-            await interaction.response.send_message(embed=make_embed.error_embed(title="1コイン以上賭けてください。"), ephemeral=True)
-            return
-
-        db = interaction.client.async_db["DashboardBot"].Account
-        user_data = await db.find_one({"user_id": interaction.user.id})
-
-        if not user_data:
-            await interaction.response.send_message(
-                embed=make_embed.error_embed(title="アカウントが存在しません。"), 
-                ephemeral=True
-            )
-            return
-
-        if user_data.get("money", 0) < コイン:
-            await interaction.response.send_message(embed=make_embed.success_embed(title="コインが足りません。"), ephemeral=True)
-            return
-
-        await interaction.response.defer()
-
-        await db.update_one({"user_id": interaction.user.id}, {"$inc": {"money": -コイン}})
-
-        loading_emoji = "<a:loading:1480529495114121279>"
-        embed = make_embed.loading_embed(
-            "スロットを引いています・・", 
-            description=f"{loading_emoji} | {loading_emoji} | {loading_emoji}"
-        )
-        msg = await interaction.followup.send(embed=embed)
-
-        await asyncio.sleep(2)
-        result = [random.choice(SLOT_EMOJIS) for _ in range(3)]
-        result_str = f"**{result[0]} | {result[1]} | {result[2]}**"
-
-        is_win = result[0] == result[1] == result[2]
-        win_amount = 0
-
-        if is_win:
-            multiplier = PAYOUTS.get(result[0], 2)
-            win_amount = コイン * multiplier
-            await db.update_one({"user_id": interaction.user.id}, {"$inc": {"money": win_amount}})
-            
-            status_title = "おめでとうございます！"
-            status_desc = f"{result_str}\n\n揃いました！ **+{win_amount}** コイン獲得！"
-
-            res_embed = make_embed.success_embed(title=status_title, description=status_desc)
-        else:
-            status_title = "残念..."
-            status_desc = f"{result_str}\n\n外れです。 **-{コイン}** コイン失いました。"
-
-            res_embed = make_embed.error_embed(title=status_title, description=status_desc)
-        
-        await interaction.edit_original_response(embed=res_embed)
+        await GlobalMoney(interaction.client).slot_execute(interaction, コイン, False)
 
 async def setup(bot):
     await bot.add_cog(AccountCog(bot))

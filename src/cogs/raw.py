@@ -1,3 +1,5 @@
+from typing import List, Union
+
 import discord
 from discord.ext import commands
 import aiohttp
@@ -5,6 +7,8 @@ import base64
 import mimetypes
 import io
 import asyncio
+
+from models.raw_error import SearchAPIError, SearchIndexNotReady
 
 
 def image_to_data_uri_sync(
@@ -29,13 +33,11 @@ def image_to_data_uri_sync(
 
 
 class Raw:
-    def __init__(self, token: str = None, bot: commands.Bot = None):
-        if not token:
-            if not bot:
-                raise ValueError("token か bot を指定してください")
-            self.token = bot.http.token
-        else:
-            self.token = token
+    def __init__(self, bot: commands.Bot = None):
+        if not bot:
+            raise ValueError("token か bot を指定してください")
+        self.token = bot.http.token
+        self.bot = bot
         self.api_base = "https://discord.com/api/v10"
 
     async def image_to_data_uri(
@@ -146,6 +148,43 @@ class Raw:
                     )
                 return await response.json()
 
+    async def search_messages(
+        self,
+        guild_id: Union[int, str],
+        **params
+    ) -> List[discord.Message]:
+        url = f"{self.api_base}/guilds/{guild_id}/messages/search"
+        headers = {"Authorization": f"Bot {self.token}"}
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers, params=params) as resp:
+                
+                if resp.status == 202:
+                    data = await resp.json()
+                    raise SearchIndexNotReady(
+                        message=data.get("message", "Index not yet available"),
+                        retry_after=data.get("retry_after", 2.0),
+                        documents_indexed=data.get("documents_indexed", 0)
+                    )
+
+                if resp.status != 200:
+                    error_text = await resp.text()
+                    raise SearchAPIError(resp.status, error_text)
+
+                data = await resp.json()
+                search_results = data.get("messages", [])
+                
+                messages = []
+                state = self.bot._connection 
+
+                for group in search_results:
+                    for msg_dict in group:
+                        c_id = int(msg_dict['channel_id'])
+                        channel = self.bot.get_channel(c_id) or discord.Object(id=c_id)
+                        message = discord.Message(state=state, channel=channel, data=msg_dict)
+                        messages.append(message)
+                
+                return messages
 
 class RawCog(commands.Cog):
     def __init__(self, bot):
