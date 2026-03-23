@@ -30,6 +30,8 @@ import math
 
 from janome.tokenizer import Tokenizer
 
+import redis.asyncio as redis
+
 tokenizer = Tokenizer()
 
 
@@ -1403,23 +1405,433 @@ class GameCog(commands.Cog):
 
         await interaction.followup.send(view=QuestView())
 
-    @game.command(name="akinator", description="アキネーターをプレイします。")
+    @game.command(name="werewolf", description="人狼ゲームをプレイします。")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
     @app_commands.checks.cooldown(2, 10, key=lambda i: i.guild_id)
-    async def akinator_game(self, interaction: discord.Interaction):
-        prob = {c: 1 / len(characters) for c in characters}
-        asked = []
+    async def werewolf_game(self, interaction: discord.Interaction):
+        if interaction.is_user_integration() and not interaction.is_guild_integration():
+            return await interaction.response.send_message(
+                ephemeral=True,
+                embed=discord.Embed(title="エラー", description="サーバーにBotをインストールしてください。", color=discord.Color.red())
+            )
+        
+        await interaction.response.defer()
 
-        view = AkiView(interaction, prob, asked)
-        await interaction.response.send_message(
-            embed=discord.Embed(
-                title="アキネーターからの質問",
-                description=view.current_q["text"],
-                color=discord.Color.blue(),
-            ),
-            view=view,
+        channel_id = interaction.channel.id
+        await self.cleanup_game(channel_id)
+
+        members_key = f"werewolf:members:{channel_id}"
+        membercount_key = f"werewolf:membercount:{channel_id}"
+        owner_key = f"werewolf:owner:{channel_id}"
+        await self.bot.redis.rpush(members_key, str(interaction.user.id))
+        await self.bot.redis.set(membercount_key, "1")
+        await self.bot.redis.set(owner_key, str(interaction.user.id))
+
+        await self.bot.redis.expire(members_key, 86400)
+        await self.bot.redis.expire(membercount_key, 86400)
+        await self.bot.redis.expire(owner_key, 86400)
+
+        view = discord.ui.View(timeout=None)
+        view.add_item(discord.ui.Button(label="参加する", custom_id="werewolf_join", style=discord.ButtonStyle.blurple))
+        
+        embed = discord.Embed(title="人狼ゲーム 募集", color=discord.Color.blue())
+        embed.add_field(name="参加メンバー", value=f"{interaction.user.mention}", inline=False)
+
+        await interaction.followup.send(view=view, embed=embed)
+
+    @commands.Cog.listener()
+    async def on_interaction(self, interaction: discord.Interaction):
+        if interaction.type != discord.InteractionType.component:
+            return
+            
+        custom_id = interaction.data.get("custom_id", "")
+        if not custom_id.startswith("werewolf_"):
+            return
+
+        channel_id = interaction.channel_id or (custom_id.split(":")[-1] if ":" in custom_id else None)
+        if not channel_id: return
+
+        if custom_id == "werewolf_join":
+            await self._handle_join(interaction, channel_id)
+
+        if custom_id == "werewolf_force_start":
+            owner_key = f"werewolf:owner:{channel_id}"
+            owner_id = await self.bot.redis.get(owner_key)
+            if owner_id != str(interaction.user.id):
+                await interaction.response.send_message(ephemeral=True, content="あなたは主催者ではありません。")
+                return
+
+            status_key = f"werewolf:status:{channel_id}"
+            await self.bot.redis.set(status_key, "running", ex=3600)
+
+            embed = interaction.message.embeds[0].copy()
+            await interaction.message.edit(view=None)
+            await self.assign_roles(interaction, channel_id, embed)
+
+        elif custom_id.startswith(("werewolf_kill:", "werewolf_divine:")):
+            await self._handle_night_action(interaction, custom_id)
+
+        elif custom_id.startswith("werewolf_vote_select:"):
+            await self._handle_vote(interaction, custom_id)
+
+        elif custom_id.startswith("werewolf_skip_discuss:"):
+            channel_id = custom_id.split(":")[1]
+            ready_key = f"werewolf:ready:{channel_id}"
+            user_id = str(interaction.user.id)
+
+            if not user_id in interaction.message.embeds[0].fields[0].value:
+                await interaction.response.send_message(ephemeral=True, content="あなたは生存していません。")
+                return
+
+            await self.bot.redis.sadd(ready_key, user_id)
+            ready_count = await self.bot.redis.scard(ready_key)
+            members_key = f"werewolf:members:{channel_id}"
+            survivor_count = await self.bot.redis.llen(members_key)
+            if ready_count >= survivor_count:
+                await interaction.message.edit(view=None)
+                await self.bot.redis.set(f"werewolf:status:{channel_id}", "voting")
+                await interaction.response.send_message("全員の準備が整いました。投票に移ります。")
+                await self.start_voting_phase(channel_id)
+            else:
+                await interaction.response.send_message(f"準備完了通知を出しました ({ready_count}/{survivor_count})", ephemeral=True)
+
+    async def _handle_join(self, interaction: discord.Interaction, channel_id):
+        status_key = f"werewolf:status:{channel_id}"
+        members_key = f"werewolf:members:{channel_id}"
+        membercount_key = f"werewolf:membercount:{channel_id}"
+
+        if await self.bot.redis.get(status_key):
+            return await interaction.response.send_message("このゲームは既に進行中、または開始されています。", ephemeral=True)
+
+        user_id_str = str(interaction.user.id)
+        existing_bin = await self.bot.redis.lrange(members_key, 0, -1)
+        if any(m == user_id_str for m in existing_bin):
+            return await interaction.response.send_message("既に参加しています。", ephemeral=True)
+
+        await interaction.response.defer()
+
+        await self.bot.redis.rpush(members_key, user_id_str)
+        await self.bot.redis.expire(members_key, 3600)
+        
+        count = await self.bot.redis.incr(membercount_key)
+        await self.bot.redis.expire(membercount_key, 3600)
+
+        embed = interaction.message.embeds[0].copy()
+        current_mentions = embed.fields[0].value
+        embed.set_field_at(0, name=f"参加メンバー ({count}/8)", value=f"{current_mentions}\n{interaction.user.mention}", inline=False)
+
+        view = discord.ui.View(timeout=None)
+
+        view.add_item(discord.ui.Button(label="参加する", custom_id="werewolf_join", style=discord.ButtonStyle.blurple, disabled=(count >= 8)))
+        
+        if count >= 3:
+            view.add_item(discord.ui.Button(label="ゲームを開始する", custom_id="werewolf_force_start", style=discord.ButtonStyle.green))
+
+        if count >= 8:
+            await self.bot.redis.set(status_key, "running", ex=3600)
+            await interaction.message.edit(embed=embed, view=None)
+            await self.assign_roles(interaction, channel_id, embed)
+        else:
+            await interaction.message.edit(embed=embed, view=view)
+
+    async def assign_roles(self, interaction, channel_id, embed):
+        members_key = f"werewolf:members:{channel_id}"
+        roles_key = f"werewolf:roles:{channel_id}"
+        
+        member_ids = [m for m in await self.bot.redis.lrange(members_key, 0, -1)]
+        count = len(member_ids)
+        
+        if count <= 3:
+            roles = ["人狼", "占い師", "村人"]
+        elif count == 4:
+            roles = ["人狼", "占い師", "村人", "村人"]
+        elif count == 5:
+            roles = ["人狼", "占い師", "騎士", "村人", "村人"]
+        elif count <= 8:
+            roles = ["人狼", "人狼", "占い師", "騎士"] + ["村人"] * (count - 4)
+        else:
+            roles = ["人狼", "人狼", "狂人", "占い師", "騎士"] + ["村人"] * (count - 5)
+
+        random.shuffle(roles)
+        
+        role_map = dict(zip(member_ids, roles))
+        await self.bot.redis.hset(roles_key, mapping=role_map)
+        await self.bot.redis.expire(roles_key, 86400)
+
+        for u_id, role in role_map.items():
+            try:
+                user = await self.bot.fetch_user(int(u_id))
+                description = self._get_role_description(role)
+                await user.send(embed=discord.Embed(title="人狼ゲーム", description=f"あなたの役職は **{role}** です。\n{description}", color=discord.Color.blue()))
+            except:
+                await interaction.channel.send(f"<@{u_id}> DMを解放してください。")
+
+            await asyncio.sleep(1)
+
+        embed.title = f"人狼ゲーム - 開始（参加者: {count}名）"
+        embed.description = "全員に役職を送信しました。夜の行動を開始します。"
+        await interaction.message.edit(embed=embed)
+        
+        await self.start_night_phase(interaction.channel, role_map)
+
+    def _get_role_description(self, role):
+        descriptions = {
+            "人狼": "夜に一人を指名して襲撃します。自分以外の狼は誰か分かります。",
+            "占い師": "夜に一人を占って、その人が「人狼」か「人間」かを知ることができます。",
+            "騎士": "夜に一人を守ります。その人が襲撃された場合、死亡を防げます。",
+            "狂人": "人間ですが、人狼陣営です。占われても「人間」と出ます。",
+            "村人": "特別な能力はありません。議論で人狼を見つけ出してください。"
+        }
+        return descriptions.get(role, "")
+
+    async def start_night_phase(self, channel, role_map):
+        for u_id, role in role_map.items():
+            if role == "村人": continue
+            
+            user = await self.bot.fetch_user(int(u_id))
+            view = discord.ui.View(timeout=None)
+            targets = [m for m in role_map.keys() if m != u_id]
+
+            for t_id in targets:
+                t_user = await self.bot.fetch_user(int(t_id))
+                action_type = "kill" if role == "人狼" else "divine"
+                view.add_item(discord.ui.Button(
+                    label=f"{t_user.name}を{'襲撃' if action_type == 'kill' else '占う'}",
+                    style=discord.ButtonStyle.danger if action_type == "kill" else discord.ButtonStyle.primary,
+                    custom_id=f"werewolf_{action_type}:{t_id}:{channel.id}"
+                ))
+            await user.send(f"夜の行動を選択してください。", view=view)
+
+    async def _handle_night_action(self, interaction, custom_id):
+        action_parts = custom_id.split(":")
+        action = action_parts[0]
+        target_id = action_parts[1]
+        channel_id = action_parts[2]
+        
+        action_key = f"werewolf:actions:{channel_id}"
+        roles_key = f"werewolf:roles:{channel_id}"
+        
+        await interaction.response.defer(ephemeral=True)
+
+        await interaction.message.edit(view=None)
+
+        if "kill" in action:
+            await self.bot.redis.hset(action_key, f"kill:{interaction.user.id}", target_id)
+            await interaction.followup.send("襲撃先を選択しました。", ephemeral=True)
+        elif "divine" in action:
+            target_role = (await self.bot.redis.hget(roles_key, target_id))
+            res = "人狼" if target_role == "人狼" else "人間"
+            await self.bot.redis.hset(action_key, f"divine:{interaction.user.id}", target_id)
+            await interaction.followup.send(f"占い結果: <@{target_id}> は **{res}** です。", ephemeral=True)
+        elif "guard" in action:
+            await self.bot.redis.hset(action_key, f"guard:{interaction.user.id}", target_id)
+            await interaction.followup.send("守衛先を選択しました。", ephemeral=True)
+
+        all_roles = await self.bot.redis.hgetall(roles_key)
+
+        active_roles_count = sum(1 for r in all_roles.values() if r in ["人狼", "占い師", "騎士"])
+        
+        completed_actions = await self.bot.redis.hlen(action_key)
+
+        if completed_actions >= active_roles_count:
+            await self.process_morning(channel_id)
+
+    async def start_discussion_phase(self, channel_id):
+        channel = self.bot.get_channel(int(channel_id))
+        if not channel:
+            return
+
+        members_key = f"werewolf:members:{channel_id}"
+        survivors = [s for s in await self.bot.redis.lrange(members_key, 0, -1)]
+        
+        status_key = f"werewolf:status:{channel_id}"
+        await self.bot.redis.set(status_key, "discussing", ex=600)
+
+        view = discord.ui.View(timeout=None)
+        view.add_item(discord.ui.Button(
+            label="議論を終了して投票へ", 
+            custom_id=f"werewolf_skip_discuss:{channel_id}", 
+            style=discord.ButtonStyle.secondary
+        ))
+
+        embed = discord.Embed(
+            title="昼の議論フェーズ", 
+            description="生存者で話し合い、人狼を見つけ出してください。\n制限時間は **3分** です。", 
+            color=discord.Color.orange()
         )
+        embed.add_field(
+            name="現在の生存者", 
+            value="\n".join([f"<@{s}>" for s in survivors]), 
+            inline=False
+        )
+        
+        discussion_msg = await channel.send(embed=embed, view=view)
 
+        for i in range(18):
+            await asyncio.sleep(10)
+            current_status = await self.bot.redis.get(status_key)
+            if not current_status or current_status != "discussing":
+                await discussion_msg.edit(view=None)
+                return
+
+        await self.start_voting_phase(channel_id)
+
+    async def process_morning(self, channel_id):
+        action_key = f"werewolf:actions:{channel_id}"
+        members_key = f"werewolf:members:{channel_id}"
+        
+        actions = await self.bot.redis.hgetall(action_key)
+        actions = {k: v for k, v in actions.items()}
+        
+        victim_id = None
+        guarded_id = None
+        for key, value in actions.items():
+            if key.startswith("kill:"): victim_id = value
+            if key.startswith("guard:"): guarded_id = value
+
+        channel = self.bot.get_channel(int(channel_id))
+        embed = discord.Embed(title="朝が来ました", color=discord.Color.gold())
+
+        if victim_id and victim_id != guarded_id:
+            embed.description = f"昨晩、<@{victim_id}> が無残な姿で発見されました。"
+            await self.bot.redis.lrem(members_key, 0, victim_id)
+        else:
+            embed.description = "昨晩は誰も死にませんでした。平和な朝です。"
+
+        await channel.send(embed=embed)
+        
+        await self.bot.redis.delete(action_key)
+        
+        if not await self.check_win_condition(channel_id):
+            await self.start_discussion_phase(channel_id)
+
+    async def start_voting_phase(self, channel_id):
+        members_key = f"werewolf:members:{channel_id}"
+        survivors = [m for m in await self.bot.redis.lrange(members_key, 0, -1)]
+        
+        view = discord.ui.View(timeout=None)
+        select = discord.ui.Select(custom_id=f"werewolf_vote_select:{channel_id}", placeholder="追放する人を選択")
+        for s_id in survivors:
+            user = await self.bot.fetch_user(int(s_id))
+            select.add_option(label=user.name, value=s_id)
+        
+        view.add_item(select)
+        await self.bot.get_channel(int(channel_id)).send("議論を終了し、投票を行ってください。", view=view)
+
+    async def process_tally(self, channel_id):
+        vote_key = f"werewolf:votes:{channel_id}"
+        members_key = f"werewolf:members:{channel_id}"
+        
+        votes = await self.bot.redis.hgetall(vote_key)
+        vote_counts = {}
+
+        for voter_id, voted_id in votes.items():
+            v_id = voted_id
+            vote_counts[v_id] = vote_counts.get(v_id, 0) + 1
+
+        max_votes = max(vote_counts.values())
+        candidates = [k for k, v in vote_counts.items() if v == max_votes]
+
+        channel = self.bot.get_channel(int(channel_id))
+        
+        if len(candidates) > 1:
+            expelled_id = random.choice(candidates)
+            await channel.send(f"投票が割れましたが、厳正なる抽選の結果、<@{expelled_id}> が追放されました。")
+        else:
+            expelled_id = candidates[0]
+            await channel.send(f"投票の結果、もっとも疑わしかった <@{expelled_id}> が追放されました。")
+
+        await self.bot.redis.lrem(members_key, 0, expelled_id)
+
+        await self.bot.redis.delete(vote_key)
+
+        await self.check_win_condition(channel_id)
+
+    async def _handle_vote(self, interaction: discord.Interaction, custom_id: str):
+        channel_id = custom_id.split(":")[1]
+        voted_id = interaction.data["values"][0]
+        user_id = str(interaction.user.id)
+        
+        members_key = f"werewolf:members:{channel_id}"
+        vote_key = f"werewolf:votes:{channel_id}"
+
+        survivors_bin = await self.bot.redis.lrange(members_key, 0, -1)
+        survivors = [s for s in survivors_bin]
+
+        if user_id not in survivors:
+            return await interaction.response.send_message(
+                "あなたは生存者ではないため、投票権がありません。", 
+                ephemeral=True
+            )
+
+        is_new = await self.bot.redis.hset(vote_key, user_id, voted_id)
+        if is_new == 0:
+            return await interaction.response.send_message(
+                "既に投票済みです。変更はできません。", 
+                ephemeral=True
+            )
+
+        await interaction.response.send_message(f"<@{voted_id}> に投票しました。", ephemeral=True)
+
+        total_votes = await self.bot.redis.hlen(vote_key)
+        if total_votes >= len(survivors):
+            try:
+                await interaction.message.edit(view=None)
+            except:
+                pass
+            
+            await self.process_tally(channel_id)
+
+    async def check_win_condition(self, channel_id) -> bool:
+        members_key = f"werewolf:members:{channel_id}"
+        roles_key = f"werewolf:roles:{channel_id}"
+        
+        survivors = [s for s in await self.bot.redis.lrange(members_key, 0, -1)]
+        
+        all_roles = await self.bot.redis.hgetall(roles_key)
+        all_roles = {k: v for k, v in all_roles.items()}
+        
+        wolf_count = 0
+        human_count = 0
+        
+        for s_id in survivors:
+            role = all_roles.get(s_id)
+            if role == "人狼":
+                wolf_count += 1
+            else:
+                human_count += 1
+        
+        channel = self.bot.get_channel(int(channel_id))
+        if not channel:
+            return True
+
+        if wolf_count == 0:
+            embed = discord.Embed(title="ゲーム終了", description="人狼が全滅しました！\n\n**村人陣営の勝利です！**", color=discord.Color.green())
+            await channel.send(embed=embed)
+            await self.cleanup_game(channel_id)
+            return True
+
+        elif wolf_count >= human_count:
+            embed = discord.Embed(title="ゲーム終了", description="人狼の数が人間以上になりました！\n\n**人狼陣営の勝利です！**", color=discord.Color.red())
+            await channel.send(embed=embed)
+            await self.cleanup_game(channel_id)
+            return True
+
+        return False
+
+    async def cleanup_game(self, channel_id):
+        keys = [
+            f"werewolf:roles:{channel_id}",
+            f"werewolf:members:{channel_id}",
+            f"werewolf:actions:{channel_id}",
+            f"werewolf:votes:{channel_id}",
+            f"werewolf:membercount:{channel_id}",
+            f"werewolf:owner:{channel_id}",
+            f"werewolf:status:{channel_id}",
+            f"werewolf:ready:{channel_id}"
+        ]
+
+        await self.bot.redis.delete(*keys)
 
 async def setup(bot):
     await bot.add_cog(GameCog(bot))
