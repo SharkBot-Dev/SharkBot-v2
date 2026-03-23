@@ -7,6 +7,7 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 import urllib.parse
+from consts import settings
 from models import is_ban, make_embed
 import io
 
@@ -33,6 +34,17 @@ class SuperGlobalChatCog(commands.Cog):
             "here",
         ]
         return not any(word in content for word in blocked_words)
+
+    # ユーティリティ
+    async def post_json_sgc(self, dict: dict):
+        messageId = dict.get('messageId')
+        if not messageId:
+            return
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f"https://api.sharkbot.xyz/sgc/json/{messageId}", json=dict, headers={"authorization": settings.SGCAPIKEY}) as resp:
+                jso = await resp.json()
+                return jso.get('message_id')
 
     # Json作成
     async def sgc_make_json(self, message: discord.Message):
@@ -156,6 +168,9 @@ class SuperGlobalChatCog(commands.Cog):
 
         if dic.get("type") != "message":
             return
+        
+        asyncio.create_task(self.post_json_sgc(dic))
+        asyncio.create_task(message.add_reaction("💾"))
 
         past_logs = []
         reference_mid = dic.get("reference")
@@ -259,6 +274,8 @@ class SuperGlobalChatCog(commands.Cog):
         await self.bot.get_channel(self.DEBUG).send(
             content=js, allowed_mentions=discord.AllowedMentions.none()
         )
+
+        asyncio.create_task(self.post_json_sgc(json.loads(js)))
 
         await self.send_super_global_chat_debug(message)
         await message.remove_reaction("🔄", self.bot.user)

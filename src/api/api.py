@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 import dotenv
 
-from routers import account, api, bot, economy, search, topgg
+from routers import account, api, bot, economy, search, sgc, topgg
 
 dotenv.load_dotenv()
 
@@ -23,6 +23,7 @@ app.include_router(bot.status_router)
 app.include_router(economy.router)
 app.include_router(search.router)
 app.include_router(topgg.router)
+app.include_router(sgc.router)
 
 @app.get("/", include_in_schema=False)
 async def index():
