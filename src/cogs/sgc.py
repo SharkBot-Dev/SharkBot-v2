@@ -42,7 +42,7 @@ class SuperGlobalChatCog(commands.Cog):
             return
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(f"https://api.sharkbot.xyz/sgc/json/{messageId}", json=dict, headers={"authorization": settings.SGCAPIKEY}) as resp:
+            async with session.post(f"https://api.sharkbot.xyz/sgc/json/{messageId}", json=dict, headers={"authorization": settings.SGCAPIKEY}, timeout=3) as resp:
                 jso = await resp.json()
                 return jso.get('message_id')
 
@@ -99,6 +99,13 @@ class SuperGlobalChatCog(commands.Cog):
                 reference_mid = str(reference_msg.id)  # 返信元メッセージIDを取得
 
             dic.update({"reference": reference_mid})
+
+        try:
+            msg_id = await self.post_json_sgc(dic)
+            if msg_id:
+                dic.update({"shark-webapi": f"https://api.sharkbot.xyz/sgc/json/{msg_id}"})
+        except:
+            pass
 
         return json.dumps(dic, ensure_ascii=False)
     
@@ -275,8 +282,6 @@ class SuperGlobalChatCog(commands.Cog):
             content=js, allowed_mentions=discord.AllowedMentions.none()
         )
 
-        asyncio.create_task(self.post_json_sgc(json.loads(js)))
-
         await self.send_super_global_chat_debug(message)
         await message.remove_reaction("🔄", self.bot.user)
 
@@ -351,6 +356,9 @@ class SuperGlobalChatCog(commands.Cog):
         if dic.get("type") != "message":
             return
         
+        asyncio.create_task(self.post_json_sgc(dic))
+        asyncio.create_task(message.add_reaction("💾"))
+
         past_logs = []
         reference_mid = dic.get("reference")
         if reference_mid and reference_mid != "0":
